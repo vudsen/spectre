@@ -13,7 +13,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 @SchemaMapping(typeName = "LogEntityQueries")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).USER_MODIFY_SELF_PASSWORD)")
+@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).LOG_READ)")
 class LogEntityQueriesController(
     private val auditService: AuditService
 ) {

@@ -47,7 +47,7 @@ class UserController(
 
     @PostMapping("modify-password")
     @Log(messageKey = "log.user.modify_password")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).USER_MODIFY_SELF_PASSWORD)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).LOG_READ)")
     fun modifySelfPassword(@RequestBody @Validated vo: ModifyPasswordVO, request: HttpServletRequest) {
         val user = SecurityContextHolder.getContext().authentication.principal as UserWithID
         userService.modifyPassword(user.id, vo.oldPassword, vo.newPassword)
