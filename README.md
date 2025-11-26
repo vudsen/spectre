@@ -1,6 +1,6 @@
 # Spectre
 
-[在线体验](https://spectreproject.click)
+[在线体验](https://spectreproject.click) (账号：`public`/`P@ssw0rd`)
 
 一个 Arthas 管理平台
 
@@ -32,6 +32,8 @@
 推荐使用 SQLite 启动，详见 [application.yaml](./deploy/self-env/application.yaml).
 
 第一次启动会自动执行初始化 SQL。
+
+初始的用户名密码为：`admin`/`P@ssw0rd`
 
 ### 启动前端
 

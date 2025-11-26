@@ -9,7 +9,6 @@ import io.github.vudsen.spectre.core.vo.ModifyPasswordVO
 import io.github.vudsen.spectre.core.vo.ModifyUserPasswordVO
 import io.github.vudsen.spectre.repo.po.UserPO
 import jakarta.servlet.http.HttpServletRequest
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.validation.annotation.Validated
@@ -48,7 +47,7 @@ class UserController(
 
     @PostMapping("modify-password")
     @Log(messageKey = "log.user.modify_password")
-    @PreAuthorize("isAuthenticated() && !isAnonymous()")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).USER_MODIFY_SELF_PASSWORD)")
     fun modifySelfPassword(@RequestBody @Validated vo: ModifyPasswordVO, request: HttpServletRequest) {
         val user = SecurityContextHolder.getContext().authentication.principal as UserWithID
         userService.modifyPassword(user.id, vo.oldPassword, vo.newPassword)

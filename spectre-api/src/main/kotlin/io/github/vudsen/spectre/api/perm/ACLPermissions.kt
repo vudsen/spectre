@@ -51,7 +51,10 @@ object ACLPermissions : BasePermissionsHolder() {
     val USER_UPDATE = PermissionEntity("user", "update", "更新用户")
 
     @JvmStatic
-    val MODIFY_USER_PASSWORD = PermissionEntity("user", "modify-password", "更新用户")
+    val MODIFY_USER_PASSWORD = PermissionEntity("user", "modify-password", "更新用户密码")
+
+    @JvmStatic
+    val AUDIT_READ = PermissionEntity("user", "modify-self-password", "修改自身密码")
 
     @JvmStatic
     val USER_DELETE = PermissionEntity("user", "delete", "删除用户")
@@ -78,8 +81,10 @@ object ACLPermissions : BasePermissionsHolder() {
     val PERMISSION_READ = PermissionEntity("permission", "read", "查询权限")
 
     @JvmStatic
-    val AUDIT_READ = PermissionEntity("audit", "read", "查询日志")
+    val USER_MODIFY_SELF_PASSWORD = PermissionEntity("audit", "read", "查询日志")
 
+
+    @JvmStatic
 
     init {
         registerPermission(ALL)
@@ -106,7 +111,7 @@ object ACLPermissions : BasePermissionsHolder() {
         registerPermission(ROLE_BIND_USER)
         registerPermission(PERMISSION_BIND)
         registerPermission(PERMISSION_READ)
-        registerPermission(AUDIT_READ)
+        registerPermission(USER_MODIFY_SELF_PASSWORD)
 
         registerName("all", "所有权限")
         registerName("runtime-node", "运行节点")
