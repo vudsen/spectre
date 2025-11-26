@@ -2,6 +2,7 @@ package io.github.vudsen.spectre.core.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.UserDTO.Companion.toDTO
+import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.perm.ABACContext
 import io.github.vudsen.spectre.api.perm.ACLPermissions
@@ -19,7 +20,7 @@ import io.github.vudsen.spectre.repo.po.StaticPermissionPO
 import org.slf4j.LoggerFactory
 import org.springframework.expression.spel.standard.SpelExpression
 import org.springframework.expression.spel.standard.SpelExpressionParser
-import org.springframework.expression.spel.support.SimpleEvaluationContext
+import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import java.util.WeakHashMap
@@ -113,20 +114,25 @@ class DefaultAppAccessControlService(
 
                 val expression = expressionCache.compute(expressionString) {k, v ->
                     if (v == null) {
-                        return@compute spelParser.parseRaw(expressionString)
+                        try {
+                            return@compute spelParser.parseRaw(expressionString)
+                        } catch (e: Exception) {
+                            logger.error("", e)
+                            throw BusinessException("解析表达式出错，请联系管理员")
+                        }
                     }
                     return@compute v
                 }!!
 
-                val restrictedContext = SimpleEvaluationContext.forReadOnlyDataBinding().build()
+                val context = StandardEvaluationContext()
                 for (entry in spELContext) {
-                    restrictedContext.setVariable(entry.key, entry.value)
+                    context.setVariable(entry.key, entry.value)
                 }
                 val result = try {
-                    expression.getValue(restrictedContext, Boolean::class.java)
+                    expression.getValue(context, Boolean::class.java)
                 } catch (e: Exception) {
                     logger.error("", e)
-                    continue
+                    throw BusinessException("SpEL 脚本执行错误，请联系管理员")
                 }
                 if (result == null || !result) {
                     return false

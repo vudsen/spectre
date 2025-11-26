@@ -181,7 +181,7 @@ const ModifyPermissionDrawerContent: React.FC<
         <div>
           <Alert
             color="warning"
-            title="表达式无法使用 `T(...)` 和 `new` 关键字"
+            title="目前没有限制表达式的使用，用户可以使用 T(...) 等操作新建任意的类，请严格限制相关创建权限的分配"
           ></Alert>
         </div>
         <ControlledInput

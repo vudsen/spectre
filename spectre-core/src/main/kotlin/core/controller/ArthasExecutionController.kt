@@ -8,7 +8,12 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.core.lock.DistributedLock
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
+import io.github.vudsen.spectre.api.perm.ABACPermissions
+import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
+import io.github.vudsen.spectre.api.service.RuntimeNodeService
+import io.github.vudsen.spectre.core.integrate.abac.AttachNodeABACContext
+import io.github.vudsen.spectre.core.integrate.abac.RuntimeNodeABACContext
 import io.github.vudsen.spectre.core.vo.CreateChannelRequestVO
 import io.github.vudsen.spectre.core.vo.ExecuteCommandRequestVO
 import jakarta.servlet.http.HttpServletRequest
@@ -29,7 +34,9 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_READ)")
 class ArthasExecutionController(
-    private val arthasExecutionService: ArthasExecutionService
+    private val arthasExecutionService: ArthasExecutionService,
+    private val runtimeNodeService: RuntimeNodeService,
+    private val appAccessControlService: AppAccessControlService
 ) {
 
     private fun channelSessionDataKey(channelId: String): String = "ChannelIdToConsumerId:${channelId}"
@@ -40,6 +47,10 @@ class ArthasExecutionController(
     @PostMapping("create-channel")
     @Log("log.arthas.channel.create", "{ runtimeNodeId: #args[0].runtimeNodeId, channelId: #returnObj?.channelId }")
     fun createChannel(@RequestBody @Validated vo: CreateChannelRequestVO, request: HttpServletRequest): AttachStatus {
+        val node = runtimeNodeService.getRuntimeNode(vo.runtimeNodeId) ?: throw BusinessException("运行节点不存在")
+        val treeNode = runtimeNodeService.findTreeNode(vo.treeNodeId) ?: throw BusinessException("节点不存在")
+        val ctx = AttachNodeABACContext(ABACPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
+        appAccessControlService.checkPolicyPermission(ctx)
         // TODO: DELETE ME! 在实装登录系统前先这样写着，以防 joinChannel0 方法并发调用时创建多个 session
         request.getSession(true)
         return arthasExecutionService.requireAttach(vo.runtimeNodeId, vo.treeNodeId, vo.bundleId)

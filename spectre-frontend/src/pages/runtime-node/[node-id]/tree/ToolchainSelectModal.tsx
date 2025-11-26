@@ -1,6 +1,7 @@
 import { type ChangeEvent, useEffect } from 'react'
 import React, { useState } from 'react'
 import {
+  addToast,
   Button,
   Modal,
   ModalBody,
@@ -53,7 +54,10 @@ const MyModalContent: React.FC<MyModalContentProps> = (props) => {
     execute(ToolchainBundleQueryForAttach)
       .then((r) => {
         setResult(r)
-        setBundleId([r.toolchain.toolchainBundles.result[0].id])
+        const bundles = r.toolchain.toolchainBundles.result
+        if (bundles.length > 0) {
+          setBundleId([r.toolchain.toolchainBundles.result[0].id])
+        }
       })
       .catch((e) => handleError(e))
       .finally(() => {
