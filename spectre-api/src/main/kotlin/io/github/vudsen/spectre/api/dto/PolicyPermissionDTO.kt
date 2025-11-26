@@ -28,7 +28,7 @@ class PolicyPermissionDTO(
                 resource!!,
                 action!!,
                 conditionExpression!!,
-                description!!,
+                description,
                 createdAt!!,
                 ABACPermissions.findByResourceAndActions(resource!!, action!!).name,
                 enhancePlugins

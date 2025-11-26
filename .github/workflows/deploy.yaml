@@ -112,7 +112,7 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ vars.AWS_INSTANCE_IDS }}" \
             --document-name "AWS-RunShellScript" \
-            --parameters commands='["sh", "/opt/spectre/reboot.sh", "${{ needs.build.outputs.app_version }}-${{ github.sha }}"]' \
+            --parameters commands='["sh /opt/spectre/reboot.sh ${{ needs.build.outputs.app_version }}-${{ github.sha }}"]' \
             --query "Command.CommandId" \
             --output text)
           
