@@ -1,0 +1,33 @@
+package io.github.vudsen.spectre.repo.po
+
+import io.github.vudsen.spectre.repo.util.SnowFlake
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.PrePersist
+import jakarta.persistence.Table
+import org.hibernate.annotations.DynamicUpdate
+import java.sql.Timestamp
+
+@Entity
+@DynamicUpdate
+@Table(name = "toolchain_bundle")
+data class ToolchainBundlePO(
+    @Id
+    var id: Long? = null,
+    var name: String? = null,
+    @Column(name = "created_at", updatable = false, insertable = false)
+    var createdAt: Timestamp? = null,
+    var jattachTag: String? = null,
+    var arthasTag: String? = null,
+    var httpClientTag: String? = null
+) {
+
+    @PrePersist
+    fun prePersist() {
+        if (id == null) {
+            id = SnowFlake.nextId()
+        }
+    }
+
+}

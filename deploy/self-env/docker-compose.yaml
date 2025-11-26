@@ -1,0 +1,18 @@
+name: Spectre
+services:
+  web:
+    user: spectre
+    pull_policy: always
+    ports:
+      - "80:8080"
+    volumes:
+      - ./application.yaml:/home/spectre/application.yaml
+      - ./data:/home/spectre/data
+      - ./logs:/home/spectre/logs
+    working_dir: /home/spectre
+    image: public.ecr.aws/b9z8l9n7/vudsen/spectre:${SPECTRE_VERSION}
+    command:
+      - java
+      - -Xmx3g
+      - -jar
+      - spectre.jar

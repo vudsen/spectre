@@ -1,0 +1,13 @@
+[versions]
+springBoot = "3.5.5"
+springDependencyManagement = "1.1.7"
+minaSshd = "2.15.0"
+apacheCommons = "1.28.0"
+
+[libraries]
+sshdCore = { name = "sshd-core", group = "org.apache.sshd", version.ref = "minaSshd" }
+sshdSftp = { name = "sshd-sftp", group = "org.apache.sshd", version.ref = "minaSshd" }
+
+[plugins]
+springBoot = { id = "org.springframework.boot", version.ref = "springBoot" }
+springDependencyManagement = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }

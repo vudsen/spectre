@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: jdbc:sqlite:identifier.sqlite
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect

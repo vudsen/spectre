@@ -1,0 +1,51 @@
+plugins {
+    kotlin("jvm")
+    kotlin("plugin.spring") version "2.2.20"
+    alias(libs.plugins.springBoot)
+    alias(libs.plugins.springDependencyManagement)
+}
+
+group = "io.github.vudsen.spectre.core"
+
+repositories {
+    mavenCentral()
+}
+
+springBoot {
+    mainClass.set("io.github.vudsen.spectre.SpectreApplicationKt")
+}
+
+dependencies {
+    testImplementation(kotlin("test"))
+    implementation("org.bouncycastle:bcprov-jdk18on:1.82")
+    implementation("org.bouncycastle:bcpkix-jdk18on:1.82")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-graphql")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.session:spring-session-data-redis")
+    implementation("org.liquibase:liquibase-core:5.0.1")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(project(":spectre-repo"))
+    implementation(project(":spectre-api"))
+    implementation(project(":spectre-common"))
+    implementation(libs.sshdCore)
+    implementation(libs.sshdSftp)
+    implementation("com.squareup.okhttp3:okhttp:5.3.0")
+    implementation("org.apache.commons", "commons-compress", libs.versions.apacheCommons.get())
+    implementation("io.lettuce:lettuce-core")
+    implementation("org.postgresql:postgresql:42.7.8")
+    implementation("org.hibernate.orm:hibernate-community-dialects:7.0.8.Final")
+    // 稳定后再删除.
+    implementation("org.xerial:sqlite-jdbc:3.50.3.0")
+}
+tasks.test {
+    useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(17)
+}

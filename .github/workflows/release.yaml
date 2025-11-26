@@ -1,0 +1,83 @@
+name: Release
+permissions:
+  contents: write
+on:
+  release:
+    types:
+      - prereleased
+      - released
+jobs:
+  release:
+    name: Build And Upload
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Setup Environment
+        id: env
+        run: |
+          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_OUTPUT
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: 'pnpm'
+          cache-dependency-path: spectre-frontend/pnpm-lock.yaml
+
+      - name: Build Frontend
+        working-directory: spectre-frontend
+        env:
+          VITE_APP_VERSION: ${{ steps.env.outputs.APP_VERSION }}
+        run: pnpm i && pnpm run build
+
+      - name: Build Backend
+        run: >
+          mkdir spectre-core/src/main/resources/static/  &&
+          cp -r spectre-frontend/dist/* spectre-core/src/main/resources/static/ &&
+          sh ./gradlew build
+
+      - name: Build Image
+        run: |
+          cp spectre-core/build/libs/spectre-core-${{ steps.env.outputs.APP_VERSION }}.jar deploy/image/spectre.jar
+          docker build -f deploy/image/Dockerfile -t public.ecr.aws/b9z8l9n7/vudsen/spectre:${{ steps.env.outputs.APP_VERSION }} deploy/image
+          docker tag public.ecr.aws/b9z8l9n7/vudsen/spectre:${{ steps.env.outputs.APP_VERSION }} public.ecr.aws/b9z8l9n7/vudsen/spectre:latest
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Push Image And Restart Service
+        run: |
+          docker push public.ecr.aws/b9z8l9n7/vudsen/spectre:${{ steps.env.outputs.APP_VERSION }}
+          docker push public.ecr.aws/b9z8l9n7/vudsen/spectre:latest
+
+      - name: Upload Release Assets
+        run: |
+          gh release upload "${GITHUB_REF_NAME}" spectre-core/build/libs/spectre-core-${{ steps.env.outputs.APP_VERSION }}.jar
+          gh release upload "${GITHUB_REF_NAME}" cli/http-client/build/libs/http-client-${{ steps.env.outputs.APP_VERSION }}.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

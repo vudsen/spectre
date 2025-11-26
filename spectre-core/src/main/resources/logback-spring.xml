@@ -1,0 +1,9 @@
+<configuration>
+<!--    <include resource="logback-spring-${spring.profiles.active}.xml"/>-->
+    <springProfile name="prod">
+        <include resource="logback-spring-prod.xml"/>
+    </springProfile>
+    <springProfile name="!prod">
+        <include resource="logback-spring-default.xml"/>
+    </springProfile>
+</configuration>

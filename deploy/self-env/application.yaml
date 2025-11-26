@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: prod
+  datasource:
+    url: jdbc:sqlite:data/identifier.sqlite
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+  data:
+    redis:
+      database: 0
+      password:
+      host:
+      port:

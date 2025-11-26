@@ -1,0 +1,77 @@
+package io.github.vudsen.spectre.common.plugin.rnode
+
+import java.io.File
+import kotlin.text.iterator
+
+abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode{
+
+
+    override fun isFileExist(path: String): Boolean {
+        return execute("test -f $path").exitCode == 0
+    }
+
+    override fun isArm(): Boolean {
+        val result = execute("uname -a").ok()
+        return result.contains("arm", ignoreCase = true) ||
+                result.contains("aarch64", ignoreCase = true) ||
+                result.contains("arm64", ignoreCase = true)
+    }
+
+    override fun upload(src: String, dest: String) {
+        val file = File(src)
+        if (file.length() == 0L) {
+            return
+        }
+        if (isFileExist(dest)) {
+            return
+        }
+
+        val tmp = "$dest.tmp"
+        doUpload(file, tmp)
+        execute("mv $tmp $dest").ok()
+    }
+
+    /**
+     * 上传文件. 子类不需要任何检查
+     */
+    protected abstract fun doUpload(src: File, dest: String)
+
+    override fun unzipTarGzPkg(target: String, dest: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun mkdirs(path: String) {
+        execute("mkdir -p $path").let {
+            if (it.exitCode != 0 && it.stdout.contains("Permission denied")) {
+                throw IllegalStateException("Can not create directory `${path}`: ${it.stdout}")
+            }
+        }
+    }
+
+    override fun isDirectoryExist(path: String): Boolean {
+        return execute("test -d $path").exitCode == 0
+    }
+
+    override fun listFiles(directory: String): List<String> {
+        execute("ls $directory").tryUnwrap() ?.let {
+            val result = mutableListOf<String>()
+            val buf = StringBuilder()
+            for (ch in it) {
+                if (ch == ' ' || ch == '\n') {
+                    if (buf.isEmpty()) {
+                        continue
+                    }
+                    result.add(buf.toString())
+                    buf.clear()
+                } else {
+                    buf.append(ch)
+                }
+            }
+            if (buf.isNotEmpty()) {
+                result.add(buf.toString())
+            }
+            return result
+        }
+        return emptyList()
+    }
+}

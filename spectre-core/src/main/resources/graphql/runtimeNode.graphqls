@@ -1,0 +1,32 @@
+type RuntimeNodeQueries {
+    runtimeNodes(page: Int = 0, size: Int = 10): RuntimeNodePage!
+    runtimeNode(id: String): RuntimeNodeDTO
+    plugin(pluginId: String): RuntimeNodePluginVO
+    plugins: [RuntimeNodePluginVO!]!
+}
+
+input RuntimeNodeModifyRequestVO {
+    pluginId: String
+    configuration: String
+}
+
+type RuntimeNodePluginVO {
+    id: String!
+    name: String!
+    description: String!
+    page: PageDescriptor!
+}
+
+type RuntimeNodePage {
+    totalPages: Int
+    result: [RuntimeNodeDTO!]!
+}
+
+type RuntimeNodeDTO {
+    id: Long!
+    name: String!
+    pluginId: String!
+    configuration: String
+    createdAt: Timestamp!
+    labels: Labels!
+}

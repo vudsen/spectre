@@ -1,0 +1,22 @@
+type LogEntityQueries {
+    logs(page: Int!, size: Int!): LogEntityPageResult!
+    log(id: Long!): LogEntityDTO
+}
+
+type LogEntityPageResult {
+    totalPages: Int!
+    result: [LogEntityDTO!]!
+}
+
+# 只有查询，先直接用 PO
+type LogEntityDTO {
+    id: Long!
+    operation: String!
+    isSuccess: Boolean!
+    context: String
+    time: Timestamp!
+    ip: String!
+    username: String!
+    userAgent: String!
+    message: String
+}

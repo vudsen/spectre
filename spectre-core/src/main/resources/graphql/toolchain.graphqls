@@ -1,0 +1,56 @@
+scalar ToolchainType
+
+type ToolchainItemQueries {
+    toolchainItems(type: ToolchainType!, page: Int = 0, size: Int = 10): ToolchainItemsPage!
+    toolchainBundles(page: Int = 0, size: Int = 10): ToolchainBundlePage!
+    toolchainBundle(id: Long!): ToolchainBundlePO
+}
+
+type ToolchainMutations {
+    updateOrCreateToolchain(po: ToolchainItemModify): ToolchainItemPO
+    createToolchainBundle(vo: ToolchainBundleModifyVO): ToolchainBundlePO
+}
+
+input ToolchainItemModify {
+    url: String!
+    type: ToolchainType!
+    tag: String!
+    armUrl: String
+}
+
+input ToolchainBundleModifyVO {
+    id: Long
+    name: String
+    jattachTag: String
+    arthasTag: String
+    httpClientTag: String
+}
+
+type ToolchainBundlePage {
+    totalPages: Int!
+    result: [ToolchainBundlePO!]!
+}
+
+type ToolchainItemsPage {
+    totalPages: Int!
+    result: [ToolchainItemPO!]!
+}
+
+type ToolchainBundlePO {
+    id: Long!
+    name: String!
+    createdAt: Timestamp!
+    jattachTag: String!
+    arthasTag: String!
+}
+
+type ToolchainItemId {
+    type: ToolchainType!
+    tag: String!
+}
+
+type ToolchainItemPO {
+    id: ToolchainItemId!
+    url: String!
+    createdAt: Timestamp!
+}

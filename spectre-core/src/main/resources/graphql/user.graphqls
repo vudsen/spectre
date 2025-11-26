@@ -1,0 +1,22 @@
+
+
+type UserQueries {
+    users(page: Int = 0, size: Int = 10): UserPage!
+    searchByUsername(username: String!): UserPage!
+    user(id: Long!): User
+}
+
+type UserPage {
+    totalPages: Int!
+    result: [User!]!
+}
+
+type User {
+    id: Long!
+    username: String!
+    displayName: String
+    # A kv string pair
+    labels: Labels
+    createdAt: Timestamp!
+}
+

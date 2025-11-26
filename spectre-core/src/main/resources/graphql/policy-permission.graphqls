@@ -1,0 +1,27 @@
+type PolicyPermissionQueries {
+    permissions(subjectId: Long!, subjectType: String, page: Int, size: Int): PolicyPermissionDTOPageResult!
+    permission(id: Long!): PolicyPermissionDTO
+}
+
+type PolicyPermissionDTO {
+    id: Long!
+    subjectType: String!
+    subjectId: String!
+    resource: String!
+    action: String!
+    conditionExpression: String!
+    description: String
+    createdAt: Timestamp!
+    name: String!
+    enhancePlugins: [PolicyPermissionEnhancePlugin!]!
+}
+
+type PolicyPermissionEnhancePlugin {
+    pluginId: String!
+    configuration: String!
+}
+
+type PolicyPermissionDTOPageResult {
+    totalPages: Int!
+    result: [PolicyPermissionDTO!]!
+}

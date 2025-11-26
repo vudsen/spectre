@@ -1,0 +1,54 @@
+# 给予 spectre 最大的权限.
+# 创建 token: kubectl create token spectre -n spectre --duration=720h
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spectre
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: spectre
+  namespace: spectre
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: spectre-cluster-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs:
+      - get
+      - create
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["list"]
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: spectre-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: spectre-cluster-role
+subjects:
+  - kind: ServiceAccount
+    name: spectre
+    namespace: spectre

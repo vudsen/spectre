@@ -1,0 +1,24 @@
+scalar Timestamp
+scalar JSON
+scalar Labels
+scalar Long
+
+type PageDescriptor {
+    pageName: String!
+    parameters: JSON
+    usage: String!
+}
+
+type Query {
+    runtimeNode: RuntimeNodeQueries!
+    toolchain: ToolchainItemQueries!
+    user: UserQueries!
+    role: RoleQueries!
+    staticPermission: StaticPermissionQueries!
+    policyPermission: PolicyPermissionQueries!
+    log: LogEntityQueries!
+}
+
+type Mutation {
+    toolchain: ToolchainMutations!
+}

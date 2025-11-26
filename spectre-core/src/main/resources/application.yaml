@@ -1,0 +1,30 @@
+spring:
+  graphql:
+    graphiql:
+      enabled: true
+    schema:
+      printer:
+        enabled: true
+    http:
+      path: /spectre-api/graphql
+  session:
+    jdbc:
+      initialize-schema: always
+  cache:
+    type: redis
+  data:
+    redis:
+      client-type: lettuce
+  liquibase:
+    change-log: classpath:/db/changelog-master.xml
+server:
+  error:
+    path: /spectre-api/error
+  servlet:
+    encoding:
+      charset: UTF-8
+      force-response: true
+
+#logging.level.org.hibernate.SQL: debug
+#logging.level.org.hibernate.type.descriptor.sql.BasicBinder: trace
+

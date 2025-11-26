@@ -1,0 +1,153 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - master
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build Project
+    outputs:
+      app_version: ${{ steps.env.outputs.APP_VERSION }}
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Setup Environment
+        id: env
+        run: |
+          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_OUTPUT
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: 'pnpm'
+          cache-dependency-path: spectre-frontend/pnpm-lock.yaml
+
+      - name: Build Frontend
+        working-directory: spectre-frontend
+        env:
+          VITE_APP_VERSION: ${{ steps.env.outputs.APP_VERSION }}-${{ github.sha }}
+        run: pnpm i && pnpm run build
+
+      - name: Build Backend
+        run: >
+          mkdir spectre-core/src/main/resources/static/  &&
+          cp -r spectre-frontend/dist/* spectre-core/src/main/resources/static/ &&
+          sh ./gradlew build
+
+      - name: Upload Spectre
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'spectre'
+          path: spectre-core/build/libs/spectre-core-${{ steps.env.outputs.APP_VERSION }}.jar
+  upload:
+    runs-on: ubuntu-latest
+    name: Upload Image
+    needs: build
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+
+      - name: Enable QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # Step 2: 安装 buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: spectre
+          path: deploy/image
+
+      - name: Rename Package
+        run: mv deploy/image/spectre-core-${{ needs.build.outputs.app_version }}.jar deploy/image/spectre.jar
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Build And Push Image
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --file deploy/image/Dockerfile \
+            --push \
+            -t public.ecr.aws/b9z8l9n7/vudsen/spectre:${{ needs.build.outputs.app_version }}-${{ github.sha }} \
+            deploy/image
+
+      - name: Restart Service
+        id: reboot
+        env:
+          AWS_REGION: ap-southeast-1
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ vars.AWS_INSTANCE_IDS }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands='["sudo", "sh", "/opt/spectre/reboot.sh", "${{ needs.build.outputs.app_version }}-${{ github.sha }}"]' \
+            --query "Command.CommandId" \
+            --output text)
+          
+          set +e
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ vars.AWS_INSTANCE_IDS }}"
+          rc=$?
+          set -e
+          
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ vars.AWS_INSTANCE_IDS }}" \
+            --query "StandardOutputContent"
+          
+          echo "--- Exit Code ---"
+          aws ssm get-command-invocation \
+          --command-id "$COMMAND_ID" \
+          --instance-id "${{ vars.AWS_INSTANCE_IDS }}" \
+          --query "ResponseCode"
+          
+          echo "--- Stdout ---"
+          aws ssm get-command-invocation \
+          --command-id "$COMMAND_ID" \
+          --instance-id "${{ vars.AWS_INSTANCE_IDS }}" \
+          --query "StandardOutputContent"
+    
+          echo "--- Stderr ---"
+          aws ssm get-command-invocation \
+          --command-id "$COMMAND_ID" \
+          --instance-id "${{ vars.AWS_INSTANCE_IDS }}" \
+          --query "StandardErrorContent"
+
+          if [ $rc -ne 0 ]; then
+            echo "Execute command failed, exit code: $rc"
+          fi
+          
+          exit $rc

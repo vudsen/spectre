@@ -1,0 +1,257 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+"""This directive allows results to be deferred during execution"""
+directive @defer(
+  """Deferred behaviour is controlled by this argument"""
+  if: Boolean! = true
+  """A unique label that represents the fragment being deferred"""
+  label: String
+) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"""
+This directive disables error propagation when a non nullable field returns null for the given operation.
+"""
+directive @experimental_disableErrorPropagation on MUTATION | QUERY | SUBSCRIPTION
+
+type ACLPermissionEntity {
+  action: String!
+  name: String!
+  resource: String!
+}
+
+"""Dynamic JSON Type"""
+scalar JSON
+
+"""Labels"""
+scalar Labels
+
+""" 只有查询，先直接用 PO"""
+type LogEntityDTO {
+  context: String
+  id: Long!
+  ip: String!
+  isSuccess: Boolean!
+  message: String
+  operation: String!
+  time: Timestamp!
+  userAgent: String!
+  username: String!
+}
+
+type LogEntityPageResult {
+  result: [LogEntityDTO!]!
+  totalPages: Int!
+}
+
+type LogEntityQueries {
+  log(id: Long!): LogEntityDTO
+  logs(page: Int!, size: Int!): LogEntityPageResult!
+}
+
+"""Long"""
+scalar Long
+
+type Mutation {
+  toolchain: ToolchainMutations!
+}
+
+type PageDescriptor {
+  pageName: String!
+  parameters: JSON
+  usage: String!
+}
+
+type PolicyPermissionDTO {
+  action: String!
+  conditionExpression: String!
+  createdAt: Timestamp!
+  description: String
+  enhancePlugins: [PolicyPermissionEnhancePlugin!]!
+  id: Long!
+  name: String!
+  resource: String!
+  subjectId: String!
+  subjectType: String!
+}
+
+type PolicyPermissionDTOPageResult {
+  result: [PolicyPermissionDTO!]!
+  totalPages: Int!
+}
+
+type PolicyPermissionEnhancePlugin {
+  configuration: String!
+  pluginId: String!
+}
+
+type PolicyPermissionQueries {
+  permission(id: Long!): PolicyPermissionDTO
+  permissions(page: Int, size: Int, subjectId: Long!, subjectType: String): PolicyPermissionDTOPageResult!
+}
+
+type Query {
+  log: LogEntityQueries!
+  policyPermission: PolicyPermissionQueries!
+  role: RoleQueries!
+  runtimeNode: RuntimeNodeQueries!
+  staticPermission: StaticPermissionQueries!
+  toolchain: ToolchainItemQueries!
+  user: UserQueries!
+}
+
+type RolePO {
+  createdAt: Timestamp
+  description: String
+  id: Long!
+  name: String!
+}
+
+type RolePageResult {
+  result: [RolePO!]!
+  totalPages: Int
+}
+
+type RoleQueries {
+  """ 返回已经绑定的用户"""
+  boundUsers(page: Int, roleId: Long!, size: Int): UserPage!
+  role(id: Long!): RolePO
+  roles(page: Int, size: Int): RolePageResult!
+}
+
+type RuntimeNodeDTO {
+  configuration: String
+  createdAt: Timestamp!
+  id: Long!
+  labels: Labels!
+  name: String!
+  pluginId: String!
+}
+
+input RuntimeNodeModifyRequestVO {
+  configuration: String
+  pluginId: String
+}
+
+type RuntimeNodePage {
+  result: [RuntimeNodeDTO!]!
+  totalPages: Int
+}
+
+type RuntimeNodePluginVO {
+  description: String!
+  id: String!
+  name: String!
+  page: PageDescriptor!
+}
+
+type RuntimeNodeQueries {
+  plugin(pluginId: String): RuntimeNodePluginVO
+  plugins: [RuntimeNodePluginVO!]!
+  runtimeNode(id: String): RuntimeNodeDTO
+  runtimeNodes(page: Int = 0, size: Int = 10): RuntimeNodePage!
+}
+
+type StaticPermissionDTO {
+  action: String!
+  name: String!
+  resource: String!
+  subjectId: Long!
+  subjectType: String!
+}
+
+type StaticPermissionDTOPageResult {
+  result: [StaticPermissionDTO!]!
+  totalPages: Int!
+}
+
+type StaticPermissionQueries {
+  """ 列出主体下对应资源的所有权限"""
+  allBoundPermissions(resource: String, subjectId: Long, subjectType: String): [StaticPermissionDTO!]!
+  listPermissionsByResource(resource: String): [ACLPermissionEntity!]!
+  """ 列出对应主体下的所有权限，带分页"""
+  permissions(page: Int, size: Int, subjectId: Long!, subjectType: String): StaticPermissionDTOPageResult!
+}
+
+"""Epoch milliseconds timestamp"""
+scalar Timestamp
+
+input ToolchainBundleModifyVO {
+  arthasTag: String
+  httpClientTag: String
+  id: Long
+  jattachTag: String
+  name: String
+}
+
+type ToolchainBundlePO {
+  arthasTag: String!
+  createdAt: Timestamp!
+  id: Long!
+  jattachTag: String!
+  name: String!
+}
+
+type ToolchainBundlePage {
+  result: [ToolchainBundlePO!]!
+  totalPages: Int!
+}
+
+type ToolchainItemId {
+  tag: String!
+  type: ToolchainType!
+}
+
+input ToolchainItemModify {
+  armUrl: String
+  tag: String!
+  type: ToolchainType!
+  url: String!
+}
+
+type ToolchainItemPO {
+  createdAt: Timestamp!
+  id: ToolchainItemId!
+  url: String!
+}
+
+type ToolchainItemQueries {
+  toolchainBundle(id: Long!): ToolchainBundlePO
+  toolchainBundles(page: Int = 0, size: Int = 10): ToolchainBundlePage!
+  toolchainItems(page: Int = 0, size: Int = 10, type: ToolchainType!): ToolchainItemsPage!
+}
+
+type ToolchainItemsPage {
+  result: [ToolchainItemPO!]!
+  totalPages: Int!
+}
+
+type ToolchainMutations {
+  createToolchainBundle(vo: ToolchainBundleModifyVO): ToolchainBundlePO
+  updateOrCreateToolchain(po: ToolchainItemModify): ToolchainItemPO
+}
+
+"""ToolchainTypes"""
+scalar ToolchainType
+
+type User {
+  createdAt: Timestamp!
+  displayName: String
+  id: Long!
+  """ A kv string pair"""
+  labels: Labels
+  username: String!
+}
+
+type UserPage {
+  result: [User!]!
+  totalPages: Int!
+}
+
+type UserQueries {
+  searchByUsername(username: String!): UserPage!
+  user(id: Long!): User
+  users(page: Int = 0, size: Int = 10): UserPage!
+}
