@@ -83,9 +83,6 @@ object ACLPermissions : BasePermissionsHolder() {
     @JvmStatic
     val USER_MODIFY_SELF_PASSWORD = PermissionEntity("audit", "read", "查询日志")
 
-
-    @JvmStatic
-
     init {
         registerPermission(ALL)
         registerPermission(RUNTIME_NODE_READ)
