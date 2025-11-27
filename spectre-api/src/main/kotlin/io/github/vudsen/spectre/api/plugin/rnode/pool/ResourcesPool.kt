@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.api.plugin.rnode.pool
 
+import io.github.vudsen.spectre.api.exception.BusinessException
 import org.slf4j.LoggerFactory
 import io.github.vudsen.spectre.api.plugin.rnode.CloseableRuntimeNode
 import java.io.Closeable
@@ -22,12 +23,15 @@ class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
 
     private val modifyLock = ReentrantLock()
 
-    private fun createResource(): CloseableRuntimeNode {
+    private fun createResource(isNewOne: Boolean): CloseableRuntimeNode {
+        // TODO 容量满的时候不再创建
         modifyLock.lockInterruptibly()
         return try {
             val runtimeNode = factory.createInstance()
             pool.add(runtimeNode)
-            count++
+            if (isNewOne) {
+                count++
+            }
             runtimeNode
         } finally {
             modifyLock.unlock()
@@ -45,8 +49,8 @@ class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
             }
             modifyLock.lockInterruptibly()
             val node = try {
-                count--
-                createResource()
+                // 替换节点
+                createResource(false)
             } finally {
                 modifyLock.unlock()
             }
@@ -54,15 +58,14 @@ class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
             return node
         }
 
-        if (count == QUEUE_SIZE) {
+        if (count >= QUEUE_SIZE) {
             val res = pool.poll(5, TimeUnit.SECONDS)
             if (res == null) {
-                TODO("提示用户资源繁忙")
+                throw BusinessException("系统繁忙，请稍后再试")
             }
             return res
         }
-        val node = createResource()
-        node.test()
+        val node = createResource(true)
         return node
     }
 
@@ -70,7 +73,8 @@ class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
         try {
             pool.add(node)
         } catch (e: Exception) {
-            logger.error("", e)
+            node.close()
+            logger.error("Failed to retrieve resource.", e)
         }
     }
 

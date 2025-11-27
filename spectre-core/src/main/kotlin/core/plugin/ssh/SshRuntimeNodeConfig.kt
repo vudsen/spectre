@@ -14,17 +14,21 @@ data class SshRuntimeNodeConfig(
 
     constructor() : this(null, null, "", 22, "", null, "/opt/spectre")
 
-    class Docker(
-        var enabled: Boolean = false,
-        var executablePath: String? = null,
-        var javaHome: String? = null,
-        var spectreHome: String? = "/opt/spectre",
-    )
+    data class Docker(
+        var enabled: Boolean,
+        var executablePath: String,
+        var javaHome: String?,
+        var spectreHome: String?,
+    ) {
+        constructor() : this(false, "docker", null, "/opt/spectre")
+    }
 
-    class Local(
-        var enabled: Boolean = false,
-        var javaHome: String = ""
-    )
+    data class Local(
+        var enabled: Boolean,
+        var javaHome: String
+    ) {
+        constructor() : this(false, "")
+    }
 
     enum class LoginType {
         PASSWORD,
@@ -32,12 +36,14 @@ data class SshRuntimeNodeConfig(
         NONE
     }
 
-    class LoginPrincipal(
-        var loginType: LoginType = LoginType.NONE,
-        var password: String? = null,
-        var secretKey: String? = null,
-        var secretKeyPassword: String? = null,
-    )
+    data class LoginPrincipal(
+        var loginType: LoginType,
+        var password: String?,
+        var secretKey: String?,
+        var secretKeyPassword: String?,
+    ) {
+        constructor() : this(LoginType.NONE, null, null, null)
+    }
 
 
 

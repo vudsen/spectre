@@ -114,7 +114,7 @@ abstract class RuntimeNodeExtensionPoint (
 
     /**
      * 填充敏感信息到 [updated] 中。该方法用于更新节点时，重新填充敏感信息到配置中
-     * @param updated 客户端传入的最新配置，密码等信息可能为空, 需要通过 [base] 参数进行填充
+     * @param updated 客户端传入的最新配置，密码等信息可能为空, 需要通过 [base] 参数进行填充. **如果密码信息非空，则不要替换**！
      * @param base 数据库中的配置
      * @return [updated]
      */

@@ -161,18 +161,6 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
           <CardBody className="space-y-3">
             <div className="header-2">Spectre 设置</div>
             <div className="text-sm">该板块允许你配置 Spectre 的具体特性。</div>
-            <div>
-              <ControlledInput
-                control={control}
-                name="configuration.spectreHome"
-                rules={{ required: true }}
-                inputProps={{
-                  isRequired: true,
-                  defaultValue: '/opt/spectre',
-                  label: 'Spectre Home 目录',
-                }}
-              />
-            </div>
             <div className="text-xl font-semibold">本地</div>
             <div>
               <div className="flex flex-row items-center">
@@ -406,8 +394,6 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
         connectConfiguration.current = values
         setPage(1)
       }
-    } catch (e) {
-      handleError(e, '测试失败')
     } finally {
       setLoading(false)
     }
@@ -457,9 +443,20 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
                   control={control}
                   rules={{ required: true }}
                 />
+                <ControlledInput
+                  control={control}
+                  name="configuration.spectreHome"
+                  rules={{ required: true }}
+                  inputProps={{
+                    isRequired: true,
+                    defaultValue: '/opt/spectre',
+                    label: 'Spectre 数据目录',
+                  }}
+                />
               </CardBody>
             </Card>
             <Tabs
+              defaultSelectedKey={configuration?.principal?.loginType}
               onSelectionChange={onLoginTypeChange}
               aria-label="Login Type Tabs"
               classNames={classnames}

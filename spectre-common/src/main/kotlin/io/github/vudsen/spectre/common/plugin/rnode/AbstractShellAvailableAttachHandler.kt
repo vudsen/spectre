@@ -79,7 +79,7 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         var filename: String
         var downloadUrl: String
         if (armUrl != null && armUrl.isNotEmpty() && runtimeNode.isArm()) {
-            filename = "${item.type.originalName}-arm-${armUrl}.${item.type.bundleExtensionName}"
+            filename = "${item.type.originalName}-arm.${item.type.bundleExtensionName}"
             downloadUrl = armUrl
         } else {
             filename = "${item.type.originalName}-${item.tag}.${item.type.bundleExtensionName}"

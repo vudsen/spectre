@@ -32,6 +32,8 @@ name: Spectre
 services:
   web:
     user: spectre
+    environment:
+      SPECTRE_HOME: '/home/spectre/data'
     pull_policy: always
     ports:
       - "80:8080"
@@ -67,10 +69,12 @@ spring:
 EOF
 
 sudo chown -R spectre:spectre /opt/spectre
+sudo chmod -R g+w /opt/spectre
 
 # Add test user for docker attach.
 sudo useradd -m tester
 sudo usermod -aG docker tester
+sudo usermod -aG spectre tester
 ssh-keygen -t rsa -f /tmp/tester_id_rsa
 sudo mkdir -p /home/tester/.ssh
 sudo cp /tmp/tester_id_rsa.pub /home/tester/.ssh/authorized_keys

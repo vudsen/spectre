@@ -203,9 +203,15 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
     ): RuntimeNodeConfig {
         val basePrincipal = base.principal ?: return updated
         updated.principal ?.let {
-            it.password = basePrincipal.password
-            it.secretKey = basePrincipal.secretKey
-            it.secretKeyPassword = basePrincipal.secretKeyPassword
+            if (it.password.isNullOrEmpty()) {
+                it.password = basePrincipal.password
+            }
+            if (it.secretKey.isNullOrEmpty()) {
+                it.secretKey = basePrincipal.secretKey
+            }
+            if (it.secretKeyPassword.isNullOrEmpty()) {
+                it.secretKeyPassword = basePrincipal.secretKeyPassword
+            }
         }
         return updated
     }

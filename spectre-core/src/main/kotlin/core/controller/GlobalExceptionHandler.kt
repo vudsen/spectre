@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.core.controller
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.core.vo.ErrorResponseVO
 import io.github.vudsen.spectre.core.vo.ValidationErrorResponseVO
+import org.slf4j.LoggerFactory
 import org.springframework.context.MessageSource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -13,23 +14,14 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.servlet.NoHandlerFoundException
+import java.lang.reflect.InvocationTargetException
 
 @ControllerAdvice
 class GlobalExceptionHandler(
     private val messageSource: MessageSource
 ) {
 
-
-    @ResponseBody
-    @ExceptionHandler(BusinessException::class)
-    fun bizExceptionHandler(e: BusinessException): ResponseEntity<ErrorResponseVO> {
-        return ResponseEntity.ok(
-            ErrorResponseVO(
-                messageSource.getMessage(e.messageKey, e.messageArgs, null),
-                e.code
-            )
-        )
-    }
+    private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ResponseBody
     @ExceptionHandler(MethodArgumentNotValidException::class)
@@ -54,5 +46,29 @@ class GlobalExceptionHandler(
         }
         return ResponseEntity.status(HttpStatus.PERMANENT_REDIRECT).header(HttpHeaders.LOCATION, "/spectre/notfound")
             .build()
+    }
+
+    @ResponseBody
+    @ExceptionHandler(Exception::class)
+    fun bizExceptionHandler(e: Exception): ResponseEntity<ErrorResponseVO> {
+        val ex = if (e is InvocationTargetException) {
+            e.targetException
+        } else {
+            e
+        }
+        if (ex is BusinessException) {
+            return ResponseEntity.ok(
+                ErrorResponseVO(
+                    messageSource.getMessage(ex.messageKey, ex.messageArgs, null),
+                    ex.code
+                )
+            )
+        }
+        logger.error("", ex)
+        return ResponseEntity.ok(
+            ErrorResponseVO(
+                messageSource.getMessage("error.server.internal.error", emptyArray(), null)
+            )
+        )
     }
 }

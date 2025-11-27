@@ -108,7 +108,9 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
         updated: K8sRuntimeNodeConfig,
         base: K8sRuntimeNodeConfig
     ): RuntimeNodeConfig {
-        updated.token = base.token
+        if (updated.token.isEmpty()) {
+            updated.token = base.token
+        }
         return updated
     }
 

@@ -87,21 +87,17 @@ class DefaultRuntimeNodeService(
         val conf = objectMapper.readValue(testObj.configuration, plugin.getConfigurationClass())
 
         val runtimeNodeId = testObj.runtimeNodeId
-        try {
-            if (runtimeNodeId == null) {
-                plugin.test(conf)
-            } else {
-                val node =
-                    repository.findById(runtimeNodeId.toLong()).getOrNull() ?: throw BusinessException("运行节点不存在")
-                plugin.test(
-                    plugin.fillSensitiveConfiguration(
-                        conf,
-                        objectMapper.readValue(node.configuration, plugin.getConfigurationClass())
-                    )
+        if (runtimeNodeId == null) {
+            plugin.test(conf)
+        } else {
+            val node =
+                repository.findById(runtimeNodeId.toLong()).getOrNull() ?: throw BusinessException("运行节点不存在")
+            plugin.test(
+                plugin.fillSensitiveConfiguration(
+                    conf,
+                    objectMapper.readValue(node.configuration, plugin.getConfigurationClass())
                 )
-            }
-        } catch (e: Exception) {
-            throw BusinessException(e.message ?: "测试失败: 未知原因")
+            )
         }
     }
 

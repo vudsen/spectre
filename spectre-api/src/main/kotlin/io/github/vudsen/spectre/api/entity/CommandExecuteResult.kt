@@ -30,4 +30,8 @@ data class CommandExecuteResult(
             null
         }
     }
+
+    fun isFailed(): Boolean {
+        return exitCode != 0
+    }
 }

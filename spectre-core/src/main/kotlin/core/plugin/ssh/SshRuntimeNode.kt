@@ -18,7 +18,6 @@ import org.apache.sshd.common.util.io.resource.AbstractIoResource
 import org.apache.sshd.common.util.threads.CloseableExecutorService
 import org.apache.sshd.sftp.client.SftpClientFactory
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
@@ -31,7 +30,6 @@ import java.security.KeyPair
 import java.security.Security
 import java.security.interfaces.RSAPrivateCrtKey
 import java.security.spec.RSAPublicKeySpec
-import java.security.spec.X509EncodedKeySpec
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -250,8 +248,28 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
 
 
     override fun test() {
-        if (session.isClosed) {
-            TODO("session already closed.")
+        if (nodeConfig.spectreHome.isNotEmpty()) {
+            if (execute("test -r ${nodeConfig.spectreHome}").isFailed()) {
+                throw BusinessException("error.require.read.permission", arrayOf(nodeConfig.spectreHome))
+            }
+            if (execute("test -w ${nodeConfig.spectreHome}").isFailed()) {
+                throw BusinessException("error.require.write.permission", arrayOf(nodeConfig.spectreHome))
+            }
+            if (execute("test -x ${nodeConfig.spectreHome}").isFailed()) {
+                throw BusinessException("error.require.execute.permission", arrayOf(nodeConfig.spectreHome))
+            }
+        }
+        nodeConfig.docker ?.let {
+            if (it.enabled) {
+                val result = execute("${it.executablePath} version")
+                if (result.isFailed()) {
+                    if (result.stdout.contains("permission denied")) {
+                        throw BusinessException("error.require.docker.permission")
+                    } else {
+                        throw BusinessException(result.stdout)
+                    }
+                }
+            }
         }
     }
 

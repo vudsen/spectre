@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.task.TaskExecutor
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
+import java.lang.reflect.InvocationTargetException
 import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -335,9 +336,14 @@ class DefaultArthasExecutionService(
                     this.bundleId = bundle.id!!
                 }, COMMON_REDIS_EXPIRE_TIME)
                 clientMap[jvm]!!.client = client
-            } catch (e: Exception) {
+            }  catch (e: Exception) {
+                val ex = if (e is InvocationTargetException) {
+                    e.targetException
+                } else {
+                    e
+                }
                 holder.error =
-                    AttachStatus.ErrorInfo(e.message ?: "<Unknown>", System.currentTimeMillis() + 5000)
+                    AttachStatus.ErrorInfo(ex.message ?: "<Unknown>", System.currentTimeMillis() + 5000)
                 logger.debug("Failed to attach", e)
             } finally {
                 redisDistributedLock.unlock(lockKey)

@@ -1,7 +1,7 @@
 import { addToast } from '@heroui/react'
 import { getDialogQueue } from '@/components/DialogProvider/dialogQueue.ts'
 import type { DialogConfig } from '@/components/DialogProvider/ConfirmDialog.tsx'
-import { isValidationError } from '@/api/types.ts'
+import { isErrorResponse, isValidationError } from '@/api/types.ts'
 import type { UseFormSetError, FieldPath, FieldValues } from 'react-hook-form'
 
 export const showDialog = (config: DialogConfig) => {
@@ -14,6 +14,8 @@ export const handleError = (e: unknown, title: string = '错误') => {
     msg = e.message
   } else if (typeof e === 'string') {
     msg = e
+  } else if (isErrorResponse(e)) {
+    msg = e.message
   }
   if (msg) {
     addToast({

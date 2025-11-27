@@ -1,6 +1,9 @@
 package io.github.vudsen.spectre.api.dto
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 class AttachStatus(
+    @field:JsonProperty("isReady")
     var isReady: Boolean,
 ) {
 
