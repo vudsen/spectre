@@ -47,7 +47,7 @@ class SshAttachHandler(
             throw BusinessException("未提供 Docker 相关配置")
         }
 
-        val dockerNode = DockerRuntimeNode(runtimeNode, dockerCnf.executablePath ?: "docker", jvm.id)
+        val dockerNode = DockerRuntimeNode(runtimeNode, dockerCnf.executablePath, jvm.id)
 
         val uid = dockerNode.execute("id -u").tryUnwrap()?.trim() ?: "0"
         val gid = dockerNode.execute("id -g").tryUnwrap()?.trim() ?: "0"

@@ -94,7 +94,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         runtimeNode: SshRuntimeNode,
         conf: SshRuntimeNodeConfig.Docker
     ): List<JvmSearchNode<DockerJvm>> {
-        val ps = runtimeNode.execute(conf.executablePath ?: "docker ps --format=json").ok()
+        val ps = runtimeNode.execute("${conf.executablePath} ps --format=json").ok()
 
         val containers = ps.split('\n')
         val result = mutableListOf<JvmSearchNode<DockerJvm>>()
