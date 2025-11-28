@@ -29,6 +29,7 @@ type Documents = {
     "\n  query UserListQuery($page: Int, $size: Int) {\n    user {\n      users(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          createdAt\n          displayName\n          username\n          labels\n        }\n      }\n    }\n  }\n": typeof types.UserListQueryDocument,
     "\n  query UserQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        labels\n        username\n        displayName\n      }\n    }\n  }\n": typeof types.UserQueryDocument,
     "\n  query ToolchainBundleQueryForAttach {\n    toolchain {\n      toolchainBundles {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n": typeof types.ToolchainBundleQueryForAttachDocument,
+    "\n  query NodeInfoQuery($id: String!) {\n    runtimeNode {\n      runtimeNode(id: $id) {\n        name\n        labels\n        createdAt\n      }\n    }\n  }\n": typeof types.NodeInfoQueryDocument,
     "\n  query ListJvmSource($page: Int, $size: Int) {\n    runtimeNode {\n      runtimeNodes(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          name\n          createdAt\n          pluginId\n          labels\n        }\n      }\n      plugins {\n        id\n        name\n      }\n    }\n  }\n": typeof types.ListJvmSourceDocument,
     "\n  query RuntimeNodeCreatePluginQuery(\n    $pluginId: String\n    $runtimeNodeId: String\n  ) {\n    runtimeNode {\n      plugin(pluginId: $pluginId) {\n        id\n        page {\n          pageName\n        }\n      }\n      runtimeNode(id: $runtimeNodeId) {\n        id\n        configuration\n        name\n      }\n    }\n  }\n": typeof types.RuntimeNodeCreatePluginQueryDocument,
     "\n  query RuntimeNodePluginQuery {\n    runtimeNode {\n      plugins {\n        id\n        name\n        page {\n          pageName\n        }\n      }\n    }\n  }\n": typeof types.RuntimeNodePluginQueryDocument,
@@ -54,6 +55,7 @@ const documents: Documents = {
     "\n  query UserListQuery($page: Int, $size: Int) {\n    user {\n      users(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          createdAt\n          displayName\n          username\n          labels\n        }\n      }\n    }\n  }\n": types.UserListQueryDocument,
     "\n  query UserQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        labels\n        username\n        displayName\n      }\n    }\n  }\n": types.UserQueryDocument,
     "\n  query ToolchainBundleQueryForAttach {\n    toolchain {\n      toolchainBundles {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n": types.ToolchainBundleQueryForAttachDocument,
+    "\n  query NodeInfoQuery($id: String!) {\n    runtimeNode {\n      runtimeNode(id: $id) {\n        name\n        labels\n        createdAt\n      }\n    }\n  }\n": types.NodeInfoQueryDocument,
     "\n  query ListJvmSource($page: Int, $size: Int) {\n    runtimeNode {\n      runtimeNodes(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          name\n          createdAt\n          pluginId\n          labels\n        }\n      }\n      plugins {\n        id\n        name\n      }\n    }\n  }\n": types.ListJvmSourceDocument,
     "\n  query RuntimeNodeCreatePluginQuery(\n    $pluginId: String\n    $runtimeNodeId: String\n  ) {\n    runtimeNode {\n      plugin(pluginId: $pluginId) {\n        id\n        page {\n          pageName\n        }\n      }\n      runtimeNode(id: $runtimeNodeId) {\n        id\n        configuration\n        name\n      }\n    }\n  }\n": types.RuntimeNodeCreatePluginQueryDocument,
     "\n  query RuntimeNodePluginQuery {\n    runtimeNode {\n      plugins {\n        id\n        name\n        page {\n          pageName\n        }\n      }\n    }\n  }\n": types.RuntimeNodePluginQueryDocument,
@@ -121,6 +123,10 @@ export function graphql(source: "\n  query UserQuery($id: Long!) {\n    user {\n
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query ToolchainBundleQueryForAttach {\n    toolchain {\n      toolchainBundles {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n"): typeof import('./graphql').ToolchainBundleQueryForAttachDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query NodeInfoQuery($id: String!) {\n    runtimeNode {\n      runtimeNode(id: $id) {\n        name\n        labels\n        createdAt\n      }\n    }\n  }\n"): typeof import('./graphql').NodeInfoQueryDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

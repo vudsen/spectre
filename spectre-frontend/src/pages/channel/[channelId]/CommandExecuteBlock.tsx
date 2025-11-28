@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, type KeyboardEvent } from 'react'
 import ControlledTextarea from '@/components/validation/ControlledTextarea.tsx'
 import { addToast, Button, Tooltip } from '@heroui/react'
 import { useForm } from 'react-hook-form'
@@ -19,7 +19,7 @@ type FromState = {
 }
 
 const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
-  const { control, trigger, getValues, reset } = useForm<FromState>()
+  const { control, trigger, getValues, reset, setValue } = useForm<FromState>()
   const [loading, setLoading] = useState(false)
 
   const execute = async () => {
@@ -51,6 +51,21 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
       })
   }
 
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== 'Enter') {
+      return
+    }
+    if (e.altKey) {
+      const value = getValues()
+      setValue('command', (value.command ?? '') + '\n')
+      return
+    }
+
+    // 如果是纯 Enter → 触发事件并禁止换行
+    e.preventDefault() // 不想换行就加这句
+    console.log('触发事件：纯 Enter 被按下')
+  }
+
   return (
     <div className="border-t-divider flex flex-col border-t p-3">
       <ControlledTextarea
@@ -58,8 +73,9 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
         name="command"
         rules={{ required: true }}
         inputProps={{
+          onKeyDown: onKeyDown,
           spellCheck: 'false',
-          placeholder: '请输入命令',
+          placeholder: '请输入命令, 使用`回车`执行，`alt + 回车`换行',
           maxRows: 16,
         }}
       />

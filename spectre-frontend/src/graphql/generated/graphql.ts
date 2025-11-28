@@ -518,6 +518,13 @@ export type ToolchainBundleQueryForAttachQueryVariables = Exact<{ [key: string]:
 
 export type ToolchainBundleQueryForAttachQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainBundles: { __typename?: 'ToolchainBundlePage', result: Array<{ __typename?: 'ToolchainBundlePO', id: string, name: string }> } } };
 
+export type NodeInfoQueryQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type NodeInfoQueryQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', runtimeNode?: { __typename?: 'RuntimeNodeDTO', name: string, labels: any, createdAt: any } | null } };
+
 export type ListJvmSourceQueryVariables = Exact<{
   page?: InputMaybe<Scalars['Int']['input']>;
   size?: InputMaybe<Scalars['Int']['input']>;
@@ -834,6 +841,17 @@ export const ToolchainBundleQueryForAttachDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<ToolchainBundleQueryForAttachQuery, ToolchainBundleQueryForAttachQueryVariables>;
+export const NodeInfoQueryDocument = new TypedDocumentString(`
+    query NodeInfoQuery($id: String!) {
+  runtimeNode {
+    runtimeNode(id: $id) {
+      name
+      labels
+      createdAt
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<NodeInfoQueryQuery, NodeInfoQueryQueryVariables>;
 export const ListJvmSourceDocument = new TypedDocumentString(`
     query ListJvmSource($page: Int, $size: Int) {
   runtimeNode {

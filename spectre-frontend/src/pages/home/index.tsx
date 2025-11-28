@@ -63,9 +63,7 @@ const Home: React.FC = () => {
           <Card>
             <CardBody className="overflow-hidden">
               <div className="header-2">快速开始</div>
-              <div className="my-3 text-sm">
-                点击任意一个运行节点来 Attach Arthas
-              </div>
+              <div className="my-3 text-sm">选择任意一个运行节点来连接</div>
               <Table
                 removeWrapper
                 aria-label="Runtime Nodes"

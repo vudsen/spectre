@@ -4,8 +4,9 @@
 
 一个 Arthas 管理平台
 
-- 零侵入性，无需为服务添加额外依赖
-- 支持自动 attach 远程 SSH、Docker(SSH) 以及 Kubernetes 集群上的 JVM 服务
+- **零侵入性，无需为服务添加额外依赖进行集成**
+- 支持使用 SSH 连接远程服务器并扫描可用的本地 JVM 或 Docker 中的 JVM
+- 支持连接 Kubernetes 集群中的 Pod
 - 拥有完整的权限管理，允许限制用户可以执行的命令
 - 完美结合 Web 界面的优势，提供更加精美的界面展示
 - 支持运行在 Jre 环境的 JVM

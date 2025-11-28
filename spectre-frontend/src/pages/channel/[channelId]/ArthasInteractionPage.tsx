@@ -5,7 +5,7 @@ import {
   type InputStatusResponse,
   pullResults,
 } from '@/api/impl/arthas.ts'
-import { Button, Divider, Tooltip } from '@heroui/react'
+import { Button, Code, Divider, Tooltip } from '@heroui/react'
 import ArthasResponseDetail from '@/pages/channel/[channelId]/ArthasResponseDetail.tsx'
 import { isErrorResponse } from '@/api/types.ts'
 import { handleError, showDialog } from '@/common/util.ts'
@@ -133,8 +133,8 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
   return (
     <div className="flex h-screen flex-col">
       <div className="h-navbar mx-3 flex items-center justify-between">
-        <div className="text-foreground text-small max-w-96 truncate">
-          {props.appName}
+        <div className="max-w-96 truncate font-bold">
+          &gt; 已连接到: <Code>{props.appName}</Code>
         </div>
         <div>
           <Tooltip content="开启 DEBUG 模式">

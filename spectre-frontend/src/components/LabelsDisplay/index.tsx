@@ -19,6 +19,7 @@ const LabelsDisplay: React.FC<LabelsDisplayProps> = (props) => {
           {key}={value}
         </Chip>
       ))}
+      {attrs.length === 0 ? <div>-</div> : null}
     </div>
   )
 }

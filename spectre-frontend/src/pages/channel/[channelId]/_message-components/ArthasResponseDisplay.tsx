@@ -1,6 +1,7 @@
 import type { ArthasResponse } from '@/api/impl/arthas.ts'
 import type React from 'react'
-import { Chip, type ChipProps, Tooltip } from '@heroui/react'
+import { type ChipProps, Tooltip } from '@heroui/react'
+import clsx from 'clsx'
 
 interface ArthasResponseDisplayProps {
   entity: ArthasResponse
@@ -28,7 +29,7 @@ const ArthasResponseDisplay: React.FC<ArthasResponseDisplayProps> = ({
     case 'command': {
       state = {
         name: entity.command,
-        color: 'warning',
+        color: 'primary',
         tag: '执行命令',
       }
       break
@@ -52,7 +53,7 @@ const ArthasResponseDisplay: React.FC<ArthasResponseDisplayProps> = ({
     case 'version': {
       state = {
         name: entity.version,
-        color: 'success',
+        color: 'default',
         tag: '版本',
       }
       break
@@ -60,8 +61,8 @@ const ArthasResponseDisplay: React.FC<ArthasResponseDisplayProps> = ({
     case 'status': {
       state = {
         name: entity.message ?? '成功',
-        color: entity.statusCode === 0 ? 'default' : 'danger',
-        tag: '命令执行状态',
+        color: entity.statusCode === 0 ? 'success' : 'danger',
+        tag: entity.statusCode === 0 ? '执行成功' : '执行失败',
       }
       break
     }
@@ -102,11 +103,24 @@ const ArthasResponseDisplay: React.FC<ArthasResponseDisplayProps> = ({
 
   return (
     <div className="flex items-center">
-      <Chip color={state.color}>
-        <span className="block w-20 text-center">{state.tag}</span>
-      </Chip>
+      {/*<Chip variant="flat" color={state.color} size="sm">*/}
+      {/*  <span className="block w-24 text-center text-sm">{state.tag}</span>*/}
+      {/*</Chip>*/}
+      <div className="border-r-divider h-full border-r-2 text-center italic">
+        <span
+          className={clsx('block w-24 text-sm italic', {
+            'text-danger': state.color === 'danger',
+            'text-primary': state.color === 'primary',
+            'text-success': state.color === 'success',
+          })}
+        >
+          {state.tag}
+        </span>
+      </div>
       <Tooltip content={state.name} size="lg" delay={200} closeDelay={100}>
-        <span className="ml-2 truncate">{state.name}</span>
+        <span className="text-default-500 ml-2 truncate text-sm">
+          {state.name}
+        </span>
       </Tooltip>
     </div>
   )
