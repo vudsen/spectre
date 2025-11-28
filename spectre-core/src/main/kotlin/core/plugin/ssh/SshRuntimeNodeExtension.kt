@@ -26,6 +26,10 @@ import java.util.concurrent.TimeUnit
 @Component
 class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeConfig, SshRuntimeNode>("SSH") {
 
+    companion object {
+        const val ID = "RuntimeNode:LocalRuntimeNodeExtensionPoint"
+    }
+
     private lateinit var objectMapper: ObjectMapper
 
     private val executor = SshThreadPoolExecutor(1, 4, 1L, TimeUnit.MINUTES, ArrayBlockingQueue(16))
@@ -231,7 +235,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
 
 
     override fun getId(): String {
-        return "RuntimeNode:LocalRuntimeNodeExtensionPoint"
+        return ID
     }
 
 

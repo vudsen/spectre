@@ -1,0 +1,9 @@
+spring:
+  liquibase:
+    change-log: classpath:/db-test/changelog-master.xml
+  datasource:
+    url: jdbc:sqlite:identifier-test.sqlite
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
