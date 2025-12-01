@@ -30,8 +30,8 @@ class DockerRuntimeNode(
         TODO("Not yet implemented")
     }
 
-    override fun test() {
-        delegate.test()
+    override fun ensureAttachEnvironmentReady() {
+        delegate.ensureAttachEnvironmentReady()
     }
 
     override fun getConfiguration(): RuntimeNodeConfig {

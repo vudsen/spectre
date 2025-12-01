@@ -26,6 +26,10 @@ import java.util.concurrent.TimeUnit
 @Component
 class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeConfig, SshRuntimeNode>("SSH") {
 
+    companion object {
+        const val ID = "RuntimeNode:LocalRuntimeNodeExtensionPoint"
+    }
+
     private lateinit var objectMapper: ObjectMapper
 
     private val executor = SshThreadPoolExecutor(1, 4, 1L, TimeUnit.MINUTES, ArrayBlockingQueue(16))
@@ -156,7 +160,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         """.trimIndent()
     }
 
-    override fun typedGetConfigurationForm(oldConfiguration: SshRuntimeNodeConfig?): PageDescriptor {
+    override fun getConfigurationForm0(oldConfiguration: SshRuntimeNodeConfig?): PageDescriptor {
         return PageDescriptor("form/SshConfForm", oldConfiguration, "")
     }
 
@@ -164,17 +168,17 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         return SshRuntimeNodeConfig::class.java
     }
 
-    override fun typedCreateRuntimeNode(config: SshRuntimeNodeConfig): SshRuntimeNode {
+    override fun createRuntimeNode0(config: SshRuntimeNodeConfig): SshRuntimeNode {
         return SshRuntimeNode().apply {
             nodeConfig = config
             executorServiceFactory = MyCloseableExecutorService()
         }
     }
 
-    override fun typedTest(conf: SshRuntimeNodeConfig) {
-        val node = typedCreateRuntimeNode(conf)
+    override fun test0(conf: SshRuntimeNodeConfig) {
+        val node = createRuntimeNode0(conf)
         try {
-            node.test()
+            node.ensureAttachEnvironmentReady()
         } finally {
             node.close()
         }
@@ -189,7 +193,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
     }
 
 
-    override fun typedFilterSensitiveConfiguration(conf: SshRuntimeNodeConfig) {
+    override fun filterSensitiveConfiguration0(conf: SshRuntimeNodeConfig) {
         conf.principal ?.let {
             it.secretKey = ""
             it.password = ""
@@ -197,7 +201,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         }
     }
 
-    override fun typedFillSensitiveConfiguration(
+    override fun fillSensitiveConfiguration0(
         updated: SshRuntimeNodeConfig,
         base: SshRuntimeNodeConfig
     ): RuntimeNodeConfig {
@@ -221,7 +225,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
     }
 
 
-    override fun typedCreateAttachHandler(
+    override fun createAttachHandler0(
         runtimeNode: SshRuntimeNode,
         jvm: Jvm,
         bundles: ToolchainBundleDTO
@@ -231,7 +235,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
 
 
     override fun getId(): String {
-        return "RuntimeNode:LocalRuntimeNodeExtensionPoint"
+        return ID
     }
 
 

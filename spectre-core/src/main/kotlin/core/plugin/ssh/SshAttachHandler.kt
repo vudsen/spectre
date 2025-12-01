@@ -112,7 +112,7 @@ class SshAttachHandler(
             runtimeNode,
             paths.httpClientPath,
             "http://127.0.0.1:$port/api",
-            "${localConf.javaHome}/bin/java"
+            if (localConf.javaHome.isNullOrEmpty()) { "java" } else { "${localConf.javaHome}/bin/java" }
         )
     }
 

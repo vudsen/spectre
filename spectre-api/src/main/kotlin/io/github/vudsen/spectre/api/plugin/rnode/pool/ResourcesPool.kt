@@ -54,7 +54,7 @@ class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
             } finally {
                 modifyLock.unlock()
             }
-            node.test()
+            node.ensureAttachEnvironmentReady()
             return node
         }
 

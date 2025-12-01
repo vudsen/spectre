@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.common.plugin.rnode
 
+import io.github.vudsen.spectre.api.exception.BusinessException
 import java.io.File
 import kotlin.text.iterator
 
@@ -43,7 +44,7 @@ abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode{
     override fun mkdirs(path: String) {
         execute("mkdir -p $path").let {
             if (it.exitCode != 0 && it.stdout.contains("Permission denied")) {
-                throw IllegalStateException("Can not create directory `${path}`: ${it.stdout}")
+                throw BusinessException("error.permission.denied", arrayOf(path))
             }
         }
     }

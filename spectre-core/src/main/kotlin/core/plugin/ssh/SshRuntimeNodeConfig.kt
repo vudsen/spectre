@@ -25,9 +25,9 @@ data class SshRuntimeNodeConfig(
 
     data class Local(
         var enabled: Boolean,
-        var javaHome: String
+        var javaHome: String?
     ) {
-        constructor() : this(false, "")
+        constructor() : this(false, null)
     }
 
     enum class LoginType {

@@ -39,6 +39,8 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
 
     /**
      * 递归创建文件夹
+     *
+     * 当碰到权限不足时，会抛出异常
      */
     fun mkdirs(path: String)
 

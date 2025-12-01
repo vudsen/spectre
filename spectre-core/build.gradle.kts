@@ -16,7 +16,6 @@ springBoot {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
     implementation("org.bouncycastle:bcprov-jdk18on:1.82")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.82")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -42,6 +41,9 @@ dependencies {
     implementation("org.hibernate.orm:hibernate-community-dialects:7.0.8.Final")
     // 稳定后再删除.
     implementation("org.xerial:sqlite-jdbc:3.50.3.0")
+    testImplementation(kotlin("test"))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.testcontainers:testcontainers:2.0.2")
 }
 tasks.test {
     useJUnitPlatform()

@@ -40,7 +40,7 @@ class SecurityConfiguration {
     }
 
     @Bean
-    fun filterChain(http: HttpSecurity, @Value("\${spring.graphql.http.path}") graphqlEndpoint: String): SecurityFilterChain {
+    fun filterChain(http: HttpSecurity, @Value("\${spring.graphql.http.path:'/graphql'}") graphqlEndpoint: String): SecurityFilterChain {
         http
             .authorizeHttpRequests { authorize ->
                 authorize
