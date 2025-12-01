@@ -8,7 +8,7 @@ object TestContainerUtils {
     const val REDIS_PASSWORD = "123456"
 
     fun createMathGameSshMachine(): GenericContainer<*> {
-        val sshContainer = GenericContainer(DockerImageName.parse("vudsen/ssh-server-with-math-game:0.0.3")).apply{
+        val sshContainer = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply{
             withExposedPorts(22)
         }
         sshContainer.start();
