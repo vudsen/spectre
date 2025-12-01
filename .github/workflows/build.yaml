@@ -35,7 +35,7 @@ jobs:
 
       - name: Tests
         id: test
-        run: ./gradlew spectre-core:test
+        run: sh ./gradlew spectre-core:test
 
       - name: Upload Test Output
         if: failure() && steps.test.outcome == 'failure'
