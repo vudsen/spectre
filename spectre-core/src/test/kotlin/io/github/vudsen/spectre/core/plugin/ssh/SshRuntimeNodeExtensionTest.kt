@@ -1,29 +1,34 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
-import io.github.vudsen.spectre.SpectreApplication
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
+import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.TestContainerUtils
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.beans.factory.annotation.Autowired
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import kotlin.test.Test
 
-@SpringBootTest(classes = [SpectreApplication::class], webEnvironment = SpringBootTest.WebEnvironment.NONE)
-class SshRuntimeNodeExtensionTest(
-    val runtimeNodeService: RuntimeNodeService,
-    val arthasExecutionService: ArthasExecutionService
-) {
+class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
+
+    @set:Autowired
+    lateinit var runtimeNodeService: RuntimeNodeService
+
+    @set:Autowired
+    lateinit var arthasExecutionService: ArthasExecutionService
 
     private fun insertSshRuntimeNode(container: GenericContainer<*>): Long {
         val objectMapper = ObjectMapper()
         val conf = SshRuntimeNodeConfig(
             null,
-            SshRuntimeNodeConfig.Local(true, ""),
+            SshRuntimeNodeConfig.Local(true, "/opt/java"),
             container.host,
             container.firstMappedPort,
             "root",
@@ -44,7 +49,7 @@ class SshRuntimeNodeExtensionTest(
     }
 
     @Test
-    fun testLocalAttach() {
+    fun ensureAttachEnvironmentReadyLocalAttach() {
         val container = TestContainerUtils.createMathGameSshMachine()
         val id = insertSshRuntimeNode(container)
 
@@ -66,6 +71,9 @@ class SshRuntimeNodeExtensionTest(
                 mathGame.id,
                 TestConstant.TOOLCHAIN_BUNDLE_LATEST_ID
             )
+            attachStatus.error ?.let {
+                Assertions.fail<Unit>("Failed to attach: ${it.message}")
+            }
             if (attachStatus.isReady) {
                 return@loop attachStatus
             }
@@ -76,15 +84,30 @@ class SshRuntimeNodeExtensionTest(
         Assertions.assertNotNull(status.channelId, "Attach timeout!")
         val channelId = status.channelId!!
         val sessionDTO = arthasExecutionService.joinChannel(channelId, "test")
-        arthasExecutionService.execAsync(channelId, "version")
-        arthasExecutionService.pullResults(channelId, sessionDTO.consumerId)
+        arthasExecutionService.execAsync(channelId, "sc demo.*")
 
         loop(5) {
             val result = arthasExecutionService.pullResults(channelId, sessionDTO.consumerId)
-            println(result)
+            if (result is ArrayNode) {
+                if (result.isEmpty) {
+                    return@loop null
+                }
+                checkScResult(result)
+                return@loop true
+            } else {
+                Assertions.fail("Invalid type: ${result::class.java}")
+            }
         }
+    }
 
-        println(runtimeNodeService.listPlugins())
+    private fun checkScResult(node: ArrayNode) {
+        Assertions.assertTrue(node.size() == 10)
+        val messageNode = node.get(1) as ObjectNode
+        Assertions.assertEquals("Welcome to arthas!", messageNode.get("message").asText())
+        val scResult = node.get(6) as ObjectNode
+        val classes = scResult.get("classNames") as ArrayNode
+
+        Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.map { node -> node.asText() })
     }
 
 }

@@ -247,8 +247,11 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
     }
 
 
-    override fun test() {
-        if (nodeConfig.spectreHome.isNotEmpty()) {
+    override fun ensureAttachEnvironmentReady() {
+        if (nodeConfig.spectreHome.isEmpty()) {
+            throw BusinessException("error.spectre.home.not.empty")
+        }
+        if (isDirectoryExist(nodeConfig.spectreHome)) {
             if (execute("test -r ${nodeConfig.spectreHome}").isFailed()) {
                 throw BusinessException("error.require.read.permission", arrayOf(nodeConfig.spectreHome))
             }
@@ -258,17 +261,44 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
             if (execute("test -x ${nodeConfig.spectreHome}").isFailed()) {
                 throw BusinessException("error.require.execute.permission", arrayOf(nodeConfig.spectreHome))
             }
+        } else {
+            mkdirs(nodeConfig.spectreHome)
+        }
+        nodeConfig.local ?.let {
+            checkLocalConf(it)
         }
         nodeConfig.docker ?.let {
-            if (it.enabled) {
-                val result = execute("${it.executablePath} version")
-                if (result.isFailed()) {
-                    if (result.stdout.contains("permission denied")) {
-                        throw BusinessException("error.require.docker.permission")
-                    } else {
-                        throw BusinessException(result.stdout)
-                    }
-                }
+            checkDockerConf(it)
+        }
+    }
+
+    private fun checkDockerConf(docker: SshRuntimeNodeConfig.Docker) {
+        if (!docker.enabled) {
+            return
+        }
+        val result = execute("${docker.executablePath} version")
+        if (result.isFailed()) {
+            if (result.stdout.contains("permission denied")) {
+                throw BusinessException("error.require.docker.permission")
+            } else {
+                throw BusinessException(result.stdout)
+            }
+        }
+    }
+
+    private fun checkLocalConf(local: SshRuntimeNodeConfig.Local) {
+        if (!local.enabled) {
+            return
+        }
+        val javaHome = local.javaHome
+        if (javaHome.isNullOrEmpty()) {
+            if (execute("java", "-version").isFailed()) {
+                throw BusinessException("error.java.not.found")
+            }
+        } else {
+            val execute = execute("${javaHome}/bin/java", "-version")
+            if (execute.isFailed()) {
+                throw BusinessException("error.java.not.found.in.home", arrayOf(javaHome, execute.stdout))
             }
         }
     }

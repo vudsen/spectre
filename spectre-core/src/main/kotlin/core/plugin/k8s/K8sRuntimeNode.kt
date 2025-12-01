@@ -223,7 +223,7 @@ class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig) : AbstractShellRunt
 
     }
 
-    override fun test() {
+    override fun ensureAttachEnvironmentReady() {
         try {
             doRequest(
                 restClient.post()

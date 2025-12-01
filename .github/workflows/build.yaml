@@ -1,5 +1,6 @@
 name: Deploy
 on:
+  pull_request:
   push:
     branches:
       - master
@@ -32,6 +33,17 @@ jobs:
           APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
           echo "APP_VERSION=$APP_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Tests
+        id: test
+        run: ./gradlew spectre-core:test
+
+      - name: Upload Test Output
+        if: failure() && steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: ./spectre-core/build/reports/tests/test/**/*
+
       - uses: pnpm/action-setup@v4
         with:
           version: latest
@@ -62,6 +74,7 @@ jobs:
           path: spectre-core/build/libs/spectre-core-${{ steps.env.outputs.APP_VERSION }}.jar
   upload:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     name: Upload Image
     needs: build
     steps:

@@ -3,9 +3,11 @@ package io.github.vudsen.spectre.api.plugin.rnode
 interface RuntimeNode {
 
     /**
-     * 测试连接. 如果测试失败则直接报错
+     * 确保 Attach 环境准备好了。
+     *
+     * 实现类至少应该在该方法中准备好对应的文件夹，例如 spectre home，并且检测是否具有相关的权限。
      */
-    fun test()
+    fun ensureAttachEnvironmentReady()
 
     /**
      * 获取配置

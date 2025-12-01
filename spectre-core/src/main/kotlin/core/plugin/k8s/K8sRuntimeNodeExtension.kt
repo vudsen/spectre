@@ -82,11 +82,11 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
         return K8sRuntimeNodeConfig::class.java
     }
 
-    override fun typedGetConfigurationForm(oldConfiguration: K8sRuntimeNodeConfig?): PageDescriptor {
+    override fun getConfigurationForm0(oldConfiguration: K8sRuntimeNodeConfig?): PageDescriptor {
         return PageDescriptor("form/K8sConfForm", oldConfiguration, "")
     }
 
-    override fun typedCreateRuntimeNode(config: K8sRuntimeNodeConfig): K8sRuntimeNode {
+    override fun createRuntimeNode0(config: K8sRuntimeNodeConfig): K8sRuntimeNode {
         val cached = runtimeNodeCache[config]
         if (cached == null) {
             val newOne = K8sRuntimeNode(config)
@@ -96,15 +96,15 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
         return cached
     }
 
-    override fun typedTest(conf: K8sRuntimeNodeConfig) {
-        typedCreateRuntimeNode(conf).test()
+    override fun test0(conf: K8sRuntimeNodeConfig) {
+        createRuntimeNode0(conf).ensureAttachEnvironmentReady()
     }
 
-    override fun typedFilterSensitiveConfiguration(conf: K8sRuntimeNodeConfig) {
+    override fun filterSensitiveConfiguration0(conf: K8sRuntimeNodeConfig) {
         conf.token = ""
     }
 
-    override fun typedFillSensitiveConfiguration(
+    override fun fillSensitiveConfiguration0(
         updated: K8sRuntimeNodeConfig,
         base: K8sRuntimeNodeConfig
     ): RuntimeNodeConfig {
@@ -114,7 +114,7 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
         return updated
     }
 
-    override fun typedCreateAttachHandler(
+    override fun createAttachHandler0(
         runtimeNode: K8sRuntimeNode,
         jvm: Jvm,
         bundles: ToolchainBundleDTO

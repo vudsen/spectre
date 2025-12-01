@@ -14,26 +14,26 @@ import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 abstract class TypedRuntimeNodeExtensionPoint<T : RuntimeNodeConfig, R : RuntimeNode>(name: String) : RuntimeNodeExtensionPoint(name) {
 
     final override fun getConfigurationForm(oldConfiguration: RuntimeNodeConfig?): PageDescriptor {
-        return typedGetConfigurationForm(oldConfiguration as T?)
+        return getConfigurationForm0(oldConfiguration as T?)
     }
 
     final override fun createRuntimeNode(config: RuntimeNodeConfig): RuntimeNode {
-        return typedCreateRuntimeNode(config as T)
+        return createRuntimeNode0(config as T)
     }
 
     final override fun test(conf: RuntimeNodeConfig) {
-        typedTest(conf as T)
+        test0(conf as T)
     }
 
     final override fun filterSensitiveConfiguration(conf: RuntimeNodeConfig) {
-        typedFilterSensitiveConfiguration(conf as T)
+        filterSensitiveConfiguration0(conf as T)
     }
 
     final override fun fillSensitiveConfiguration(
         updated: RuntimeNodeConfig,
         base: RuntimeNodeConfig
     ): RuntimeNodeConfig {
-        return typedFillSensitiveConfiguration(updated as T, base as T)
+        return fillSensitiveConfiguration0(updated as T, base as T)
     }
 
     final override fun createAttachHandler(
@@ -41,22 +41,22 @@ abstract class TypedRuntimeNodeExtensionPoint<T : RuntimeNodeConfig, R : Runtime
         jvm: Jvm,
         bundles: ToolchainBundleDTO
     ): JvmAttachHandler {
-        return typedCreateAttachHandler(runtimeNode as R, jvm, bundles)
+        return createAttachHandler0(runtimeNode as R, jvm, bundles)
     }
 
     abstract override fun getConfigurationClass(): Class<T>
 
-    protected abstract fun typedGetConfigurationForm(oldConfiguration: T?): PageDescriptor
+    protected abstract fun getConfigurationForm0(oldConfiguration: T?): PageDescriptor
 
-    protected abstract fun typedCreateRuntimeNode(config: T): R
+    protected abstract fun createRuntimeNode0(config: T): R
 
-    protected abstract fun typedTest(conf: T)
+    protected abstract fun test0(conf: T)
 
-    protected abstract fun typedFilterSensitiveConfiguration(conf: T)
+    protected abstract fun filterSensitiveConfiguration0(conf: T)
 
-    protected abstract fun typedFillSensitiveConfiguration(updated: T, base: T): RuntimeNodeConfig
+    protected abstract fun fillSensitiveConfiguration0(updated: T, base: T): RuntimeNodeConfig
 
-    protected abstract fun typedCreateAttachHandler(
+    protected abstract fun createAttachHandler0(
         runtimeNode: R,
         jvm: Jvm,
         bundles: ToolchainBundleDTO
