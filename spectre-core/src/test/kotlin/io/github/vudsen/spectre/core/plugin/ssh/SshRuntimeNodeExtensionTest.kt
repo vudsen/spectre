@@ -8,6 +8,7 @@ import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
+import io.github.vudsen.spectre.test.Disposer
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.TestContainerUtils
 import io.github.vudsen.spectre.test.loop
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.startupcheck.IsRunningStartupCheckStrategy
 import org.testcontainers.containers.startupcheck.StartupCheckStrategy
+import org.testcontainers.containers.wait.strategy.DockerHealthcheckWaitStrategy
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
@@ -28,6 +31,9 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
 
     @set:Autowired
     lateinit var arthasExecutionService: ArthasExecutionService
+
+    @set:Autowired
+    lateinit var disposer: Disposer
 
     companion object {
         const val MATH_GAME = "math-game"
@@ -43,7 +49,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
 
         val dockerNodes = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, dockerNode.id)
 
-        val mathGame = dockerNodes.find { node -> node.name == MATH_GAME }
+        val mathGame = dockerNodes.find { node -> node.name.startsWith(MATH_GAME) }
         Assertions.assertNotNull(mathGame)
 
         testNodeAttach(runtimeNodeId, mathGame!!)
@@ -51,18 +57,19 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
 
     private fun setupDockerAttachContainer(): Long {
         val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSHD_WITH_DOCKER)).apply {
-            withExposedPorts(5432)
+            withExposedPorts(22)
             withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
         }
-        container.withStartupCheckStrategy(IsRunningStartupCheckStrategy())
-        container.setWaitStrategy(Wait.forListeningPort())
         container.start()
 
         // TODO 结束后删除容器
         val result =
-            container.execInContainer("docker run --name $MATH_GAME --rm -d ${TestConstant.DOCKER_IMAGE_MATH_GAME}")
+            container.execInContainer("/usr/bin/docker", "run", "--name", MATH_GAME, "--rm", "-d", TestConstant.DOCKER_IMAGE_MATH_GAME)
         if (result.exitCode != 0) {
             Assertions.fail<Unit>("Failed to start docker run command: $result")
+        }
+        disposer.registerDispose {
+            container.execInContainer("/usr/bin/docker", "stop", MATH_GAME)
         }
 
         val objectMapper = ObjectMapper()
