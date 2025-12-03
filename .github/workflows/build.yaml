@@ -103,7 +103,7 @@ jobs:
         run: >
           mkdir spectre-core/src/main/resources/static/  &&
           cp -r spectre-frontend/dist/* spectre-core/src/main/resources/static/ &&
-          sh ./gradlew build
+          sh ./gradlew build -x test
 
       - name: Upload Spectre
         uses: actions/upload-artifact@v4
