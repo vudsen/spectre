@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: math-game
+  namespace: spectre
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: math-game
+    spec:
+      serviceAccountName: spectre
+      containers:
+        - name: math-game
+          image: vudsen/math-game:0.0.1
+          resources:
+            requests:
+              memory: 40Mi
+            limits:
+              memory: 150Mi
+  selector:
+    matchLabels:
+      app: math-game

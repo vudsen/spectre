@@ -30,7 +30,7 @@ jobs:
         uses: fenio/setup-k3s@v1
 
       - name: Setup Test Environment
-        id: k3s
+        id: env
         env:
           KUBECONFIG: ${{ steps.k3s.outputs.kubeconfig }}
         run: |
@@ -47,7 +47,7 @@ jobs:
         id: test
         env:
           K8S_ENDPOINT: https://127.0.0.1:6443
-          K8S_TOKEN: ${{ steps.k8s.outputs.token }}
+          K8S_TOKEN: ${{ steps.env.outputs.token }}
         run: sh ./gradlew spectre-core:test
 
       - name: Upload Test Output
