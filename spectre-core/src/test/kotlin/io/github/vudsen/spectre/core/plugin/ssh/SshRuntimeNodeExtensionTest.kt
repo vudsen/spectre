@@ -1,25 +1,14 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.github.dockerjava.api.DockerClient
-import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
-import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.Disposer
 import io.github.vudsen.spectre.test.TestConstant
-import io.github.vudsen.spectre.test.TestContainerUtils
-import io.github.vudsen.spectre.test.loop
+import io.github.vudsen.spectre.test.plugin.AttachTester
 import org.junit.jupiter.api.Assertions
 import org.springframework.beans.factory.annotation.Autowired
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.startupcheck.IsRunningStartupCheckStrategy
-import org.testcontainers.containers.startupcheck.StartupCheckStrategy
-import org.testcontainers.containers.wait.strategy.DockerHealthcheckWaitStrategy
-import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
-import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.Test
@@ -30,7 +19,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     lateinit var runtimeNodeService: RuntimeNodeService
 
     @set:Autowired
-    lateinit var arthasExecutionService: ArthasExecutionService
+    lateinit var attachTester: AttachTester
 
     @set:Autowired
     lateinit var disposer: Disposer
@@ -52,7 +41,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
         val mathGame = dockerNodes.find { node -> node.name.startsWith(MATH_GAME) }
         Assertions.assertNotNull(mathGame)
 
-        testNodeAttach(runtimeNodeId, mathGame!!)
+        attachTester.testAttach(runtimeNodeId, mathGame!!)
     }
 
     private fun setupDockerAttachContainer(): Long {
@@ -102,9 +91,6 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     fun testLocalAttach() {
         val runtimeNodeId = setupContainerForLocal()
 
-
-        runtimeNodeService.getRuntimeNode(runtimeNodeId)!!
-
         val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
         val localeNode = root.get(0)
 
@@ -115,43 +101,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
         Assertions.assertTrue(mathGame.isJvm)
 
 
-        testNodeAttach(runtimeNodeId, mathGame)
-    }
-
-    private fun testNodeAttach(runtimeNodeId: Long, mathGame: JvmTreeNodeDTO) {
-        val status = loop(20) {
-            val attachStatus = arthasExecutionService.requireAttach(
-                runtimeNodeId,
-                mathGame.id,
-                TestConstant.TOOLCHAIN_BUNDLE_LATEST_ID
-            )
-            attachStatus.error?.let {
-                Assertions.fail<Unit>("Failed to attach: ${it.message}")
-            }
-            if (attachStatus.isReady) {
-                return@loop attachStatus
-            }
-            return@loop null
-        }
-
-        Assertions.assertTrue(status.isReady, "Attach timeout!")
-        Assertions.assertNotNull(status.channelId, "Attach timeout!")
-        val channelId = status.channelId!!
-        val sessionDTO = arthasExecutionService.joinChannel(channelId, "test")
-        arthasExecutionService.execAsync(channelId, "sc demo.*")
-
-        loop(5) {
-            val result = arthasExecutionService.pullResults(channelId, sessionDTO.consumerId)
-            if (result is ArrayNode) {
-                if (result.isEmpty) {
-                    return@loop null
-                }
-                checkScResult(result)
-                return@loop true
-            } else {
-                Assertions.fail("Invalid type: ${result::class.java}")
-            }
-        }
+        attachTester.testAttach(runtimeNodeId, mathGame)
     }
 
     private fun setupContainerForLocal(): Long {
@@ -185,14 +135,5 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
         return runtimeNodeId
     }
 
-    private fun checkScResult(node: ArrayNode) {
-        Assertions.assertTrue(node.size() == 10)
-        val messageNode = node.get(1) as ObjectNode
-        Assertions.assertEquals("Welcome to arthas!", messageNode.get("message").asText())
-        val scResult = node.get(6) as ObjectNode
-        val classes = scResult.get("classNames") as ArrayNode
-
-        Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.map { node -> node.asText() })
-    }
 
 }

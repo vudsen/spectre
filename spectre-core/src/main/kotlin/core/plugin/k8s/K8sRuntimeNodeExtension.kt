@@ -17,6 +17,10 @@ import java.util.WeakHashMap
 @Component
 class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeConfig, K8sRuntimeNode>("Kubernetes") {
 
+    companion object {
+        const val ID = "RuntimeNodeExtensionPoint:K8sRuntimeNodeExtension"
+    }
+
     private val searcher: JvmSearcher by lazy {
         val builder = SearchTreeBuilder.create()
 
@@ -137,6 +141,6 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
     }
 
     override fun getId(): String {
-        return "RuntimeNodeExtensionPoint:K8sRuntimeNodeExtension"
+        return ID
     }
 }

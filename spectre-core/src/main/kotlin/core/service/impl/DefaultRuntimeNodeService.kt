@@ -128,9 +128,10 @@ class DefaultRuntimeNodeService(
         )
         return buildList {
             for (searchNode in nodes) {
-                val id = "tree:$runtimeNodeId:${searchNode.pcFlag}:${searchNode.ctx?.hashCode()}"
+                // Should we use random id?
+                val id = "tree:$runtimeNodeId:${searchNode.hashCode()}"
                 add(JvmTreeNodeDTO(id, searchNode.name, searchNode.isJvm))
-                redisTemplate.opsForValue().setIfAbsent(id, searchNode, 10, TimeUnit.MINUTES)
+                redisTemplate.opsForValue().setIfAbsent(id, searchNode, 3, TimeUnit.MINUTES)
             }
         }
     }
