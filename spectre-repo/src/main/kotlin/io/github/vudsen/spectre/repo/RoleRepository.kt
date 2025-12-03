@@ -27,7 +27,7 @@ interface RoleRepository : JpaRepository<RolePO, Long>, QueryByExampleExecutor<R
 //    @Query("SELECT r FROM UserPO u JOIN u.roles r WHERE u.id = :userId")
 //    fun findRolesByUserId(@Param("userId") userId: Long, pageable: Pageable): Page<RolePO>
 
-    @Query("SELECT u FROM UserPO u JOIN u.roles r WHERE r.id = :roleId")
+    @Query("SELECT u FROM UserRolePO ur JOIN UserPO u ON u.id = ur.id.userId WHERE ur.id.roleId = :roleId")
     fun findUsersByRoleId(@Param("roleId") roleId: Long, pageable: Pageable): Page<UserPO>
 
 }

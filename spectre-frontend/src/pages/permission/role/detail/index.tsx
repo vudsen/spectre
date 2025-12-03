@@ -1,19 +1,29 @@
 import { graphql } from '@/graphql/generated'
-import React, { useMemo } from 'react'
-import useGraphQL from '@/hook/useGraphQL.ts'
+import React, { useEffect, useMemo, useState } from 'react'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
-import { Button, Card, CardBody } from '@heroui/react'
+import {
+  Button,
+  Card,
+  CardBody,
+  Drawer,
+  DrawerContent,
+  useDisclosure,
+} from '@heroui/react'
 import { formatTime } from '@/common/util.ts'
 import useCrumb, { type Crumb } from '@/hook/useCrumb.ts'
 import SpectreTabs, { type TabContent } from '@/components/SpectreTabs'
 import RoleUserList from '@/pages/permission/role/detail/RoleUserList.tsx'
 import StaticPermissionList from '@/components/page/StaticPermissionList'
 import PolicyPermissionList from '@/components/page/PolicyPermissionList'
+import RoleModifyDrawerContent from '@/pages/permission/role/RoleModifyDrawerContent.tsx'
+import { type DocumentResult, execute } from '@/graphql/execute.ts'
+import type { RoleModifyVO } from '@/api/impl/role.ts'
 
 const RolePermissionDetailQuery = graphql(`
   query RolePermissionDetailQuery($roleId: Long!) {
     role {
       role(id: $roleId) {
+        id
         name
         createdAt
         description
@@ -22,6 +32,9 @@ const RolePermissionDetailQuery = graphql(`
   }
 `)
 
+type UserRoleData = DocumentResult<
+  typeof RolePermissionDetailQuery
+>['role']['role']
 const RolePermissionDetailPage: React.FC = () => {
   const param = useMemo(() => {
     const searchParams = new URLSearchParams(location.search)
@@ -29,10 +42,24 @@ const RolePermissionDetailPage: React.FC = () => {
       roleId: searchParams.get('subjectId') ?? '-1',
     }
   }, [])
+  const roleModifyDrawerClosure = useDisclosure()
+  const [role, setRole] = useState<UserRoleData | null>(null)
+  const [isLoading, setLoading] = useState(false)
 
-  const { result, isLoading } = useGraphQL(RolePermissionDetailQuery, param)
+  useEffect(() => {
+    setLoading(true)
+    execute(RolePermissionDetailQuery, param)
+      .then((r) => {
+        const result = r.role.role
+        if (result) {
+          setRole(result)
+        }
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [param])
 
-  const role = result?.role.role
   const crumbs: Crumb[] = useMemo(() => {
     return [
       {
@@ -70,6 +97,18 @@ const RolePermissionDetailPage: React.FC = () => {
     ]
   }, [param.roleId])
 
+  const onSave = (newRole: RoleModifyVO) => {
+    setRole((prev) => {
+      if (!prev) {
+        throw new Error('Unreachable code.')
+      }
+      return {
+        ...prev,
+        ...newRole,
+      }
+    })
+  }
+
   if (isLoading) {
     return (
       <div>
@@ -85,9 +124,14 @@ const RolePermissionDetailPage: React.FC = () => {
       <div className="spectre-heading">{role.name}</div>
       <Card>
         <CardBody>
-          <div className="flex items-center justify-between">
-            <div className="spectre-heading">详细信息</div>
-            <Button color="primary" variant="bordered" size="sm">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="header-2">详细信息</div>
+            <Button
+              color="primary"
+              variant="bordered"
+              size="sm"
+              onPress={roleModifyDrawerClosure.onOpen}
+            >
               编辑
             </Button>
           </div>
@@ -108,6 +152,20 @@ const RolePermissionDetailPage: React.FC = () => {
         </CardBody>
       </Card>
       <SpectreTabs className="pt-10" tabs={tabs} />
+      <Drawer
+        isOpen={roleModifyDrawerClosure.isOpen}
+        onOpenChange={roleModifyDrawerClosure.onOpenChange}
+      >
+        <DrawerContent>
+          {(onClose) => (
+            <RoleModifyDrawerContent
+              oldEntity={role}
+              onClose={onClose}
+              onSave={onSave}
+            />
+          )}
+        </DrawerContent>
+      </Drawer>
     </div>
   )
 }

@@ -28,15 +28,16 @@ const LoginPage: React.FC = () => {
     setLoading(true)
     try {
       const values = getValues()
-      const uid = await login(values.username, values.password)
+      const user = await login(values.username, values.password)
       addToast({
         title: '登录成功!',
         color: 'success',
       })
       dispatch(
         saveUserInfo({
-          userId: uid,
-          username: values.username,
+          userId: user.id,
+          displayName: user.displayName,
+          username: user.username,
         }),
       )
       nav('/')

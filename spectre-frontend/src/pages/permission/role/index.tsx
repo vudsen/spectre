@@ -61,7 +61,7 @@ const RolePage: React.FC = () => {
   }
 
   return (
-    <div className="mx-8 space-y-3">
+    <div className="mx-6 space-y-3">
       <div className="spectre-heading">角色</div>
       <div className="flex items-center">
         <Input

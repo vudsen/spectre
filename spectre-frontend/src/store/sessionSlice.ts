@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 export type UserInfo = {
   username: string
+  displayName?: string
   userId: string
 }
 

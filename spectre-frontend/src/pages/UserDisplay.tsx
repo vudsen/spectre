@@ -68,19 +68,22 @@ const UserDisplay: React.FC = () => {
     return null
   }
   return (
-    <div className="shadow-medium rounded-t-medium absolute bottom-1 left-0 box-border flex w-full items-center justify-between p-1 px-4 py-3">
+    <div className="rounded-t-medium absolute bottom-1 left-0 box-border flex w-full items-center justify-between p-1 px-4 py-3">
       <div className="flex items-center">
         <div className="bg-default-300 h-8 w-8 rounded-[50%] text-center leading-8">
           {user.username.charAt(0)}
         </div>
-        <span className="text-primary ml-2 text-sm font-bold">
-          {user.username}
-        </span>
+        <div className="ml-2 flex flex-col items-start">
+          <span className="text-base">{user.displayName ?? user.username}</span>
+          <span className="text-default-500 text-sm font-light">
+            {user.username}
+          </span>
+        </div>
       </div>
       <Dropdown>
         <DropdownTrigger>
-          <Button isIconOnly variant="light" size="sm">
-            <SvgIcon icon={Icon.VERTICAL_DOTS} />
+          <Button isIconOnly variant="light">
+            <SvgIcon icon={Icon.VERTICAL_DOTS} size={24} />
           </Button>
         </DropdownTrigger>
         <DropdownMenu aria-label="User session selections">

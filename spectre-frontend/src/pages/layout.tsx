@@ -206,7 +206,7 @@ const Layout: React.FC = () => {
     <div>
       <div className="flex">
         <div className="w-48">
-          <div className="border-divider fixed top-0 z-40 box-border h-screen w-48 border-r bg-white px-2">
+          <div className="fixed top-0 z-40 box-border h-screen w-48 border-r-1 border-r-zinc-100 bg-zinc-50 px-2">
             <div className="space-y-2 pt-2">
               <div className="text-primary my-3 flex grow-0 items-center text-2xl font-bold">
                 <SvgIcon icon={Icon.LOGO} size={30} />
@@ -230,7 +230,6 @@ const Layout: React.FC = () => {
                         classNames={{
                           base: 'w-full',
                           content: 'px-3',
-                          title: 'text-default-600',
                           heading:
                             'spectre-nav-item hover:bg-default-100 cursor-pointer',
                           trigger: 'cursor-pointer',

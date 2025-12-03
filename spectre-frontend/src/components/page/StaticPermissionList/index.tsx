@@ -117,7 +117,7 @@ const StaticPermissionList: React.FC<StaticPermissionListProps> = (props) => {
   return (
     <>
       <Card>
-        <CardBody>
+        <CardBody className="overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="spectre-heading">静态权限</div>
             <Button

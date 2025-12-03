@@ -106,7 +106,7 @@ const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
   return (
     <>
       <Card>
-        <CardBody>
+        <CardBody className="overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="spectre-heading">策略权限</div>
             <Button

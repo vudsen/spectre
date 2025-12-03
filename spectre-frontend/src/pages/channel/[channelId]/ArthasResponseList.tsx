@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import type { ArthasResponse } from '@/api/impl/arthas.ts'
-import ArthasResponseDisplay from '@/pages/channel/[channelId]/_message-components/ArthasResponseDisplay.tsx'
-import clsx from 'clsx'
+import ArthasResponseItem, {
+  type ResponseGroupItem,
+} from '@/pages/channel/[channelId]/components/ArthasResponseItem.tsx'
 
 interface ArthasResponseListProps {
   isDebugMode: boolean
@@ -10,13 +11,6 @@ interface ArthasResponseListProps {
 }
 
 const IGNORED_TYPES = new Set(['input_status'])
-
-type ResponseGroupItem = {
-  entity: ArthasResponse
-  groupInfo?: {
-    colorFlag: number
-  }
-}
 
 const ArthasResponseList: React.FC<ArthasResponseListProps> = (props) => {
   const [filteredResponses, setFilteredResponse] = useState<
@@ -82,25 +76,12 @@ const ArthasResponseList: React.FC<ArthasResponseListProps> = (props) => {
   return (
     <div className="text-content text-sm">
       {filteredResponses.map((r, index) => (
-        <div
-          key={`${r.entity.type}:${r.entity.jobId}:${index}`}
-          className={clsx(
-            {
-              'border-divider': !r.groupInfo,
-              'bg-zinc-100':
-                (index & 1) === 0 &&
-                index !== selectedEntityIndex &&
-                !r.groupInfo,
-              'bg-cyan-100': r.groupInfo && r.groupInfo.colorFlag === 0,
-              'bg-blue-100': r.groupInfo && r.groupInfo.colorFlag === 1,
-              'bg-primary-100': index === selectedEntityIndex,
-            },
-            'hover:bg-primary-100 cursor-pointer px-3 py-3 select-none',
-          )}
-          onClick={() => onEntitySelect(index)}
-        >
-          <ArthasResponseDisplay entity={r.entity} />
-        </div>
+        <ArthasResponseItem
+          index={index}
+          isSelected={index === selectedEntityIndex}
+          item={r}
+          onEntitySelect={onEntitySelect}
+        />
       ))}
     </div>
   )

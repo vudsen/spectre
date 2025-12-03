@@ -61,9 +61,8 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
       return
     }
 
-    // 如果是纯 Enter → 触发事件并禁止换行
-    e.preventDefault() // 不想换行就加这句
-    console.log('触发事件：纯 Enter 被按下')
+    e.preventDefault()
+    execute().then()
   }
 
   return (
