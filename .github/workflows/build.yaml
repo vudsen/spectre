@@ -96,6 +96,7 @@ jobs:
       - name: Build Frontend
         working-directory: spectre-frontend
         env:
+          VITE_IS_PREVIEW_ENV: true
           VITE_APP_VERSION: ${{ steps.env.outputs.APP_VERSION }}-${{ github.sha }}
         run: pnpm i && pnpm run build
 

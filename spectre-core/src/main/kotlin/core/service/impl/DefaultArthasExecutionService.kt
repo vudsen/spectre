@@ -118,7 +118,7 @@ class DefaultArthasExecutionService(
         bundleId: Long,
     ): AttachStatus {
         val runtimeNodeDto = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
-        val extPoint = runtimeNodeService.getExtPoint(runtimeNodeDto.pluginId) ?: throw BusinessException("插件不存在")
+        val extPoint = runtimeNodeService.getExtPoint(runtimeNodeDto.pluginId)
 
         val node = runtimeNodeService.findTreeNode(treeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
         val jvm = extPoint.createSearcher().deserializeJvm(node)
@@ -174,7 +174,7 @@ class DefaultArthasExecutionService(
         }
 
         try {
-            attachJvmAsync(extPoint, runtimeNodeDto, jvm, currentHolder, bundleId)
+            attachJvmAsync(extPoint, runtimeNodeDto, jvm, currentHolder, bundleId, treeNodeId)
             return returnAttachingMsg(currentHolder)
         } catch (e: Exception) {
             currentHolder.lock.set(false)
@@ -285,6 +285,7 @@ class DefaultArthasExecutionService(
         jvm: Jvm,
         holder: ClientHolder,
         bundleId: Long,
+        treeNodeId: String,
     ) {
         executor.execute {
             val lockKey = arthasInitDistributedLockKey(runtimeNodeDto.id)
@@ -323,7 +324,7 @@ class DefaultArthasExecutionService(
 
                 val session = client.initSession()
 
-                val data = ArthasChannelInfoDTO(session.sessionId, runtimeNodeDto.id, client.getPort()).apply {
+                val data = ArthasChannelInfoDTO(session.sessionId, runtimeNodeDto.id, treeNodeId, client.getPort()).apply {
                     this.jvm = jvm
                 }
                 setChannelData(holder.channelId, data)

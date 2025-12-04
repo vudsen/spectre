@@ -8,9 +8,10 @@ class ArthasChannelInfoDTO(
      */
     var sessionId: String,
     var runtimeNodeId: Long,
+    var treeNodeId: String,
     var port: Int
 ) {
     lateinit var jvm: Jvm
 
-    constructor() : this("", 0, 0)
+    constructor() : this("", 0, "", 0)
 }

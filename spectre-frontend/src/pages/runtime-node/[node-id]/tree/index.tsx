@@ -12,7 +12,14 @@ import TreeContext, {
   type NodeTreeContext,
 } from '@/pages/runtime-node/[node-id]/tree/context.ts'
 import ToolchainSelectModal from '@/pages/runtime-node/[node-id]/tree/ToolchainSelectModal.tsx'
-import { Card, CardBody, Input, Skeleton, useDisclosure } from '@heroui/react'
+import {
+  Alert,
+  Card,
+  CardBody,
+  Input,
+  Skeleton,
+  useDisclosure,
+} from '@heroui/react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import DetailGrid from '@/components/DetailGrid.tsx'
@@ -43,6 +50,7 @@ const RuntimeNodeTreePage: React.FC = () => {
   const selectedSearchNode = useRef<JvmTreeNodeDTO>(undefined)
   const nav = useNavigate()
   const [isRootNodeLoading, setRootNodeLoading] = useState(true)
+  const [isAlertVisible, setAlertVisible] = React.useState(true)
   const { isLoading, result } = useGraphQL(
     NodeInfoQuery,
     useMemo(() => {
@@ -112,6 +120,17 @@ const RuntimeNodeTreePage: React.FC = () => {
     <TreeContext value={context}>
       <div className="mx-6 space-y-5">
         <div className="header-1">连接到节点</div>
+        {import.meta.env.VITE_IS_PREVIEW_ENV === 'true' && isAlertVisible ? (
+          <Alert
+            isVisible={isAlertVisible}
+            onClose={() => setAlertVisible(false)}
+            color="warning"
+            title="权限限制"
+            variant="faded"
+            description="public 用户目前只可以连接 math-game 节点"
+          />
+        ) : null}
+
         <Card>
           <CardBody className="space-y-3">
             <div className="header-2">节点信息</div>

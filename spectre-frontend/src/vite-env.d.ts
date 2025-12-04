@@ -12,6 +12,10 @@ interface ImportMetaEnv {
    * 应用版本
    */
   readonly VITE_APP_VERSION?: string
+  /**
+   * 是否为演示环境
+   */
+  readonly VITE_IS_PREVIEW_ENV?: 'true' | 'false'
 }
 
 interface ImportMeta {

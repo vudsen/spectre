@@ -10,6 +10,7 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.perm.ABACPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.plugin.PolicyAuthenticationExtensionPoint
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 
 @Component
@@ -113,14 +114,20 @@ class ArthasExecutionPolicyAuthenticationExtension : PolicyAuthenticationExtensi
         if (!arthasCommands.contains(command)) {
             // unknown command.
             if (!conf.allowUnknownCommand) {
-                throw BusinessException("您没有执行未知命令的权限", emptyArray(),"403")
+                throw BusinessException("您没有执行未知命令的权限", emptyArray()).apply {
+                    httpStatus = HttpStatus.FORBIDDEN.value()
+                }
             }
         } else if (!conf.allowedCommands.contains(command)) {
-            throw BusinessException("您没有执行${command}的权限", emptyArray(),"403")
+            throw BusinessException("您没有执行${command}的权限", emptyArray()).apply {
+                httpStatus = HttpStatus.FORBIDDEN.value()
+            }
         }
         if (fullCommand.contains('>') || fullCommand.contains('<')) {
             if (!conf.allowRedirect) {
-                throw BusinessException("您没有执行使用重定向符的权限", emptyArray(), "403")
+                throw BusinessException("您没有执行使用重定向符的权限", emptyArray()).apply {
+                    httpStatus = HttpStatus.FORBIDDEN.value()
+                }
             }
         }
         return true

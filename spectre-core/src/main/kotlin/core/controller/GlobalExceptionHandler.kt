@@ -57,12 +57,12 @@ class GlobalExceptionHandler(
             e
         }
         if (ex is BusinessException) {
-            return ResponseEntity.ok(
-                ErrorResponseVO(
-                    messageSource.getMessage(ex.messageKey, ex.messageArgs, null),
-                    ex.code
+
+            return ResponseEntity
+                .status(ex.httpStatus ?: 200)
+                .body(ErrorResponseVO(
+                    messageSource.getMessage(ex.messageKey, ex.messageArgs, null))
                 )
-            )
         }
         logger.error("", ex)
         return ResponseEntity.ok(

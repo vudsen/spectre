@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.integrate.abac
 
+import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.policy.ABACAuthenticationProvider
 import io.github.vudsen.spectre.api.perm.ABACContext
 import org.springframework.stereotype.Component
@@ -23,5 +24,9 @@ class ArthasExecutionABACAuthProvider : ABACAuthenticationProvider {
 
     override fun createTestContext(): ABACContext {
         TODO("Not yet implemented")
+    }
+
+    override fun customiseErrorException(): BusinessException? {
+        return null
     }
 }

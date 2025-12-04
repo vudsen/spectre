@@ -82,6 +82,9 @@ class DefaultAppAccessControlService(
         if (isAccessibleByPolicy(user.id, context.resource, spelContext)) {
             return
         }
+        provider.customiseErrorException() ?.let {
+            throw it
+        }
         throw NamedExceptions.FORBIDDEN.toException()
     }
 
