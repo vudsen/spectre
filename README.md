@@ -2,14 +2,21 @@
 
 [在线体验](https://spectreproject.click) (账号：`public`/`P@ssw0rd`)
 
-一个 Arthas 管理平台
+一个 Arthas 在线管理平台
 
-- **零侵入性，无需为服务添加额外依赖进行集成**
-- 支持使用 SSH 连接远程服务器并扫描可用的本地 JVM 或 Docker 中的 JVM
-- 支持连接 Kubernetes 集群中的 Pod
-- 拥有完整的权限管理，允许限制用户可以执行的命令
-- 完美结合 Web 界面的优势，提供更加精美的界面展示
-- 支持运行在 Jre 环境的 JVM
+![core-preview](./images/core-preview.png)
+
+📦: **零侵入性，无需为服务添加额外依赖进行集成**
+
+🐳: 支持连接远程(SSH) Docker 容器以及本地运行的 JVM
+
+☸️: Kubernetes 集群 Pod 连接支持
+
+👮: 拥有完整的权限管理，允许限制用户可以执行的命令，使用更加放心
+
+💻:  完美结合 Web 界面的优势，提供更加完善的界面展示以及操作体验
+
+♨️: 支持运行在 Jre 环境的 JVM
 
 
 ## 本地部署
