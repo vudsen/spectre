@@ -33,15 +33,16 @@ class RolePO {
     var description: String? = null
 
     @Column(updatable = false, insertable = false)
+    @Null(groups = [UpdateGroup::class])
     var createdAt: Timestamp? = null
 
-    @ManyToMany
-    @JoinTable(
-        name = "user_role",
-        joinColumns = [JoinColumn(name = "role_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")]
-    )
-    var users: MutableList<UserPO> = mutableListOf()
+//    @ManyToMany
+//    @JoinTable(
+//        name = "user_role",
+//        joinColumns = [JoinColumn(name = "role_id")],
+//        inverseJoinColumns = [JoinColumn(name = "user_id")]
+//    )
+//    var users: MutableList<UserPO> = mutableListOf()
 
     @PrePersist
     fun prePersist() {

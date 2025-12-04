@@ -6,6 +6,7 @@ import io.github.vudsen.spectre.api.plugin.rnode.CloseableRuntimeNode
 import java.io.Closeable
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedTransferQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
@@ -16,22 +17,39 @@ class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
         private const val QUEUE_SIZE = 3
     }
 
-    private val pool: BlockingQueue<CloseableRuntimeNode> = ArrayBlockingQueue(QUEUE_SIZE)
+    private val pool: BlockingQueue<CloseableRuntimeNode> = LinkedTransferQueue()
 
     @Volatile
     private var count = 0
 
     private val modifyLock = ReentrantLock()
 
-    private fun createResource(isNewOne: Boolean): CloseableRuntimeNode {
-        // TODO 容量满的时候不再创建
+    private fun waitForResource(): CloseableRuntimeNode {
+        val res = pool.poll(3, TimeUnit.SECONDS)
+        if (res == null) {
+            throw BusinessException("系统繁忙，请稍后再试")
+        }
+        return res
+    }
+
+    /**
+     * 尝试创建资源。
+     *
+     * 如果队列已满，则会等待其它资源返回，不会创建新的资源
+     */
+    private fun tryCreateResource(): CloseableRuntimeNode {
+        if (count >= QUEUE_SIZE) {
+            return waitForResource()
+        }
         modifyLock.lockInterruptibly()
+        if (count >= QUEUE_SIZE) {
+            modifyLock.unlock()
+            return waitForResource()
+        }
         return try {
             val runtimeNode = factory.createInstance()
             pool.add(runtimeNode)
-            if (isNewOne) {
-                count++
-            }
+            count++
             runtimeNode
         } finally {
             modifyLock.unlock()
@@ -39,40 +57,28 @@ class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
     }
 
     fun borrow(): CloseableRuntimeNode {
-        while (true) {
-            val res = pool.poll()
-            if (res == null) {
-                break
+        val res = pool.poll()
+        if (res == null) {
+            if (count < QUEUE_SIZE) {
+                return tryCreateResource()
             }
-            if (res.isAlive()) {
-                return res
-            }
-            modifyLock.lockInterruptibly()
-            val node = try {
-                // 替换节点
-                createResource(false)
-            } finally {
-                modifyLock.unlock()
-            }
-            node.ensureAttachEnvironmentReady()
-            return node
         }
-
-        if (count >= QUEUE_SIZE) {
-            val res = pool.poll(5, TimeUnit.SECONDS)
-            if (res == null) {
-                throw BusinessException("系统繁忙，请稍后再试")
-            }
+        if (res.isAlive()) {
             return res
         }
-        val node = createResource(true)
-        return node
+        return tryCreateResource()
     }
 
     fun retrieve(node: CloseableRuntimeNode) {
         try {
             pool.add(node)
         } catch (e: Exception) {
+            modifyLock.lockInterruptibly()
+            try {
+                count--
+            } finally {
+                modifyLock.unlock()
+            }
             node.close()
             logger.error("Failed to retrieve resource.", e)
         }

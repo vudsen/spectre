@@ -89,7 +89,7 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
         aria-label="Toolchain list"
         removeWrapper
         bottomContent={
-          result && itemArray.length > 0 ? (
+          result && itemArray.length > 1 ? (
             <div className="flex w-full justify-center">
               <Pagination
                 isCompact

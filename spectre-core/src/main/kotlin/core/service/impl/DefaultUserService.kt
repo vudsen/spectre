@@ -67,7 +67,9 @@ class DefaultUserService(
     }
 
     override fun findById(id: Long): UserDTO? {
-        return userRepository.findById(id).getOrNull()?.toDTO()
+        return userRepository.findById(id).getOrNull()?.toDTO().apply {
+            this?.password = ""
+        }
     }
 
     @Transactional(rollbackFor = [Exception::class])

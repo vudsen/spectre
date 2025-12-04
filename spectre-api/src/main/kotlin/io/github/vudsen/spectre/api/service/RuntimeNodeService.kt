@@ -5,6 +5,7 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
+import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.springframework.data.domain.Page
 
@@ -17,9 +18,11 @@ interface RuntimeNodeService {
     fun insert(runtimeNodePO: RuntimeNodePO): Long
 
     /**
-     * 获取拓展点
+     * 获取拓展点.
+     *
+     * 如果扩展不存在，则会直接抛出异常
      */
-    fun getExtPoint(extPointId: String): RuntimeNodeExtensionPoint?
+    fun getExtPoint(extPointId: String): RuntimeNodeExtensionPoint
 
     /**
      * 更新一个宿主机
@@ -66,5 +69,10 @@ interface RuntimeNodeService {
      * 获取树节点
      */
     fun findTreeNode(id: String): JvmSearchNode<Any>?
+
+    /**
+     * 获取运行节点
+     */
+    fun resolveRuntimeNode(runtimeNodeId: Long): RuntimeNode
 
 }

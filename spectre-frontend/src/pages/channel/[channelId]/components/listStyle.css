@@ -1,0 +1,30 @@
+@reference "tailwindcss";
+.normalColorFlag0 {
+  @apply bg-cyan-100 hover:bg-cyan-200
+}
+
+.normalColorFlag1 {
+  @apply bg-blue-100 hover:bg-blue-200
+}
+
+.normalUngrouped0 {
+  @apply bg-zinc-100 hover:bg-zinc-200
+}
+.normalUngrouped1 {
+  @apply hover:bg-zinc-50
+}
+
+.normalColorFlag0Selected {
+  @apply  bg-cyan-300
+}
+
+.normalColorFlag1Selected {
+  @apply bg-blue-300
+}
+
+.normalUngrouped0Selected {
+  @apply bg-zinc-300
+}
+.normalUngrouped1Selected {
+  @apply bg-zinc-200
+}

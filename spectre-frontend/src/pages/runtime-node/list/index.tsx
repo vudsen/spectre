@@ -3,8 +3,7 @@ import {
   addToast,
   Button,
   Code,
-  Modal,
-  ModalContent,
+  Link,
   Pagination,
   Table,
   TableBody,
@@ -13,7 +12,6 @@ import {
   TableHeader,
   TableRow,
   Tooltip,
-  useDisclosure,
 } from '@heroui/react'
 import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
@@ -22,7 +20,6 @@ import { useNavigate } from 'react-router'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { formatTime, showDialog } from '@/common/util.ts'
-import NodeDetailModalContent from '@/pages/runtime-node/list/NodeDetailModalContent.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import { deleteRuntimeNode } from '@/api/impl/runtime-node.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
@@ -59,9 +56,7 @@ type NodeType = DocumentResult<
 const JvmSourcePage: React.FC = () => {
   const [page, setPage] = useState(pg)
   const { result, isLoading } = useGraphQL(ListJvmSource, page)
-  const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const nav = useNavigate()
-  const [selectedEntity, setSelectedEntity] = useState<NodeType>()
 
   const nodes: NodeType[] = useMemo(() => {
     if (!result) {
@@ -91,11 +86,6 @@ const JvmSourcePage: React.FC = () => {
 
   const toNodeTree = (id: string) => {
     nav(`/runtime-node/${id}/tree`)
-  }
-
-  const viewNode = (node: NodeType) => {
-    setSelectedEntity(node)
-    onOpen()
   }
 
   const deleteNode = (node: NodeType) => {
@@ -160,7 +150,16 @@ const JvmSourcePage: React.FC = () => {
         >
           {(item) => (
             <TableRow key={item.id}>
-              <TableCell>{item.name}</TableCell>
+              <TableCell>
+                <Link
+                  color="primary"
+                  underline="always"
+                  className="cursor-pointer"
+                  size="sm"
+                >
+                  {item.name}
+                </Link>
+              </TableCell>
               <TableCell>
                 <Code>{item.typeName}</Code>
               </TableCell>
@@ -178,7 +177,7 @@ const JvmSourcePage: React.FC = () => {
                       variant="light"
                       onPress={() => toNodeTree(item.id)}
                     >
-                      <SvgIcon icon={Icon.PLUG} size={22} />
+                      <SvgIcon icon={Icon.PLUG} size={20} />
                     </Button>
                   </Tooltip>
                   <Button
@@ -188,14 +187,6 @@ const JvmSourcePage: React.FC = () => {
                     onPress={() => editNode(item)}
                   >
                     <SvgIcon icon={Icon.EDIT} />
-                  </Button>
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="sm"
-                    onPress={() => viewNode(item)}
-                  >
-                    <SvgIcon icon={Icon.VIEW} />
                   </Button>
                   <Button
                     isIconOnly
@@ -212,13 +203,6 @@ const JvmSourcePage: React.FC = () => {
           )}
         </TableBody>
       </Table>
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-          {(onClose) => (
-            <NodeDetailModalContent entity={selectedEntity} onClose={onClose} />
-          )}
-        </ModalContent>
-      </Modal>
     </div>
   )
 }

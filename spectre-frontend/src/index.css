@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  font-family: Helvetica, Tahoma, "PingFang SC", "Hiragino Sans GB", "Heiti SC", sans-serif;
+  font-family: "Noto Sans", "Noto Sans SC", Helvetica, Tahoma, "PingFang SC", "Hiragino Sans GB", "Heiti SC", sans-serif;
   line-height: 1.5;
-  font-weight: 400;
+  font-weight: 500;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,11 +23,11 @@ body {
 
 /* styles.css 或任意支持 Tailwind 的 CSS 文件 */
 .spectre-nav-item {
-  @apply px-3.5 text-default-600 rounded-xl cursor-pointer transition-all duration-150 h-[44px];
+  @apply px-3.5 rounded-xl cursor-pointer transition-all duration-150 h-[44px];
 }
 
 .spectre-heading {
-  @apply mb-3 text-xl font-semibold;
+  @apply mb-5 text-xl font-semibold;
 }
 
 .header-1 {

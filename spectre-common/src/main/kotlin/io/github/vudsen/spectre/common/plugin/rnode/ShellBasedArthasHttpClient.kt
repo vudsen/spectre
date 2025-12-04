@@ -40,7 +40,7 @@ open class ShellBasedArthasHttpClient(
             if (msg.startsWith("consumer not found")) {
                 throw ConsumerNotFountException(msg)
             }
-            TODO("Tip user the execution has failed.")
+            throw BusinessException(msg)
         }
         return node
     }

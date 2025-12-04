@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.controller
 
+import io.github.vudsen.spectre.api.dto.UserDTO
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.core.integrate.UserWithID
 import io.github.vudsen.spectre.api.service.UserService
@@ -32,7 +33,7 @@ class AuthController(
      */
     @PostMapping("login")
     @Log("log.login", contextResolveExp = "{ username: #args[0].username }")
-    fun login(@RequestBody @Validated vo: LoginRequestVO, request: HttpServletRequest, response: HttpServletResponse): String {
+    fun login(@RequestBody @Validated vo: LoginRequestVO, request: HttpServletRequest, response: HttpServletResponse): UserDTO {
         val authToken =
             UsernamePasswordAuthenticationToken(vo.username, vo.password)
         val authentication = authenticationManager.authenticate(authToken)
@@ -44,7 +45,8 @@ class AuthController(
         repo.saveContext(context, request, response)
 
         SecurityContextHolder.setContext(context)
-        return (authentication.principal as UserWithID).id.toString()
+        val uid = (authentication.principal as UserWithID).id
+        return userService.findById(uid)!!
     }
 
 

@@ -488,7 +488,7 @@ export type RolePermissionDetailQueryQueryVariables = Exact<{
 }>;
 
 
-export type RolePermissionDetailQueryQuery = { __typename?: 'Query', role: { __typename?: 'RoleQueries', role?: { __typename?: 'RolePO', name: string, createdAt?: any | null, description?: string | null } | null } };
+export type RolePermissionDetailQueryQuery = { __typename?: 'Query', role: { __typename?: 'RoleQueries', role?: { __typename?: 'RolePO', id: string, name: string, createdAt?: any | null, description?: string | null } | null } };
 
 export type ListRoleQueryQueryVariables = Exact<{
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -779,6 +779,7 @@ export const RolePermissionDetailQueryDocument = new TypedDocumentString(`
     query RolePermissionDetailQuery($roleId: Long!) {
   role {
     role(id: $roleId) {
+      id
       name
       createdAt
       description

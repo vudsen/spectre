@@ -11,6 +11,7 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
+import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -157,6 +158,14 @@ class DefaultRuntimeNodeService(
             redisTemplate.expire(id, 10, TimeUnit.MINUTES )
         }
         return node
+    }
+
+    override fun resolveRuntimeNode(runtimeNodeId: Long): RuntimeNode {
+        val runtimeNodeDTO = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
+
+        val extPoint = getExtPoint(runtimeNodeDTO.pluginId)
+
+        return extPoint.connect(objectMapper.readValue(runtimeNodeDTO.configuration, extPoint.getConfigurationClass()))
     }
 
 

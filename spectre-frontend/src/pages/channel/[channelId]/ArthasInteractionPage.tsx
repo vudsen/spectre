@@ -172,7 +172,7 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
             onEntitySelect={setSelectedEntity}
           />
         </Panel>
-        <PanelResizeHandle className="bg-default-200 border-divider border-l-1" />
+        <PanelResizeHandle className="bg-default-200 border-default-100 border-l-1" />
         <Panel minSize={30} defaultSize={60}>
           <ArthasResponseDetail entity={selectedEntity} />
         </Panel>

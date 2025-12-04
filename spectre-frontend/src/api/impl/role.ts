@@ -5,17 +5,20 @@ type RoleBind = {
   userIds: string[]
 }
 
-export type RolePo = {
+export type RoleModifyVO = {
   id?: string
   name: string
-  description?: string
+  description?: string | null
 }
-
 
 export const bindRoleToUser = (vo: RoleBind) => {
   return axios.post('role/bind-user', vo)
 }
 
-export const createRole = (role: RolePo) => {
+export const createRole = (role: RoleModifyVO) => {
   return axios.post('role/create', role)
+}
+
+export const updateRole = (role: RoleModifyVO) => {
+  return axios.post('role/update', role)
 }
