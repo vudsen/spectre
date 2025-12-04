@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.core.integrate.abac
 
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
+import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.perm.ABACContext
 import io.github.vudsen.spectre.api.perm.ABACPermissions
 import io.github.vudsen.spectre.api.plugin.policy.ABACAuthenticationProvider
@@ -28,5 +29,9 @@ class AttachNodeABABAuthProvider : ABACAuthenticationProvider {
             RuntimeNodeDTO(-1, "Test", "Test", "{}", Timestamp(System.currentTimeMillis()), emptyMap()),
             JvmSearchNode("Hello", false, null)
         )
+    }
+
+    override fun customiseErrorException(): BusinessException? {
+        return BusinessException("您没有 Attach 该 JVM 的权限")
     }
 }

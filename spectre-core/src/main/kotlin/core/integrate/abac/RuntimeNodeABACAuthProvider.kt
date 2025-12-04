@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.core.integrate.abac
 
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
+import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.policy.ABACAuthenticationProvider
 import io.github.vudsen.spectre.api.perm.ABACContext
 import io.github.vudsen.spectre.api.perm.ABACPermissions
@@ -26,6 +27,10 @@ class RuntimeNodeABACAuthProvider : ABACAuthenticationProvider {
             RuntimeNodeDTO(-1, "Test", "Test", "{}", Timestamp(System.currentTimeMillis()), emptyMap()),
             ABACPermissions.RUNTIME_NODE_TREE_EXPAND
         )
+    }
+
+    override fun customiseErrorException(): BusinessException? {
+        return null
     }
 
 

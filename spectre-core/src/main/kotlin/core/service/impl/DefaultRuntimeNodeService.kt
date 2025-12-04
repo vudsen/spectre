@@ -155,7 +155,7 @@ class DefaultRuntimeNodeService(
     override fun findTreeNode(id: String): JvmSearchNode<Any>? {
         val node = redisTemplate.opsForValue().get(id) as JvmSearchNode<Any>?
         node ?.let {
-            redisTemplate.expire(id, 10, TimeUnit.MINUTES )
+            redisTemplate.expire(id, 10, TimeUnit.MINUTES)
         }
         return node
     }
