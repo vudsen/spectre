@@ -258,11 +258,8 @@ class DefaultArthasExecutionService(
         info: ArthasChannelInfoDTO,
         metadata: ChannelInnerMetadata
     ): ArthasHttpClient {
-        val extPoint = runtimeNodeService.getExtPoint(metadata.extPointId) ?: throw BusinessException("插件不存在")
-        val runtimeNodeDTO = runtimeNodeService.getRuntimeNode(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
-
-        val runtimeNode =
-            extPoint.connect(objectMapper.readValue(runtimeNodeDTO.configuration, extPoint.getConfigurationClass()))
+        val extPoint = runtimeNodeService.getExtPoint(metadata.extPointId)
+        val runtimeNode = runtimeNodeService.resolveRuntimeNode(info.runtimeNodeId)
 
         val bundle = toolchainService.resolveToolchainBundle(metadata.bundleId) ?: TODO("bundle not found.")
         val handler = extPoint.createAttachHandler(runtimeNode, info.jvm, ToolchainBundleDTO(

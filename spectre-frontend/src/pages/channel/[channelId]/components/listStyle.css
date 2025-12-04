@@ -26,5 +26,5 @@
   @apply bg-zinc-300
 }
 .normalUngrouped1Selected {
-  @apply hover:bg-zinc-100
+  @apply bg-zinc-200
 }
