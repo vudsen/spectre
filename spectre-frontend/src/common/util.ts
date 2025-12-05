@@ -41,10 +41,16 @@ function ensureSize(num: number): string {
 }
 
 export const formatTime = (time: number | string): string => {
+  let date: Date
   if (typeof time === 'string') {
-    time = Number.parseInt(time, 10)
+    if (time.includes('-')) {
+      date = new Date(time)
+    } else {
+      date = new Date(Number.parseInt(time, 10))
+    }
+  } else {
+    date = new Date(time)
   }
-  const date = new Date(time)
   return `${date.getFullYear()}/${ensureSize(date.getMonth() + 1)}/${ensureSize(date.getDate())} ${ensureSize(date.getHours())}:${ensureSize(date.getMinutes())}`
 }
 

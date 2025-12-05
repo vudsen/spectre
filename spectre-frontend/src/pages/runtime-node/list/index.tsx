@@ -81,7 +81,7 @@ const JvmSourcePage: React.FC = () => {
   const totalPage = result?.runtimeNode.runtimeNodes.totalPages ?? 0
 
   const onCreate = () => {
-    nav('/runtime-node/new')
+    nav('/runtime-node/modify')
   }
 
   const toNodeTree = (id: string) => {
@@ -109,7 +109,7 @@ const JvmSourcePage: React.FC = () => {
   }
 
   const editNode = (node: NodeType) => {
-    nav(`/runtime-node/new/${node.pluginId}?runtimeNodeId=${node.id}`)
+    nav(`/runtime-node/modify/${node.pluginId}?runtimeNodeId=${node.id}`)
   }
 
   return (

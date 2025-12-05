@@ -123,7 +123,7 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
         runtimeNodeDTO: RuntimeNodeDTO,
         configuration: K8sRuntimeNodeConfig
     ): PageDescriptor {
-        TODO("Not yet implemented")
+        return PageDescriptor("view/K8sView", runtimeNodeDTO)
     }
 
 

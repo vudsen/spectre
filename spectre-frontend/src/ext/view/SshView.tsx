@@ -168,7 +168,7 @@ const SshView: ViewComponent = (props) => {
         content: <LabelsInfo labels={data.labels} />,
       },
     ]
-  }, [configuration, connectInfo])
+  }, [configuration, connectInfo, data])
 
   return (
     <div className="space-y-6 px-6 pb-24">

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import type { FormComponentProps } from '@/ext/type.ts'
 import { useForm } from 'react-hook-form'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
-import { addToast, Alert, Button } from '@heroui/react'
+import { addToast, Alert, Button, Card, CardBody } from '@heroui/react'
 import {
   createRuntimeNode,
   type RuntimeNodeDTO,
@@ -37,7 +37,7 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
       >
       return {
         name: oldState.name,
-        labels: oldState.labeles,
+        labels: oldState.labels,
         configuration: {
           apiServerEndpoint: conf.apiServerEndpoint,
           insecure: conf.insecure,
@@ -90,53 +90,60 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
   }
   return (
     <div className="space-y-3 px-5">
-      <div className="spectre-heading">连接设置</div>
-      <Alert color="warning">目前仅支持 Token 认证</Alert>
-      <ControlledInput
-        name="name"
-        inputProps={{ isRequired: true, label: '名称' }}
-        control={control}
-        rules={{ required: true }}
-      />
-      <ControlledInput
-        name="configuration.apiServerEndpoint"
-        inputProps={{
-          isRequired: true,
-          label: 'Endpoint',
-          placeholder: '请输入 Api Server 端点',
-          type: 'url',
-        }}
-        control={control}
-        rules={{ required: true }}
-      />
-      <ControlledInput
-        name="configuration.token"
-        inputProps={{
-          isRequired: true,
-          label: 'Token',
-          type: 'password',
-        }}
-        control={control}
-        rules={{ required: true }}
-      />
-      <ControlledInput
-        name="configuration.spectreHome"
-        inputProps={{
-          isRequired: true,
-          label: 'Spectre Home',
-          defaultValue: '/opt/spectre',
-        }}
-        control={control}
-        rules={{ required: true }}
-      />
+      <div className="header-1">Kubernetes</div>
+      <Card>
+        <CardBody className="space-y-3">
+          <div className="header-2">连接设置</div>
+          <Alert color="warning" variant="faded">
+            目前仅支持 Token 认证
+          </Alert>
+          <ControlledInput
+            name="name"
+            inputProps={{ isRequired: true, label: '名称' }}
+            control={control}
+            rules={{ required: true }}
+          />
+          <ControlledInput
+            name="configuration.apiServerEndpoint"
+            inputProps={{
+              isRequired: true,
+              label: 'Endpoint',
+              placeholder: '请输入 Api Server 端点',
+              type: 'url',
+            }}
+            control={control}
+            rules={{ required: true }}
+          />
+          <ControlledInput
+            name="configuration.token"
+            inputProps={{
+              isRequired: true,
+              label: 'Token',
+              type: 'password',
+            }}
+            control={control}
+            rules={{ required: true }}
+          />
+          <ControlledInput
+            name="configuration.spectreHome"
+            inputProps={{
+              isRequired: true,
+              label: 'Spectre Home',
+              defaultValue: '/opt/spectre',
+            }}
+            control={control}
+            rules={{ required: true }}
+          />
+          <ControlledCheckbox
+            checkboxProps={{}}
+            control={control}
+            name="configuration.insecure"
+          >
+            忽略 SSL 校验
+          </ControlledCheckbox>
+        </CardBody>
+      </Card>
       <LabelEditor control={control} name="labels" />
-      <ControlledCheckbox
-        checkboxProps={{}}
-        control={control}
-        name="configuration.insecure"
-      >
-        忽略 SSL 校验
-      </ControlledCheckbox>
       <div className="flex flex-row-reverse">
         <Button
           variant="light"
