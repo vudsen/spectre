@@ -2,7 +2,6 @@ import {
   Button,
   Card,
   CardBody,
-  CardHeader,
   Divider,
   Select,
   SelectItem,
@@ -86,17 +85,21 @@ const JvmSourceModifyPage: React.FC = () => {
 
   return (
     <div>
-      <div className="p-6">
+      <div className="space-y-5 px-6">
+        <div className="header-1">新建运行节点</div>
         <Card>
-          <CardHeader>
-            <span className="text-lg font-bold">创建数据源</span>
-          </CardHeader>
-          <Divider />
           <CardBody className="space-y-3 text-sm">
-            <span>
-              创建一个新的数据源。数据源全称为 "JVM 数据源"，作为 spectre
-              的入口，我们会从数据源为你列出所有的 JVM 来进行进一步的操作。
-            </span>
+            <span className="header-2">选择节点类型</span>
+            <div>
+              创建一个新的运行节点:
+              运行节点是一个抽象概念，它可以是一台远程服务器，也可以是一个Kubernetes
+              集群，或其它任何能够运行 JVM 的东西。
+            </div>
+            <div>
+              运行节点作为 Spectre
+              核心功能的入口，我们会从运行节点为你列出所有的 JVM
+              来进行进一步的操作。
+            </div>
             <span>选择一个类型来开始:</span>
             <Select
               className="max-w-xs"

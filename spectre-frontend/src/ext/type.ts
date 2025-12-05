@@ -7,11 +7,6 @@ export type FormComponentRef = {
   collect: () => Promise<Record<string, unknown> | undefined>
 }
 
-export interface ControlledFormComponentProps {
-  oldState?: unknown
-  pluginId: string
-}
-
 export interface FormComponentProps {
   /**
    * 提交事件
@@ -25,9 +20,16 @@ export interface FormComponentProps {
   ref?: React.RefObject<FormComponentRef | null>
 }
 
-export type ControlledFormPage =
-  React.ComponentType<ControlledFormComponentProps>
 /**
  * 表单专用组件
  */
 export type FormPage = React.ComponentType<FormComponentProps>
+
+export interface ViewComponentProps {
+  data: unknown
+}
+
+/**
+ * 展示类组件
+ */
+export type ViewComponent = React.ComponentType<ViewComponentProps>

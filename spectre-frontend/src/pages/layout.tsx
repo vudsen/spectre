@@ -65,6 +65,7 @@ const AccordionHeader: React.FC<AccordionHeaderProps> = (props) => {
 
 type RouteHandle = {
   crumb: string
+  crumbHref?: string
   hideCrumb: boolean
 }
 
@@ -95,8 +96,8 @@ const navigations: NavigationGroup[] = [
         icon: Icon.DATASOURCE,
         items: [
           {
-            name: '新建数节点',
-            to: '/runtime-node/new',
+            name: '新建运行节点',
+            to: '/runtime-node/modify',
           },
           {
             name: '节点列表',
@@ -179,7 +180,9 @@ const NavBreadcrumbs: React.FC = () => {
       {crumbs.map((crumb, index) => (
         <BreadcrumbItem
           key={crumb.handle.crumb}
-          onPress={() => tryNav(crumb.pathname, index === 0)}
+          onPress={() =>
+            tryNav(crumb.handle.crumbHref ?? crumb.pathname, index === 0)
+          }
         >
           {crumb.handle.crumb}
         </BreadcrumbItem>

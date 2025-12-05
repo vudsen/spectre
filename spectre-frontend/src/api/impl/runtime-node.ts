@@ -1,11 +1,12 @@
 import axios from 'axios'
+import type { PageDescriptor } from '@/api/types.ts'
 
 export type RuntimeNodeDTO = {
   id: string
   name: string
   pluginId: string
   configuration: string
-  labeles: Record<string, string>
+  labels: Record<string, string>
   createdAt: number
 }
 
@@ -74,4 +75,8 @@ export const expandTree = (
 
 export const deleteRuntimeNode = (id: string) => {
   return axios.post(`/runtime-node/delete/${id}`)
+}
+
+export const viewRuntimeNode = (id: string): Promise<PageDescriptor> => {
+  return axios.get(`/runtime-node/view?runtimeNodeId=${id}`)
 }

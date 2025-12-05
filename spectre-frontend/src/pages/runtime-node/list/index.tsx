@@ -81,11 +81,15 @@ const JvmSourcePage: React.FC = () => {
   const totalPage = result?.runtimeNode.runtimeNodes.totalPages ?? 0
 
   const onCreate = () => {
-    nav('/runtime-node/new')
+    nav('/runtime-node/modify')
   }
 
   const toNodeTree = (id: string) => {
     nav(`/runtime-node/${id}/tree`)
+  }
+
+  const viewNode = (id: string) => {
+    nav(`/runtime-node/${id}/view`)
   }
 
   const deleteNode = (node: NodeType) => {
@@ -105,7 +109,7 @@ const JvmSourcePage: React.FC = () => {
   }
 
   const editNode = (node: NodeType) => {
-    nav(`/runtime-node/new/${node.pluginId}?runtimeNodeId=${node.id}`)
+    nav(`/runtime-node/modify/${node.pluginId}?runtimeNodeId=${node.id}`)
   }
 
   return (
@@ -152,6 +156,7 @@ const JvmSourcePage: React.FC = () => {
             <TableRow key={item.id}>
               <TableCell>
                 <Link
+                  onPress={() => viewNode(item.id)}
                   color="primary"
                   underline="always"
                   className="cursor-pointer"

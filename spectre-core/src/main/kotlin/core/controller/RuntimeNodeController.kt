@@ -21,13 +21,13 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("runtime-node")
 @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_READ)")
 class RuntimeNodeController(
-    private val objectMapper: ObjectMapper,
     private val service: RuntimeNodeService,
     private val appAccessControlService: AppAccessControlService
 ) {
@@ -73,6 +73,11 @@ class RuntimeNodeController(
     @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_DELETE)")
     fun delete(@PathVariable id: Long) {
         service.deleteById(id)
+    }
+
+    @GetMapping("view")
+    fun view(@RequestParam("runtimeNodeId") runtimeNodeId: Long): PageDescriptor {
+        return service.resolveViewPage(runtimeNodeId)
     }
 
 }

@@ -20,7 +20,7 @@ const DetailGrid: React.FC<DetailGridProps> = (props) => {
           )}
         >
           <div className="font-bold">{detail.name}</div>
-          <div>{detail.value}</div>
+          <div className="font-normal">{detail.value}</div>
         </div>
       ))}
     </div>

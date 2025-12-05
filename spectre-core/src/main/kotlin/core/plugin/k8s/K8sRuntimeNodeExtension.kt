@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
+import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
@@ -87,7 +88,7 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
     }
 
     override fun getConfigurationForm0(oldConfiguration: K8sRuntimeNodeConfig?): PageDescriptor {
-        return PageDescriptor("form/K8sConfForm", oldConfiguration, "")
+        return PageDescriptor("form/K8sConfForm", oldConfiguration)
     }
 
     override fun createRuntimeNode0(config: K8sRuntimeNodeConfig): K8sRuntimeNode {
@@ -117,6 +118,14 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
         }
         return updated
     }
+
+    override fun getViewPage0(
+        runtimeNodeDTO: RuntimeNodeDTO,
+        configuration: K8sRuntimeNodeConfig
+    ): PageDescriptor {
+        return PageDescriptor("view/K8sView", runtimeNodeDTO)
+    }
+
 
     override fun createAttachHandler0(
         runtimeNode: K8sRuntimeNode,

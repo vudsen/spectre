@@ -16,7 +16,7 @@ const router = createBrowserRouter(
         },
         {
           path: 'runtime-node',
-          handle: { crumb: '数据源' },
+          handle: { crumb: '运行节点' },
           children: [
             {
               path: 'list',
@@ -28,13 +28,13 @@ const router = createBrowserRouter(
               },
             },
             {
-              path: 'new',
+              path: 'modify',
               children: [
                 {
                   index: true,
                   lazy: async () => {
                     const { default: Home } = await import(
-                      '@/pages/runtime-node/new'
+                      '@/pages/runtime-node/modify'
                     )
                     return { Component: Home, handle: { crumb: '新建节点' } }
                   },
@@ -43,7 +43,7 @@ const router = createBrowserRouter(
                   path: ':pluginId',
                   lazy: async () => {
                     const { default: Home } = await import(
-                      '@/pages/runtime-node/new/[pluginId]'
+                      '@/pages/runtime-node/modify/[pluginId]'
                     )
                     return { Component: Home }
                   },
@@ -52,7 +52,7 @@ const router = createBrowserRouter(
             },
             {
               path: ':node-id',
-              handle: { crumb: '运行节点' },
+              handle: { crumb: '节点列表', crumbHref: '/runtime-node/list' },
               children: [
                 {
                   path: 'tree',
@@ -70,6 +70,15 @@ const router = createBrowserRouter(
                       '@/pages/runtime-node/[node-id]/attach'
                     )
                     return { Component: Home, handle: { crumb: '连接' } }
+                  },
+                },
+                {
+                  path: 'view',
+                  lazy: async () => {
+                    const { default: View } = await import(
+                      '@/pages/runtime-node/[node-id]/view'
+                    )
+                    return { Component: View, handle: { crumb: '节点详情' } }
                   },
                 },
               ],
