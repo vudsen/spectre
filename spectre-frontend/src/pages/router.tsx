@@ -72,6 +72,15 @@ const router = createBrowserRouter(
                     return { Component: Home, handle: { crumb: '连接' } }
                   },
                 },
+                {
+                  path: 'view',
+                  lazy: async () => {
+                    const { default: View } = await import(
+                      '@/pages/runtime-node/[node-id]/view'
+                    )
+                    return { Component: View, handle: { crumb: '节点详情' } }
+                  },
+                },
               ],
             },
           ],

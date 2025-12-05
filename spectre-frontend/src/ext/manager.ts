@@ -1,6 +1,6 @@
 import type React from 'react'
 import { lazy } from 'react'
-import type { ControlledFormPage, FormPage } from '@/ext/type.ts'
+import type { FormPage, ViewComponent } from '@/ext/type.ts'
 
 const modules = import.meta.glob('./**/*.tsx') as Record<
   string,
@@ -20,13 +20,11 @@ const ExtensionPageManager = {
     }
     return pages[pageName] as React.LazyExoticComponent<FormPage>
   },
-  getControlledFormPage(
-    pageName: string,
-  ): React.LazyExoticComponent<ControlledFormPage> {
-    if (!pageName.startsWith('controlled-form/')) {
-      throw new Error('Page name must start with `form/`')
+  getViewComponent(pageName: string): React.LazyExoticComponent<ViewComponent> {
+    if (!pageName.startsWith('view/')) {
+      throw new Error('Page name must start with `view/`')
     }
-    return pages[pageName] as React.LazyExoticComponent<ControlledFormPage>
+    return pages[pageName] as React.LazyExoticComponent<ViewComponent>
   },
 }
 

@@ -88,6 +88,10 @@ const JvmSourcePage: React.FC = () => {
     nav(`/runtime-node/${id}/tree`)
   }
 
+  const viewNode = (id: string) => {
+    nav(`/runtime-node/${id}/view`)
+  }
+
   const deleteNode = (node: NodeType) => {
     showDialog({
       title: '删除节点',
@@ -152,6 +156,7 @@ const JvmSourcePage: React.FC = () => {
             <TableRow key={item.id}>
               <TableCell>
                 <Link
+                  onPress={() => viewNode(item.id)}
                   color="primary"
                   underline="always"
                   className="cursor-pointer"

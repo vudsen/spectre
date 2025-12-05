@@ -8,6 +8,7 @@ import io.github.vudsen.spectre.repo.RuntimeNodeRepository
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO.Companion.toDTO
+import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
@@ -146,7 +147,6 @@ class DefaultRuntimeNodeService(
     }
 
     override fun getRuntimeNode(runtimeNodeId: Long): RuntimeNodeDTO? {
-        // TODO: 过滤敏感信息
         val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: return null
         filterSensitiveConfiguration(dto)
         return dto
@@ -166,6 +166,13 @@ class DefaultRuntimeNodeService(
         val extPoint = getExtPoint(runtimeNodeDTO.pluginId)
 
         return extPoint.connect(objectMapper.readValue(runtimeNodeDTO.configuration, extPoint.getConfigurationClass()))
+    }
+
+    override fun resolveViewPage(runtimeNodeId: Long): PageDescriptor {
+        val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
+        val ext = extManager.findById(dto.pluginId)
+        filterSensitiveConfiguration(dto)
+        return ext.getViewPage(dto, objectMapper.readValue(dto.configuration, ext.getConfigurationClass()))
     }
 
 

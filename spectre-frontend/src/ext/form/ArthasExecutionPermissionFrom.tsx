@@ -68,6 +68,7 @@ type ArthasExecutionConfiguration = {
 
 /**
  * 增强 Arthas 执行鉴权，支持精细到命令级别
+ * Extension Point: PolicyAuthenticationExtensionPoint
  */
 const ArthasExecutionPermissionFrom: React.FC<FormComponentProps> = (props) => {
   const { control, setValue, trigger, getValues } = useForm<Values>({

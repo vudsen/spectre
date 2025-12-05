@@ -3,9 +3,11 @@ package io.github.vudsen.spectre.api.service
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
+import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
+import io.github.vudsen.spectre.api.vo.RuntimeNodeVO
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.springframework.data.domain.Page
 
@@ -74,5 +76,10 @@ interface RuntimeNodeService {
      * 获取运行节点
      */
     fun resolveRuntimeNode(runtimeNodeId: Long): RuntimeNode
+
+    /**
+     * 获取详情界面
+     */
+    fun resolveViewPage(runtimeNodeId: Long): PageDescriptor
 
 }

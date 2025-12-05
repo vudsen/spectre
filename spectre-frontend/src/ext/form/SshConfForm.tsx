@@ -156,7 +156,7 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
   return (
     <div>
       <div className="space-y-5">
-        <div className="header-1">高级配置</div>
+        <div className="header-1">SSH-高级配置</div>
         <Card>
           <CardBody className="space-y-3">
             <div className="header-2">Spectre 设置</div>
@@ -343,7 +343,7 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
     defaultValues: oldState
       ? {
           name: oldState.name,
-          labels: oldState.labeles,
+          labels: oldState.labels,
           configuration: {
             host: configuration?.host,
             principal: {
@@ -410,6 +410,7 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
       <SteppedPanel page={page} className="px-5">
         <SteppedPanelItem>
           <div className="space-y-3">
+            <div className="header-1">SSH</div>
             <Card>
               <CardBody className="space-y-3">
                 <div className="header-2 font-semibold">基础设置</div>

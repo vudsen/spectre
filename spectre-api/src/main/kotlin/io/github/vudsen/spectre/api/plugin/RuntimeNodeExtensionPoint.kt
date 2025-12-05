@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.api.plugin
 
+import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.plugin.rnode.CloseableRuntimeNode
@@ -38,6 +39,13 @@ abstract class RuntimeNodeExtensionPoint (
      * 获取配置表单
      */
     abstract fun getConfigurationForm(oldConfiguration: RuntimeNodeConfig?): PageDescriptor
+
+    /**
+     * 获取查看页面
+     * @param runtimeNodeDTO 已经过滤敏感字段后的数据
+     * @param configuration 完整的配置，包含敏感字段
+     */
+    abstract fun getViewPage(runtimeNodeDTO: RuntimeNodeDTO, configuration: RuntimeNodeConfig): PageDescriptor
 
     /**
      * 获取配置的类名

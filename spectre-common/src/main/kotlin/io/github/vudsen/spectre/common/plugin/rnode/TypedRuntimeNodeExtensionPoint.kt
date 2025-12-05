@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.common.plugin.rnode
 
+import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.entity.PageDescriptor
@@ -15,6 +16,10 @@ abstract class TypedRuntimeNodeExtensionPoint<T : RuntimeNodeConfig, R : Runtime
 
     final override fun getConfigurationForm(oldConfiguration: RuntimeNodeConfig?): PageDescriptor {
         return getConfigurationForm0(oldConfiguration as T?)
+    }
+
+    final override fun getViewPage(runtimeNodeDTO: RuntimeNodeDTO, configuration: RuntimeNodeConfig): PageDescriptor {
+        return getViewPage0(runtimeNodeDTO, configuration as T)
     }
 
     final override fun createRuntimeNode(config: RuntimeNodeConfig): RuntimeNode {
@@ -55,6 +60,8 @@ abstract class TypedRuntimeNodeExtensionPoint<T : RuntimeNodeConfig, R : Runtime
     protected abstract fun filterSensitiveConfiguration0(conf: T)
 
     protected abstract fun fillSensitiveConfiguration0(updated: T, base: T): RuntimeNodeConfig
+
+    protected abstract fun getViewPage0(runtimeNodeDTO: RuntimeNodeDTO, configuration: T): PageDescriptor
 
     protected abstract fun createAttachHandler0(
         runtimeNode: R,

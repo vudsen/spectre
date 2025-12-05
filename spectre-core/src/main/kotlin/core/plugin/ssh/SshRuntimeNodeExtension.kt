@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.common.plugin.rnode.TypedRuntimeNodeExtensionPoint
@@ -161,7 +162,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
     }
 
     override fun getConfigurationForm0(oldConfiguration: SshRuntimeNodeConfig?): PageDescriptor {
-        return PageDescriptor("form/SshConfForm", oldConfiguration, "")
+        return PageDescriptor("form/SshConfForm", oldConfiguration)
     }
 
     override fun getConfigurationClass(): Class<SshRuntimeNodeConfig> {
@@ -218,6 +219,10 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
             }
         }
         return updated
+    }
+
+    override fun getViewPage0(runtimeNodeDTO: RuntimeNodeDTO, configuration: SshRuntimeNodeConfig): PageDescriptor {
+        return PageDescriptor("view/SshView", runtimeNodeDTO)
     }
 
     override fun createSearcher(): JvmSearcher {

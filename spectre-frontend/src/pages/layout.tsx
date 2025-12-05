@@ -95,7 +95,7 @@ const navigations: NavigationGroup[] = [
         icon: Icon.DATASOURCE,
         items: [
           {
-            name: '新建数节点',
+            name: '新建运行节点',
             to: '/runtime-node/new',
           },
           {

@@ -8,7 +8,6 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
-import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionABACContext
 import io.github.vudsen.spectre.core.lock.RedisDistributedLock
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.repo.RuntimeNodeRepository
@@ -24,7 +23,6 @@ import io.github.vudsen.spectre.api.dto.ToolchainItemDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.repo.entity.ToolchainType
-import io.github.vudsen.spectre.api.perm.ABACPermissions
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
@@ -388,10 +386,7 @@ class DefaultArthasExecutionService(
 
     override fun execAsync(channelId: String, command: String) {
         val data = getChannelData(channelId) ?: throw BusinessException("会话过期，请刷新页面")
-        val runtimeNodeDTO = runtimeNodeService.getRuntimeNode(data.runtimeNodeId) ?: throw BusinessException("节点不存在")
 
-
-        appAccessControlService.checkPolicyPermission(ArthasExecutionABACContext(ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE, command, runtimeNodeDTO, data.jvm))
         val client = tryResolveClient(data, channelId)
         client.asyncExec(data.sessionId, command)
     }

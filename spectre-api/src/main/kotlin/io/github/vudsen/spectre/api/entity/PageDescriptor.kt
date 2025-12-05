@@ -6,6 +6,4 @@ package io.github.vudsen.spectre.api.entity
 open class PageDescriptor(
     val pageName: String,
     var parameters: Any?,
-    // 用途
-    val usage: String,
 )

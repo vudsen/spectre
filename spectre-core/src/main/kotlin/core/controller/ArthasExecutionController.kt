@@ -10,6 +10,7 @@ import io.github.vudsen.spectre.api.perm.ABACPermissions
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
+import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionABACContext
 import io.github.vudsen.spectre.core.integrate.abac.AttachNodeABACContext
 import io.github.vudsen.spectre.core.vo.CreateChannelRequestVO
 import io.github.vudsen.spectre.core.vo.ExecuteCommandRequestVO
@@ -118,10 +119,25 @@ class ArthasExecutionController(
         return channelSession
     }
 
+    private fun checkCommandExecPermission(channelId: String, command: String) {
+        val info = arthasExecutionService.getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
+        val runtimeNodeDTO = runtimeNodeService.getRuntimeNode(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
+
+        appAccessControlService.checkPolicyPermission(
+            ArthasExecutionABACContext(
+                ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE,
+                command.trim(),
+                runtimeNodeDTO,
+                info.jvm
+            )
+        )
+    }
+
     @PostMapping("/channel/{channelId}/execute")
     @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: #args[1].command  }")
     fun execute(@PathVariable channelId: String, @Validated @RequestBody vo: ExecuteCommandRequestVO, request: HttpServletRequest) {
         checkTreeNodePermission(channelId)
+        checkCommandExecPermission(channelId, vo.command)
         // ensure connected.
         resolveChannelSession(request, channelId)
         arthasExecutionService.execAsync(channelId, vo.command.trim())
