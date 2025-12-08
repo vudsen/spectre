@@ -8,6 +8,7 @@ import org.springframework.context.MessageSource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -57,12 +58,13 @@ class GlobalExceptionHandler(
             e
         }
         if (ex is BusinessException) {
-
             return ResponseEntity
                 .status(ex.httpStatus ?: 200)
                 .body(ErrorResponseVO(
                     messageSource.getMessage(ex.messageKey, ex.messageArgs, null))
                 )
+        } else if (ex is BadCredentialsException) {
+            return ResponseEntity.ok(ErrorResponseVO(ex.message))
         }
         logger.error("", ex)
         return ResponseEntity.ok(
