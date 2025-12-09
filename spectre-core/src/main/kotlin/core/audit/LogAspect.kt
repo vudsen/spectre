@@ -86,19 +86,20 @@ class LogAspect {
         var returnObj: Any? = null
         try {
             // 处理修改密码导致退出后，拿不到用户信息的问题
-            tryFillUserInfo(logEntity)
+            tryFillUserInfo(logEntity, null)
             returnObj = joinPoint.proceed()
             return returnObj
         } catch (e: Exception) {
             exp = e
             throw e
         } finally {
-            if (logEntity.userId == null) {
-                tryFillUserInfo(logEntity)
-            }
             executor.execute {
+                val context = resolveContext(logAnnotation, returnObj, joinPoint)
+                if (logEntity.username == null) {
+                    tryFillUserInfo(logEntity, context)
+                }
                 try {
-                    logEntity.context = objectMapper.writeValueAsString(resolveContext(logAnnotation, returnObj, joinPoint))
+                    logEntity.context = objectMapper.writeValueAsString(context)
                     if (exp == null) {
                         logEntity.isSuccess = true
                     } else {
@@ -117,7 +118,7 @@ class LogAspect {
         logAnnotation: Log,
         result: Any?,
         joinPoint: ProceedingJoinPoint,
-    ): Any? {
+    ): Map<String, *>? {
         if (logAnnotation.contextResolveExp == "null") {
             return null
         }
@@ -132,18 +133,29 @@ class LogAspect {
         evaluationContext.setVariable(SPEL_VARIABLE_ARGS, joinPoint.args)
         evaluationContext.setRootObject(LogRootObject)
         try {
-            return expression.getValue(evaluationContext, Any::class.java)
+            return expression.getValue(evaluationContext, Map::class.java) as Map<String, *>?
         } catch (e: Exception) {
             logger.error("Failed to resolve context", e)
             return mapOf(Pair("error", e.message))
         }
     }
 
-    private fun tryFillUserInfo(logEntity: LogEntityPO) {
+    /**
+     * 尝试填充用户上下文
+     * @param context 从注解获取的上下文，当用户没登录时，会使用里面的 username 值
+     */
+    private fun tryFillUserInfo(logEntity: LogEntityPO, context: Map<String, *>?) {
         SecurityContextHolder.getContext().authentication?.principal?.let {
             if (it is UserWithID) {
                 logEntity.username = it.username
                 logEntity.userId = it.id
+            }
+        }
+        if (logEntity.username == null && context != null) {
+            val un = context["username"]
+            if (un is String) {
+                logEntity.username = un
+                logEntity.id = -1
             }
         }
     }

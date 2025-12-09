@@ -4,7 +4,7 @@
 
 一个 Arthas 在线管理平台
 
-![core-preview](./images/core-preview.png)
+![core-preview](images/spectre-preview.png)
 
 📦: **零侵入性，无需为服务添加额外依赖进行集成**
 

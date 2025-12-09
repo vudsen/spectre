@@ -6,6 +6,7 @@ import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.common.plugin.rnode.TypedRuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.entity.PageDescriptor
+import io.github.vudsen.spectre.api.exception.BusinessException
 import org.apache.sshd.common.Factory
 import org.apache.sshd.common.util.threads.CloseableExecutorService
 import org.apache.sshd.common.util.threads.SshThreadPoolExecutor
@@ -16,6 +17,7 @@ import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import io.github.vudsen.spectre.common.plugin.rnode.SearchTreeBuilder
+import org.apache.sshd.common.SshException
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -180,8 +182,12 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         val node = createRuntimeNode0(conf)
         try {
             node.ensureAttachEnvironmentReady()
+        } catch (e: SshException) {
+            throw BusinessException("测试连接失败: " + e.message)
         } finally {
-            node.close()
+            try {
+                node.close()
+            } catch (_: Exception) { }
         }
     }
 

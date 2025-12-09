@@ -121,7 +121,7 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
         client.ioServiceFactoryFactory = Nio2ServiceFactoryFactory(executorServiceFactory)
         client.start()
         val session = client.connect(nodeConfig.username, nodeConfig.host, nodeConfig.port)
-            .verify(10, TimeUnit.SECONDS)
+            .verify(3, TimeUnit.SECONDS)
             .session
         nodeConfig.principal?.let {
             if (it.loginType == SshRuntimeNodeConfig.LoginType.KEY) {
@@ -135,7 +135,7 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
                 session.addPasswordIdentity(it.password)
             }
         }
-        session.auth().verify(10, TimeUnit.SECONDS)
+        session.auth().verify(3, TimeUnit.SECONDS)
         logger.info("Successfully connected to {}", nodeConfig.host)
         session
     }
