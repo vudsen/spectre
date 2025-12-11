@@ -21,13 +21,19 @@ interface RoleRepository : JpaRepository<RolePO, Long>, QueryByExampleExecutor<R
     @Query("SELECT role_id FROM user_role WHERE user_id = ?", nativeQuery = true)
     fun findUserRoleIds(@Param("userId") userId: Long): List<Long>
 
+    @Query("SELECT r FROM RolePO r WHERE r.id IN (SELECT ur.id.roleId FROM UserRolePO ur WHERE ur.id.userId = :userId)")
+    fun queryAllUserRoles(@Param("userId") userId: Long): List<RolePO>
+
     @Query("SELECT COUNT(*) FROM user_role WHERE role_id = :roleId AND user_id = :userId ", nativeQuery = true)
     fun countRoleRelationByRoleIdAndUserId(@Param("roleId") roleId: Long, @Param("userId") userId: Long): Int
 
-//    @Query("SELECT r FROM UserPO u JOIN u.roles r WHERE u.id = :userId")
-//    fun findRolesByUserId(@Param("userId") userId: Long, pageable: Pageable): Page<RolePO>
-
     @Query("SELECT u FROM UserRolePO ur JOIN UserPO u ON u.id = ur.id.userId WHERE ur.id.roleId = :roleId")
     fun findUsersByRoleId(@Param("roleId") roleId: Long, pageable: Pageable): Page<UserPO>
+
+    @Modifying
+    @Query("DELETE FROM UserRolePO WHERE id.userId = :userId AND id.roleId = :roleId")
+    fun unbindUser(@Param("roleId") roleId: Long, @Param("userId") userId: Long)
+
+    fun searchByNameStartsWith(namePrefix: String, page: Pageable): Page<RolePO>
 
 }

@@ -18,6 +18,11 @@ class DefaultRoleService(
     private val userRepository: UserRepository
 ) : RoleService {
 
+    companion object {
+        const val ADMIN_ROLE = 1L
+        const val ADMIN_ID = 1L
+    }
+
     override fun saveRole(role: RolePO) {
         roleRepository.save(role)
     }
@@ -35,16 +40,26 @@ class DefaultRoleService(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun bindUser(roleId: Long, userIds: List<Long>) {
-        for (uid in userIds) {
+    override fun bindUser(roleIds: List<Long>, userIds: List<Long>) {
+        for (roleId in roleIds) {
             val role = roleRepository.findById(roleId).getOrNull() ?: throw BusinessException("error.role.not.exit")
-            val user = userRepository.findById(uid).getOrNull() ?: throw BusinessException("error.user.not.exit")
+            for (uid in userIds) {
+                val user = userRepository.findById(uid).getOrNull() ?: throw BusinessException("error.user.not.exit")
 
-            if (roleRepository.countRoleRelationByRoleIdAndUserId(roleId, uid) != 0) {
-                throw BusinessException("error.role.already.bound.user", arrayOf(user.username, role.name))
+                if (roleRepository.countRoleRelationByRoleIdAndUserId(roleId, uid) != 0) {
+                    throw BusinessException("error.role.already.bound.user", arrayOf(user.username, role.name))
+                }
+                roleRepository.bindRoleToUser(uid, roleId)
             }
-            roleRepository.bindRoleToUser(uid, roleId)
         }
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    override fun unbindUser(roleId: Long, userId: Long) {
+        if (roleId == ADMIN_ROLE && userId == ADMIN_ID) {
+            throw BusinessException("error.cannot.unbind.admin")
+        }
+        roleRepository.unbindUser(roleId, userId)
     }
 
     override fun listRoles(
@@ -52,6 +67,14 @@ class DefaultRoleService(
         size: Int
     ): Page<RolePO> {
         return roleRepository.findAll(PageRequest.of(page, size))
+    }
+
+    override fun listUserRoles(userId: Long): List<RolePO> {
+        return roleRepository.queryAllUserRoles(userId)
+    }
+
+    override fun searchByName(name: String, page: Int, size: Int): Page<RolePO> {
+        return roleRepository.searchByNameStartsWith(name, PageRequest.of(page, size))
     }
 
 

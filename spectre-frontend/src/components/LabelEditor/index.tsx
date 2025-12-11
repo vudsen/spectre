@@ -126,7 +126,7 @@ function LabelEditor<Values extends FieldValues>(
         <div className="mb-3 flex items-center justify-between">
           <div className="header-2">标签</div>
           <div>
-            <Button variant="flat" color="primary" size="sm" onPress={onCreate}>
+            <Button variant="flat" color="primary" onPress={onCreate}>
               新增标签
             </Button>
           </div>

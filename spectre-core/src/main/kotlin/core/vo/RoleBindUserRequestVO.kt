@@ -1,12 +1,14 @@
 package io.github.vudsen.spectre.core.vo
 
-import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.Size
+
 
 class RoleBindUserRequestVO {
 
-    @NotEmpty
-    var roleId: String = ""
+    @Size(min = 1)
+    var roleIds: List<String> = emptyList()
 
+    @Size(min = 1)
     var userIds: List<String> = emptyList()
 
 }
