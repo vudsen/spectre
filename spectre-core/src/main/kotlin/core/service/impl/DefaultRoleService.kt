@@ -42,8 +42,8 @@ class DefaultRoleService(
     @Transactional(rollbackFor = [Exception::class])
     override fun bindUser(roleIds: List<Long>, userIds: List<Long>) {
         for (roleId in roleIds) {
+            val role = roleRepository.findById(roleId).getOrNull() ?: throw BusinessException("error.role.not.exit")
             for (uid in userIds) {
-                val role = roleRepository.findById(roleId).getOrNull() ?: throw BusinessException("error.role.not.exit")
                 val user = userRepository.findById(uid).getOrNull() ?: throw BusinessException("error.user.not.exit")
 
                 if (roleRepository.countRoleRelationByRoleIdAndUserId(roleId, uid) != 0) {
