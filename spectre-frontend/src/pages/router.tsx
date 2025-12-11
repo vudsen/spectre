@@ -181,6 +181,17 @@ const router = createBrowserRouter(
                 }
               },
             },
+            {
+              path: 'user/detail',
+              lazy: async () => {
+                const { default: UserDetailPage } = await import(
+                  '@/pages/permission/user/detail'
+                )
+                return {
+                  Component: UserDetailPage,
+                }
+              },
+            },
           ],
         },
         {

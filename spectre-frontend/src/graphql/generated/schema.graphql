@@ -119,6 +119,8 @@ type RoleQueries {
   boundUsers(page: Int, roleId: Long!, size: Int): UserPage!
   role(id: Long!): RolePO
   roles(page: Int, size: Int): RolePageResult!
+  searchRoleByName(name: String): RolePageResult!
+  userRoles(userId: Long!): [RolePO!]!
 }
 
 type RuntimeNodeDTO {

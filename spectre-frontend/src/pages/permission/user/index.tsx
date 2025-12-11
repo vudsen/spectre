@@ -4,6 +4,7 @@ import useGraphQL from '@/hook/useGraphQL.ts'
 import {
   Button,
   Input,
+  Link,
   Modal,
   ModalContent,
   Pagination,
@@ -77,6 +78,10 @@ const UserListPage: React.FC = () => {
     [],
   )
 
+  const toDetail = (userId: string) => {
+    nav(`/permission/user/detail?uid=${userId}`)
+  }
+
   return (
     <div className="mx-6 space-y-3">
       <div className="mb-3 text-xl font-semibold">用户列表</div>
@@ -138,7 +143,17 @@ const UserListPage: React.FC = () => {
         >
           {(user) => (
             <TableRow key={user.id}>
-              <TableCell>{user.username}</TableCell>
+              <TableCell>
+                <Link
+                  onPress={() => toDetail(user.id)}
+                  size="sm"
+                  underline="always"
+                  color="primary"
+                  className="cursor-pointer"
+                >
+                  {user.username}
+                </Link>
+              </TableCell>
               <TableCell>{user.displayName ?? '-'}</TableCell>
               <TableCell>
                 <LabelsDisplay attributes={user.labels} />

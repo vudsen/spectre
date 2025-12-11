@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.servlet.NoHandlerFoundException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.lang.reflect.InvocationTargetException
 
 @ControllerAdvice
@@ -65,6 +66,10 @@ class GlobalExceptionHandler(
                 )
         } else if (ex is BadCredentialsException) {
             return ResponseEntity.ok(ErrorResponseVO(ex.message))
+        } else if (ex is NoResourceFoundException) {
+            return ResponseEntity
+                .status(404)
+                .body(ErrorResponseVO(messageSource.getMessage("error.not.found", emptyArray(), null)))
         }
         logger.error("", ex)
         return ResponseEntity.ok(

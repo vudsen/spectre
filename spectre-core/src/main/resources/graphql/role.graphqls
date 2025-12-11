@@ -3,6 +3,8 @@ type RoleQueries {
     role(id: Long!): RolePO
     # 返回已经绑定的用户
     boundUsers(roleId: Long!, page: Int, size: Int): UserPage!
+    userRoles(userId: Long!): [RolePO!]!
+    searchRoleByName(name: String): RolePageResult!
 }
 
 

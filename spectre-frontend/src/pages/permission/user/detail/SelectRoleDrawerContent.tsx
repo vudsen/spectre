@@ -1,58 +1,56 @@
+import React, { useRef, useState } from 'react'
 import {
+  addToast,
   Button,
   DrawerBody,
   DrawerFooter,
   DrawerHeader,
   Input,
+  type Selection,
   Table,
   TableBody,
   TableCell,
   TableColumn,
   TableHeader,
   TableRow,
-  type Selection,
-  addToast,
 } from '@heroui/react'
-import React, { useRef, useState } from 'react'
-import { graphql } from '@/graphql/generated'
-import useGraphQL from '@/hook/useGraphQL.ts'
-import TableLoadingMask from '@/components/TableLoadingMask.tsx'
-import LabelsDisplay from '@/components/LabelsDisplay'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
+import TableLoadingMask from '@/components/TableLoadingMask.tsx'
+import { graphql } from '@/graphql/generated'
+import useGraphQL from '@/hook/useGraphQL.ts'
 import { bindRoleToUser } from '@/api/impl/role.ts'
 
-const ListUserWithUsernameQuery = graphql(`
-  query ListUserWithUsernameQuery($username: String!) {
-    user {
-      searchByUsername(username: $username) {
+const ListRoleWithNameQuery = graphql(`
+  query ListRoleWithNameQuery($name: String) {
+    role {
+      searchRoleByName(name: $name) {
         result {
           id
-          username
-          displayName
-          labels
+          name
+          description
         }
       }
     }
   }
 `)
 
-interface SelectUserDrawerContentProps {
+interface SelectRoleDrawerContentProps {
   onClose: () => void
-  roleId: string
+  userId: string
   onSave: () => void
+  ownedRoleIds?: string[]
 }
-
-const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
+const SelectRoleDrawerContent: React.FC<SelectRoleDrawerContentProps> = (
   props,
 ) => {
   const [qlArgs, setQlArgs] = useState({
-    username: '',
+    name: '',
   })
+  const { result, isLoading } = useGraphQL(ListRoleWithNameQuery, qlArgs)
   const taskId = useRef<undefined | number>(undefined)
-  const { result, isLoading } = useGraphQL(ListUserWithUsernameQuery, qlArgs)
-  const [isSubmitting, setSubmitting] = useState(false)
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set())
+  const [isSubmitting, setSubmitting] = useState(false)
 
   const onChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     if (taskId.current) {
@@ -60,17 +58,18 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
     }
     taskId.current = setTimeout(() => {
       setQlArgs({
-        username: e.target.value,
+        name: e.target.value,
       })
     }, 400)
   }
+
   const onSave = async () => {
     setSubmitting(true)
     try {
       if (selectedKeys === 'all') {
         await bindRoleToUser({
-          roleIds: [props.roleId],
-          userIds: result!.user.searchByUsername.result.map((usr) => usr.id),
+          roleIds: result!.role.searchRoleByName.result.map((role) => role.id),
+          userIds: [props.userId],
         })
       } else if (selectedKeys.size == 0) {
         addToast({
@@ -83,8 +82,8 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
           ids.push(selectedKey as string)
         }
         await bindRoleToUser({
-          roleIds: [props.roleId],
-          userIds: ids,
+          roleIds: ids,
+          userIds: [props.userId],
         })
       }
       addToast({
@@ -97,43 +96,41 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
       setSubmitting(false)
     }
   }
+
   return (
     <>
-      <DrawerHeader>绑定用户</DrawerHeader>
+      <DrawerHeader>绑定角色</DrawerHeader>
       <DrawerBody>
         <Input
           size="sm"
           labelPlacement="outside"
           label="搜索"
+          placeholder="搜索角色"
           onChange={onChange}
-          placeholder="搜索权限"
           startContent={<SvgIcon icon={Icon.SEARCH} />}
         />
         <Table
           onSelectionChange={setSelectedKeys}
           removeWrapper
+          disabledKeys={props.ownedRoleIds}
           aria-label="User List"
           selectionMode="multiple"
           color="primary"
         >
           <TableHeader>
-            <TableColumn>用户名</TableColumn>
-            <TableColumn>昵称</TableColumn>
-            <TableColumn>标签</TableColumn>
+            <TableColumn>角色名称</TableColumn>
+            <TableColumn>描述</TableColumn>
           </TableHeader>
           <TableBody
             isLoading={isLoading}
             loadingContent={<TableLoadingMask />}
-            items={result?.user.searchByUsername.result ?? []}
-            emptyContent={'没有匹配的用户'}
+            items={result?.role.searchRoleByName.result ?? []}
+            emptyContent={'没有匹配的角色'}
           >
-            {(user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.displayName}</TableCell>
-                <TableCell>
-                  <LabelsDisplay attributes={user.labels} />
-                </TableCell>
+            {(role) => (
+              <TableRow key={role.id}>
+                <TableCell>{role.name}</TableCell>
+                <TableCell>{role.description ?? '-'}</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -156,4 +153,4 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
   )
 }
 
-export default SelectUserDrawerContent
+export default SelectRoleDrawerContent

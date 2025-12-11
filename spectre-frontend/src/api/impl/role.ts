@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 type RoleBind = {
-  roleId: string
+  roleIds: string[]
   userIds: string[]
 }
 
@@ -21,4 +21,11 @@ export const createRole = (role: RoleModifyVO) => {
 
 export const updateRole = (role: RoleModifyVO) => {
   return axios.post('role/update', role)
+}
+
+export const unbindRole = (userId: string, roleId: string) => {
+  return axios.post('role/unbind-user', {
+    userId,
+    roleId,
+  })
 }

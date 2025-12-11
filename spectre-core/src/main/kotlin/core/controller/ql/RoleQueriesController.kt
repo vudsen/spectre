@@ -28,19 +28,25 @@ class RoleQueriesController(
         return RoleQueries
     }
 
-    @SchemaMapping
+    @SchemaMapping(typeName = "RoleQueries", field = "roles")
     fun roles(@Argument page: Int, @Argument size: Int): PageResult<RolePO> {
         return roleService.listRoles(page, size).toPageResult()
     }
 
-    @SchemaMapping
+    @SchemaMapping(typeName = "RoleQueries", field = "role")
     fun role(@Argument id: String): RolePO? {
         return roleService.findById(id.toLong())
     }
 
-    @SchemaMapping
+    @SchemaMapping(typeName = "RoleQueries", field = "boundUsers")
     fun boundUsers(@Argument roleId: Long, @Argument page: Int, @Argument size: Int): PageResult<UserPO> {
         return roleService.boundUsers(roleId, page, size).toPageResult()
     }
+
+    @SchemaMapping(typeName = "RoleQueries", field = "userRoles")
+    fun userRoles(@Argument userId: Long): List<RolePO> = roleService.listUserRoles(userId)
+
+    @SchemaMapping(typeName = "RoleQueries", field = "searchRoleByName")
+    fun searchRoleByName(@Argument name: String): PageResult<RolePO> = roleService.searchByName(name, 0, 10).toPageResult()
 
 }

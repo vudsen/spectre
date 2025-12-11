@@ -158,6 +158,8 @@ export type RoleQueries = {
   boundUsers: UserPage;
   role?: Maybe<RolePo>;
   roles: RolePageResult;
+  searchRoleByName: RolePageResult;
+  userRoles: Array<RolePo>;
 };
 
 
@@ -176,6 +178,16 @@ export type RoleQueriesRoleArgs = {
 export type RoleQueriesRolesArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   size?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type RoleQueriesSearchRoleByNameArgs = {
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type RoleQueriesUserRolesArgs = {
+  userId: Scalars['Long']['input'];
 };
 
 export type RuntimeNodeDto = {
@@ -498,6 +510,27 @@ export type ListRoleQueryQueryVariables = Exact<{
 
 export type ListRoleQueryQuery = { __typename?: 'Query', role: { __typename?: 'RoleQueries', roles: { __typename?: 'RolePageResult', totalPages?: number | null, result: Array<{ __typename?: 'RolePO', id: string, name: string, description?: string | null, createdAt?: any | null }> } } };
 
+export type ListRoleWithNameQueryQueryVariables = Exact<{
+  name?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type ListRoleWithNameQueryQuery = { __typename?: 'Query', role: { __typename?: 'RoleQueries', searchRoleByName: { __typename?: 'RolePageResult', result: Array<{ __typename?: 'RolePO', id: string, name: string, description?: string | null }> } } };
+
+export type UserRoleQueryQueryVariables = Exact<{
+  uid: Scalars['Long']['input'];
+}>;
+
+
+export type UserRoleQueryQuery = { __typename?: 'Query', role: { __typename?: 'RoleQueries', userRoles: Array<{ __typename?: 'RolePO', id: string, name: string, description?: string | null }> } };
+
+export type UserDetailQueryQueryVariables = Exact<{
+  id: Scalars['Long']['input'];
+}>;
+
+
+export type UserDetailQueryQuery = { __typename?: 'Query', user: { __typename?: 'UserQueries', user?: { __typename?: 'User', id: string, createdAt: any, displayName?: string | null, username: string, labels?: any | null } | null } };
+
 export type UserListQueryQueryVariables = Exact<{
   page?: InputMaybe<Scalars['Int']['input']>;
   size?: InputMaybe<Scalars['Int']['input']>;
@@ -802,6 +835,43 @@ export const ListRoleQueryDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<ListRoleQueryQuery, ListRoleQueryQueryVariables>;
+export const ListRoleWithNameQueryDocument = new TypedDocumentString(`
+    query ListRoleWithNameQuery($name: String) {
+  role {
+    searchRoleByName(name: $name) {
+      result {
+        id
+        name
+        description
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<ListRoleWithNameQueryQuery, ListRoleWithNameQueryQueryVariables>;
+export const UserRoleQueryDocument = new TypedDocumentString(`
+    query UserRoleQuery($uid: Long!) {
+  role {
+    userRoles(userId: $uid) {
+      id
+      name
+      description
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<UserRoleQueryQuery, UserRoleQueryQueryVariables>;
+export const UserDetailQueryDocument = new TypedDocumentString(`
+    query UserDetailQuery($id: Long!) {
+  user {
+    user(id: $id) {
+      id
+      createdAt
+      displayName
+      username
+      labels
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<UserDetailQueryQuery, UserDetailQueryQueryVariables>;
 export const UserListQueryDocument = new TypedDocumentString(`
     query UserListQuery($page: Int, $size: Int) {
   user {
