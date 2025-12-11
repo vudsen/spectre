@@ -32,12 +32,14 @@ class PolicyPermissionController(
     }
 
     @PostMapping("create")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).PERMISSION_BIND)")
     @Log("log.policy_perm.create", contextResolveExp = "pickAttributes(#args[0], 'id', 'subjectType', 'subjectId', 'resource', 'action', 'conditionExpression')")
     fun createPolicy(@RequestBody @Validated(CreateGroup::class) policy: PolicyPermissionPO) {
         policyPermissionService.save(policy)
     }
 
     @PostMapping("update")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).PERMISSION_BIND)")
     @Log("log.policy_perm.update", contextResolveExp = "pickAttributes(#args[0], 'id', 'conditionExpression')")
     fun updatePolicy(@RequestBody @Validated(UpdateGroup ::class) policy: PolicyPermissionPO) {
         policyPermissionService.save(policy)
