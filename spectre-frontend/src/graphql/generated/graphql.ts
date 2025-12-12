@@ -525,7 +525,7 @@ export type UserRoleQueryQueryVariables = Exact<{
 export type UserRoleQueryQuery = { __typename?: 'Query', role: { __typename?: 'RoleQueries', userRoles: Array<{ __typename?: 'RolePO', id: string, name: string, description?: string | null }> } };
 
 export type UserDetailQueryQueryVariables = Exact<{
-  id: Scalars['Long']['input'];
+  userId: Scalars['Long']['input'];
 }>;
 
 
@@ -860,9 +860,9 @@ export const UserRoleQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<UserRoleQueryQuery, UserRoleQueryQueryVariables>;
 export const UserDetailQueryDocument = new TypedDocumentString(`
-    query UserDetailQuery($id: Long!) {
+    query UserDetailQuery($userId: Long!) {
   user {
-    user(id: $id) {
+    user(id: $userId) {
       id
       createdAt
       displayName

@@ -8,10 +8,11 @@ import {
   NavLink,
   Outlet,
   type UIMatch,
+  useLocation,
   useMatches,
   useNavigate,
 } from 'react-router'
-import React, { useCallback } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import Icon, { type Icons } from '@/components/icon/icon.ts'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import type { RootState } from '@/store'
@@ -78,6 +79,7 @@ type NavigationSubGroup = {
   name: string
   icon: Icons
   to?: string
+  basePath: string
   items: Navigation[]
 }
 
@@ -93,6 +95,7 @@ const navigations: NavigationGroup[] = [
     items: [
       {
         name: '节点设置',
+        basePath: '/runtime-node',
         icon: Icon.DATASOURCE,
         items: [
           {
@@ -108,6 +111,7 @@ const navigations: NavigationGroup[] = [
       {
         name: '工具链',
         icon: Icon.SETTINGS,
+        basePath: '/settings',
         items: [
           {
             name: '工具',
@@ -127,6 +131,7 @@ const navigations: NavigationGroup[] = [
       {
         name: '用户管理',
         icon: Icon.USER,
+        basePath: '/permission',
         items: [
           {
             name: '用户',
@@ -145,6 +150,7 @@ const navigations: NavigationGroup[] = [
     items: [
       {
         name: '审计',
+        basePath: '/audit',
         icon: Icon.AUDIT,
         to: '/audit',
         items: [],
@@ -198,12 +204,25 @@ const NavBreadcrumbs: React.FC = () => {
 
 const Layout: React.FC = () => {
   const nav = useNavigate()
-  const tryNav = (path?: string) => {
-    if (!path) {
-      return
+  const tryNav = useCallback(
+    (path?: string) => {
+      if (!path) {
+        return
+      }
+      nav(path)
+    },
+    [nav],
+  )
+  const locations = useLocation()
+  const defaultExpandKeys = useMemo(() => {
+    for (const navigation of navigations) {
+      for (const item of navigation.items) {
+        if (locations.pathname.startsWith(item.basePath)) {
+          return [item.name]
+        }
+      }
     }
-    nav(path)
-  }
+  }, [locations.pathname])
 
   return (
     <div>
@@ -220,6 +239,7 @@ const Layout: React.FC = () => {
                 <React.Fragment key={root.name}>
                   <div className="text-xs font-normal">{root.name}</div>
                   <Accordion
+                    defaultExpandedKeys={defaultExpandKeys}
                     hideIndicator={root.items.length === 0}
                     showDivider={false}
                     selectionMode="multiple"

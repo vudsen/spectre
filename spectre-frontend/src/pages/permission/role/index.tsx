@@ -57,7 +57,7 @@ const RolePage: React.FC = () => {
   }
 
   const toRoleDetail = (roleId: string) => {
-    nav(`/permission/role/detail?subjectId=${roleId}`)
+    nav(`/permission/role/${roleId}`)
   }
 
   return (

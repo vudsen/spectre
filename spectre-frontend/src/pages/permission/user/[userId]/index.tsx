@@ -7,14 +7,14 @@ import { Button, Card, CardBody } from '@heroui/react'
 import DetailGrid from '@/components/DetailGrid.tsx'
 import { formatTime } from '@/common/util.ts'
 import SpectreTabs, { type TabContent } from '@/components/SpectreTabs'
-import UserRoleList from '@/pages/permission/user/detail/UserRoleList.tsx'
-import LabelList from '@/pages/permission/user/detail/LabelList.tsx'
-import { useNavigate } from 'react-router'
+import UserRoleList from './UserRoleList.tsx'
+import LabelList from './LabelList.tsx'
+import { useNavigate, useParams } from 'react-router'
 
 const UserDetailQuery = graphql(`
-  query UserDetailQuery($id: Long!) {
+  query UserDetailQuery($userId: Long!) {
     user {
-      user(id: $id) {
+      user(id: $userId) {
         id
         createdAt
         displayName
@@ -30,13 +30,14 @@ type UserData = DocumentResult<typeof UserDetailQuery>['user']['user']
 const UserDetail: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null)
   const [isLoading, setLoading] = useState(true)
-  const uid = useMemo(() => {
-    return new URLSearchParams(location.search).get('uid') ?? '-1'
-  }, [])
+  const params = useParams() as {
+    userId: string
+  }
+
   const nav = useNavigate()
 
   useEffect(() => {
-    execute(UserDetailQuery, { id: uid })
+    execute(UserDetailQuery, params)
       .then((r) => {
         const user = r.user.user
         if (user) {
@@ -44,7 +45,7 @@ const UserDetail: React.FC = () => {
         }
       })
       .finally(() => setLoading(false))
-  }, [uid])
+  }, [params])
 
   const crumbs: Crumb[] = useMemo(() => {
     return [
@@ -64,7 +65,7 @@ const UserDetail: React.FC = () => {
       {
         name: '角色',
         key: 'User',
-        content: <UserRoleList uid={uid} />,
+        content: <UserRoleList uid={params.userId} />,
       },
       {
         name: '标签',
@@ -72,11 +73,11 @@ const UserDetail: React.FC = () => {
         content: <LabelList labels={user?.labels} />,
       },
     ]
-  }, [uid, user?.labels])
+  }, [params, user?.labels])
 
   const updateUser = useCallback(() => {
-    nav(`/permission/user/modify?uid=${uid}`)
-  }, [nav, uid])
+    nav(`/permission/user/modify?uid=${params.userId}`)
+  }, [nav, params])
 
   if (isLoading) {
     return (

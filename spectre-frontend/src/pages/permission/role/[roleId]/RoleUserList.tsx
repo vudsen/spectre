@@ -5,6 +5,7 @@ import {
   Drawer,
   DrawerContent,
   Input,
+  Link,
   Pagination,
   Table,
   TableBody,
@@ -14,14 +15,15 @@ import {
   TableRow,
   useDisclosure,
 } from '@heroui/react'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import LabelsDisplay from '@/components/LabelsDisplay'
 import { graphql } from '@/graphql/generated'
-import SelectUserDrawerContent from '@/pages/permission/role/detail/SelectUserDrawerContent.tsx'
+import SelectUserDrawerContent from './SelectUserDrawerContent.tsx'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
+import { useNavigate } from 'react-router'
 
 const RoleBoundUserQuery = graphql(`
   query RoleBoundUserQuery($roleId: Long!, $page: Int, $size: Int) {
@@ -42,9 +44,12 @@ const RoleBoundUserQuery = graphql(`
   }
 `)
 
-const RoleUserList: React.FC = () => {
-  const subjectId =
-    new URLSearchParams(location.search).get('subjectId') ?? '-1'
+interface RoleUserListProps {
+  roleId: string
+}
+
+const RoleUserList: React.FC<RoleUserListProps> = (props) => {
+  const subjectId = props.roleId
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const [qlParams, setQlParams] = useState({
     roleId: subjectId,
@@ -52,11 +57,22 @@ const RoleUserList: React.FC = () => {
     size: 10,
   })
   const { isLoading, result } = useGraphQL(RoleBoundUserQuery, qlParams)
+  const nav = useNavigate()
   const totalPage = result?.role.boundUsers.totalPages ?? 0
 
   const refresh = () => {
     setQlParams({ ...qlParams })
   }
+
+  const toUserPage = useCallback(
+    (userId: string) => {
+      nav(`/permission/user/${userId}`)
+    },
+    [nav],
+  )
+
+  const users = result?.role.boundUsers.result ?? []
+  const userIds = users.map((u) => u.id)
 
   return (
     <>
@@ -68,19 +84,13 @@ const RoleUserList: React.FC = () => {
               <Button
                 isIconOnly
                 color="primary"
-                size="sm"
                 className="mx-2"
                 variant="flat"
                 onPress={refresh}
               >
                 <SvgIcon icon={Icon.REFRESH} />
               </Button>
-              <Button
-                color="primary"
-                variant="bordered"
-                size="sm"
-                onPress={onOpen}
-              >
+              <Button color="primary" variant="flat" onPress={onOpen}>
                 添加用户
               </Button>
             </div>
@@ -122,12 +132,22 @@ const RoleUserList: React.FC = () => {
               <TableBody
                 emptyContent={<div>没有绑定任何用户</div>}
                 isLoading={isLoading}
-                items={result?.role.boundUsers.result ?? []}
+                items={users}
                 loadingContent={<TableLoadingMask />}
               >
                 {(user) => (
                   <TableRow key={user.id}>
-                    <TableCell>{user.username}</TableCell>
+                    <TableCell>
+                      <Link
+                        color="primary"
+                        underline="always"
+                        size="sm"
+                        className="cursor-pointer"
+                        onPress={() => toUserPage(user.id)}
+                      >
+                        {user.username}
+                      </Link>
+                    </TableCell>
                     <TableCell>{user.displayName ?? '-'}</TableCell>
                     <TableCell>
                       <LabelsDisplay attributes={user.labels} />
@@ -153,6 +173,7 @@ const RoleUserList: React.FC = () => {
         <DrawerContent>
           {(onClose) => (
             <SelectUserDrawerContent
+              boundUserIds={userIds}
               roleId={subjectId}
               onClose={onClose}
               onSave={refresh}

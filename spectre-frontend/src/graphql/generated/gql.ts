@@ -28,7 +28,7 @@ type Documents = {
     "\n  query ListRoleQuery($page: Int, $size: Int) {\n    role {\n      roles(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          name\n          description\n          createdAt\n        }\n      }\n    }\n  }\n": typeof types.ListRoleQueryDocument,
     "\n  query ListRoleWithNameQuery($name: String) {\n    role {\n      searchRoleByName(name: $name) {\n        result {\n          id\n          name\n          description\n        }\n      }\n    }\n  }\n": typeof types.ListRoleWithNameQueryDocument,
     "\n  query UserRoleQuery($uid: Long!) {\n    role {\n      userRoles(userId: $uid) {\n        id\n        name\n        description\n      }\n    }\n  }\n": typeof types.UserRoleQueryDocument,
-    "\n  query UserDetailQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        createdAt\n        displayName\n        username\n        labels\n      }\n    }\n  }\n": typeof types.UserDetailQueryDocument,
+    "\n  query UserDetailQuery($userId: Long!) {\n    user {\n      user(id: $userId) {\n        id\n        createdAt\n        displayName\n        username\n        labels\n      }\n    }\n  }\n": typeof types.UserDetailQueryDocument,
     "\n  query UserListQuery($page: Int, $size: Int) {\n    user {\n      users(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          createdAt\n          displayName\n          username\n          labels\n        }\n      }\n    }\n  }\n": typeof types.UserListQueryDocument,
     "\n  query UserQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        labels\n        username\n        displayName\n      }\n    }\n  }\n": typeof types.UserQueryDocument,
     "\n  query ToolchainBundleQueryForAttach {\n    toolchain {\n      toolchainBundles {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n": typeof types.ToolchainBundleQueryForAttachDocument,
@@ -57,7 +57,7 @@ const documents: Documents = {
     "\n  query ListRoleQuery($page: Int, $size: Int) {\n    role {\n      roles(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          name\n          description\n          createdAt\n        }\n      }\n    }\n  }\n": types.ListRoleQueryDocument,
     "\n  query ListRoleWithNameQuery($name: String) {\n    role {\n      searchRoleByName(name: $name) {\n        result {\n          id\n          name\n          description\n        }\n      }\n    }\n  }\n": types.ListRoleWithNameQueryDocument,
     "\n  query UserRoleQuery($uid: Long!) {\n    role {\n      userRoles(userId: $uid) {\n        id\n        name\n        description\n      }\n    }\n  }\n": types.UserRoleQueryDocument,
-    "\n  query UserDetailQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        createdAt\n        displayName\n        username\n        labels\n      }\n    }\n  }\n": types.UserDetailQueryDocument,
+    "\n  query UserDetailQuery($userId: Long!) {\n    user {\n      user(id: $userId) {\n        id\n        createdAt\n        displayName\n        username\n        labels\n      }\n    }\n  }\n": types.UserDetailQueryDocument,
     "\n  query UserListQuery($page: Int, $size: Int) {\n    user {\n      users(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          createdAt\n          displayName\n          username\n          labels\n        }\n      }\n    }\n  }\n": types.UserListQueryDocument,
     "\n  query UserQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        labels\n        username\n        displayName\n      }\n    }\n  }\n": types.UserQueryDocument,
     "\n  query ToolchainBundleQueryForAttach {\n    toolchain {\n      toolchainBundles {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n": types.ToolchainBundleQueryForAttachDocument,
@@ -128,7 +128,7 @@ export function graphql(source: "\n  query UserRoleQuery($uid: Long!) {\n    rol
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query UserDetailQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        createdAt\n        displayName\n        username\n        labels\n      }\n    }\n  }\n"): typeof import('./graphql').UserDetailQueryDocument;
+export function graphql(source: "\n  query UserDetailQuery($userId: Long!) {\n    user {\n      user(id: $userId) {\n        id\n        createdAt\n        displayName\n        username\n        labels\n      }\n    }\n  }\n"): typeof import('./graphql').UserDetailQueryDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

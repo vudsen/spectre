@@ -160,10 +160,10 @@ const router = createBrowserRouter(
               },
             },
             {
-              path: 'role/detail',
+              path: 'role/:roleId',
               lazy: async () => {
                 const { default: RolePermissionDetailPage } = await import(
-                  '@/pages/permission/role/detail'
+                  '@/pages/permission/role/[roleId]'
                 )
                 return {
                   Component: RolePermissionDetailPage,
@@ -182,10 +182,10 @@ const router = createBrowserRouter(
               },
             },
             {
-              path: 'user/detail',
+              path: 'user/:userId',
               lazy: async () => {
                 const { default: UserDetailPage } = await import(
-                  '@/pages/permission/user/detail'
+                  '@/pages/permission/user/[userId]'
                 )
                 return {
                   Component: UserDetailPage,
