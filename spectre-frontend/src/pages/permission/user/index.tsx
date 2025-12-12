@@ -79,7 +79,7 @@ const UserListPage: React.FC = () => {
   )
 
   const toDetail = (userId: string) => {
-    nav(`/permission/user/detail?uid=${userId}`)
+    nav(`/permission/user/${userId}`)
   }
 
   return (

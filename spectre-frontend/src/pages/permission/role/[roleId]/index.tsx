@@ -12,12 +12,13 @@ import {
 import { formatTime } from '@/common/util.ts'
 import useCrumb, { type Crumb } from '@/hook/useCrumb.ts'
 import SpectreTabs, { type TabContent } from '@/components/SpectreTabs'
-import RoleUserList from '@/pages/permission/role/detail/RoleUserList.tsx'
+import RoleUserList from './RoleUserList.tsx'
 import StaticPermissionList from '@/components/page/StaticPermissionList'
 import PolicyPermissionList from '@/components/page/PolicyPermissionList'
 import RoleModifyDrawerContent from '@/pages/permission/role/RoleModifyDrawerContent.tsx'
 import { type DocumentResult, execute } from '@/graphql/execute.ts'
 import type { RoleModifyVO } from '@/api/impl/role.ts'
+import { useParams } from 'react-router'
 
 const RolePermissionDetailQuery = graphql(`
   query RolePermissionDetailQuery($roleId: Long!) {
@@ -36,19 +37,17 @@ type UserRoleData = DocumentResult<
   typeof RolePermissionDetailQuery
 >['role']['role']
 const RolePermissionDetailPage: React.FC = () => {
-  const param = useMemo(() => {
-    const searchParams = new URLSearchParams(location.search)
-    return {
-      roleId: searchParams.get('subjectId') ?? '-1',
-    }
-  }, [])
+  const params = useParams() as {
+    roleId: string
+  }
+
   const roleModifyDrawerClosure = useDisclosure()
   const [role, setRole] = useState<UserRoleData | null>(null)
   const [isLoading, setLoading] = useState(false)
 
   useEffect(() => {
     setLoading(true)
-    execute(RolePermissionDetailQuery, param)
+    execute(RolePermissionDetailQuery, params)
       .then((r) => {
         const result = r.role.role
         if (result) {
@@ -58,7 +57,7 @@ const RolePermissionDetailPage: React.FC = () => {
       .finally(() => {
         setLoading(false)
       })
-  }, [param])
+  }, [params])
 
   const crumbs: Crumb[] = useMemo(() => {
     return [
@@ -78,24 +77,24 @@ const RolePermissionDetailPage: React.FC = () => {
       {
         name: '用户',
         key: 'User',
-        content: <RoleUserList />,
+        content: <RoleUserList roleId={params.roleId} />,
       },
       {
         name: '静态权限',
         key: 'StaticPermission',
         content: (
-          <StaticPermissionList subjectId={param.roleId} subjectType="ROLE" />
+          <StaticPermissionList subjectId={params.roleId} subjectType="ROLE" />
         ),
       },
       {
         name: '策略权限',
         key: 'PolicyPermission',
         content: (
-          <PolicyPermissionList subjectId={param.roleId} subjectType="ROLE" />
+          <PolicyPermissionList subjectId={params.roleId} subjectType="ROLE" />
         ),
       },
     ]
-  }, [param.roleId])
+  }, [params.roleId])
 
   const onSave = (newRole: RoleModifyVO) => {
     setRole((prev) => {
@@ -128,8 +127,7 @@ const RolePermissionDetailPage: React.FC = () => {
             <div className="header-2">详细信息</div>
             <Button
               color="primary"
-              variant="bordered"
-              size="sm"
+              variant="flat"
               onPress={roleModifyDrawerClosure.onOpen}
             >
               编辑

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
   addToast,
   Button,
@@ -6,6 +6,7 @@ import {
   CardBody,
   Drawer,
   DrawerContent,
+  Link,
   Table,
   TableBody,
   TableCell,
@@ -21,7 +22,8 @@ import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { unbindRole } from '@/api/impl/role.ts'
 import { showDialog } from '@/common/util.ts'
-import SelectRoleDrawerContent from '@/pages/permission/user/detail/SelectRoleDrawerContent.tsx'
+import SelectRoleDrawerContent from './SelectRoleDrawerContent.tsx'
+import { useNavigate } from 'react-router'
 
 const UserRoleQuery = graphql(`
   query UserRoleQuery($uid: Long!) {
@@ -44,6 +46,7 @@ const UserRoleList: React.FC<UserRoleListProps> = (props) => {
   const { result, isLoading } = useGraphQL(UserRoleQuery, qlParams)
   const roles = result?.role.userRoles ?? []
   const roleModifyDrawerClosure = useDisclosure()
+  const nav = useNavigate()
 
   const removeRole = (roleId: string, roleName: string) => {
     showDialog({
@@ -65,6 +68,13 @@ const UserRoleList: React.FC<UserRoleListProps> = (props) => {
   const onModified = () => {
     setQueryParams({ ...qlParams })
   }
+
+  const toRolePage = useCallback(
+    (roleId: string) => {
+      nav(`/permission/role/${roleId}`)
+    },
+    [nav],
+  )
 
   return (
     <>
@@ -97,7 +107,17 @@ const UserRoleList: React.FC<UserRoleListProps> = (props) => {
             >
               {(role) => (
                 <TableRow key={role.id}>
-                  <TableCell>{role.name}</TableCell>
+                  <TableCell>
+                    <Link
+                      color="primary"
+                      underline="always"
+                      size="sm"
+                      className="cursor-pointer"
+                      onPress={() => toRolePage(role.id)}
+                    >
+                      {role.name}
+                    </Link>
+                  </TableCell>
                   <TableCell>{role.description}</TableCell>
                   <TableCell>
                     <Button

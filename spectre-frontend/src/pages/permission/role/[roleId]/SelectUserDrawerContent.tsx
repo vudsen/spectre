@@ -41,6 +41,7 @@ interface SelectUserDrawerContentProps {
   onClose: () => void
   roleId: string
   onSave: () => void
+  boundUserIds: string[]
 }
 
 const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
@@ -115,6 +116,7 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
           aria-label="User List"
           selectionMode="multiple"
           color="primary"
+          disabledKeys={props.boundUserIds}
         >
           <TableHeader>
             <TableColumn>用户名</TableColumn>
