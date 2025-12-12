@@ -11,7 +11,22 @@ declare let process: {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react({
+      plugins: [
+        [
+          '@swc-contrib/plugin-graphql-codegen-client-preset',
+          {
+            artifactDirectory: path
+              .resolve(__dirname, './src/graphql/generated')
+              .replaceAll('\\', '/'),
+            gqlTagName: 'graphql',
+          },
+        ],
+      ],
+    }),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
