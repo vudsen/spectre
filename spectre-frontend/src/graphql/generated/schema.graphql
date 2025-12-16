@@ -223,6 +223,22 @@ type ToolchainItemQueries {
   toolchainBundle(id: Long!): ToolchainBundlePO
   toolchainBundles(page: Int = 0, size: Int = 10): ToolchainBundlePage!
   toolchainItems(page: Int = 0, size: Int = 10, type: ToolchainType!): ToolchainItemsPage!
+  toolchainItemsV2(page: Int = 0, size: Int = 10, type: ToolchainType!): ToolchainItemResponseVOPageResult!
+}
+
+type ToolchainItemResponseVO {
+  armUrl: String
+  createdAt: Timestamp!
+  isArmCached: Boolean!
+  isX86Cached: Boolean!
+  tag: String!
+  type: ToolchainType!
+  url: String!
+}
+
+type ToolchainItemResponseVOPageResult {
+  result: [ToolchainItemResponseVO!]!
+  totalPages: Int!
 }
 
 type ToolchainItemsPage {

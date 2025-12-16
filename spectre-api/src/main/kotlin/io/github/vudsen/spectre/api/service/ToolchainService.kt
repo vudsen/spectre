@@ -1,8 +1,10 @@
 package io.github.vudsen.spectre.api.service
 
+import io.github.vudsen.spectre.api.vo.ToolchainItemResponseVO
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemPO
+import org.springframework.core.io.InputStreamSource
 import org.springframework.data.domain.Page
 
 interface ToolchainService {
@@ -33,5 +35,17 @@ interface ToolchainService {
      * 更新或者创建工具包
      */
     fun updateOrCreateToolchainBundle(po: ToolchainBundlePO): ToolchainBundlePO
+
+    /**
+     * 检查包是否缓存到本地.
+     *
+     * 该方法仅适用于单机部署，用于手动上传工具包。对于集群环境，该方法不一定可靠.
+     */
+    fun isPackageCached(type: ToolchainType, tag: String, isArm: Boolean): Boolean
+
+    /**
+     * 将包缓存到本地
+     */
+    fun cachePackageToLocal(type: ToolchainType, tag: String, isArm: Boolean, source: InputStreamSource)
 
 }

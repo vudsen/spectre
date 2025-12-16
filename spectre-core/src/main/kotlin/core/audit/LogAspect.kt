@@ -135,7 +135,7 @@ class LogAspect {
         try {
             return expression.getValue(evaluationContext, Map::class.java) as Map<String, *>?
         } catch (e: Exception) {
-            logger.error("Failed to resolve context", e)
+            logger.error("Failed to resolve context for method {}", joinPoint.signature.declaringTypeName, e)
             return mapOf(Pair("error", e.message))
         }
     }

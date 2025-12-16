@@ -76,17 +76,18 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
 
     private fun prepareBundle(baseDirectory: String, item: ToolchainItemDTO): String {
         val armUrl = item.armUrl
-        var filename: String
+        var isArm: Boolean
         var downloadUrl: String
-        if (armUrl != null && armUrl.isNotEmpty() && runtimeNode.isArm()) {
-            filename = "${item.type.originalName}-arm.${item.type.bundleExtensionName}"
+
+        if (!armUrl.isNullOrEmpty() && runtimeNode.isArm()) {
+            isArm = true
             downloadUrl = armUrl
         } else {
-            filename = "${item.type.originalName}-${item.tag}.${item.type.bundleExtensionName}"
+            isArm = false
             downloadUrl = item.url
         }
-        val path = LocalPackageManager.resolvePackage(filename, downloadUrl)
-        val dest = "$baseDirectory/$filename"
+        val path = LocalPackageManager.resolvePackage(item.type, item.tag, isArm, downloadUrl)
+        val dest = "$baseDirectory/$isArm"
         ProgressReportHolder.currentProgressManager()?.pushState("上传${item.type.originalName}到目标节点")
         try {
             runtimeNode.upload(path, dest)
