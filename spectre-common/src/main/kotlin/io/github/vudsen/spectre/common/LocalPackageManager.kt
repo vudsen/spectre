@@ -54,18 +54,18 @@ object LocalPackageManager {
      * @param url 文件路径
      * @return 软件包路径
      */
-    fun resolvePackage(type: ToolchainType, tag: String, isArm: Boolean, url: String): String {
+    fun resolvePackage(type: ToolchainType, tag: String, isArm: Boolean, url: String): File {
         val destPath = resolvePackagePath(type, tag, isArm)
         val destFile = File(destPath)
         if (destFile.exists()) {
             if (destFile.extension == "zip") {
                 val tgz = File("${destFile.parentFile.absolutePath}/${destFile.nameWithoutExtension}.tar.gz")
                 if (tgz.exists()) {
-                    return tgz.absolutePath
+                    return tgz
                 }
                 return repackageToGzip(destFile)
             }
-            return destPath
+            return destFile
         }
         if (!destFile.parentFile.mkdirs()) {
             logger.warn("Failed to create directory for file: $destPath")
@@ -123,10 +123,10 @@ object LocalPackageManager {
         if (destFile.extension == "zip") {
             return repackageToGzip(destFile)
         }
-        return destPath
+        return destFile
     }
 
-    private fun repackageToGzip(file: File): String {
+    private fun repackageToGzip(file: File): File {
         // 解压 zip 文件到临时目录
         val tempDir = File(file.parent, file.nameWithoutExtension + "_tmp")
         tempDir.mkdirs()
@@ -166,7 +166,7 @@ object LocalPackageManager {
             // 清理临时目录
             tempDir.deleteRecursively()
         }
-        return tarGzFile.absolutePath
+        return tarGzFile
     }
 
 }

@@ -51,7 +51,6 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
         }
         container.start()
 
-        // TODO 结束后删除容器
         val result =
             container.execInContainer("/usr/bin/docker", "run", "--name", MATH_GAME, "--rm", "-d", TestConstant.DOCKER_IMAGE_MATH_GAME)
         if (result.exitCode != 0) {

@@ -86,11 +86,12 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
             isArm = false
             downloadUrl = item.url
         }
-        val path = LocalPackageManager.resolvePackage(item.type, item.tag, isArm, downloadUrl)
-        val dest = "$baseDirectory/$isArm"
+        val file = LocalPackageManager.resolvePackage(item.type, item.tag, isArm, downloadUrl)
+
+        val dest = "$baseDirectory/${file.name}"
         ProgressReportHolder.currentProgressManager()?.pushState("上传${item.type.originalName}到目标节点")
         try {
-            runtimeNode.upload(path, dest)
+            runtimeNode.upload(file.absolutePath, dest)
         } finally {
             ProgressReportHolder.currentProgressManager()?.popState()
         }
