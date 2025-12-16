@@ -335,6 +335,7 @@ export type ToolchainItemQueries = {
   toolchainBundle?: Maybe<ToolchainBundlePo>;
   toolchainBundles: ToolchainBundlePage;
   toolchainItems: ToolchainItemsPage;
+  toolchainItemsV2: ToolchainItemResponseVoPageResult;
 };
 
 
@@ -353,6 +354,30 @@ export type ToolchainItemQueriesToolchainItemsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   size?: InputMaybe<Scalars['Int']['input']>;
   type: Scalars['ToolchainType']['input'];
+};
+
+
+export type ToolchainItemQueriesToolchainItemsV2Args = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  size?: InputMaybe<Scalars['Int']['input']>;
+  type: Scalars['ToolchainType']['input'];
+};
+
+export type ToolchainItemResponseVo = {
+  __typename?: 'ToolchainItemResponseVO';
+  armUrl?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Timestamp']['output'];
+  isArmCached: Scalars['Boolean']['output'];
+  isX86Cached: Scalars['Boolean']['output'];
+  tag: Scalars['String']['output'];
+  type: Scalars['ToolchainType']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type ToolchainItemResponseVoPageResult = {
+  __typename?: 'ToolchainItemResponseVOPageResult';
+  result: Array<ToolchainItemResponseVo>;
+  totalPages: Scalars['Int']['output'];
 };
 
 export type ToolchainItemsPage = {
@@ -613,7 +638,7 @@ export type ToolchainItemsQueryQueryVariables = Exact<{
 }>;
 
 
-export type ToolchainItemsQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainItems: { __typename?: 'ToolchainItemsPage', totalPages: number, result: Array<{ __typename?: 'ToolchainItemPO', url: string, createdAt: any, id: { __typename?: 'ToolchainItemId', type: any, tag: string } }> } } };
+export type ToolchainItemsQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainItemsV2: { __typename?: 'ToolchainItemResponseVOPageResult', totalPages: number, result: Array<{ __typename?: 'ToolchainItemResponseVO', type: any, tag: string, createdAt: any, isArmCached: boolean, isX86Cached: boolean }> } } };
 
 export type UpdateOrCreateToolchainItemMutationVariables = Exact<{
   po?: InputMaybe<ToolchainItemModify>;
@@ -1040,15 +1065,14 @@ export const CreateToolchainBundleDocument = new TypedDocumentString(`
 export const ToolchainItemsQueryDocument = new TypedDocumentString(`
     query ToolchainItemsQuery($type: ToolchainType!, $page: Int, $size: Int) {
   toolchain {
-    toolchainItems(type: $type, page: $page, size: $size) {
+    toolchainItemsV2(type: $type, page: $page, size: $size) {
       totalPages
       result {
-        id {
-          type
-          tag
-        }
-        url
+        type
+        tag
         createdAt
+        isArmCached
+        isX86Cached
       }
     }
   }

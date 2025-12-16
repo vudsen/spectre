@@ -4,6 +4,7 @@ type ToolchainItemQueries {
     toolchainItems(type: ToolchainType!, page: Int = 0, size: Int = 10): ToolchainItemsPage!
     toolchainBundles(page: Int = 0, size: Int = 10): ToolchainBundlePage!
     toolchainBundle(id: Long!): ToolchainBundlePO
+    toolchainItemsV2(type: ToolchainType!, page: Int = 0, size: Int = 10): ToolchainItemResponseVOPageResult!
 }
 
 type ToolchainMutations {
@@ -53,4 +54,19 @@ type ToolchainItemPO {
     id: ToolchainItemId!
     url: String!
     createdAt: Timestamp!
+}
+
+type ToolchainItemResponseVO {
+    type: ToolchainType!
+    tag: String!
+    url: String!
+    createdAt: Timestamp!
+    armUrl: String
+    isX86Cached: Boolean!
+    isArmCached: Boolean!
+}
+
+type ToolchainItemResponseVOPageResult {
+    totalPages: Int!
+    result: [ToolchainItemResponseVO!]!
 }

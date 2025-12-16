@@ -2,8 +2,10 @@ package io.github.vudsen.spectre.common
 
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.common.progress.checkCanceled
+import io.github.vudsen.spectre.repo.entity.ToolchainType
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.InputStreamSource
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -16,26 +18,54 @@ object LocalPackageManager {
 
     private val logger = LoggerFactory.getLogger(LocalPackageManager::class.java)
 
+    private fun resolvePackageName(type: ToolchainType, tag: String, isArm: Boolean): String {
+        return if (isArm) {
+            "${type.originalName}-arm-${tag}.${type.bundleExtensionName}"
+        } else {
+            "${type.originalName}-${tag}.${type.bundleExtensionName}"
+        }
+    }
+
+    private fun resolvePackagePath(
+        type: ToolchainType,
+        tag: String,
+        isArm: Boolean
+    ): String =
+        "${SpectreEnvironment.SPECTRE_HOME}/downloads/${resolvePackageName(type, tag, isArm)}"
+
+
+    fun isCached(type: ToolchainType, tag: String, isArm: Boolean): Boolean {
+        val destPath = resolvePackagePath(type, tag, isArm)
+        return File(destPath).exists()
+    }
+
+    fun savePackage(type: ToolchainType, tag: String, isArm: Boolean, source: InputStreamSource) {
+        source.inputStream.use { inputStream ->
+            FileOutputStream(File(resolvePackagePath(type, tag, isArm))).use { fileOutputStream ->
+                inputStream.transferTo(fileOutputStream)
+            }
+        }
+    }
+
     /**
      * 获取对应软件包的路径.
      *
      * **如果软件包是 `zip`，则会被解压后重新打包成 `tar.gz`**；对于其它类型的文件不会做任何处理.
-     * @param name 文件名称
      * @param url 文件路径
      * @return 软件包路径
      */
-    fun resolvePackage(name: String, url: String): String {
-        val destPath = "${SpectreEnvironment.SPECTRE_HOME}/downloads/${name}"
+    fun resolvePackage(type: ToolchainType, tag: String, isArm: Boolean, url: String): File {
+        val destPath = resolvePackagePath(type, tag, isArm)
         val destFile = File(destPath)
-        if (destFile.exists() && destFile.isFile) {
+        if (destFile.exists()) {
             if (destFile.extension == "zip") {
                 val tgz = File("${destFile.parentFile.absolutePath}/${destFile.nameWithoutExtension}.tar.gz")
                 if (tgz.exists()) {
-                    return tgz.absolutePath
+                    return tgz
                 }
                 return repackageToGzip(destFile)
             }
-            return destPath
+            return destFile
         }
         if (!destFile.parentFile.mkdirs()) {
             logger.warn("Failed to create directory for file: $destPath")
@@ -43,7 +73,7 @@ object LocalPackageManager {
 
         val tempFile = File(destFile.parentFile.absolutePath + "/" + destFile.name + ".tmp")
 
-        val baseText = "下载 $name 到服务器"
+        val baseText = "下载 ${type.originalName} 到服务器"
         val progress = ProgressReportHolder.currentProgressManager()
         progress?.pushState(baseText)
 
@@ -72,8 +102,13 @@ object LocalPackageManager {
                             output.write(buffer, 0, bytesRead)
                             totalBytesRead += bytesRead
                             checkCanceled()
-                            progress ?.let {
-                                it.currentProgress()?.title = "$baseText (${String.format("%.2fMB", totalBytesRead * 1.0 / 1024 / 1024)} / ${totalMb}MB)"
+                            progress?.let {
+                                it.currentProgress()?.title = "$baseText (${
+                                    String.format(
+                                        "%.2fMB",
+                                        totalBytesRead * 1.0 / 1024 / 1024
+                                    )
+                                } / ${totalMb}MB)"
                             }
                         }
                     }
@@ -88,10 +123,10 @@ object LocalPackageManager {
         if (destFile.extension == "zip") {
             return repackageToGzip(destFile)
         }
-        return destPath
+        return destFile
     }
 
-    private fun repackageToGzip(file: File): String {
+    private fun repackageToGzip(file: File): File {
         // 解压 zip 文件到临时目录
         val tempDir = File(file.parent, file.nameWithoutExtension + "_tmp")
         tempDir.mkdirs()
@@ -131,7 +166,8 @@ object LocalPackageManager {
             // 清理临时目录
             tempDir.deleteRecursively()
         }
-        return tarGzFile.absolutePath
+        return tarGzFile
     }
 
 }
+

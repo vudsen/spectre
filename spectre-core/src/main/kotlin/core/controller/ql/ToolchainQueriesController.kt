@@ -1,13 +1,12 @@
 package io.github.vudsen.spectre.core.controller.ql
 
 import io.github.vudsen.spectre.core.bean.PageResult
-import io.github.vudsen.spectre.core.bean.emptyResult
 import io.github.vudsen.spectre.core.bean.toPageResult
 import io.github.vudsen.spectre.api.service.ToolchainService
+import io.github.vudsen.spectre.api.vo.ToolchainItemResponseVO
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemPO
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.graphql.data.method.annotation.SchemaMapping
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 @SchemaMapping(typeName = "ToolchainItemQueries")
+@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_READ)")
 class ToolchainQueriesController(
     private val toolchainService: ToolchainService
 ) {
@@ -27,26 +27,43 @@ class ToolchainQueriesController(
         return ToolchainItemQueries
     }
 
-    @SchemaMapping
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_READ)")
+    @SchemaMapping(typeName = "ToolchainItemQueries", field = "toolchainItems")
     fun toolchainItems(@Argument type: String, @Argument page: Int, @Argument size: Int): PageResult<ToolchainItemPO> {
-        try {
-
-            return toolchainService.listToolchainItems(ToolchainType.valueOf(type), page, size).toPageResult()
-        } catch (e: IllegalArgumentException) {
-            return emptyResult()
-        }
+        return toolchainService.listToolchainItems(ToolchainType.valueOf(type), page, size).toPageResult()
     }
 
-    @SchemaMapping
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_BUNDLE_READ)")
+    @SchemaMapping(typeName = "ToolchainItemQueries", field = "toolchainBundles")
     fun toolchainBundles(@Argument page: Int, @Argument size: Int): PageResult<ToolchainBundlePO> {
         return toolchainService.listToolchainBundles(page, size).toPageResult()
     }
 
-    @SchemaMapping
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_BUNDLE_READ)")
+    @SchemaMapping(typeName = "ToolchainItemQueries", field = "toolchainBundle")
     fun toolchainBundle(@Argument id: String): ToolchainBundlePO? {
         return toolchainService.resolveToolchainBundle(id.toLong())
     }
+
+    @SchemaMapping(typeName = "ToolchainItemQueries", field = "toolchainItemsV2")
+    fun toolchainItemsV2(
+        @Argument type: String,
+        @Argument page: Int,
+        @Argument size: Int
+    ): PageResult<ToolchainItemResponseVO>? {
+        val result = toolchainService.listToolchainItems(ToolchainType.valueOf(type), page, size)
+        return PageResult(result.totalPages, result.mapIndexed { _, item ->
+            val id = item.id!!
+            val type = id.type!!
+            val tag = id.tag!!
+            return@mapIndexed ToolchainItemResponseVO(
+                type,
+                tag,
+                item.url!!,
+                item.armUrl!!,
+                item.createdAt!!,
+                toolchainService.isPackageCached(type, tag, false),
+                toolchainService.isPackageCached(type, tag, true)
+            )
+        })
+
+    }
+
 }

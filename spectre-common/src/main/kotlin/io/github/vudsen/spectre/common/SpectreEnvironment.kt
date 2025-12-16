@@ -2,6 +2,7 @@ package io.github.vudsen.spectre.common
 
 import io.github.vudsen.spectre.api.entity.OS
 import io.github.vudsen.spectre.api.entity.currentOS
+import org.slf4j.LoggerFactory
 
 object SpectreEnvironment {
 
@@ -14,18 +15,20 @@ object SpectreEnvironment {
 
     init {
         var home = System.getenv("SPECTRE_HOME")
+        val logger = LoggerFactory.getLogger(SpectreEnvironment::class.java)
         if (home == null) {
-            if (currentOS == OS.LINUX) {
-                home = "/opt/spectre"
+            home = if (currentOS == OS.LINUX) {
+                "/opt/spectre"
             } else {
                 val userHome = System.getProperty("user.home")
                 if (currentOS == OS.WINDOWS) {
-                    home = "$userHome\\AppData\\Local\\spectre"
+                    "$userHome\\AppData\\Local\\spectre"
                 } else {
                     // mac
-                    home = "$userHome/Library/Application Support/spectre"
+                    "$userHome/Library/Application Support/spectre"
                 }
             }
+            logger.warn("SPECTRE_HOME is not specific, will use the default path: {}", home)
         }
         SPECTRE_HOME = home
         GRAPHQL_AUTHORIZATION_TOKEN = System.getenv("GRAPHQL_AUTHORIZATION_TOKEN")

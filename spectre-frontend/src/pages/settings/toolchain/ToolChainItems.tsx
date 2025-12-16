@@ -1,14 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Button,
+  Code,
   Drawer,
   DrawerContent,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
   Input,
   Link,
+  Modal,
+  ModalContent,
   Pagination,
   Table,
   TableBody,
@@ -16,6 +15,7 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Tooltip,
   useDisclosure,
 } from '@heroui/react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
@@ -26,27 +26,75 @@ import { formatTime } from '@/common/util.ts'
 import ToolchainItemModifyDrawerContent from './ToolchainItemModifyDrawerContent'
 import type { ToolchainItemType } from '@/pages/settings/toolchain/ToolchainItemType.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
+import type { DocumentResult } from '@/graphql/execute.ts'
+import UploadToolchainModalContent from '@/pages/settings/toolchain/UploadToolchainModalContent.tsx'
 
 const ToolchainItemsQuery = graphql(`
   query ToolchainItemsQuery($type: ToolchainType!, $page: Int, $size: Int) {
     toolchain {
-      toolchainItems(type: $type, page: $page, size: $size) {
+      toolchainItemsV2(type: $type, page: $page, size: $size) {
         totalPages
         result {
-          id {
-            type
-            tag
-          }
-          url
+          type
+          tag
           createdAt
+          isArmCached
+          isX86Cached
         }
       }
     }
   }
 `)
 
+type ToolchainItemResponseVO = DocumentResult<
+  typeof ToolchainItemsQuery
+>['toolchain']['toolchainItemsV2']['result'][number]
+
+interface ToolchainCacheStatusLinkProps {
+  isCached: boolean
+  isUnavailable?: boolean
+  onUploadPress: () => void
+}
+
+const ToolchainCacheStatusLink: React.FC<ToolchainCacheStatusLinkProps> = (
+  props,
+) => {
+  if (props.isUnavailable) {
+    return <span className="italic">Unavailable</span>
+  }
+  if (props.isCached) {
+    return <span className="text-success bold">true</span>
+  }
+  return (
+    <div className="flex items-center">
+      <Tooltip content="服务器本地未缓存该包，可以手动上传(该功能仅限单机部署)，也可以在后面使用到时，自动从 url 下载">
+        <SvgIcon icon={Icon.NOTE} className="text-warning" />
+      </Tooltip>
+      <Link
+        underline="always"
+        color="warning"
+        className="ml-1 cursor-pointer"
+        onPress={props.onUploadPress}
+      >
+        false
+      </Link>
+    </div>
+  )
+}
+
 interface ToolChainItemsProps {
   type: ToolchainItemType
+}
+
+type UploadArgs = {
+  type: string
+  tag: string
+  isArm: boolean
+}
+const initial: UploadArgs = {
+  type: '',
+  tag: '',
+  isArm: false,
 }
 
 const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
@@ -56,16 +104,26 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
     type: props.type.type,
   })
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
+  const uploadModal = useDisclosure()
   const { isLoading, result } = useGraphQL(ToolchainItemsQuery, args)
-  if (!result && !isLoading) {
-    return <div>Unknown error!</div>
-  }
-
+  const [uploadArgs, setUploadArgs] = useState(initial)
   const onModified = () => {
     setArgs({ ...args })
   }
 
-  const itemArray = result ? result.toolchain.toolchainItems.result : []
+  const itemArray = result ? result.toolchain.toolchainItemsV2.result : []
+  const uploadPkg = (vo: ToolchainItemResponseVO, isArm: boolean) => {
+    setUploadArgs({
+      tag: vo.tag,
+      type: vo.type,
+      isArm,
+    })
+    uploadModal.onOpen()
+  }
+
+  if (!result && !isLoading) {
+    return <div>Unknown error!</div>
+  }
   return (
     <div className="space-y-3">
       <div className="flex items-center">
@@ -97,7 +155,7 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
                 showShadow
                 color="primary"
                 page={args.page}
-                total={result.toolchain.toolchainItems.totalPages}
+                total={result.toolchain.toolchainItemsV2.totalPages}
                 onChange={(page) => setArgs({ ...args, page })}
               />
             </div>
@@ -107,7 +165,8 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
         <TableHeader>
           <TableColumn>标签</TableColumn>
           <TableColumn>创建时间</TableColumn>
-          <TableColumn>URL</TableColumn>
+          <TableColumn>x86 包缓存状态</TableColumn>
+          <TableColumn>ARM 包缓存状态</TableColumn>
           <TableColumn align="end">操作</TableColumn>
         </TableHeader>
         <TableBody
@@ -116,36 +175,33 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
           loadingContent={<TableLoadingMask />}
         >
           {itemArray.map((item) => (
-            <TableRow key={item.id.tag}>
-              <TableCell>{item.id.tag}</TableCell>
-              <TableCell>{formatTime(item.createdAt)}</TableCell>
+            <TableRow key={item.tag}>
               <TableCell>
-                <Link size="sm" isExternal href={item.url}>
-                  {item.url}
-                </Link>
+                <Code>{item.tag}</Code>
+              </TableCell>
+              <TableCell>{formatTime(item.createdAt)}</TableCell>
+              <TableCell
+                className={item.isX86Cached ? 'text-success' : 'text-warning'}
+              >
+                <ToolchainCacheStatusLink
+                  isCached={item.isX86Cached}
+                  onUploadPress={() => uploadPkg(item, false)}
+                />
+              </TableCell>
+              <TableCell>
+                <ToolchainCacheStatusLink
+                  onUploadPress={() => uploadPkg(item, true)}
+                  isCached={item.isArmCached}
+                  isUnavailable={!props.type.hasMultiplatformBundle}
+                />
               </TableCell>
               <TableCell
                 align="right"
                 className="relative flex items-center justify-end gap-2"
               >
-                <Dropdown>
-                  <DropdownTrigger>
-                    <Button isIconOnly size="sm" variant="light">
-                      <SvgIcon icon={Icon.VERTICAL_DOTS} size={24} />
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu aria-label="Static Actions">
-                    <DropdownItem key="detail">查看详情</DropdownItem>
-                    <DropdownItem key="update">更新</DropdownItem>
-                    <DropdownItem
-                      key="delete"
-                      className="text-danger"
-                      color="danger"
-                    >
-                      删除
-                    </DropdownItem>
-                  </DropdownMenu>
-                </Dropdown>
+                <Button color="danger" variant="light" isIconOnly>
+                  <SvgIcon icon={Icon.TRASH} />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
@@ -162,6 +218,20 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
           )}
         </DrawerContent>
       </Drawer>
+      <Modal
+        isOpen={uploadModal.isOpen}
+        onOpenChange={uploadModal.onOpenChange}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <UploadToolchainModalContent
+              {...uploadArgs}
+              onClose={onClose}
+              onModified={onModified}
+            />
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
