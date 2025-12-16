@@ -24,14 +24,27 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
         }
         assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl \"''.getClass().forName('java.lang.Runtime')\"")
-            val sessionDTO =
-                arthasExecutionService.joinChannel(defaultChannel, DefaultArthasExecutionServiceTest::class.java.name)
-            val r = attachTester.pullResultSync(defaultChannel, sessionDTO.consumerId)
-            print(r)
         }
         assertThrows(BusinessException::class.java) {
-            arthasExecutionService.execAsync(defaultChannel, "ognl '(#root.class.forName('java.lang.Runtime'))\n'")
+            arthasExecutionService.execAsync(defaultChannel, "ognl \"(#root.class.forName('java.lang.Runtime'))\"")
         }
+        assertThrows(BusinessException::class.java) {
+            // test prase failed.
+            arthasExecutionService.execAsync(defaultChannel, "ognl \"exawxe-=-+\"")
+        }
+        assertThrows(BusinessException::class.java) {
+            arthasExecutionService.execAsync(defaultChannel, "ognl '#root.toString()'")
+        }
+
+        arthasExecutionService.execAsync(defaultChannel, "watch demo.MathGame primeFactors \"{params[0],target}\" \"params[0]<0\"")
+        arthasExecutionService.interruptCommand(defaultChannel)
+        arthasExecutionService.execAsync(defaultChannel, "ognl '#root.fake'")
+        arthasExecutionService.execAsync(defaultChannel, "watch demo.MathGame primeFactors \"{params,returnObj}\" -x 2 -b")
+        arthasExecutionService.interruptCommand(defaultChannel)
+        val sessionDTO =
+            arthasExecutionService.joinChannel(defaultChannel, DefaultArthasExecutionServiceTest::class.java.name)
+        val r = attachTester.pullResultSync(defaultChannel, sessionDTO.consumerId)
+        print(r)
 
     }
 

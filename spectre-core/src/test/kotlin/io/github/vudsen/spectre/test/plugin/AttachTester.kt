@@ -114,7 +114,8 @@ class AttachTester {
             RuntimeNodePO(
                 name = "Test Node",
                 pluginId = SshRuntimeNodeExtension.ID,
-                configuration = objectMapper.writeValueAsString(conf)
+                configuration = objectMapper.writeValueAsString(conf),
+                restrictedMode = true
             )
         ).id!!
     }
@@ -125,12 +126,12 @@ class AttachTester {
      */
     fun resolveDefaultChannel(): String {
         val root = runtimeNodeService.expandRuntimeNodeTree(commonRuntimeNodeId, null)
-        val localeNode = root.get(0)
+        val localeNode = root[0]
 
         val localJvms =
             runtimeNodeService.expandRuntimeNodeTree(commonRuntimeNodeId, localeNode.id)
 
-        val mathGame = localJvms.get(0)
+        val mathGame = localJvms[0]
         Assertions.assertTrue(mathGame.isJvm)
 
         return doAttach(commonRuntimeNodeId, mathGame)

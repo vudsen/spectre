@@ -42,8 +42,8 @@
     </changeSet>
 
     <changeSet id="202512161748" author="vudsen">
-        <addColumn tableName="runtime_node">
-            <column name="restricted_mode" type="java.lang.Boolean" defaultValueComputed="false"/>
-        </addColumn>
+        <sql>
+            ALTER TABLE runtime_node ADD COLUMN restricted_mode BOOLEAN DEFAULT FALSE;
+        </sql>
     </changeSet>
 </databaseChangeLog>

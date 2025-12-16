@@ -58,7 +58,6 @@ class DefaultArthasExecutionService(
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
         private val COMMON_REDIS_EXPIRE_TIME = Duration.ofMinutes(10)
-        private val ognlExpression = Regex("'.+'")
         private val ALLOWED_EXPRESSION: Set<Class<*>> = setOf(
             Literal::class.java,
             PropertyOrFieldReference::class.java,
@@ -68,7 +67,13 @@ class DefaultArthasExecutionService(
             OpGT::class.java, OpGE::class.java,
             OpLT::class.java, OpLE::class.java,
             OpPlus::class.java, OpMinus::class.java,
-            OpMultiply::class.java, OpDivide::class.java
+            OpMultiply::class.java, OpDivide::class.java,
+            CompoundExpression::class.java,
+            InlineList::class.java,
+            Indexer::class.java,
+            IntLiteral::class.java,
+            LongLiteral::class.java,
+            NullLiteral::class.java,
         );
         val parser = SpelExpressionParser()
 
@@ -431,23 +436,124 @@ class DefaultArthasExecutionService(
         val data = getChannelData(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         if (data.restrictedMode) {
-            ognlExpression.find(command)?.let {
-                checkOgnlExpression(it.value.substring(1, it.value.length - 1))
-            }
+            checkOgnlExpression(command)
         }
         client.asyncExec(data.sessionId, command)
     }
 
-    fun checkOgnlExpression(expression: String) {
+    fun checkOgnlExpression(command: String) {
         // Ognl 和 SpEL 差不多的
-        val expression =
-            parser.parseExpression(expression) as SpelExpression
+        for (rawExpression in splitOgnlExpression(command)) {
+            val expression = try {
+                parser.parseExpression(rawExpression) as SpelExpression
+            } catch (_: Exception) {
+                throw BusinessException("error.ognl.parse.failed")
+            }
+            validateAst(expression.ast)
+        }
+    }
 
-        validateAst(expression.ast)
+    /**
+     * **AI GENERATED**:
+     *
+     * 帮我写一个 Kotlin 工具函数，这个函数输入一个字符串，你需要提取出所有双引号或单引号包裹的子字符串，返回为一个字符串列表。
+     *
+     * ## 样例
+     * ### 样例 1
+     *
+     * 输入: `hello "wo rld" '!! !!'`
+     *
+     * 输出: `["wo rld", "!! !!"]`
+     *
+     * ### 样例 2
+     *
+     * 输入: `hello "\"wo \"rld" '\\!!\'!!'`
+     *
+     * 输出: `["\"wo \"rld", "\\!!\'!!"]`
+     *
+     * 解释: `\` 为转义符，`\"` 或 `\'` 不应该视为开始或结束的标志
+     *
+     * ### 样例 3
+     *
+     * 输入: `I "love 'you'"`
+     *
+     * 输出: `[love 'you']`
+     *
+     * 解释: 虽然 `you` 被单引号包裹，但是它已经被双引号包裹了，所以需要将其当做普通的单引号
+     *
+     * ## 注意事项
+     *
+     * 1. 不要使用正则表达式，一个字符一个字符解析
+     * 2. 未来不需要扩展，**保持代码简洁，不要考虑扩展性**
+     *
+     * @param input 需要解析的命令
+     * @return 识别到的子串
+     */
+    private fun splitOgnlExpression(input: String): List<String> {
+        val result = mutableListOf<String>()
+        var currentIndex = 0
+
+        while (currentIndex < input.length) {
+            val startChar = input[currentIndex]
+
+            // 检查当前字符是否是引号的起始
+            if (startChar == '"' || startChar == '\'') {
+                val closingQuote = startChar // 匹配的结束引号
+                val contentBuilder = StringBuilder()
+                var isEscaped = false // 跟踪前一个字符是否是转义符 '\'
+
+                // 从引号后的下一个字符开始
+                var innerIndex = currentIndex + 1
+
+                // 循环直到字符串结束或者找到匹配的结束引号
+                while (innerIndex < input.length) {
+                    val currentChar = input[innerIndex]
+                    if (isEscaped) {
+                        // 如果前一个字符是转义符，则当前字符被视为普通字符，
+                        // 无论它是什么（包括引号或转义符本身），并添加到内容中。
+                        contentBuilder.append(currentChar)
+                        isEscaped = false
+                    } else {
+                        // 没有转义的情况
+                        when (currentChar) {
+                            '\\' -> {
+                                // 遇到转义符，设置标志，但不添加到内容中。
+                                isEscaped = true
+                            }
+                            closingQuote -> {
+                                // 遇到未转义的匹配结束引号，说明子字符串提取完成
+                                result.add(contentBuilder.toString())
+                                currentIndex = innerIndex + 1 // 更新外部循环的起始位置到结束引号的下一个字符
+                                innerIndex = -1 // 标记内部循环结束
+                                break
+                            }
+                            else -> {
+                                // 遇到普通字符，添加到内容中
+                                contentBuilder.append(currentChar)
+                            }
+                        }
+                    }
+                    if (innerIndex != -1) {
+                        innerIndex++
+                    }
+                }
+                // 如果内部循环因为达到字符串末尾而结束，但没有找到结束引号，
+                // 那么该引号块是不完整的，我们继续从原先的currentIndex的下一个位置开始扫描。
+                // 这种情况下，我们不更新currentIndex，因为它在内部循环中已经被正确更新。
+                if (innerIndex != -1) {
+                    // 如果内部循环没有break (即没有找到匹配的结束引号)
+                    currentIndex++
+                }
+            } else {
+                // 如果当前字符不是引号，则跳过它
+                currentIndex++
+            }
+        }
+        return result
     }
 
     private fun validateAst(node: SpelNode) {
-        if (ALLOWED_EXPRESSION.contains(node.javaClass)) {
+        if (!ALLOWED_EXPRESSION.contains(node.javaClass)) {
             throw BusinessException("error.invalid.ognl.expression", arrayOf(node.javaClass.getSimpleName()))
         }
 
