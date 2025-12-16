@@ -14,7 +14,9 @@ class RuntimeNodeDTO(
 
     var createdAt: Timestamp,
 
-    var labels: Map<String, String>
+    var labels: Map<String, String>,
+
+    var restrictedMode: Boolean
 ) {
 
     companion object {
@@ -26,7 +28,8 @@ class RuntimeNodeDTO(
                 pluginId!!,
                 configuration!!,
                 createdAt!!,
-                labels ?: emptyMap()
+                labels ?: emptyMap(),
+                restrictedMode!!
             )
         }
 

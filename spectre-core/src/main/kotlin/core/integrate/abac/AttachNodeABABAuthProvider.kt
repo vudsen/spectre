@@ -26,7 +26,7 @@ class AttachNodeABABAuthProvider : ABACAuthenticationProvider {
     override fun createTestContext(): ABACContext {
         return AttachNodeABACContext(
             ABACPermissions.RUNTIME_NODE_ATTACH,
-            RuntimeNodeDTO(-1, "Test", "Test", "{}", Timestamp(System.currentTimeMillis()), emptyMap()),
+            RuntimeNodeDTO(-1, "Test", "Test", "{}", Timestamp(System.currentTimeMillis()), emptyMap(), false),
             JvmSearchNode("Hello", false, null)
         )
     }

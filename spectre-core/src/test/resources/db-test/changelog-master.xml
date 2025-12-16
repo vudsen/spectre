@@ -6,5 +6,6 @@
 
 
     <include file="init/init.xml" relativeToChangelogFile="true"/>
+    <include file="classpath:db/changes/patches-0.0.1.xml" />
 
 </databaseChangeLog>

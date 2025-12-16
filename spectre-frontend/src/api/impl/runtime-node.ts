@@ -8,6 +8,7 @@ export type RuntimeNodeDTO = {
   configuration: string
   labels: Record<string, string>
   createdAt: number
+  restrictedMode: boolean
 }
 
 export const createRuntimeNode = (

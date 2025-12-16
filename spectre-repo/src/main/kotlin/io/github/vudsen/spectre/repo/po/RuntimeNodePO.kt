@@ -42,10 +42,11 @@ data class RuntimeNodePO (
     @field:NotEmpty
     var configuration: String? = null,
 
-    @Column(name = "created_at", updatable = false, insertable = false)
+    @Column(updatable = false, insertable = false)
     @field:Null
     var createdAt: Timestamp? = null,
 
+    var restrictedMode: Boolean? = null
 
     ) {
 
@@ -56,7 +57,4 @@ data class RuntimeNodePO (
         }
     }
 
-//    fun toDTO(): RuntimeNodeDTO {
-
-//    }
 }

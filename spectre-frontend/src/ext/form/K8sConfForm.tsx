@@ -10,7 +10,7 @@ import {
 } from '@/api/impl/runtime-node.ts'
 import { useNavigate } from 'react-router'
 import ControlledCheckbox from '@/components/validation/ControlledCheckbox.tsx'
-import LabelEditor from '@/components/LabelEditor'
+import RuntimeNodeBasicInputs from '@/components/RuntimeNodeBasicInputs.tsx'
 
 type K8sRuntimeNodeConfig = {
   apiServerEndpoint: string
@@ -22,6 +22,7 @@ type K8sRuntimeNodeConfig = {
 type Values = {
   name: string
   labels: Record<string, string>
+  restrictedMode: boolean
   configuration: K8sRuntimeNodeConfig
 }
 
@@ -44,6 +45,7 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
           spectreHome: conf.spectreHome,
           token: ANONYMOUS_PASSWORD,
         },
+        restrictedMode: oldState.restrictedMode,
       } satisfies Values
     },
   })
@@ -91,18 +93,13 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
   return (
     <div className="space-y-3 px-5">
       <div className="header-1">Kubernetes</div>
+      <RuntimeNodeBasicInputs control={control} />
       <Card>
         <CardBody className="space-y-3">
           <div className="header-2">连接设置</div>
           <Alert color="warning" variant="faded">
             目前仅支持 Token 认证
           </Alert>
-          <ControlledInput
-            name="name"
-            inputProps={{ isRequired: true, label: '名称' }}
-            control={control}
-            rules={{ required: true }}
-          />
           <ControlledInput
             name="configuration.apiServerEndpoint"
             inputProps={{
@@ -143,7 +140,6 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
           </ControlledCheckbox>
         </CardBody>
       </Card>
-      <LabelEditor control={control} name="labels" />
       <div className="flex flex-row-reverse">
         <Button
           variant="light"

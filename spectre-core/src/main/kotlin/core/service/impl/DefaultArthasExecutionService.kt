@@ -1,27 +1,23 @@
 package io.github.vudsen.spectre.core.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.vudsen.spectre.api.dto.ArthasChannelInfoDTO
-import io.github.vudsen.spectre.api.dto.AttachStatus
-import io.github.vudsen.spectre.api.dto.ChannelSessionDTO
-import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
-import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.*
+import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO.Companion.toDTO
+import io.github.vudsen.spectre.api.dto.ToolchainItemDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
-import io.github.vudsen.spectre.core.lock.RedisDistributedLock
+import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import io.github.vudsen.spectre.repo.RuntimeNodeRepository
-import io.github.vudsen.spectre.repo.ToolchainItemRepository
+import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.service.ToolchainService
 import io.github.vudsen.spectre.common.progress.ProgressManager
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
-import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO.Companion.toDTO
-import io.github.vudsen.spectre.api.dto.ToolchainItemDTO.Companion.toDTO
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
-import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
+import io.github.vudsen.spectre.core.lock.RedisDistributedLock
+import io.github.vudsen.spectre.repo.RuntimeNodeRepository
+import io.github.vudsen.spectre.repo.ToolchainItemRepository
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
 import jakarta.annotation.PreDestroy
@@ -29,15 +25,20 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.task.TaskExecutor
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.expression.spel.SpelNode
+import org.springframework.expression.spel.ast.*
+import org.springframework.expression.spel.standard.SpelExpression
+import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.stereotype.Service
 import java.lang.reflect.InvocationTargetException
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.optionals.getOrNull
+
 
 /**
  * 管理 Arthas 连接的服务。
@@ -57,6 +58,20 @@ class DefaultArthasExecutionService(
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
         private val COMMON_REDIS_EXPIRE_TIME = Duration.ofMinutes(10)
+        private val ognlExpression = Regex("'.+'")
+        private val ALLOWED_EXPRESSION: Set<Class<*>> = setOf(
+            Literal::class.java,
+            PropertyOrFieldReference::class.java,
+            VariableReference::class.java,
+            OpAnd::class.java, OpOr::class.java,
+            OpEQ::class.java, OpNE::class.java,
+            OpGT::class.java, OpGE::class.java,
+            OpLT::class.java, OpLE::class.java,
+            OpPlus::class.java, OpMinus::class.java,
+            OpMultiply::class.java, OpDivide::class.java
+        );
+        val parser = SpelExpressionParser()
+
     }
 
     /**
@@ -94,14 +109,17 @@ class DefaultArthasExecutionService(
          * 本地缓存的客户端. 若为空，表示正在初始化中
          */
         var client: ArthasHttpClient? = null
+
         /**
          * 客户端初始化锁，避免并发，每次限制只有一个线程能够初始化，并且在初始化完全或失败前，锁将保持持有
          */
         var lock: AtomicBoolean = AtomicBoolean(false)
+
         /**
          * 在创建客户端时的错误信息
          */
         var error: AttachStatus.ErrorInfo? = null
+
         /**
          * 进度指示器，用于获取当前初始化进度
          */
@@ -109,13 +127,13 @@ class DefaultArthasExecutionService(
     }
 
 
-
     override fun requireAttach(
         runtimeNodeId: Long,
         treeNodeId: String,
         bundleId: Long,
     ): AttachStatus {
-        val runtimeNodeDto = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
+        val runtimeNodeDto =
+            runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
         val extPoint = runtimeNodeService.getExtPoint(runtimeNodeDto.pluginId)
 
         val node = runtimeNodeService.findTreeNode(treeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
@@ -143,14 +161,14 @@ class DefaultArthasExecutionService(
             }
         } else {
             currentHolder = holder
-            holder.error ?.let {
+            holder.error?.let {
                 if (System.currentTimeMillis() >= it.nextRetryTime) {
                     holder.error = null
                 } else {
                     return returnAttachingMsg(holder)
                 }
             }
-            holder.client ?.let {
+            holder.client?.let {
                 getChannelData(holder.channelId) ?: return AttachStatus(false)
                 return AttachStatus(true).apply {
                     channelId = holder.channelId
@@ -161,7 +179,7 @@ class DefaultArthasExecutionService(
             }
         }
 
-        
+
         if (!currentHolder.lock.compareAndSet(false, true)) {
             return returnAttachingMsg(currentHolder)
         }
@@ -183,7 +201,7 @@ class DefaultArthasExecutionService(
     private fun returnAttachingMsg(holder: ClientHolder): AttachStatus {
         return AttachStatus(false).apply {
             error = holder.error
-            holder.progressManager.currentProgress() ?.let {
+            holder.progressManager.currentProgress()?.let {
                 title = it.title
                 message = it.title
             }
@@ -225,13 +243,15 @@ class DefaultArthasExecutionService(
         }
         val consumerCacheKey = "channel:consumer:${channelId}:${ownerIdentifier}"
         try {
-            (redisTemplate.opsForValue().get(consumerCacheKey) as ChannelSessionDTO?) ?.let {
+            (redisTemplate.opsForValue().get(consumerCacheKey) as ChannelSessionDTO?)?.let {
                 return it
             }
             var client = clientMap[data.jvm]?.client
             if (client == null) {
                 val key = innerMetadataKey(channelId)
-                val metadata = redisTemplate.opsForValue().get(key) as ChannelInnerMetadata? ?: throw BusinessException("Channel 已经关闭，请重新在列表中连接")
+                val metadata = redisTemplate.opsForValue().get(key) as ChannelInnerMetadata? ?: throw BusinessException(
+                    "Channel 已经关闭，请重新在列表中连接"
+                )
                 modifyLock.lock()
                 try {
                     val newClient = createClient(data, metadata)
@@ -260,15 +280,17 @@ class DefaultArthasExecutionService(
         val runtimeNode = runtimeNodeService.resolveRuntimeNode(info.runtimeNodeId)
 
         val bundle = toolchainService.resolveToolchainBundle(metadata.bundleId) ?: TODO("bundle not found.")
-        val handler = extPoint.createAttachHandler(runtimeNode, info.jvm, ToolchainBundleDTO(
-            toolchainItemRepository.findById(ToolchainItemId(ToolchainType.JATTACH, bundle.jattachTag)).get()
-                .toDTO(),
-            toolchainItemRepository.findById(ToolchainItemId(ToolchainType.ARTHAS, bundle.arthasTag)).get()
-                .toDTO(),
-            toolchainItemRepository.findById(ToolchainItemId(ToolchainType.HTTP_CLIENT, bundle.httpClientTag))
-                .get()
-                .toDTO(),
-        ))
+        val handler = extPoint.createAttachHandler(
+            runtimeNode, info.jvm, ToolchainBundleDTO(
+                toolchainItemRepository.findById(ToolchainItemId(ToolchainType.JATTACH, bundle.jattachTag)).get()
+                    .toDTO(),
+                toolchainItemRepository.findById(ToolchainItemId(ToolchainType.ARTHAS, bundle.arthasTag)).get()
+                    .toDTO(),
+                toolchainItemRepository.findById(ToolchainItemId(ToolchainType.HTTP_CLIENT, bundle.httpClientTag))
+                    .get()
+                    .toDTO(),
+            )
+        )
         return handler.attach(info.port)
     }
 
@@ -301,18 +323,31 @@ class DefaultArthasExecutionService(
 
                 val bundle = toolchainService.resolveToolchainBundle(bundleId) ?: TODO("bundle not found.")
                 val runtimeNode =
-                    extPoint.connect(objectMapper.readValue(runtimeNodeDto.configuration, extPoint.getConfigurationClass()))
+                    extPoint.connect(
+                        objectMapper.readValue(
+                            runtimeNodeDto.configuration,
+                            extPoint.getConfigurationClass()
+                        )
+                    )
 
 
-                val handler = extPoint.createAttachHandler(runtimeNode, jvm, ToolchainBundleDTO(
-                    toolchainItemRepository.findById(ToolchainItemId(ToolchainType.JATTACH, bundle.jattachTag)).get()
-                        .toDTO(),
-                    toolchainItemRepository.findById(ToolchainItemId(ToolchainType.ARTHAS, bundle.arthasTag)).get()
-                        .toDTO(),
-                    toolchainItemRepository.findById(ToolchainItemId(ToolchainType.HTTP_CLIENT, bundle.httpClientTag))
-                        .get()
-                        .toDTO(),
-                ))
+                val handler = extPoint.createAttachHandler(
+                    runtimeNode, jvm, ToolchainBundleDTO(
+                        toolchainItemRepository.findById(ToolchainItemId(ToolchainType.JATTACH, bundle.jattachTag))
+                            .get()
+                            .toDTO(),
+                        toolchainItemRepository.findById(ToolchainItemId(ToolchainType.ARTHAS, bundle.arthasTag)).get()
+                            .toDTO(),
+                        toolchainItemRepository.findById(
+                            ToolchainItemId(
+                                ToolchainType.HTTP_CLIENT,
+                                bundle.httpClientTag
+                            )
+                        )
+                            .get()
+                            .toDTO(),
+                    )
+                )
 
                 val client: ArthasHttpClient? = handler.attach(null)
                 if (client == null) {
@@ -322,7 +357,13 @@ class DefaultArthasExecutionService(
 
                 val session = client.initSession()
 
-                val data = ArthasChannelInfoDTO(session.sessionId, runtimeNodeDto.id, treeNodeId, client.getPort()).apply {
+                val data = ArthasChannelInfoDTO(
+                    session.sessionId,
+                    runtimeNodeDto.id,
+                    treeNodeId,
+                    client.getPort(),
+                    runtimeNodeDto.restrictedMode
+                ).apply {
                     this.jvm = jvm
                 }
                 setChannelData(holder.channelId, data)
@@ -332,7 +373,7 @@ class DefaultArthasExecutionService(
                     this.bundleId = bundle.id!!
                 }, COMMON_REDIS_EXPIRE_TIME)
                 clientMap[jvm]!!.client = client
-            }  catch (e: Exception) {
+            } catch (e: Exception) {
                 val ex = if (e is InvocationTargetException) {
                     e.targetException
                 } else {
@@ -374,22 +415,47 @@ class DefaultArthasExecutionService(
         if (holder == null) {
             holder = ClientHolder(channelId)
         } else {
-            holder.client ?.let {
+            holder.client?.let {
                 return it
             }
         }
-        val metadata = redisTemplate.opsForValue().get(innerMetadataKey(channelId)) as ChannelInnerMetadata? ?: throw BusinessException("会话过期，请刷新页面")
+        val metadata = redisTemplate.opsForValue().get(innerMetadataKey(channelId)) as ChannelInnerMetadata?
+            ?: throw BusinessException("会话过期，请刷新页面")
         val client = createClient(channelInfo, metadata)
         holder.client = client
         return client
     }
 
     override fun execAsync(channelId: String, command: String) {
+        // TODO 把 controller 的策略权限校验移到这里来.
         val data = getChannelData(channelId) ?: throw BusinessException("会话过期，请刷新页面")
-
         val client = tryResolveClient(data, channelId)
+        if (data.restrictedMode) {
+            ognlExpression.find(command)?.let {
+                checkOgnlExpression(it.value.substring(1, it.value.length - 1))
+            }
+        }
         client.asyncExec(data.sessionId, command)
     }
+
+    fun checkOgnlExpression(expression: String) {
+        // Ognl 和 SpEL 差不多的
+        val expression =
+            parser.parseExpression(expression) as SpelExpression
+
+        validateAst(expression.ast)
+    }
+
+    private fun validateAst(node: SpelNode) {
+        if (ALLOWED_EXPRESSION.contains(node.javaClass)) {
+            throw BusinessException("error.invalid.ognl.expression", arrayOf(node.javaClass.getSimpleName()))
+        }
+
+        for (i in 0..<node.childCount) {
+            validateAst(node.getChild(i))
+        }
+    }
+
 
     override fun pullResults(channelId: String, consumerId: String): Any {
         val data = getChannelData(channelId) ?: throw BusinessException("会话过期，请刷新页面")
@@ -413,7 +479,11 @@ class DefaultArthasExecutionService(
             try {
                 entry.value.client?.exec("stop")
             } catch (e: Exception) {
-                logger.warn("Failed to destroy client listen on {}, reason: {}", entry.value.client?.getPort(), e.message)
+                logger.warn(
+                    "Failed to destroy client listen on {}, reason: {}",
+                    entry.value.client?.getPort(),
+                    e.message
+                )
             }
         }
     }
