@@ -74,7 +74,7 @@ class DefaultArthasExecutionService(
             IntLiteral::class.java,
             LongLiteral::class.java,
             NullLiteral::class.java,
-        );
+        )
         val parser = SpelExpressionParser()
 
     }
@@ -101,8 +101,12 @@ class DefaultArthasExecutionService(
 
     /**
      * 保存 jvm 到客户端的缓存
+     *
+     * - **key**: see [resolveJvmId]
+     *
+     * FIXME: memory leak.
      */
-    private val clientMap = ConcurrentHashMap<Jvm, ClientHolder>()
+    private val clientMap = ConcurrentHashMap<String, ClientHolder>()
 
     private val modifyLock = ReentrantLock()
 
@@ -118,7 +122,7 @@ class DefaultArthasExecutionService(
         /**
          * 客户端初始化锁，避免并发，每次限制只有一个线程能够初始化，并且在初始化完全或失败前，锁将保持持有
          */
-        var lock: AtomicBoolean = AtomicBoolean(false)
+        var clientInitLock: AtomicBoolean = AtomicBoolean(false)
 
         /**
          * 在创建客户端时的错误信息
@@ -131,6 +135,26 @@ class DefaultArthasExecutionService(
         val progressManager = ProgressManager()
     }
 
+    private fun resolveJvmId(runtimeNodeId: Long, jvm: Jvm): String {
+        return "${runtimeNodeId}:${jvm.hashCode()}"
+    }
+
+    private fun initHolder(jvmId: String): ClientHolder? {
+        // 本地没有记录
+        if (!modifyLock.tryLock()) {
+            return null
+        }
+        try {
+            clientMap[jvmId]?.let {
+                return it
+            }
+            val newHolder = ClientHolder(UUID.randomUUID().toString())
+            clientMap[jvmId] = newHolder
+            return newHolder
+        } finally {
+            modifyLock.unlock()
+        }
+    }
 
     override fun requireAttach(
         runtimeNodeId: Long,
@@ -143,29 +167,19 @@ class DefaultArthasExecutionService(
 
         val node = runtimeNodeService.findTreeNode(treeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
         val jvm = extPoint.createSearcher().deserializeJvm(node)
+        val jvmId = resolveJvmId(runtimeNodeId, jvm)
 
-        val holder = clientMap[jvm]
-        var currentHolder: ClientHolder
+        // FIXME 不能使用单纯的哈希
+        var holder = clientMap[jvmId]
         if (holder == null) {
-            // 本地没有记录
-            if (!modifyLock.tryLock()) {
-                return AttachStatus(false)
-            }
-            try {
-                val holderCheck = clientMap[jvm]
-                if (holderCheck == null) {
-                    val newHolder = ClientHolder(UUID.randomUUID().toString())
-                    // is deadlock here?
-                    clientMap[jvm] = newHolder
-                    currentHolder = newHolder
-                } else {
-                    currentHolder = holderCheck
-                }
-            } finally {
-                modifyLock.unlock()
-            }
+            holder = initHolder(jvmId) ?: return AttachStatus(false)
         } else {
-            currentHolder = holder
+            holder.client?.let {
+                getChannelData(holder.channelId) ?: return AttachStatus(false)
+                return AttachStatus(true).apply {
+                    channelId = holder.channelId
+                }
+            }
             holder.error?.let {
                 if (System.currentTimeMillis() >= it.nextRetryTime) {
                     holder.error = null
@@ -173,32 +187,25 @@ class DefaultArthasExecutionService(
                     return returnAttachingMsg(holder)
                 }
             }
-            holder.client?.let {
-                getChannelData(holder.channelId) ?: return AttachStatus(false)
-                return AttachStatus(true).apply {
-                    channelId = holder.channelId
-                }
-            }
-            if (holder.lock.get()) {
+            if (holder.clientInitLock.get()) {
                 return returnAttachingMsg(holder)
             }
         }
 
-
-        if (!currentHolder.lock.compareAndSet(false, true)) {
-            return returnAttachingMsg(currentHolder)
+        if (!holder.clientInitLock.compareAndSet(false, true)) {
+            return returnAttachingMsg(holder)
         }
-        if (clientMap.contains(jvm)) {
+        if (clientMap.contains(jvmId)) {
             // 懒得写了 :( 让客户端自己再轮询一次
-            currentHolder.lock.set(false)
-            return returnAttachingMsg(currentHolder)
+            holder.clientInitLock.set(false)
+            return returnAttachingMsg(holder)
         }
 
         try {
-            attachJvmAsync(extPoint, runtimeNodeDto, jvm, currentHolder, bundleId, treeNodeId)
-            return returnAttachingMsg(currentHolder)
+            attachJvmAsync(extPoint, runtimeNodeDto, jvm, holder, bundleId, treeNodeId)
+            return returnAttachingMsg(holder)
         } catch (e: Exception) {
-            currentHolder.lock.set(false)
+            holder.clientInitLock.set(false)
             throw e
         }
     }
@@ -251,7 +258,8 @@ class DefaultArthasExecutionService(
             (redisTemplate.opsForValue().get(consumerCacheKey) as ChannelSessionDTO?)?.let {
                 return it
             }
-            var client = clientMap[data.jvm]?.client
+            val jvmId = resolveJvmId(data.runtimeNodeId, data.jvm)
+            var client = clientMap[jvmId]?.client
             if (client == null) {
                 val key = innerMetadataKey(channelId)
                 val metadata = redisTemplate.opsForValue().get(key) as ChannelInnerMetadata? ?: throw BusinessException(
@@ -260,7 +268,7 @@ class DefaultArthasExecutionService(
                 modifyLock.lock()
                 try {
                     val newClient = createClient(data, metadata)
-                    clientMap[data.jvm] = ClientHolder(channelId).apply {
+                    clientMap[jvmId] = ClientHolder(channelId).apply {
                         this.client = newClient
                     }
                     client = newClient
@@ -354,10 +362,8 @@ class DefaultArthasExecutionService(
                     )
                 )
 
-                val client: ArthasHttpClient? = handler.attach(null)
-                if (client == null) {
-                    throw BusinessException("端口已被占用, 请稍后重试")
-                }
+                val client: ArthasHttpClient = handler.attach(null)
+
                 logger.info("Client creation success!")
 
                 val session = client.initSession()
@@ -377,7 +383,7 @@ class DefaultArthasExecutionService(
                     this.runtimeNodeId = runtimeNodeDto.id
                     this.bundleId = bundle.id!!
                 }, COMMON_REDIS_EXPIRE_TIME)
-                clientMap[jvm]!!.client = client
+                clientMap[resolveJvmId(runtimeNodeDto.id, jvm)]!!.client = client
             } catch (e: Exception) {
                 val ex = if (e is InvocationTargetException) {
                     e.targetException
@@ -389,7 +395,7 @@ class DefaultArthasExecutionService(
                 logger.debug("Failed to attach", e)
             } finally {
                 redisDistributedLock.unlock(lockKey)
-                holder.lock.set(false)
+                holder.clientInitLock.set(false)
                 ProgressReportHolder.clear()
             }
         }
@@ -416,7 +422,7 @@ class DefaultArthasExecutionService(
      * 尝试从 [clientMap] 中获取 client，如果没有，则尝试创建一个新的
      */
     private fun tryResolveClient(channelInfo: ArthasChannelInfoDTO, channelId: String): ArthasHttpClient {
-        var holder = clientMap[channelInfo.jvm]
+        var holder = clientMap[resolveJvmId(channelInfo.runtimeNodeId, channelInfo.jvm)]
         if (holder == null) {
             holder = ClientHolder(channelId)
         } else {

@@ -73,13 +73,14 @@ jobs:
         with:
           actions: 'create-comment'
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
+          issue-number: ${{ github.event.pull_request.number }}
           body: |
             ❌ Run test failed, click [here](${{ steps.cloudflare.outputs.deployment-url }}) to check the test report.
 
       - name: Add Summary
         if: failure() && steps.test.outcome == 'failure' && github.event_name == 'pull_request'
         run: |
+          echo "# Test Report" >> $GITHUB_STEP_SUMMARY
           echo "❌ Run test failed, click [here](${{ steps.cloudflare.outputs.deployment-url }}) to check the test report." >> $GITHUB_STEP_SUMMARY
 
   build:
