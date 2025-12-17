@@ -1,14 +1,16 @@
 package io.github.vudsen.spectre.test
 
+import org.junit.jupiter.api.extension.Extension
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.DisposableBean
-import org.springframework.stereotype.Component
+import java.io.Closeable
 import java.util.LinkedList
 
-@Component
-class Disposer : DisposableBean{
+class Disposer : Closeable, Extension {
 
-    private val logger = LoggerFactory.getLogger(Disposer::class.java)
+    companion object {
+        @JvmStatic
+        private val logger = LoggerFactory.getLogger(Disposer::class.java)
+    }
 
     private val resources = LinkedList<Runnable>()
 
@@ -16,7 +18,11 @@ class Disposer : DisposableBean{
         resources.add(runnable)
     }
 
-    override fun destroy() {
+    fun after() {
+        close()
+    }
+
+    override fun close() {
         for (runnable in resources) {
             try {
                 runnable.run()

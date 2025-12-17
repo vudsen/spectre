@@ -1,5 +1,5 @@
 import { type FormComponentProps } from '@/ext/type.ts'
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import SteppedPanel from '@/components/SteppedPanel/SteppedPanel.tsx'
 import SteppedPanelItem from '@/components/SteppedPanel/SteppedPanelItem.tsx'
@@ -29,14 +29,15 @@ import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { useNavigate } from 'react-router'
 import ControlledCheckbox from '@/components/validation/ControlledCheckbox.tsx'
-import LabelEditor from '@/components/LabelEditor'
 import ControlledTextarea from '@/components/validation/ControlledTextarea.tsx'
 import classnames from '@/components/SpectreTabs/styles.ts'
+import RuntimeNodeBasicInputs from '@/components/RuntimeNodeBasicInputs.tsx'
 
 type Values = {
   name: string
   labels: Record<string, string>
   configuration: SshRuntimeNodeConfig
+  restrictedMode: boolean
 }
 
 type SshRuntimeNodeConfig = {
@@ -65,7 +66,6 @@ type LoginPrincipal = {
 }
 
 interface ConfigurationForm2Props {
-  connectConfiguration?: Values
   toPreviousPage: () => void
   pluginId: string
   /**
@@ -111,7 +111,6 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
     const values = getValues()
     setLoading(true)
     try {
-      const base = props.connectConfiguration!
       const configuration = values.configuration
       removeAnonymousPassword(configuration.principal)
       if (configuration.local) {
@@ -123,23 +122,21 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
 
       if (props.runtimeNodeId) {
         await updateRuntimeNode({
+          ...values,
           id: props.runtimeNodeId,
-          name: base.name,
           pluginId: props.pluginId,
           configuration,
-          labels: values.labels,
         })
         addToast({
           title: '更新成功',
           color: 'success',
         })
       } else {
-        await createRuntimeNode(
-          base.name,
-          props.pluginId,
-          values.labels,
+        await createRuntimeNode({
+          ...values,
+          pluginId: props.pluginId,
           configuration,
-        )
+        })
         addToast({
           title: '创建成功',
           color: 'success',
@@ -242,7 +239,6 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
             </div>
           </CardBody>
         </Card>
-        <LabelEditor control={control} name="labels" />
         <div className="flex flex-row-reverse">
           <Button
             variant="light"
@@ -344,6 +340,7 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
       ? {
           name: oldState.name,
           labels: oldState.labels,
+          restrictedMode: oldState.restrictedMode,
           configuration: {
             host: configuration?.host,
             principal: {
@@ -372,7 +369,6 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
   })
   const { control, trigger, getValues, setValue } = formControl
   const [loading, setLoading] = useState(false)
-  const connectConfiguration = useRef<Values | undefined>(undefined)
 
   const onConnectConfFinish = async () => {
     const b = await trigger()
@@ -391,7 +387,6 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
       if (r) {
         handleError(r, '测试失败')
       } else {
-        connectConfiguration.current = values
         setPage(1)
       }
     } finally {
@@ -411,16 +406,11 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
         <SteppedPanelItem>
           <div className="space-y-3">
             <div className="header-1">SSH</div>
+            <RuntimeNodeBasicInputs control={control} />
             <Card>
               <CardBody className="space-y-3">
-                <div className="header-2 font-semibold">基础设置</div>
+                <div className="header-2 font-semibold">连接设置</div>
                 <div className="text-sm">远程服务器基础设置</div>
-                <ControlledInput
-                  name="name"
-                  inputProps={{ isRequired: true, label: '名称' }}
-                  control={control}
-                  rules={{ required: true }}
-                />
                 <ControlledInput
                   name="configuration.host"
                   inputProps={{ isRequired: true, label: 'Host' }}
@@ -487,7 +477,6 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
         </SteppedPanelItem>
         <SteppedPanelItem>
           <ConfigurationForm2
-            connectConfiguration={connectConfiguration.current}
             toPreviousPage={() => setPage(0)}
             pluginId={props.pluginId}
             formControl={formControl}

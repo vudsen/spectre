@@ -198,6 +198,7 @@ export type RuntimeNodeDto = {
   labels: Scalars['Labels']['output'];
   name: Scalars['String']['output'];
   pluginId: Scalars['String']['output'];
+  restrictedMode: Scalars['Boolean']['output'];
 };
 
 export type RuntimeNodeModifyRequestVo = {
@@ -589,7 +590,7 @@ export type ListJvmSourceQueryVariables = Exact<{
 }>;
 
 
-export type ListJvmSourceQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', runtimeNodes: { __typename?: 'RuntimeNodePage', totalPages?: number | null, result: Array<{ __typename?: 'RuntimeNodeDTO', id: string, name: string, createdAt: any, pluginId: string, labels: any }> }, plugins: Array<{ __typename?: 'RuntimeNodePluginVO', id: string, name: string }> } };
+export type ListJvmSourceQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', runtimeNodes: { __typename?: 'RuntimeNodePage', totalPages?: number | null, result: Array<{ __typename?: 'RuntimeNodeDTO', id: string, name: string, createdAt: any, pluginId: string, labels: any, restrictedMode: boolean }> }, plugins: Array<{ __typename?: 'RuntimeNodePluginVO', id: string, name: string }> } };
 
 export type RuntimeNodeCreatePluginQueryQueryVariables = Exact<{
   pluginId?: InputMaybe<Scalars['String']['input']>;
@@ -959,6 +960,7 @@ export const ListJvmSourceDocument = new TypedDocumentString(`
         createdAt
         pluginId
         labels
+        restrictedMode
       }
     }
     plugins {

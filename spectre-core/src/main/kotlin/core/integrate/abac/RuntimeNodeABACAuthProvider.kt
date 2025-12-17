@@ -24,7 +24,7 @@ class RuntimeNodeABACAuthProvider : ABACAuthenticationProvider {
 
     override fun createTestContext(): ABACContext {
         return RuntimeNodeABACContext(
-            RuntimeNodeDTO(-1, "Test", "Test", "{}", Timestamp(System.currentTimeMillis()), emptyMap()),
+            RuntimeNodeDTO(-1, "Test", "Test", "{}", Timestamp(System.currentTimeMillis()), emptyMap(), false),
             ABACPermissions.RUNTIME_NODE_TREE_EXPAND
         )
     }

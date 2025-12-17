@@ -20,7 +20,7 @@ import java.sql.Timestamp
 @Entity
 @DynamicUpdate
 @Table(name = "runtime_node")
-data class RuntimeNodePO (
+open class RuntimeNodePO (
     @Id
     @field:NotNull(groups = [UpdateGroup::class])
     @field:Null(groups = [CreateGroup::class])
@@ -42,10 +42,11 @@ data class RuntimeNodePO (
     @field:NotEmpty
     var configuration: String? = null,
 
-    @Column(name = "created_at", updatable = false, insertable = false)
+    @Column(updatable = false, insertable = false)
     @field:Null
     var createdAt: Timestamp? = null,
 
+    var restrictedMode: Boolean? = false
 
     ) {
 
@@ -56,7 +57,4 @@ data class RuntimeNodePO (
         }
     }
 
-//    fun toDTO(): RuntimeNodeDTO {
-
-//    }
 }

@@ -6,6 +6,8 @@ import { formatTime } from '@/common/util.ts'
 import { Card, CardBody, Checkbox, Input } from '@heroui/react'
 import SpectreTabs, { type TabContent } from '@/components/SpectreTabs'
 import ReadonlyLabelsTable from '@/components/ReadonlyLabelsTable.tsx'
+import SvgIcon from '@/components/icon/SvgIcon.tsx'
+import Icon from '@/components/icon/icon.ts'
 
 type MyData = RuntimeNodeDTO
 
@@ -172,7 +174,10 @@ const SshView: ViewComponent = (props) => {
 
   return (
     <div className="space-y-6 px-6 pb-24">
-      <div className="spectre-heading">{data.name}</div>
+      <div className="spectre-heading flex items-center">
+        {data.restrictedMode ? <SvgIcon icon={Icon.SHIELD} size={26} /> : null}
+        {data.name}
+      </div>
       <Card>
         <CardBody className="space-y-3">
           <div className="header-2">基础信息</div>
@@ -186,6 +191,10 @@ const SshView: ViewComponent = (props) => {
               {
                 name: '类型',
                 value: 'SSH',
+              },
+              {
+                name: '限制模式',
+                value: data.restrictedMode ? '已开启' : '未开启',
               },
               {
                 name: '创建时间',

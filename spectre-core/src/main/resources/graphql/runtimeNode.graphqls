@@ -29,4 +29,5 @@ type RuntimeNodeDTO {
     configuration: String
     createdAt: Timestamp!
     labels: Labels!
+    restrictedMode: Boolean!
 }

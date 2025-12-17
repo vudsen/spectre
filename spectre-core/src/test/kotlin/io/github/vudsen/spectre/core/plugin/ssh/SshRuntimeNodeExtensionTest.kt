@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.test.Disposer
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.plugin.AttachTester
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.beans.factory.annotation.Autowired
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
@@ -21,8 +22,9 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     @set:Autowired
     lateinit var attachTester: AttachTester
 
-    @set:Autowired
-    lateinit var disposer: Disposer
+
+    @RegisterExtension
+    val disposer = Disposer()
 
     companion object {
         const val MATH_GAME = "math-game"
@@ -58,6 +60,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
         }
         disposer.registerDispose {
             container.execInContainer("/usr/bin/docker", "stop", MATH_GAME)
+            container.close()
         }
 
         val objectMapper = ObjectMapper()
@@ -108,6 +111,9 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
             withExposedPorts(22)
         }
         container.start();
+        disposer.registerDispose {
+            container.close()
+        }
 
         val objectMapper = ObjectMapper()
         val conf = SshRuntimeNodeConfig(

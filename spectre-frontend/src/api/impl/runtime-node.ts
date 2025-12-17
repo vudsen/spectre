@@ -8,27 +8,23 @@ export type RuntimeNodeDTO = {
   configuration: string
   labels: Record<string, string>
   createdAt: number
+  restrictedMode: boolean
+}
+
+type RuntimeNodeCreateVO = Partial<Omit<RuntimeNodeDTO, 'configuration'>> & {
+  configuration: unknown
 }
 
 export const createRuntimeNode = (
-  name: string,
-  pluginId: string,
-  labels: Record<string, string>,
-  configuration: unknown,
+  vo: RuntimeNodeCreateVO,
 ): Promise<string | undefined> => {
   return axios.post('/runtime-node/create', {
-    name,
-    pluginId,
-    labels,
-    configuration: JSON.stringify(configuration),
+    ...vo,
+    configuration: JSON.stringify(vo.configuration),
   })
 }
 
-type RuntimeNodeUpdateVO = {
-  id: string
-  name: string
-  labels: Record<string, string>
-  pluginId: string
+type RuntimeNodeUpdateVO = Partial<Omit<RuntimeNodeDTO, 'configuration'>> & {
   configuration: unknown
 }
 
