@@ -11,7 +11,12 @@ interface DetailGridProps {
 
 const DetailGrid: React.FC<DetailGridProps> = (props) => {
   return (
-    <div className="grid grid-cols-3 text-sm">
+    <div
+      className="grid grid-cols-3 text-sm"
+      style={{
+        gridTemplateColumns: `repeat(${props.details.length}, minmax(0, 1fr))`,
+      }}
+    >
       {props.details.map((detail, index) => (
         <div
           key={detail.name}

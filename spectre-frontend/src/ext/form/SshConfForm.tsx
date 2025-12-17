@@ -1,5 +1,5 @@
 import { type FormComponentProps } from '@/ext/type.ts'
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import SteppedPanel from '@/components/SteppedPanel/SteppedPanel.tsx'
 import SteppedPanelItem from '@/components/SteppedPanel/SteppedPanelItem.tsx'
@@ -66,7 +66,6 @@ type LoginPrincipal = {
 }
 
 interface ConfigurationForm2Props {
-  connectConfiguration?: Values
   toPreviousPage: () => void
   pluginId: string
   /**
@@ -112,7 +111,6 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
     const values = getValues()
     setLoading(true)
     try {
-      const base = props.connectConfiguration!
       const configuration = values.configuration
       removeAnonymousPassword(configuration.principal)
       if (configuration.local) {
@@ -124,23 +122,21 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
 
       if (props.runtimeNodeId) {
         await updateRuntimeNode({
+          ...values,
           id: props.runtimeNodeId,
-          name: base.name,
           pluginId: props.pluginId,
           configuration,
-          labels: values.labels,
         })
         addToast({
           title: '更新成功',
           color: 'success',
         })
       } else {
-        await createRuntimeNode(
-          base.name,
-          props.pluginId,
-          values.labels,
+        await createRuntimeNode({
+          ...values,
+          pluginId: props.pluginId,
           configuration,
-        )
+        })
         addToast({
           title: '创建成功',
           color: 'success',
@@ -373,7 +369,6 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
   })
   const { control, trigger, getValues, setValue } = formControl
   const [loading, setLoading] = useState(false)
-  const connectConfiguration = useRef<Values | undefined>(undefined)
 
   const onConnectConfFinish = async () => {
     const b = await trigger()
@@ -392,7 +387,6 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
       if (r) {
         handleError(r, '测试失败')
       } else {
-        connectConfiguration.current = values
         setPage(1)
       }
     } finally {
@@ -483,7 +477,6 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
         </SteppedPanelItem>
         <SteppedPanelItem>
           <ConfigurationForm2
-            connectConfiguration={connectConfiguration.current}
             toPreviousPage={() => setPage(0)}
             pluginId={props.pluginId}
             formControl={formControl}

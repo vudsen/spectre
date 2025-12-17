@@ -36,6 +36,7 @@ const ListJvmSource = graphql(`
           createdAt
           pluginId
           labels
+          restrictedMode
         }
       }
       plugins {
@@ -154,7 +155,16 @@ const JvmSourcePage: React.FC = () => {
         >
           {(item) => (
             <TableRow key={item.id}>
-              <TableCell>
+              <TableCell className="flex items-center">
+                {item.restrictedMode ? (
+                  <Tooltip content="处于限制模式中" className="outline-0">
+                    <SvgIcon
+                      icon={Icon.SHIELD}
+                      size={22}
+                      className="text-primary-500 ml-0.5"
+                    />
+                  </Tooltip>
+                ) : null}
                 <Link
                   onPress={() => viewNode(item.id)}
                   color="primary"

@@ -130,6 +130,7 @@ type RuntimeNodeDTO {
   labels: Labels!
   name: String!
   pluginId: String!
+  restrictedMode: Boolean!
 }
 
 input RuntimeNodeModifyRequestVO {

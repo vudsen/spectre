@@ -74,12 +74,10 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
           },
         })
       } else {
-        await createRuntimeNode(
-          values.name,
-          props.pluginId,
-          values.labels,
-          values.configuration,
-        )
+        await createRuntimeNode({
+          ...values,
+          pluginId: props.pluginId,
+        })
       }
       addToast({
         title: props.oldState ? '更新成功' : '创建成功',

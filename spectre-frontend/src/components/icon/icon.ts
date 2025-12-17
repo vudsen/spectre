@@ -22,7 +22,8 @@ const Icon = {
   DISCONNECT: 'fc-link-slash',
   FIELD: 'jb-field',
   AUDIT: 'note-sticky',
-  SECRET_KEY: 'fc-key'
+  SECRET_KEY: 'fc-key',
+  SHIELD: 'fc-shield-halved',
 } as const
 
 export type Icons = (typeof Icon)[keyof typeof Icon]
