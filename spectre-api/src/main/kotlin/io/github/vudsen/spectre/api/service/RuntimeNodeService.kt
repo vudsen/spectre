@@ -63,9 +63,14 @@ interface RuntimeNodeService {
     fun expandRuntimeNodeTree(runtimeNodeId: Long, parentNodeId: String?): List<JvmTreeNodeDTO>
 
     /**
-     * 获取运行时节点
+     * 获取运行时节点. 该方法会过滤敏感信息，如果需要敏感信息，请使用 [findPureRuntimeNodeById]
      */
     fun getRuntimeNode(runtimeNodeId: Long): RuntimeNodeDTO?
+
+    /**
+     * 获取运行时节点，包含敏感信息
+     */
+    fun findPureRuntimeNodeById(runtimeNodeId: Long): RuntimeNodeDTO?
 
     /**
      * 获取树节点

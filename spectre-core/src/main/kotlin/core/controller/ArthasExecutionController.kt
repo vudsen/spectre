@@ -45,7 +45,7 @@ class ArthasExecutionController(
 
     private fun checkTreeNodePermission(runtimeNodeId: Long, treeNodeId: String) {
         val treeNode = runtimeNodeService.findTreeNode(treeNodeId) ?: throw BusinessException("节点不存在")
-        val node = runtimeNodeService.getRuntimeNode(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
+        val node = runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
         val ctx = AttachNodeABACContext(ABACPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
         appAccessControlService.checkPolicyPermission(ctx)
     }
@@ -121,7 +121,7 @@ class ArthasExecutionController(
 
     private fun checkCommandExecPermission(channelId: String, command: String) {
         val info = arthasExecutionService.getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
-        val runtimeNodeDTO = runtimeNodeService.getRuntimeNode(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
+        val runtimeNodeDTO = runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
 
         appAccessControlService.checkPolicyPermission(
             ArthasExecutionABACContext(

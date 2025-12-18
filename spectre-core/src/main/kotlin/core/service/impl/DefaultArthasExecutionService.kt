@@ -123,7 +123,7 @@ class DefaultArthasExecutionService(
         bundleId: Long,
     ): AttachStatus {
         val runtimeNodeDto =
-            runtimeNodeService.getRuntimeNode(runtimeNodeId) ?: throw BusinessException("error.runtime.node.not.exist")
+            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.runtime.node.not.exist")
         val extPoint = runtimeNodeService.getExtPoint(runtimeNodeDto.pluginId)
 
         val node = runtimeNodeService.findTreeNode(treeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
