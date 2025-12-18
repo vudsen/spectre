@@ -152,6 +152,10 @@ class DefaultRuntimeNodeService(
         return dto
     }
 
+    override fun findPureRuntimeNodeById(runtimeNodeId: Long): RuntimeNodeDTO? {
+        return repository.findById(runtimeNodeId).getOrNull()?.toDTO()
+    }
+
     override fun findTreeNode(id: String): JvmSearchNode<Any>? {
         val node = redisTemplate.opsForValue().get(id) as JvmSearchNode<Any>?
         node ?.let {

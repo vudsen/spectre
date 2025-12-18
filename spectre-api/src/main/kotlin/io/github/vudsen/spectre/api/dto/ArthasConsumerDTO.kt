@@ -2,7 +2,7 @@ package io.github.vudsen.spectre.api.dto
 
 import java.io.Serializable
 
-class ChannelSessionDTO(
+class ArthasConsumerDTO(
     val consumerId: String,
     val name: String
 ) : Serializable {

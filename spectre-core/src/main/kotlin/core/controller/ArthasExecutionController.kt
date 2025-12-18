@@ -2,7 +2,7 @@ package io.github.vudsen.spectre.core.controller
 
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.api.dto.AttachStatus
-import io.github.vudsen.spectre.api.dto.ChannelSessionDTO
+import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
@@ -45,7 +45,7 @@ class ArthasExecutionController(
 
     private fun checkTreeNodePermission(runtimeNodeId: Long, treeNodeId: String) {
         val treeNode = runtimeNodeService.findTreeNode(treeNodeId) ?: throw BusinessException("节点不存在")
-        val node = runtimeNodeService.getRuntimeNode(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
+        val node = runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
         val ctx = AttachNodeABACContext(ABACPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
         appAccessControlService.checkPolicyPermission(ctx)
     }
@@ -66,7 +66,7 @@ class ArthasExecutionController(
      */
     @PostMapping("/channel/{channelId}/join")
     @Log("log.arthas.channel.join", "{ channelId: #args[0], consumerId: #returnObj?.consumerId }")
-    fun joinChannel(@PathVariable channelId: String, request: HttpServletRequest): ChannelSessionDTO? {
+    fun joinChannel(@PathVariable channelId: String, request: HttpServletRequest): ArthasConsumerDTO? {
         checkTreeNodePermission(channelId)
         return joinChannel0(request, channelId)
     }
@@ -74,14 +74,14 @@ class ArthasExecutionController(
     /**
      * @return consumerId
      */
-    private fun joinChannel0(request: HttpServletRequest, channelId: String): ChannelSessionDTO? {
+    private fun joinChannel0(request: HttpServletRequest, channelId: String): ArthasConsumerDTO? {
         val session = request.getSession(true)
         val key = channelSessionDataKey(channelId)
-        val oldConsumerId = session.getAttribute(key) as ChannelSessionDTO?
+        val oldConsumerId = session.getAttribute(key) as ArthasConsumerDTO?
         if (oldConsumerId != null) {
             return oldConsumerId
         }
-        val currentSavedConsumerId = session.getAttribute(key) as ChannelSessionDTO?
+        val currentSavedConsumerId = session.getAttribute(key) as ArthasConsumerDTO?
         if (currentSavedConsumerId != oldConsumerId) {
             return currentSavedConsumerId
         }
@@ -107,12 +107,12 @@ class ArthasExecutionController(
     private fun resolveChannelSession(
         request: HttpServletRequest,
         channelId: String
-    ): ChannelSessionDTO {
+    ): ArthasConsumerDTO {
         val session = request.getSession(false)
         if (session == null) {
             throw NamedExceptions.SESSION_EXPIRED.toException()
         }
-        val channelSession = session.getAttribute(channelSessionDataKey(channelId)) as ChannelSessionDTO?
+        val channelSession = session.getAttribute(channelSessionDataKey(channelId)) as ArthasConsumerDTO?
         if (channelSession == null) {
             throw BusinessException("频道不存在!")
         }
@@ -121,7 +121,7 @@ class ArthasExecutionController(
 
     private fun checkCommandExecPermission(channelId: String, command: String) {
         val info = arthasExecutionService.getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
-        val runtimeNodeDTO = runtimeNodeService.getRuntimeNode(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
+        val runtimeNodeDTO = runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
 
         appAccessControlService.checkPolicyPermission(
             ArthasExecutionABACContext(

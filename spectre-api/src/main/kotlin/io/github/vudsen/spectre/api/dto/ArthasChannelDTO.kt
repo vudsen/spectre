@@ -2,7 +2,7 @@ package io.github.vudsen.spectre.api.dto
 
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 
-class ArthasChannelInfoDTO(
+class ArthasChannelDTO(
     /**
      * Arthas sessionId
      */
@@ -10,9 +10,11 @@ class ArthasChannelInfoDTO(
     var runtimeNodeId: Long,
     var treeNodeId: String,
     var port: Int,
-    var restrictedMode: Boolean
+    var restrictedMode: Boolean,
+    var bundleId: Long,
+    var extPointId: String
 ) {
     lateinit var jvm: Jvm
 
-    constructor() : this("", 0, "", 0, false)
+    constructor() : this("", 0, "", 0, false, 0, "")
 }

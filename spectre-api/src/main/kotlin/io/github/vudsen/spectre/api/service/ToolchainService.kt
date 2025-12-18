@@ -1,5 +1,7 @@
 package io.github.vudsen.spectre.api.service
 
+import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
 import io.github.vudsen.spectre.api.vo.ToolchainItemResponseVO
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
@@ -23,7 +25,7 @@ interface ToolchainService {
     /**
      * 查询工具包
      */
-    fun resolveToolchainBundle(id: Long): ToolchainBundlePO?
+    fun resolveToolchainBundle(id: Long): ToolchainBundleDTO?
 
     /**
      * 更新或者创建工具
@@ -47,5 +49,10 @@ interface ToolchainService {
      * 将包缓存到本地
      */
     fun cachePackageToLocal(type: ToolchainType, tag: String, isArm: Boolean, source: InputStreamSource)
+
+    /**
+     * 根据 id 查询工具
+     */
+    fun findToolchainItemById(type: ToolchainType, tag: String): ToolchainItemDTO?
 
 }

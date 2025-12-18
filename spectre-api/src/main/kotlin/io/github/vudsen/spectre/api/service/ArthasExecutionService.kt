@@ -1,8 +1,8 @@
 package io.github.vudsen.spectre.api.service
 
-import io.github.vudsen.spectre.api.dto.ArthasChannelInfoDTO
+import io.github.vudsen.spectre.api.dto.ArthasChannelDTO
 import io.github.vudsen.spectre.api.dto.AttachStatus
-import io.github.vudsen.spectre.api.dto.ChannelSessionDTO
+import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 
 /**
@@ -25,7 +25,7 @@ interface ArthasExecutionService {
      * @param ownerIdentifier 会话凭据。对于每个凭据，在并发调用时应该只能创建一个 session
      * @return consumer id. 该 id 应该被缓存到用户的会话中
      */
-    fun joinChannel(channelId: String, ownerIdentifier: String): ChannelSessionDTO
+    fun joinChannel(channelId: String, ownerIdentifier: String): ArthasConsumerDTO
 
     /**
      * 异步执行命令
@@ -42,7 +42,7 @@ interface ArthasExecutionService {
     /**
      * 获取 channel 信息
      */
-    fun getChannelInfo(channelId: String): ArthasChannelInfoDTO?
+    fun getChannelInfo(channelId: String): ArthasChannelDTO?
 
     /**
      * 中断前台任务

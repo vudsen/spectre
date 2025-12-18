@@ -13,16 +13,18 @@ import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.service.ToolchainService
-import io.github.vudsen.spectre.common.progress.ProgressManager
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
+import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
+import io.github.vudsen.spectre.core.bean.ArthasClientWrapper
+import io.github.vudsen.spectre.core.internal.ArthasClientCacheService
 import io.github.vudsen.spectre.core.lock.RedisDistributedLock
 import io.github.vudsen.spectre.repo.RuntimeNodeRepository
 import io.github.vudsen.spectre.repo.ToolchainItemRepository
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
-import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.task.TaskExecutor
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.expression.spel.SpelNode
@@ -32,10 +34,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.stereotype.Service
 import java.lang.reflect.InvocationTargetException
 import java.time.Duration
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.optionals.getOrNull
 
@@ -43,16 +42,40 @@ import kotlin.jvm.optionals.getOrNull
 /**
  * 管理 Arthas 连接的服务。
  *
- * 每个服务都会在本地缓存 [ClientHolder] 来保证每次请求都不会重复创建。
  *
- * 为了确保未来集群能够正常使用，当成功 attach 到一个 JVM 后，会往 Redis 中写 [ArthasChannelInfoDTO] 数据，对于后续的 attach 请求
+ * 为了确保未来集群能够正常使用，当成功 attach 到一个 JVM 后，会往 Redis 中写 [ArthasChannelDTO] 数据，对于后续的 attach 请求
  * 将会直接复用对应的端口以及其它数据。
+ *
+ * ## 资源类型：
+ *
+ * ### Channel
+ *
+ * 频道，在代码上代表一个 [ArthasHttpClient] 实例，表示一个到 arthas 的连接。
+ *
+ * 可用上下文：
+ * - [ArthasChannelDTO]
+ *
+ * ### Consumer
+ *
+ * 消费者，用于接收 arthas 消息，一个 `Channel` 可以有多个 `Consumer`.
+ *
+ * 创建步骤：
+ * 1. 客户端调用 [DefaultArthasExecutionService.requireAttach] 获取到 `channelId`
+ * 2. 客户端调用 [DefaultArthasExecutionService.joinChannel] 来加入频道
+ *
+ * 注意事项:
+ * 1. 执行命令不需要消费者，只需要频道，执行完后所有的消费者都能看到
+ *
+ *
+ *
  */
 @Service
 class DefaultArthasExecutionService(
     private val redisTemplate: RedisTemplate<String, Any>,
-    private val executor: TaskExecutor,
+    @param:Qualifier("applicationTaskExecutor") private val executor: TaskExecutor,
     private val redisDistributedLock: RedisDistributedLock,
+    private val arthasClientCacheService: ArthasClientCacheService,
+    private val runtimeNodeService: RuntimeNodeService
 ) : ArthasExecutionService {
 
     companion object {
@@ -79,82 +102,20 @@ class DefaultArthasExecutionService(
 
     }
 
-    /**
-     * 这样注入 Kotlin 有非空检查，但是又不想全写构造器里面。。
-     */
-    @Autowired
-    private lateinit var runtimeNodeService: RuntimeNodeService
-
-    @Autowired
-    private lateinit var runtimeNodeRepository: RuntimeNodeRepository
-
     @Autowired
     private lateinit var toolchainService: ToolchainService
 
     @Autowired
     private lateinit var toolchainItemRepository: ToolchainItemRepository
 
-    @Autowired
-    private lateinit var appAccessControlService: AppAccessControlService
-
     private val objectMapper: ObjectMapper = ObjectMapper()
 
-    /**
-     * 保存 jvm 到客户端的缓存
-     *
-     * - **key**: see [resolveJvmId]
-     *
-     * FIXME: memory leak.
-     */
-    private val clientMap = ConcurrentHashMap<String, ClientHolder>()
-
     private val modifyLock = ReentrantLock()
-
-    /**
-     * 在服务内存中缓存的客户端数据.
-     */
-    private class ClientHolder(val channelId: String) {
-        /**
-         * 本地缓存的客户端. 若为空，表示正在初始化中
-         */
-        var client: ArthasHttpClient? = null
-
-        /**
-         * 客户端初始化锁，避免并发，每次限制只有一个线程能够初始化，并且在初始化完全或失败前，锁将保持持有
-         */
-        var clientInitLock: AtomicBoolean = AtomicBoolean(false)
-
-        /**
-         * 在创建客户端时的错误信息
-         */
-        var error: AttachStatus.ErrorInfo? = null
-
-        /**
-         * 进度指示器，用于获取当前初始化进度
-         */
-        val progressManager = ProgressManager()
-    }
 
     private fun resolveJvmId(runtimeNodeId: Long, jvm: Jvm): String {
         return "${runtimeNodeId}:${jvm.hashCode()}"
     }
 
-    private fun initHolder(jvmId: String): ClientHolder? {
-        // 本地没有记录
-        if (!modifyLock.tryLock()) {
-            return null
-        }
-        try {
-            clientMap[jvmId]?.let {
-                return it
-            }
-            val newHolder = ClientHolder(UUID.randomUUID().toString())
-            clientMap[jvmId] = newHolder
-            return newHolder
-        } finally {
-            modifyLock.unlock()
-        }
-    }
 
     override fun requireAttach(
         runtimeNodeId: Long,
@@ -162,55 +123,53 @@ class DefaultArthasExecutionService(
         bundleId: Long,
     ): AttachStatus {
         val runtimeNodeDto =
-            runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
+            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.runtime.node.not.exist")
         val extPoint = runtimeNodeService.getExtPoint(runtimeNodeDto.pluginId)
 
         val node = runtimeNodeService.findTreeNode(treeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
         val jvm = extPoint.createSearcher().deserializeJvm(node)
-        val jvmId = resolveJvmId(runtimeNodeId, jvm)
-
-        // FIXME 不能使用单纯的哈希
-        var holder = clientMap[jvmId]
-        if (holder == null) {
-            holder = initHolder(jvmId) ?: return AttachStatus(false)
-        } else {
-            holder.client?.let {
-                getChannelData(holder.channelId) ?: return AttachStatus(false)
-                return AttachStatus(true).apply {
-                    channelId = holder.channelId
-                }
-            }
-            holder.error?.let {
-                if (System.currentTimeMillis() >= it.nextRetryTime) {
-                    holder.error = null
-                } else {
-                    return returnAttachingMsg(holder)
-                }
-            }
-            if (holder.clientInitLock.get()) {
-                return returnAttachingMsg(holder)
+        arthasClientCacheService.resolveCachedClient(runtimeNodeId, jvm) ?.let {
+            return AttachStatus(true).apply {
+                channelId = it.channelId
             }
         }
 
-        if (!holder.clientInitLock.compareAndSet(false, true)) {
-            return returnAttachingMsg(holder)
+        val jvmId = arthasClientCacheService.resolveJvmId(runtimeNodeId, jvm)
+
+        // start init channel
+        val status = arthasClientCacheService.startInit(jvmId) ?: return AttachStatus(false)
+
+        // error check
+        status.error ?.let {
+            if (System.currentTimeMillis() >= it.nextRetryTime) {
+                status.error = null
+            } else {
+                return returnAttachingMsg(status)
+            }
         }
-        if (clientMap.contains(jvmId)) {
-            // 懒得写了 :( 让客户端自己再轮询一次
-            holder.clientInitLock.set(false)
-            return returnAttachingMsg(holder)
+
+        // try lock
+        if (!status.clientInitLock.compareAndSet(false, true)) {
+            return returnAttachingMsg(status)
+        }
+
+        // recheck
+        arthasClientCacheService.resolveCachedClient(jvmId)?.let {
+            return AttachStatus(true).apply {
+                channelId = it.channelId
+            }
         }
 
         try {
-            attachJvmAsync(extPoint, runtimeNodeDto, jvm, holder, bundleId, treeNodeId)
-            return returnAttachingMsg(holder)
+            attachJvmAsync(extPoint, runtimeNodeDto, jvm, status, bundleId, treeNodeId)
+            return returnAttachingMsg(status)
         } catch (e: Exception) {
-            holder.clientInitLock.set(false)
+            status.clientInitLock.set(false)
             throw e
         }
     }
 
-    private fun returnAttachingMsg(holder: ClientHolder): AttachStatus {
+    private fun returnAttachingMsg(holder: ArthasClientInitStatus): AttachStatus {
         return AttachStatus(false).apply {
             error = holder.error
             holder.progressManager.currentProgress()?.let {
@@ -220,26 +179,14 @@ class DefaultArthasExecutionService(
         }
     }
 
-    /**
-     * channel 内部信息
-     */
-    private class ChannelInnerMetadata {
-        var bundleId: Long = -1L
-        lateinit var extPointId: String
-        var runtimeNodeId: Long = -1L
-    }
-
-    private fun innerMetadataKey(channelId: String): String {
-        return "arthas:channel:metadata:${channelId}"
-    }
 
     private fun arthasInitDistributedLockKey(runtimeNodeId: Long): String {
         return "runtime-node-lock:${runtimeNodeId}"
     }
 
-    override fun joinChannel(channelId: String, ownerIdentifier: String): ChannelSessionDTO {
+    override fun joinChannel(channelId: String, ownerIdentifier: String): ArthasConsumerDTO {
         // 除非使用 redis，不然每次重启都会丢失数据
-        val data = getChannelData(channelId) ?: throw BusinessException("Channel 已经关闭，请重新在列表中连接")
+        val data = resolveArthasChannel(channelId) ?: throw BusinessException("Channel 已经关闭，请重新在列表中连接")
         val distributedLockKey = "arthas:channel:join-lock:${ownerIdentifier}"
         // 并发概率不高，先这样简单写，主要是防止前端 react 开发模式同时发两次请求
         var locked = false
@@ -255,28 +202,23 @@ class DefaultArthasExecutionService(
         }
         val consumerCacheKey = "channel:consumer:${channelId}:${ownerIdentifier}"
         try {
-            (redisTemplate.opsForValue().get(consumerCacheKey) as ChannelSessionDTO?)?.let {
+            (redisTemplate.opsForValue().get(consumerCacheKey) as ArthasConsumerDTO?)?.let {
                 return it
             }
             val jvmId = resolveJvmId(data.runtimeNodeId, data.jvm)
-            var client = clientMap[jvmId]?.client
+            var client = arthasClientCacheService.resolveCachedClient(jvmId)?.client
             if (client == null) {
-                val key = innerMetadataKey(channelId)
-                val metadata = redisTemplate.opsForValue().get(key) as ChannelInnerMetadata? ?: throw BusinessException(
-                    "Channel 已经关闭，请重新在列表中连接"
-                )
                 modifyLock.lock()
                 try {
-                    val newClient = createClient(data, metadata)
-                    clientMap[jvmId] = ClientHolder(channelId).apply {
-                        this.client = newClient
-                    }
+                    val newClient = createClient(data, data)
+                    // 本地未缓存，但是 redis 有，一般大概率出现在集群环境
+                    arthasClientCacheService.saveClient(jvmId, ArthasClientWrapper(newClient, channelId))
                     client = newClient
                 } finally {
                     modifyLock.unlock()
                 }
             }
-            val session = ChannelSessionDTO(client.joinSession(data.sessionId).consumerId, data.jvm.name)
+            val session = ArthasConsumerDTO(client.joinSession(data.sessionId).consumerId, data.jvm.name)
             // 用于解决创建期间的并发，该方法返回后，相关数据会保存到用户自己的 session 中，这里的数据就没必要了
             redisTemplate.opsForValue().set(consumerCacheKey, session, 1, TimeUnit.MINUTES)
             return session
@@ -286,37 +228,27 @@ class DefaultArthasExecutionService(
     }
 
     private fun createClient(
-        info: ArthasChannelInfoDTO,
-        metadata: ChannelInnerMetadata
+        info: ArthasChannelDTO,
+        metadata: ArthasChannelDTO
     ): ArthasHttpClient {
         val extPoint = runtimeNodeService.getExtPoint(metadata.extPointId)
         val runtimeNode = runtimeNodeService.resolveRuntimeNode(info.runtimeNodeId)
 
         val bundle = toolchainService.resolveToolchainBundle(metadata.bundleId) ?: TODO("bundle not found.")
-        val handler = extPoint.createAttachHandler(
-            runtimeNode, info.jvm, ToolchainBundleDTO(
-                toolchainItemRepository.findById(ToolchainItemId(ToolchainType.JATTACH, bundle.jattachTag)).get()
-                    .toDTO(),
-                toolchainItemRepository.findById(ToolchainItemId(ToolchainType.ARTHAS, bundle.arthasTag)).get()
-                    .toDTO(),
-                toolchainItemRepository.findById(ToolchainItemId(ToolchainType.HTTP_CLIENT, bundle.httpClientTag))
-                    .get()
-                    .toDTO(),
-            )
-        )
+        val handler = extPoint.createAttachHandler(runtimeNode, info.jvm, bundle)
         return handler.attach(info.port)
     }
 
     /**
      * 异步 attach 到 jvm
      *
-     * 该方法会设置 [ArthasChannelInfoDTO] 和 [ChannelInnerMetadata]，前者主要用于保存最终连接的端口，后者用于重复连接时，提供充足的元数据来恢复连接
+     * 该方法会设置 [ArthasChannelDTO]，主要用于保存最终连接的端口
      */
     private fun attachJvmAsync(
         extPoint: RuntimeNodeExtensionPoint,
         runtimeNodeDto: RuntimeNodeDTO,
         jvm: Jvm,
-        holder: ClientHolder,
+        holder: ArthasClientInitStatus,
         bundleId: Long,
         treeNodeId: String,
     ) {
@@ -329,7 +261,7 @@ class DefaultArthasExecutionService(
             ProgressReportHolder.startProgress(holder.progressManager)
             logger.info("Start creating new http client for jvm(id = {}), name = {}", jvm.id, jvm.name)
             try {
-                val channelData = getChannelData(holder.channelId)
+                val channelData = resolveArthasChannel(holder.channelId)
                 if (channelData != null) {
                     return@execute
                 }
@@ -343,47 +275,27 @@ class DefaultArthasExecutionService(
                         )
                     )
 
-
-                val handler = extPoint.createAttachHandler(
-                    runtimeNode, jvm, ToolchainBundleDTO(
-                        toolchainItemRepository.findById(ToolchainItemId(ToolchainType.JATTACH, bundle.jattachTag))
-                            .get()
-                            .toDTO(),
-                        toolchainItemRepository.findById(ToolchainItemId(ToolchainType.ARTHAS, bundle.arthasTag)).get()
-                            .toDTO(),
-                        toolchainItemRepository.findById(
-                            ToolchainItemId(
-                                ToolchainType.HTTP_CLIENT,
-                                bundle.httpClientTag
-                            )
-                        )
-                            .get()
-                            .toDTO(),
-                    )
-                )
-
+                val handler = extPoint.createAttachHandler(runtimeNode, jvm, bundle)
                 val client: ArthasHttpClient = handler.attach(null)
 
-                logger.info("Client creation success!")
+                logger.info("Successfully created client for jvm(id = {}), name = {}", jvm.id, jvm.name)
 
                 val session = client.initSession()
 
-                val data = ArthasChannelInfoDTO(
+                val data = ArthasChannelDTO(
                     session.sessionId,
                     runtimeNodeDto.id,
                     treeNodeId,
                     client.getPort(),
-                    runtimeNodeDto.restrictedMode
+                    runtimeNodeDto.restrictedMode,
+                    bundleId,
+                    extPoint.getId()
                 ).apply {
                     this.jvm = jvm
                 }
-                setChannelData(holder.channelId, data)
-                redisTemplate.opsForValue().set(innerMetadataKey(holder.channelId), ChannelInnerMetadata().apply {
-                    this.extPointId = extPoint.getId()
-                    this.runtimeNodeId = runtimeNodeDto.id
-                    this.bundleId = bundle.id!!
-                }, COMMON_REDIS_EXPIRE_TIME)
-                clientMap[resolveJvmId(runtimeNodeDto.id, jvm)]!!.client = client
+                saveChannelDTO(holder.channelId, data)
+                val jvmId = arthasClientCacheService.resolveJvmId(runtimeNodeDto.id, jvm)
+                arthasClientCacheService.saveClient(jvmId, ArthasClientWrapper(client, holder.channelId))
             } catch (e: Exception) {
                 val ex = if (e is InvocationTargetException) {
                     e.targetException
@@ -401,14 +313,13 @@ class DefaultArthasExecutionService(
         }
     }
 
-    private fun getChannelData(channelId: String): ArthasChannelInfoDTO? {
-        val result = redisTemplate.opsForValue().get("arthas:channel:${channelId}") as ArthasChannelInfoDTO?
+    private fun resolveArthasChannel(channelId: String): ArthasChannelDTO? {
+        val result = redisTemplate.opsForValue().get("arthas:channel:${channelId}") as ArthasChannelDTO?
         flushCacheTime(channelId)
         return result
     }
 
-
-    private fun setChannelData(channelId: String, data: ArthasChannelInfoDTO) {
+    private fun saveChannelDTO(channelId: String, data: ArthasChannelDTO) {
         redisTemplate.opsForValue().setIfAbsent("arthas:channel:${channelId}", data, COMMON_REDIS_EXPIRE_TIME)
     }
 
@@ -419,27 +330,22 @@ class DefaultArthasExecutionService(
 
 
     /**
-     * 尝试从 [clientMap] 中获取 client，如果没有，则尝试创建一个新的
+     * 尝试获取 client，如果没有，则尝试创建一个新的
      */
-    private fun tryResolveClient(channelInfo: ArthasChannelInfoDTO, channelId: String): ArthasHttpClient {
-        var holder = clientMap[resolveJvmId(channelInfo.runtimeNodeId, channelInfo.jvm)]
-        if (holder == null) {
-            holder = ClientHolder(channelId)
-        } else {
-            holder.client?.let {
-                return it
-            }
+    private fun tryResolveClient(channelInfo: ArthasChannelDTO, channelId: String): ArthasHttpClient {
+        val jvmId = resolveJvmId(channelInfo.runtimeNodeId, channelInfo.jvm)
+        arthasClientCacheService.resolveCachedClient(jvmId)?.let {
+            return it.client
         }
-        val metadata = redisTemplate.opsForValue().get(innerMetadataKey(channelId)) as ChannelInnerMetadata?
-            ?: throw BusinessException("会话过期，请刷新页面")
-        val client = createClient(channelInfo, metadata)
-        holder.client = client
+
+        val client = createClient(channelInfo, channelInfo)
+        arthasClientCacheService.saveClient(jvmId, ArthasClientWrapper(client, channelId))
         return client
     }
 
     override fun execAsync(channelId: String, command: String) {
         // TODO 把 controller 的策略权限校验移到这里来.
-        val data = getChannelData(channelId) ?: throw BusinessException("会话过期，请刷新页面")
+        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         if (data.restrictedMode) {
             checkOgnlExpression(command)
@@ -570,35 +476,22 @@ class DefaultArthasExecutionService(
 
 
     override fun pullResults(channelId: String, consumerId: String): Any {
-        val data = getChannelData(channelId) ?: throw BusinessException("会话过期，请刷新页面")
+        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         return client.pullResults(data.sessionId, consumerId)
     }
 
-    override fun getChannelInfo(channelId: String): ArthasChannelInfoDTO? {
-        return getChannelData(channelId)
+    override fun getChannelInfo(channelId: String): ArthasChannelDTO? {
+        return resolveArthasChannel(channelId)
     }
 
     override fun interruptCommand(channelId: String) {
-        val data = getChannelData(channelId) ?: throw BusinessException("会话过期，请刷新页面")
+        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         client.interruptJob(data.sessionId)
     }
 
-    @PreDestroy
-    fun destroy() {
-        for (entry in clientMap.entries) {
-            try {
-                entry.value.client?.exec("stop")
-            } catch (e: Exception) {
-                logger.warn(
-                    "Failed to destroy client listen on {}, reason: {}",
-                    entry.value.client?.getPort(),
-                    e.message
-                )
-            }
-        }
-    }
+
 
 
 }

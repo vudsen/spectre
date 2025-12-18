@@ -10,6 +10,8 @@ import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Pointcut
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.core.task.TaskExecutor
 import org.springframework.expression.spel.standard.SpelExpression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
@@ -20,20 +22,15 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import java.sql.Timestamp
 import java.util.WeakHashMap
-import java.util.concurrent.Executor
 
 @Aspect
 @Component
-class LogAspect {
+class LogAspect(
+    @param:Qualifier("applicationTaskExecutor") private val executor: TaskExecutor
+) {
 
     private lateinit var logEntityRepository: LogEntityRepository
 
-    private lateinit var executor: Executor
-
-    @Autowired
-    fun setExecutor(executor: Executor) {
-        this.executor = executor
-    }
 
     @Autowired
     fun setLogEntityRepository(logEntityRepository: LogEntityRepository) {

@@ -181,6 +181,12 @@ type StaticPermissionQueries {
 """Epoch milliseconds timestamp"""
 scalar Timestamp
 
+type ToolchainBundleDTO {
+  arthas: ToolchainItemDTO!
+  httpClient: ToolchainItemDTO!
+  jattach: ToolchainItemDTO!
+}
+
 input ToolchainBundleModifyVO {
   arthasTag: String
   httpClientTag: String
@@ -202,6 +208,14 @@ type ToolchainBundlePage {
   totalPages: Int!
 }
 
+type ToolchainItemDTO {
+  armUrl: String
+  createdAt: Timestamp!
+  tag: String!
+  type: String!
+  url: String!
+}
+
 type ToolchainItemId {
   tag: String!
   type: ToolchainType!
@@ -221,7 +235,7 @@ type ToolchainItemPO {
 }
 
 type ToolchainItemQueries {
-  toolchainBundle(id: Long!): ToolchainBundlePO
+  toolchainBundle(id: Long!): ToolchainBundleDTO
   toolchainBundles(page: Int = 0, size: Int = 10): ToolchainBundlePage!
   toolchainItems(page: Int = 0, size: Int = 10, type: ToolchainType!): ToolchainItemsPage!
   toolchainItemsV2(page: Int = 0, size: Int = 10, type: ToolchainType!): ToolchainItemResponseVOPageResult!
