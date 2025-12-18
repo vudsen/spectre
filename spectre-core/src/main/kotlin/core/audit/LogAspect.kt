@@ -152,7 +152,7 @@ class LogAspect(
             val un = context["username"]
             if (un is String) {
                 logEntity.username = un
-                logEntity.id = -1
+                logEntity.userId = -1
             }
         }
     }

@@ -18,7 +18,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.access.intercept.AuthorizationFilter
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter
 
 
@@ -59,9 +58,14 @@ class SecurityConfiguration {
                 GraphqlSchemaAuthorizationFilter(authenticationManager(http), graphqlEndpoint),
                 AnonymousAuthenticationFilter::class.java
             )
-            .logout { logoutConfigurer -> logoutConfigurer.clearAuthentication(true).logoutSuccessHandler {request, response, authentication ->
-                response.status = HttpStatus.OK.value()
-            }}
+            .logout { logoutConfigurer ->
+                logoutConfigurer
+                    .clearAuthentication(true)
+                    .logoutUrl("/spectre-api/logout")
+                    .logoutSuccessHandler { _, response, _ ->
+                        response.status = HttpStatus.OK.value()
+                    }
+            }
 
         return http.build()
     }

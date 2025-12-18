@@ -54,7 +54,8 @@ class ArthasExecutionController(
      * @return Channel Id
      */
     @PostMapping("create-channel")
-    @Log("log.arthas.channel.create", "{ runtimeNodeId: #args[0].runtimeNodeId, channelId: #returnObj?.channelId }")
+    // 该接口是轮询调用，开启后会记录大量日志
+    // @Log("log.arthas.channel.create", "{ runtimeNodeId: #args[0].runtimeNodeId, channelId: #returnObj?.channelId }")
     fun createChannel(@RequestBody @Validated vo: CreateChannelRequestVO, request: HttpServletRequest): AttachStatus {
         checkTreeNodePermission(vo.runtimeNodeId, vo.treeNodeId)
         return arthasExecutionService.requireAttach(vo.runtimeNodeId, vo.treeNodeId, vo.bundleId)
