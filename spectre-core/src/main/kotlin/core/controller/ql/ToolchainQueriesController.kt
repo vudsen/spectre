@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.controller.ql
 
+import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.core.bean.PageResult
 import io.github.vudsen.spectre.core.bean.toPageResult
 import io.github.vudsen.spectre.api.service.ToolchainService
@@ -38,7 +39,7 @@ class ToolchainQueriesController(
     }
 
     @SchemaMapping(typeName = "ToolchainItemQueries", field = "toolchainBundle")
-    fun toolchainBundle(@Argument id: String): ToolchainBundlePO? {
+    fun toolchainBundle(@Argument id: String): ToolchainBundleDTO? {
         return toolchainService.resolveToolchainBundle(id.toLong())
     }
 

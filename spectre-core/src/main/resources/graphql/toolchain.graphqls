@@ -3,7 +3,7 @@ scalar ToolchainType
 type ToolchainItemQueries {
     toolchainItems(type: ToolchainType!, page: Int = 0, size: Int = 10): ToolchainItemsPage!
     toolchainBundles(page: Int = 0, size: Int = 10): ToolchainBundlePage!
-    toolchainBundle(id: Long!): ToolchainBundlePO
+    toolchainBundle(id: Long!): ToolchainBundleDTO
     toolchainItemsV2(type: ToolchainType!, page: Int = 0, size: Int = 10): ToolchainItemResponseVOPageResult!
 }
 
@@ -11,6 +11,22 @@ type ToolchainMutations {
     updateOrCreateToolchain(po: ToolchainItemModify): ToolchainItemPO
     createToolchainBundle(vo: ToolchainBundleModifyVO): ToolchainBundlePO
 }
+
+
+type ToolchainItemDTO {
+    type: String!
+    tag: String!
+    url: String!
+    armUrl: String
+    createdAt: Timestamp!
+}
+
+type ToolchainBundleDTO {
+    jattach: ToolchainItemDTO!
+    arthas: ToolchainItemDTO!
+    httpClient: ToolchainItemDTO!
+}
+
 
 input ToolchainItemModify {
     url: String!

@@ -1,5 +1,8 @@
 package io.github.vudsen.spectre.core.service.impl
 
+import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
+import io.github.vudsen.spectre.api.dto.ToolchainItemDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.repo.ToolchainBundleRepository
 import io.github.vudsen.spectre.repo.ToolchainItemRepository
@@ -36,8 +39,18 @@ class DefaultToolchainService(
         return toolchainBundleRepository.findAll(PageRequest.of(page, size))
     }
 
-    override fun resolveToolchainBundle(id: Long): ToolchainBundlePO? {
-        return toolchainBundleRepository.findById(id).getOrNull()
+    private fun findToolchainItemAndRequireNonnull(id: ToolchainItemId) =
+        toolchainItemRepository.findById(id)
+        .getOrNull()
+        ?.toDTO() ?: throw BusinessException("error.toolchain.not.exist", arrayOf(id.tag, id.type?.originalName))
+
+    override fun resolveToolchainBundle(id: Long): ToolchainBundleDTO? {
+        val bundle = toolchainBundleRepository.findById(id).getOrNull() ?: return null
+        return ToolchainBundleDTO(
+            findToolchainItemAndRequireNonnull(ToolchainItemId(ToolchainType.JATTACH, bundle.jattachTag)),
+            findToolchainItemAndRequireNonnull(ToolchainItemId(ToolchainType.ARTHAS, bundle.arthasTag)),
+            findToolchainItemAndRequireNonnull(ToolchainItemId(ToolchainType.HTTP_CLIENT, bundle.httpClientTag)),
+        )
     }
 
 
@@ -68,5 +81,12 @@ class DefaultToolchainService(
         }
         // TODO: 检查工具包是否有 arm 的
         LocalPackageManager.savePackage(type, tag, isArm, source)
+    }
+
+    override fun findToolchainItemById(
+        type: ToolchainType,
+        tag: String
+    ): ToolchainItemDTO? {
+        return toolchainItemRepository.findById(ToolchainItemId(type, tag)).getOrNull()?.toDTO()
     }
 }

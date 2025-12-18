@@ -288,6 +288,13 @@ export type StaticPermissionQueriesPermissionsArgs = {
   subjectType?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ToolchainBundleDto = {
+  __typename?: 'ToolchainBundleDTO';
+  arthas: ToolchainItemDto;
+  httpClient: ToolchainItemDto;
+  jattach: ToolchainItemDto;
+};
+
 export type ToolchainBundleModifyVo = {
   arthasTag?: InputMaybe<Scalars['String']['input']>;
   httpClientTag?: InputMaybe<Scalars['String']['input']>;
@@ -309,6 +316,15 @@ export type ToolchainBundlePage = {
   __typename?: 'ToolchainBundlePage';
   result: Array<ToolchainBundlePo>;
   totalPages: Scalars['Int']['output'];
+};
+
+export type ToolchainItemDto = {
+  __typename?: 'ToolchainItemDTO';
+  armUrl?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Timestamp']['output'];
+  tag: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+  url: Scalars['String']['output'];
 };
 
 export type ToolchainItemId = {
@@ -333,7 +349,7 @@ export type ToolchainItemPo = {
 
 export type ToolchainItemQueries = {
   __typename?: 'ToolchainItemQueries';
-  toolchainBundle?: Maybe<ToolchainBundlePo>;
+  toolchainBundle?: Maybe<ToolchainBundleDto>;
   toolchainBundles: ToolchainBundlePage;
   toolchainItems: ToolchainItemsPage;
   toolchainItemsV2: ToolchainItemResponseVoPageResult;
