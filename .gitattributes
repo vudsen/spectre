@@ -2,3 +2,9 @@
 *.bat text eol=crlf
 *.jar binary
 * text eol=lf
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.svg  binary

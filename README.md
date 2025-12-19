@@ -18,36 +18,80 @@
 
 ♨️: 支持运行在 Jre 环境的 JVM
 
-
 ## 本地部署
 
 > [!CAUTION]
 > 目前仅完成了基础的功能，但仍然处于开发阶段，可能会有许多安全漏洞，**请暂时不要在生产环境中使用**！！！
 
+
 数据库要求：
 - SQLite
-- PostgreSQL 或其它支持该模式的数据库(需要手动加驱动)
+- PostgreSQL
 
 中间件要求:
 - Redis
 
-### 启动后端
+推荐使用 docker-compose 启动(不推荐以 root 用户启动，请使用 `sudo useradd -m spectre` 来创建一个专用账号):
 
-工具要求：
+```yaml
+name: Spectre
+services:
+  web:
+    user: spectre
+    environment:
+      SPECTRE_HOME: '/home/spectre/data'
+    pull_policy: always
+    ports:
+      - "80:8080"
+    volumes:
+      - ./application.yaml:/home/spectre/application.yaml
+      - ./data:/home/spectre/data
+      - ./logs:/home/spectre/logs
+    working_dir: /home/spectre
+    image: vudsen/spectre:latest
+    command:
+      - java
+      - -Xmx1g
+      - -jar
+      - spectre.jar
+```
 
-- Jdk: 17+
+配置文件:
 
-推荐使用 SQLite 启动，详见 [application.yaml](./deploy/self-env/application.yaml).
-
-第一次启动会自动执行初始化 SQL。
+```yaml
+# application.yaml
+spring:
+  profiles:
+    active: prod
+  datasource:
+    url: jdbc:sqlite:data/identifier.sqlite
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+  data:
+    redis:
+      database: 0
+      password:
+      host:
+      port:
+```
 
 初始的用户名密码为：`admin`/`P@ssw0rd`
 
-### 启动前端
 
-工具要求：
+## 开发部署
 
+开发工具要求：
+
+- Java: 17
 - NodeJs: 20+
 - pnpm: 9+
 
-具体说明请查看前端文件夹内的 [README.md](./spectre-frontend/README.md)
+### 启动后端
+
+提供 redis 配置后直接启动即可。
+
+### 启动前端
+
+详见前端文件夹内的 [README.md](./spectre-frontend/README.md)
