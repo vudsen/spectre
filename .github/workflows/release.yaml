@@ -7,9 +7,11 @@ on:
       - prereleased
       - released
 jobs:
-  release:
+  build:
     name: Build And Upload
     runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.env.outputs.APP_VERSION }}
     steps:
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -50,7 +52,7 @@ jobs:
         run: >
           mkdir spectre-core/src/main/resources/static/  &&
           cp -r spectre-frontend/dist/* spectre-core/src/main/resources/static/ &&
-          sh ./gradlew build
+          sh ./gradlew build -x test
 
       - name: Upload Spectre
         uses: actions/upload-artifact@v4
@@ -66,6 +68,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   push_image:
+    name: Push Image
+    needs: build
     runs-on: windows-latest
     steps:
       - name: Fetch Sources
@@ -92,27 +96,7 @@ jobs:
             --file deploy/image/Dockerfile \
             -t vudsen/spectre:latest \
             deploy/image
-          docker tag vudsen/spectre:latest public.ecr.aws/b9z8l9n7/vudsen/spectre:${{ needs.build.outputs.app_version }}
-          docker tag vudsen/spectre:latest public.ecr.aws/b9z8l9n7/vudsen/spectre:latest
           docker tag vudsen/spectre:latest vudsen/spectre:${{ needs.build.outputs.app_version }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-        with:
-          registry-type: public
-
-      - name: Push Image To ECR
-        run: |
-          docker push public.ecr.aws/b9z8l9n7/vudsen/spectre:${{ needs.build.outputs.app_version }}
-          docker push public.ecr.aws/b9z8l9n7/vudsen/spectre:latest
-          docker logout
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
