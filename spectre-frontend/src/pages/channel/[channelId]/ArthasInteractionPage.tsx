@@ -133,8 +133,13 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
   return (
     <div className="flex h-screen flex-col">
       <div className="h-navbar mx-3 flex items-center justify-between">
-        <div className="max-w-96 truncate font-bold">
-          &gt; 已连接到: <Code>{props.appName}</Code>
+        <div className="flex max-w-1/2 items-center">
+          <span className="font-bold text-nowrap">&gt; 已连接到:&nbsp;</span>
+          <Tooltip content={props.appName}>
+            <Code className="cursor-pointer truncate" color="primary">
+              {props.appName}
+            </Code>
+          </Tooltip>
         </div>
         <div>
           <Tooltip content="开启 DEBUG 模式">

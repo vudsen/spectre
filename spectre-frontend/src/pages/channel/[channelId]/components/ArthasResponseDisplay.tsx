@@ -117,7 +117,12 @@ const ArthasResponseDisplay: React.FC<ArthasResponseDisplayProps> = ({
           {state.tag}
         </span>
       </div>
-      <Tooltip content={state.name} size="lg" delay={200} closeDelay={100}>
+      <Tooltip
+        content={state.name}
+        classNames={{ content: 'max-w-96 break-all' }}
+        delay={200}
+        closeDelay={100}
+      >
         <span className="text-default-500 ml-2 truncate text-sm">
           {state.name}
         </span>
