@@ -15,6 +15,6 @@ services:
     image: public.ecr.aws/b9z8l9n7/vudsen/spectre:${SPECTRE_VERSION}
     command:
       - java
-      - -Xmx3g
+      - -Xmx1g
       - -jar
       - spectre.jar
