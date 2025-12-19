@@ -89,23 +89,18 @@ jobs:
       - name: Rename Package
         run: mv deploy/image/spectre-core-${{ needs.build.outputs.app_version }}.jar deploy/image/spectre.jar
 
-      - name: Build Image
-        run: >
-          docker buildx build
-            --platform linux/amd64,linux/arm64
-            --file deploy/image/Dockerfile
-            -t vudsen/spectre:latest
-            -t vudsen/spectre:${{ needs.build.outputs.app_version }}
-            --push
-            deploy/image
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push Image To DockerHub
+      - name: Build Image
         run: |
-          docker push vudsen/spectre:${{ needs.build.outputs.app_version }}
-          docker push vudsen/spectre:latest
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --file deploy/image/Dockerfile \
+            -t vudsen/spectre:latest \
+            -t vudsen/spectre:${{ needs.build.outputs.app_version }} \
+            --push \
+            deploy/image
