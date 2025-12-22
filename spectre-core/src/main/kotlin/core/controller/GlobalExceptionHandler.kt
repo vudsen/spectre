@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -58,24 +59,41 @@ class GlobalExceptionHandler(
         } else {
             e
         }
-        if (ex is BusinessException) {
-            return ResponseEntity
-                .status(ex.httpStatus ?: 200)
-                .body(ErrorResponseVO(
-                    messageSource.getMessage(ex.messageKey, ex.messageArgs, null))
+        when (ex) {
+            is BusinessException -> {
+                return ResponseEntity
+                    .status(ex.httpStatus ?: 200)
+                    .body(
+                        ErrorResponseVO(
+                            messageSource.getMessage(ex.messageKey, ex.messageArgs, null)
+                        )
+                    )
+            }
+
+            is BadCredentialsException -> {
+                return ResponseEntity.ok(ErrorResponseVO(ex.message))
+            }
+
+            is NoResourceFoundException -> {
+                return ResponseEntity
+                    .status(404)
+                    .body(ErrorResponseVO(messageSource.getMessage("error.not.found", emptyArray(), null)))
+            }
+
+            is AuthorizationDeniedException -> {
+                return  ResponseEntity
+                    .status(403)
+                    .body(ErrorResponseVO(messageSource.getMessage("error.permission.deny", emptyArray(), null)))
+            }
+
+            else -> {
+                logger.error("", ex)
+                return ResponseEntity.ok(
+                    ErrorResponseVO(
+                        messageSource.getMessage("error.server.internal.error", emptyArray(), null)
+                    )
                 )
-        } else if (ex is BadCredentialsException) {
-            return ResponseEntity.ok(ErrorResponseVO(ex.message))
-        } else if (ex is NoResourceFoundException) {
-            return ResponseEntity
-                .status(404)
-                .body(ErrorResponseVO(messageSource.getMessage("error.not.found", emptyArray(), null)))
+            }
         }
-        logger.error("", ex)
-        return ResponseEntity.ok(
-            ErrorResponseVO(
-                messageSource.getMessage("error.server.internal.error", emptyArray(), null)
-            )
-        )
     }
 }
