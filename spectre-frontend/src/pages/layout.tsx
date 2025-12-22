@@ -110,7 +110,7 @@ const navigations: NavigationGroup[] = [
       },
       {
         name: '工具链',
-        icon: Icon.SETTINGS,
+        icon: Icon.WRENCH,
         basePath: '/settings',
         items: [
           {

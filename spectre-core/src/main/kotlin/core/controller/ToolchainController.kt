@@ -3,8 +3,12 @@ package io.github.vudsen.spectre.core.controller
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.ToolchainService
 import io.github.vudsen.spectre.repo.entity.ToolchainType
+import io.github.vudsen.spectre.repo.po.ToolchainItemId
+import io.github.vudsen.spectre.repo.po.ToolchainItemPO
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -34,6 +38,16 @@ class ToolchainController(
             throw BusinessException("file is too big.")
         }
         toolchainService.cachePackageToLocal(type, tag, isArm, file)
+    }
+
+    @PostMapping("item/delete")
+    fun deleteToolchainItem(@Validated @RequestBody id: ToolchainItemId) {
+        toolchainService.deleteToolchainItemById(id)
+    }
+
+    @PostMapping("bundle/delete")
+    fun deleteToolchainBundle(id: String) {
+        toolchainService.deleteToolchainBundleById(id.toLong())
     }
 
 }

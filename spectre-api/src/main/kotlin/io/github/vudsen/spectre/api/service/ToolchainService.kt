@@ -5,6 +5,7 @@ import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
 import io.github.vudsen.spectre.api.vo.ToolchainItemResponseVO
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
+import io.github.vudsen.spectre.repo.po.ToolchainItemId
 import io.github.vudsen.spectre.repo.po.ToolchainItemPO
 import org.springframework.core.io.InputStreamSource
 import org.springframework.data.domain.Page
@@ -55,4 +56,13 @@ interface ToolchainService {
      */
     fun findToolchainItemById(type: ToolchainType, tag: String): ToolchainItemDTO?
 
+    /**
+     * 根据 id 删除工具
+     */
+    fun deleteToolchainItemById(id: ToolchainItemId)
+
+    /**
+     * 根据 id 删除工具包
+     */
+    fun deleteToolchainBundleById(id: Long)
 }

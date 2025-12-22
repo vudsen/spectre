@@ -307,6 +307,7 @@ export type ToolchainBundlePo = {
   __typename?: 'ToolchainBundlePO';
   arthasTag: Scalars['String']['output'];
   createdAt: Scalars['Timestamp']['output'];
+  httpClientTag: Scalars['String']['output'];
   id: Scalars['Long']['output'];
   jattachTag: Scalars['String']['output'];
   name: Scalars['String']['output'];
@@ -634,7 +635,7 @@ export type ToolchainBundleQueryQueryVariables = Exact<{
 }>;
 
 
-export type ToolchainBundleQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainBundles: { __typename?: 'ToolchainBundlePage', result: Array<{ __typename?: 'ToolchainBundlePO', id: string, name: string, createdAt: any, jattachTag: string, arthasTag: string }> } } };
+export type ToolchainBundleQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainBundles: { __typename?: 'ToolchainBundlePage', result: Array<{ __typename?: 'ToolchainBundlePO', id: string, name: string, createdAt: any, jattachTag: string, arthasTag: string, httpClientTag: string }> } } };
 
 export type QueryToolchainVersionsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -655,7 +656,7 @@ export type ToolchainItemsQueryQueryVariables = Exact<{
 }>;
 
 
-export type ToolchainItemsQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainItemsV2: { __typename?: 'ToolchainItemResponseVOPageResult', totalPages: number, result: Array<{ __typename?: 'ToolchainItemResponseVO', type: any, tag: string, createdAt: any, isArmCached: boolean, isX86Cached: boolean }> } } };
+export type ToolchainItemsQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainItemsV2: { __typename?: 'ToolchainItemResponseVOPageResult', totalPages: number, result: Array<{ __typename?: 'ToolchainItemResponseVO', type: any, tag: string, createdAt: any, isArmCached: boolean, isX86Cached: boolean, url: string, armUrl?: string | null }> } } };
 
 export type UpdateOrCreateToolchainItemMutationVariables = Exact<{
   po?: InputMaybe<ToolchainItemModify>;
@@ -1035,6 +1036,7 @@ export const ToolchainBundleQueryDocument = new TypedDocumentString(`
         createdAt
         jattachTag
         arthasTag
+        httpClientTag
       }
     }
   }
@@ -1091,6 +1093,8 @@ export const ToolchainItemsQueryDocument = new TypedDocumentString(`
         createdAt
         isArmCached
         isX86Cached
+        url
+        armUrl
       }
     }
   }

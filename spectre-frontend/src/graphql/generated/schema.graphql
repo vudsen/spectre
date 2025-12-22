@@ -198,6 +198,7 @@ input ToolchainBundleModifyVO {
 type ToolchainBundlePO {
   arthasTag: String!
   createdAt: Timestamp!
+  httpClientTag: String!
   id: Long!
   jattachTag: String!
   name: String!

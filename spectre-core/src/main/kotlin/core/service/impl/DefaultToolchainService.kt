@@ -89,4 +89,21 @@ class DefaultToolchainService(
     ): ToolchainItemDTO? {
         return toolchainItemRepository.findById(ToolchainItemId(type, tag)).getOrNull()?.toDTO()
     }
+
+    override fun deleteToolchainItemById(id: ToolchainItemId) {
+        val bundle = when(id.type!!) {
+            ToolchainType.HTTP_CLIENT -> toolchainBundleRepository.findFirstByHttpClientTag(id.tag!!)
+            ToolchainType.ARTHAS -> toolchainBundleRepository.findFirstByArthasTag(id.tag!!)
+            ToolchainType.JATTACH -> toolchainBundleRepository.findFirstByJattachTag(id.tag!!)
+        }
+        if (bundle.isNotEmpty()) {
+            val bundlePO = bundle.get(0)
+            throw BusinessException("error.toolchain.item.in.use", arrayOf(bundlePO.name))
+        }
+        toolchainItemRepository.deleteById(id)
+    }
+
+    override fun deleteToolchainBundleById(id: Long) {
+        toolchainBundleRepository.deleteById(id)
+    }
 }
