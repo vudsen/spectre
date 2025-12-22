@@ -24,6 +24,7 @@ const Icon = {
   AUDIT: 'note-sticky',
   SECRET_KEY: 'fc-key',
   SHIELD: 'fc-shield-halved',
+  WRENCH: 'fc-screwdriver-wrench',
 } as const
 
 export type Icons = (typeof Icon)[keyof typeof Icon]

@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
+  addToast,
   Button,
   Code,
   Drawer,
@@ -7,7 +8,10 @@ import {
   Input,
   Link,
   Modal,
+  ModalBody,
   ModalContent,
+  ModalFooter,
+  ModalHeader,
   Pagination,
   Table,
   TableBody,
@@ -22,12 +26,13 @@ import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
-import { formatTime } from '@/common/util.ts'
+import { formatTime, showDialog } from '@/common/util.ts'
 import ToolchainItemModifyDrawerContent from './ToolchainItemModifyDrawerContent'
 import type { ToolchainItemType } from '@/pages/settings/toolchain/ToolchainItemType.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import UploadToolchainModalContent from '@/pages/settings/toolchain/UploadToolchainModalContent.tsx'
+import { deleteToolchainItem } from '@/api/impl/toolchain.ts'
 
 const ToolchainItemsQuery = graphql(`
   query ToolchainItemsQuery($type: ToolchainType!, $page: Int, $size: Int) {
@@ -40,6 +45,8 @@ const ToolchainItemsQuery = graphql(`
           createdAt
           isArmCached
           isX86Cached
+          url
+          armUrl
         }
       }
     }
@@ -105,8 +112,13 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
   })
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const uploadModal = useDisclosure()
+  const viewModal = useDisclosure()
   const { isLoading, result } = useGraphQL(ToolchainItemsQuery, args)
   const [uploadArgs, setUploadArgs] = useState(initial)
+  const [selectedItem, setSelectedItem] = useState<
+    ToolchainItemResponseVO | undefined
+  >()
+
   const onModified = () => {
     setArgs({ ...args })
   }
@@ -120,6 +132,31 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
     })
     uploadModal.onOpen()
   }
+
+  const deleteItem = useCallback((r: ToolchainItemResponseVO) => {
+    showDialog({
+      title: '删除工具',
+      message: `确定删除 ${r.type} ${r.tag} 吗?`,
+      color: 'danger',
+      onConfirm() {
+        deleteToolchainItem(r).then(() => {
+          addToast({
+            title: '删除成功',
+            color: 'success',
+          })
+          setArgs((prev) => ({ ...prev }))
+        })
+      },
+    })
+  }, [])
+
+  const viewItem = useCallback(
+    (r: ToolchainItemResponseVO) => {
+      setSelectedItem(r)
+      viewModal.onOpen()
+    },
+    [viewModal],
+  )
 
   if (!result && !isLoading) {
     return <div>Unknown error!</div>
@@ -156,7 +193,7 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
                 color="primary"
                 page={args.page}
                 total={result.toolchain.toolchainItemsV2.totalPages}
-                onChange={(page) => setArgs({ ...args, page })}
+                onChange={(page) => setArgs({ ...args, page: page - 1 })}
               />
             </div>
           ) : null
@@ -199,7 +236,19 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
                 align="right"
                 className="relative flex items-center justify-end gap-2"
               >
-                <Button color="danger" variant="light" isIconOnly>
+                <Button
+                  variant="light"
+                  isIconOnly
+                  onPress={() => viewItem(item)}
+                >
+                  <SvgIcon icon={Icon.VIEW} />
+                </Button>
+                <Button
+                  color="danger"
+                  variant="light"
+                  isIconOnly
+                  onPress={() => deleteItem(item)}
+                >
                   <SvgIcon icon={Icon.TRASH} />
                 </Button>
               </TableCell>
@@ -229,6 +278,58 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
               onClose={onClose}
               onModified={onModified}
             />
+          )}
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={viewModal.isOpen} onOpenChange={viewModal.onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>工具详情</ModalHeader>
+              <ModalBody className="break-all">
+                <div>
+                  <span>标签: </span>
+                  <span className="text-default-500 text-sm">
+                    {selectedItem?.tag}
+                  </span>
+                </div>
+                <div>
+                  <span>x86下载地址: </span>
+                  <Link
+                    href={selectedItem?.url}
+                    isExternal
+                    className="text-default-500 text-sm"
+                    underline="hover"
+                  >
+                    {selectedItem?.url}
+                  </Link>
+                </div>
+                <div>
+                  <span>arm下载地址: </span>
+                  {selectedItem && selectedItem.armUrl ? (
+                    <Link
+                      href={selectedItem.armUrl}
+                      isExternal
+                      className="text-default-500 text-sm"
+                      underline="hover"
+                    >
+                      {selectedItem.armUrl}
+                    </Link>
+                  ) : (
+                    <span className="text-default-500 text-sm italic">
+                      Unavailable
+                    </span>
+                  )}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <div>
+                  <Button color="primary" onPress={onClose}>
+                    确定
+                  </Button>
+                </div>
+              </ModalFooter>
+            </>
           )}
         </ModalContent>
       </Modal>

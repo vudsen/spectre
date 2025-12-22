@@ -1,17 +1,15 @@
 import React, { useState } from 'react'
 import {
   addToast,
+  Alert,
   Button,
   DrawerBody,
   DrawerFooter,
   DrawerHeader,
   SelectItem,
-  Tooltip,
 } from '@heroui/react'
 import ControlledSelect from '@/components/validation/ControlledSelect.tsx'
 import { useForm } from 'react-hook-form'
-import SvgIcon from '@/components/icon/SvgIcon.tsx'
-import Icon from '@/components/icon/icon.ts'
 import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
@@ -128,11 +126,6 @@ const ToolchainBundleModifyDrawerContent: React.FC<
             isRequired: true,
             label: 'Arthas',
             placeholder: '请选择标签',
-            endContent: (
-              <Tooltip content="仅展示最新的 10 个标签">
-                <SvgIcon icon={Icon.NOTE} size={24} />
-              </Tooltip>
-            ),
             isLoading: isVersionsLoading,
           }}
         >
@@ -150,11 +143,6 @@ const ToolchainBundleModifyDrawerContent: React.FC<
             isRequired: true,
             label: 'Jattach',
             placeholder: '请选择标签',
-            endContent: (
-              <Tooltip content="仅展示最新的 10 个标签">
-                <SvgIcon icon={Icon.NOTE} size={24} />
-              </Tooltip>
-            ),
             isLoading: isVersionsLoading,
           }}
         >
@@ -170,11 +158,6 @@ const ToolchainBundleModifyDrawerContent: React.FC<
             isRequired: true,
             label: 'HttpClient',
             placeholder: '请选择标签',
-            endContent: (
-              <Tooltip content="仅展示最新的 10 个标签">
-                <SvgIcon icon={Icon.NOTE} size={24} />
-              </Tooltip>
-            ),
             isLoading: isVersionsLoading,
           }}
         >
@@ -182,6 +165,13 @@ const ToolchainBundleModifyDrawerContent: React.FC<
             <SelectItem key={it.id.tag}>{it.id.tag}</SelectItem>
           ))}
         </ControlledSelect>
+        <div>
+          <Alert
+            title="仅显示最新的 10 个标签"
+            color="primary"
+            variant="flat"
+          />
+        </div>
       </DrawerBody>
       <DrawerFooter>
         <Button color="danger" variant="light" onPress={props.onClose}>

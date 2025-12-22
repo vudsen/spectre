@@ -1,12 +1,10 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
+  addToast,
   Button,
+  Code,
   Drawer,
   DrawerContent,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
   Input,
   Table,
   TableBody,
@@ -21,8 +19,10 @@ import Icon from '@/components/icon/icon.ts'
 import { graphql } from '@/graphql/generated'
 import ToolchainBundleModifyDrawerContent from '@/pages/settings/toolchain-bundle/ToolchainBundleModifyDrawerContent.tsx'
 import useGraphQL from '@/hook/useGraphQL.ts'
-import { formatTime } from '@/common/util.ts'
+import { formatTime, showDialog } from '@/common/util.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
+import type { DocumentResult } from '@/graphql/execute.ts'
+import { deleteToolchainBundle } from '@/api/impl/toolchain.ts'
 
 const ToolchainBundleQuery = graphql(`
   query ToolchainBundleQuery($page: Int, $size: Int) {
@@ -34,12 +34,16 @@ const ToolchainBundleQuery = graphql(`
           createdAt
           jattachTag
           arthasTag
+          httpClientTag
         }
       }
     }
   }
 `)
 
+type ToolchainBundleResp = DocumentResult<
+  typeof ToolchainBundleQuery
+>['toolchain']['toolchainBundles']['result'][number]
 const ToolchainBundle: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const [qlArgs, setQlArgs] = useState({
@@ -47,6 +51,22 @@ const ToolchainBundle: React.FC = () => {
     size: 10,
   })
   const { result, isLoading } = useGraphQL(ToolchainBundleQuery, qlArgs)
+
+  const deleteBundle = useCallback((r: ToolchainBundleResp) => {
+    showDialog({
+      title: '删除工具包',
+      message: `确定删除工具包 ${r.name} 吗?`,
+      color: 'danger',
+      onConfirm: async () => {
+        await deleteToolchainBundle(r.id)
+        addToast({
+          title: '删除成功',
+          color: 'success',
+        })
+        setQlArgs((prev) => ({ ...prev }))
+      },
+    })
+  }, [])
 
   const onModified = () => {
     setQlArgs({ ...qlArgs })
@@ -76,6 +96,7 @@ const ToolchainBundle: React.FC = () => {
           <TableColumn>名称</TableColumn>
           <TableColumn>Arthas</TableColumn>
           <TableColumn>Jattach</TableColumn>
+          <TableColumn>HttpClient</TableColumn>
           <TableColumn>创建时间</TableColumn>
           <TableColumn align="end">操作</TableColumn>
         </TableHeader>
@@ -87,31 +108,28 @@ const ToolchainBundle: React.FC = () => {
           {bundles.map((bundle) => (
             <TableRow key={bundle.id}>
               <TableCell>{bundle.name}</TableCell>
-              <TableCell>{bundle.arthasTag}</TableCell>
-              <TableCell>{bundle.jattachTag}</TableCell>
+              <TableCell>
+                <Code>{bundle.arthasTag}</Code>
+              </TableCell>
+              <TableCell>
+                <Code>{bundle.jattachTag}</Code>
+              </TableCell>
+              <TableCell>
+                <Code>{bundle.httpClientTag}</Code>
+              </TableCell>
               <TableCell>{formatTime(bundle.createdAt)}</TableCell>
               <TableCell
                 align="right"
                 className="relative flex items-center justify-end gap-2"
               >
-                <Dropdown>
-                  <DropdownTrigger>
-                    <Button isIconOnly size="sm" variant="light">
-                      <SvgIcon icon={Icon.VERTICAL_DOTS} size={24} />
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu aria-label="Static Actions">
-                    <DropdownItem key="detail">查看详情</DropdownItem>
-                    <DropdownItem key="update">更新</DropdownItem>
-                    <DropdownItem
-                      key="delete"
-                      className="text-danger"
-                      color="danger"
-                    >
-                      删除
-                    </DropdownItem>
-                  </DropdownMenu>
-                </Dropdown>
+                <Button
+                  isIconOnly
+                  color="danger"
+                  variant="light"
+                  onPress={() => deleteBundle(bundle)}
+                >
+                  <SvgIcon icon={Icon.TRASH} />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
