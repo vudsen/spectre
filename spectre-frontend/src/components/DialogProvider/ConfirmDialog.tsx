@@ -9,6 +9,7 @@ import {
 } from '@heroui/react'
 import React, { useImperativeHandle, useState } from 'react'
 import { isPromise } from '@/common/util.ts'
+import i18n from '@/i18n'
 
 export type DialogConfig = {
   title: React.ReactNode
@@ -17,7 +18,7 @@ export type DialogConfig = {
   cancelBtnText?: string
   onConfirm?: () => Promise<unknown> | void
   onCancel?: () => void
-  color?: 'primary' | 'danger'
+  color?: 'primary' | 'danger' | 'warning'
   hideCancel?: boolean
 }
 
@@ -32,8 +33,8 @@ interface ConfirmDialogProps {
 const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
   const [config, setConfig] = useState<DialogConfig>({
     title: '',
-    cancelBtnText: '取消',
-    confirmBtnText: '确认',
+    cancelBtnText: i18n.t('common.cancel'),
+    confirmBtnText: i18n.t('common.confirm'),
   })
   const [isLoading, setLoading] = useState(false)
   const { isOpen, onOpenChange, onOpen, onClose } = useDisclosure()
@@ -54,8 +55,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
   useImperativeHandle(props.ref, () => ({
     showDialog(config) {
       setConfig({
-        cancelBtnText: '取消',
-        confirmBtnText: '确认',
+        cancelBtnText: i18n.t('common.cancel'),
+        confirmBtnText: i18n.t('common.confirm'),
         hideCancel: false,
         ...config,
       })
@@ -70,7 +71,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
           <>
             <ModalHeader>
               <div
-                className={`text-lg font-bold ${config.color === 'danger' ? 'text-danger' : 'text-primary'}`}
+                className={`text-lg font-bold text-${/*I know this is an incorrect usage, but it works well.*/ config.color}`}
               >
                 {config.title}
               </div>
@@ -80,7 +81,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
               {config.hideCancel ? null : (
                 <Button
                   variant="light"
-                  color="primary"
+                  color="danger"
                   onPress={onClose}
                   disabled={isLoading}
                 >
