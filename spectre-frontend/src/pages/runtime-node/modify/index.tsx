@@ -12,6 +12,7 @@ import React, { useRef, useState } from 'react'
 import { type DocumentResult, execute } from '@/graphql/execute.ts'
 import { useNavigate } from 'react-router'
 import ExtensionPageManager from '@/ext/manager.ts'
+import { useTranslation } from 'react-i18next'
 
 const RuntimeNodePluginQuery = graphql(`
   query RuntimeNodePluginQuery {
@@ -38,6 +39,7 @@ const RuntimeNodePluginDetailQuery = graphql(`
 `)
 
 const JvmSourceModifyPage: React.FC = () => {
+  const { t } = useTranslation()
   const { result, isLoading, errors } = useGraphQL(RuntimeNodePluginQuery)
   const plugins = result?.runtimeNode.plugins ?? []
   const selectedPlugin = useRef<(typeof plugins)[number]>(undefined)
@@ -86,26 +88,18 @@ const JvmSourceModifyPage: React.FC = () => {
   return (
     <div>
       <div className="space-y-5 px-6">
-        <div className="header-1">新建运行节点</div>
+        <div className="spectre-heading">{t('router.newRuntimeNode')}</div>
         <Card>
           <CardBody className="space-y-3 text-sm">
-            <span className="header-2">选择节点类型</span>
-            <div>
-              创建一个新的运行节点:
-              运行节点是一个抽象概念，它可以是一台远程服务器，也可以是一个Kubernetes
-              集群，或其它任何能够运行 JVM 的东西。
-            </div>
-            <div>
-              运行节点作为 Spectre
-              核心功能的入口，我们会从运行节点为你列出所有的 JVM
-              来进行进一步的操作。
-            </div>
-            <span>选择一个类型来开始:</span>
+            <span className="header-2">{t('runtimeNode.selectType')}</span>
+            <div>{t('runtimeNode.selectTypeInfo1')}</div>
+            <div>{t('runtimeNode.selectTypeInfo2')}</div>
+            <div>{t('runtimeNode.selectTypeInfo3')}</div>
             <Select
               className="max-w-xs"
-              placeholder="选择一个类型"
+              placeholder={t('runtimeNode.selectTypeTip')}
               onChange={onSelect}
-              aria-label="类型"
+              aria-label="Runtime Node Type"
               isLoading={isLoading}
             >
               {plugins.map((plugin) => (
@@ -115,12 +109,12 @@ const JvmSourceModifyPage: React.FC = () => {
               ))}
             </Select>
             {errorMsg ? (
-              <span className="text-danger text-sm">错误: {errorMsg}</span>
+              <span className="text-danger text-sm">Error: {errorMsg}</span>
             ) : null}
             {info ? (
               <div className="space-y-3">
                 <Divider />
-                <div className="text-base font-bold">详细信息</div>
+                <div className="text-base font-bold">{t('common.detail')}</div>
                 <div>{info.description}</div>
                 <div className="border-divider flex w-full flex-row-reverse border-t p-2">
                   <Button
@@ -128,7 +122,7 @@ const JvmSourceModifyPage: React.FC = () => {
                     isDisabled={!pluginInfo}
                     onPress={() => nav(selectedPlugin.current!.id)}
                   >
-                    下一步
+                    {t('common.next')}
                   </Button>
                 </div>
               </div>

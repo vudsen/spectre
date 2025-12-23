@@ -48,6 +48,9 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+tasks.register("prepareKotlinBuildScriptModel"){}
+
 kotlin {
     jvmToolchain(17)
 }

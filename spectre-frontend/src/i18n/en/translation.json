@@ -1,0 +1,45 @@
+{
+  "auth": {
+    "unauthorized": "Please Login",
+    "redirect": "Redirect to login page?"
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "error": "Error",
+    "detail": "Detail",
+    "next": "Next"
+  },
+  "router": {
+    "home": "Home",
+    "nodeSettings": "Runtime Node",
+    "newRuntimeNode": "New Runtime Node",
+    "nodeList": "Runtime Node List",
+    "toolchain": "Toolchain",
+    "userManagement": "User Management",
+    "audit": "Audit",
+    "toolchainItem": "Toolchain Item",
+    "toolchainBundle": "Toolchain Bundle",
+    "runtimeNode": "Runtime Node",
+    "infoMaintain": "Information Maintain",
+    "sysMaintain": "System Maintain",
+    "user": "User",
+    "role": "Role",
+    "nodeTree": "Runtime Node Tree",
+    "connect": "Connection",
+    "nodeDetail": "Node Detail",
+    "settings": "Settings",
+    "permission": "Permission"
+  },
+  "runtimeNode": {
+    "selectType": "Select Node Type",
+    "selectTypeInfo1": "Create a new runtime node: A runtime node is an abstract concept; it can be a remote server, a Kubernetes cluster, or anything else capable of running a JVM.",
+    "selectTypeInfo2": "The runtime node serves as the entry point for Spectre's core functionality. We will list all the JVMs from the runtime node for you to perform further operations.",
+    "selectTypeInfo3": "Select a type to start:",
+    "selectTypeTip": "Select a type"
+  },
+  "settings": {
+    "basic": "Basic Configuration",
+    "locale": "Locale"
+  }
+}

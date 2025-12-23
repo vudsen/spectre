@@ -68,7 +68,7 @@ const UserDisplay: React.FC = () => {
     return null
   }
   return (
-    <div className="rounded-t-medium absolute bottom-1 left-0 box-border flex w-full items-center justify-between p-1 px-4 py-3">
+    <div className="rounded-t-medium box-border flex w-full items-center justify-between p-1 px-2 py-3">
       <div className="flex items-center">
         <div className="bg-default-300 h-8 w-8 rounded-[50%] text-center leading-8">
           {user.username.charAt(0)}

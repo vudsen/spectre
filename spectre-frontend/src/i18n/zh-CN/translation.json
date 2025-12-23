@@ -1,0 +1,45 @@
+{
+  "auth": {
+    "unauthorized": "请先登录",
+    "redirect": "是否跳转到登录页面？"
+  },
+  "common": {
+    "confirm": "确定",
+    "cancel": "取消",
+    "error": "错误",
+    "detail": "详细信息",
+    "next": "下一步"
+  },
+  "router": {
+    "home": "首页",
+    "nodeSettings": "节点设置",
+    "newRuntimeNode": "新建运行节点",
+    "nodeList": "节点列表",
+    "toolchain": "工具链",
+    "userManagement": "用户管理",
+    "audit": "审计",
+    "toolchainItem": "工具",
+    "toolchainBundle": "工具包",
+    "runtimeNode": "运行节点",
+    "infoMaintain": "信息维护",
+    "sysMaintain": "系统维护",
+    "user": "用户",
+    "role": "角色",
+    "nodeTree": "节点树",
+    "connect": "连接",
+    "nodeDetail": "节点详情",
+    "settings": "设置",
+    "permission": "权限"
+  },
+  "runtimeNode": {
+    "selectType": "选择节点类型",
+    "selectTypeInfo1": "创建一个新的运行节点: 运行节点是一个抽象概念，它可以是一台远程服务器，也可以是一个Kubernetes 集群，或其它任何能够运行 JVM 的东西。",
+    "selectTypeInfo2": "运行节点作为 Spectre 核心功能的入口，我们会从运行节点为你列出所有的 JVM 来进行进一步的操作。",
+    "selectTypeInfo3": "选择一个类型来开始：",
+    "selectTypeTip": "选择一个类型"
+  },
+  "settings": {
+    "basic": "基础配置",
+    "locale": "语言"
+  }
+}

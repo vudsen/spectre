@@ -1,5 +1,5 @@
 import type React from 'react'
-import ToolchainBundle from '@/pages/settings/toolchain-bundle/ToolchainBundle.tsx'
+import ToolchainBundle from './ToolchainBundle.tsx'
 
 const ToolchainBundlePage: React.FC = () => {
   return (

@@ -17,7 +17,7 @@ import {
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { graphql } from '@/graphql/generated'
-import ToolchainBundleModifyDrawerContent from '@/pages/settings/toolchain-bundle/ToolchainBundleModifyDrawerContent.tsx'
+import ToolchainBundleModifyDrawerContent from './ToolchainBundleModifyDrawerContent.tsx'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import { formatTime, showDialog } from '@/common/util.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
