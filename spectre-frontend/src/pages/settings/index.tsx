@@ -12,7 +12,6 @@ import { LANGUAGE_CACHE_KEY } from '@/i18n'
 
 const Settings: React.FC = () => {
   const { t, i18n } = useTranslation()
-  console.log(i18n.resolvedLanguage)
   const onLocaleChange = (sel: SharedSelection) => {
     if (sel === 'all') {
       return
