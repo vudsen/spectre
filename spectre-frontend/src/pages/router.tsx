@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router'
 import Layout from '@/pages/layout.tsx'
+import i18n from '@/i18n'
 
 const router = createBrowserRouter(
   [
@@ -11,12 +12,12 @@ const router = createBrowserRouter(
           index: true,
           lazy: async () => {
             const { default: Home } = await import('@/pages/home')
-            return { Component: Home, handle: { crumb: '首页' } }
+            return { Component: Home, handle: { crumb: i18n.t('router.home') } }
           },
         },
         {
           path: 'runtime-node',
-          handle: { crumb: '运行节点' },
+          handle: { crumb: i18n.t('router.runtimeNode') },
           children: [
             {
               path: 'list',
@@ -24,7 +25,10 @@ const router = createBrowserRouter(
                 const { default: Home } = await import(
                   '@/pages/runtime-node/list'
                 )
-                return { Component: Home, handle: { crumb: '节点列表' } }
+                return {
+                  Component: Home,
+                  handle: { crumb: i18n.t('router.nodeList') },
+                }
               },
             },
             {
@@ -36,7 +40,10 @@ const router = createBrowserRouter(
                     const { default: Home } = await import(
                       '@/pages/runtime-node/modify'
                     )
-                    return { Component: Home, handle: { crumb: '新建节点' } }
+                    return {
+                      Component: Home,
+                      handle: { crumb: i18n.t('router.newRuntimeNode') },
+                    }
                   },
                 },
                 {
@@ -52,7 +59,10 @@ const router = createBrowserRouter(
             },
             {
               path: ':node-id',
-              handle: { crumb: '节点列表', crumbHref: '/runtime-node/list' },
+              handle: {
+                crumb: i18n.t('router.nodeList'),
+                crumbHref: '/runtime-node/list',
+              },
               children: [
                 {
                   path: 'tree',
@@ -60,7 +70,10 @@ const router = createBrowserRouter(
                     const { default: Home } = await import(
                       '@/pages/runtime-node/[node-id]/tree'
                     )
-                    return { Component: Home, handle: { crumb: '节点树' } }
+                    return {
+                      Component: Home,
+                      handle: { crumb: i18n.t('router.nodeTree') },
+                    }
                   },
                 },
                 {
@@ -69,7 +82,10 @@ const router = createBrowserRouter(
                     const { default: Home } = await import(
                       '@/pages/runtime-node/[node-id]/attach'
                     )
-                    return { Component: Home, handle: { crumb: '连接' } }
+                    return {
+                      Component: Home,
+                      handle: { crumb: i18n.t('router.connect') },
+                    }
                   },
                 },
                 {
@@ -78,7 +94,10 @@ const router = createBrowserRouter(
                     const { default: View } = await import(
                       '@/pages/runtime-node/[node-id]/view'
                     )
-                    return { Component: View, handle: { crumb: '节点详情' } }
+                    return {
+                      Component: View,
+                      handle: { crumb: i18n.t('router.nodeDetail') },
+                    }
                   },
                 },
               ],
@@ -86,27 +105,30 @@ const router = createBrowserRouter(
           ],
         },
         {
-          path: 'settings',
-          handle: { crumb: '设置' },
+          path: 'toolchain',
+          handle: { crumb: i18n.t('router.toolchain') },
           children: [
             {
-              path: 'toolchain',
+              path: 'items',
               lazy: async () => {
                 const { default: Home } = await import(
-                  '@/pages/settings/toolchain'
+                  '@/pages/toolchain/items'
                 )
-                return { Component: Home, handle: { crumb: '工具' } }
+                return {
+                  Component: Home,
+                  handle: { crumb: i18n.t('router.toolchainItem') },
+                }
               },
             },
             {
-              path: 'toolchain-bundle',
+              path: 'bundles',
               lazy: async () => {
                 const { default: ToolchainBundlePage } = await import(
-                  '@/pages/settings/toolchain-bundle'
+                  '@/pages/toolchain/bundles'
                 )
                 return {
                   Component: ToolchainBundlePage,
-                  handle: { crumb: '工具包' },
+                  handle: { crumb: i18n.t('router.toolchainBundle') },
                 }
               },
             },
@@ -115,7 +137,7 @@ const router = createBrowserRouter(
         {
           path: 'channel',
           handle: {
-            crumb: '连接',
+            crumb: i18n.t('router.connect'),
           },
           children: [
             {
@@ -132,7 +154,7 @@ const router = createBrowserRouter(
         {
           path: 'permission',
           handle: {
-            crumb: '权限',
+            crumb: i18n.t('router.permission'),
           },
           children: [
             {
@@ -143,20 +165,22 @@ const router = createBrowserRouter(
                 )
                 return {
                   Component: RolePage,
-                  handle: { crumb: '角色' },
+                  handle: { crumb: i18n.t('router.permission') },
                 }
               },
             },
             {
               path: 'user',
               handle: {
-                crumb: '用户',
+                crumb: i18n.t('router.user'),
               },
               lazy: async () => {
                 const { default: UserPage } = await import(
                   '@/pages/permission/user'
                 )
-                return { Component: UserPage, handle: { crumb: '用户' } }
+                return {
+                  Component: UserPage,
+                }
               },
             },
             {
@@ -197,13 +221,23 @@ const router = createBrowserRouter(
         {
           path: 'audit',
           handle: {
-            crumb: '审计',
+            crumb: i18n.t('router.audit'),
           },
           lazy: async () => {
             const { default: AuditPage } = await import('@/pages/audit')
             return {
               Component: AuditPage,
             }
+          },
+        },
+        {
+          path: '/settings',
+          handle: {
+            crumb: i18n.t('router.settings'),
+          },
+          lazy: async () => {
+            const { default: SettingsPage } = await import('@/pages/settings')
+            return { Component: SettingsPage }
           },
         },
       ],

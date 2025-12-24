@@ -4,6 +4,7 @@ import { handleError, showDialog } from '@/common/util.ts'
 import { isErrorResponse, isValidationError } from '@/api/types.ts'
 import { store } from '@/store'
 import { clearUserInfo } from '@/store/sessionSlice'
+import i18n from '@/i18n'
 
 type ErrorInfo = {
   title: string
@@ -17,11 +18,11 @@ function handleResponse0(
   meta?: AxiosRequestConfig['meta'],
 ): AxiosResponse<unknown> | Promise<AxiosResponse<unknown>> {
   let errorInfo: ErrorInfo | undefined = undefined
-  console.log('1')
   if (status === 401) {
     showDialog({
-      title: '请先登录',
-      message: '是否跳转到登录页面',
+      title: i18n.t('auth.unauthorized'),
+      message: i18n.t('auth.redirect'),
+      color: 'warning',
       onConfirm: () => {
         store.dispatch(clearUserInfo())
         location.replace(`${import.meta.env.VITE_BASE_PATH}/login`)

@@ -17,7 +17,7 @@ import { execute } from '@/graphql/execute.ts'
 import { handleError } from '@/common/util.ts'
 import toolchainTypes, {
   type ToolchainItemType,
-} from '@/pages/settings/toolchain/ToolchainItemType.ts'
+} from './ToolchainItemType.ts'
 
 interface ToolchainItemModifyDrawerContentProps {
   onClose: () => void

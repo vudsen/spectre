@@ -1,5 +1,6 @@
 import type { TypedDocumentString } from './generated/graphql'
 import { showDialog } from '@/common/util.ts'
+import i18n from '@/i18n'
 
 type QLError = {
   extensions: {
@@ -54,8 +55,9 @@ export async function execute<TResult, TVariables>(
 
   if (response.status === 401) {
     showDialog({
-      title: '请先登录',
-      message: '是否跳转到登录页面',
+      title: i18n.t('auth.unauthorized'),
+      message: i18n.t('auth.redirect'),
+      color: 'warning',
       onConfirm: () => {
         location.replace(`${import.meta.env.VITE_BASE_PATH}/login`)
       },

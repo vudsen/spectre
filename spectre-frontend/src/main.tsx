@@ -10,6 +10,7 @@ import DialogProvider from '@/components/DialogProvider/DialogProvider.tsx'
 import { Provider } from 'react-redux'
 import { store, persistor } from '@/store'
 import { PersistGate } from 'redux-persist/integration/react'
+import '@/i18n'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

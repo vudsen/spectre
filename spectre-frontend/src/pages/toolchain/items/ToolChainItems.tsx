@@ -28,10 +28,10 @@ import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import { formatTime, showDialog } from '@/common/util.ts'
 import ToolchainItemModifyDrawerContent from './ToolchainItemModifyDrawerContent'
-import type { ToolchainItemType } from '@/pages/settings/toolchain/ToolchainItemType.ts'
+import type { ToolchainItemType } from './ToolchainItemType.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
-import UploadToolchainModalContent from '@/pages/settings/toolchain/UploadToolchainModalContent.tsx'
+import UploadToolchainModalContent from './UploadToolchainModalContent.tsx'
 import { deleteToolchainItem } from '@/api/impl/toolchain.ts'
 
 const ToolchainItemsQuery = graphql(`

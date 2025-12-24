@@ -3,12 +3,16 @@ import { getDialogQueue } from '@/components/DialogProvider/dialogQueue.ts'
 import type { DialogConfig } from '@/components/DialogProvider/ConfirmDialog.tsx'
 import { isErrorResponse, isValidationError } from '@/api/types.ts'
 import type { UseFormSetError, FieldPath, FieldValues } from 'react-hook-form'
+import i18n from '@/i18n'
 
 export const showDialog = (config: DialogConfig) => {
   getDialogQueue().addElement(config)
 }
 
-export const handleError = (e: unknown, title: string = '错误') => {
+export const handleError = (
+  e: unknown,
+  title: string = i18n.t('common.error'),
+) => {
   let msg: string | undefined
   if (e instanceof Error) {
     msg = e.message

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Tab, Tabs } from '@heroui/react'
-import toolchainTypes from '@/pages/settings/toolchain/ToolchainItemType.ts'
-import ToolChainItems from '@/pages/settings/toolchain/ToolChainItems.tsx'
+import toolchainTypes from './ToolchainItemType.ts'
+import ToolChainItems from './ToolChainItems.tsx'
 
 const tabs = toolchainTypes.map((it) => ({
   name: it.name,

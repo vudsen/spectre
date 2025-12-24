@@ -29,6 +29,9 @@ body {
 .spectre-heading {
   @apply mb-5 text-xl font-semibold;
 }
+.spectre-container {
+  @apply mx-6 space-y-5;
+}
 
 .header-1 {
   @apply text-2xl font-semibold;
