@@ -19,11 +19,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
-import { formatTime, showDialog } from '@/common/util.ts'
+import { showDialog } from '@/common/util.ts'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import { deleteRuntimeNode } from '@/api/impl/runtime-node.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import LabelsDisplay from '@/components/LabelsDisplay'
+import Time from '@/components/Time.tsx'
 
 const ListJvmSource = graphql(`
   query ListJvmSource($page: Int, $size: Int) {
@@ -132,9 +133,9 @@ const JvmSourcePage: React.FC = () => {
                 showControls
                 showShadow
                 color="primary"
-                page={page.page}
+                page={page.page + 1}
                 total={result?.runtimeNode.runtimeNodes.totalPages ?? 0}
-                onChange={(p) => setPage({ page: p, size: page.size })}
+                onChange={(p) => setPage({ page: p, size: page.size - 1 })}
               />
             </div>
           ) : null
@@ -181,7 +182,9 @@ const JvmSourcePage: React.FC = () => {
               <TableCell>
                 <LabelsDisplay attributes={item.labels} />
               </TableCell>
-              <TableCell>{formatTime(item.createdAt)}</TableCell>
+              <TableCell>
+                <Time time={item.createdAt} />
+              </TableCell>
               <TableCell>
                 <div className="relative flex items-center justify-end gap-2">
                   <Tooltip content="连接该节点">

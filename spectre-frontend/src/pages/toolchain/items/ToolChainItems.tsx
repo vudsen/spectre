@@ -26,13 +26,14 @@ import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
-import { formatTime, showDialog } from '@/common/util.ts'
+import { showDialog } from '@/common/util.ts'
 import ToolchainItemModifyDrawerContent from './ToolchainItemModifyDrawerContent'
 import type { ToolchainItemType } from './ToolchainItemType.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import UploadToolchainModalContent from './UploadToolchainModalContent.tsx'
 import { deleteToolchainItem } from '@/api/impl/toolchain.ts'
+import Time from '@/components/Time.tsx'
 
 const ToolchainItemsQuery = graphql(`
   query ToolchainItemsQuery($type: ToolchainType!, $page: Int, $size: Int) {
@@ -191,7 +192,7 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
                 showControls
                 showShadow
                 color="primary"
-                page={args.page}
+                page={args.page + 1}
                 total={result.toolchain.toolchainItemsV2.totalPages}
                 onChange={(page) => setArgs({ ...args, page: page - 1 })}
               />
@@ -216,7 +217,9 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
               <TableCell>
                 <Code>{item.tag}</Code>
               </TableCell>
-              <TableCell>{formatTime(item.createdAt)}</TableCell>
+              <TableCell>
+                <Time time={item.createdAt} />
+              </TableCell>
               <TableCell
                 className={item.isX86Cached ? 'text-success' : 'text-warning'}
               >

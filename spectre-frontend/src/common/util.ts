@@ -44,7 +44,7 @@ function ensureSize(num: number): string {
   return num.toString(10)
 }
 
-export const formatTime = (time: number | string): string => {
+export const toDate = (time: number | string): Date => {
   let date: Date
   if (typeof time === 'string') {
     if (time.includes('-')) {
@@ -55,6 +55,11 @@ export const formatTime = (time: number | string): string => {
   } else {
     date = new Date(time)
   }
+  return date
+}
+
+export const formatTime = (time: number | string): string => {
+  const date = toDate(time)
   return `${date.getFullYear()}/${ensureSize(date.getMonth() + 1)}/${ensureSize(date.getDate())} ${ensureSize(date.getHours())}:${ensureSize(date.getMinutes())}`
 }
 

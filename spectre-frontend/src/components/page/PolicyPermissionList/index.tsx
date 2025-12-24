@@ -23,9 +23,9 @@ import {
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
-import { formatTime } from '@/common/util.ts'
 import BindPolicyPermissionDrawer from '@/components/page/PolicyPermissionList/BindPolicyPermissionDrawer.tsx'
 import ModifyPermissionDrawerContent from '@/components/page/PolicyPermissionList/ModifyPermissionDrawerContent.tsx'
+import Time from '@/components/Time.tsx'
 
 interface PolicyPermissionListProps {
   subjectId: string
@@ -140,9 +140,9 @@ const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
                     showControls
                     showShadow
                     color="primary"
-                    page={qlArgs.page}
+                    page={qlArgs.page + 1}
                     total={totalPage}
-                    onChange={(p) => setQlArgs({ ...qlArgs, page: p })}
+                    onChange={(p) => setQlArgs({ ...qlArgs, page: p - 1 })}
                   />
                 </div>
               ) : null
@@ -167,7 +167,9 @@ const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
                   <TableCell>
                     <Code>{permission.conditionExpression}</Code>
                   </TableCell>
-                  <TableCell>{formatTime(permission.createdAt)}</TableCell>
+                  <TableCell>
+                    <Time time={permission.createdAt} />
+                  </TableCell>
                   <TableCell>{permission.description ?? '-'}</TableCell>
                   <TableCell>
                     <Button
