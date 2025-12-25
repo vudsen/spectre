@@ -28,11 +28,11 @@ abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode {
             return
         }
         file.inputStream().use { inputStream ->
-            upload(inputStream, file.name, dest)
+            upload(inputStream, dest)
         }
     }
 
-    override fun upload(input: InputStream, filename: String, dest: String) {
+    override fun upload(input: InputStream, dest: String) {
         if (input.available() == 0) {
             return
         }
@@ -40,7 +40,7 @@ abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode {
             return
         }
         val tmp = "$dest.tmp"
-        doUpload(input, filename, tmp)
+        doUpload(input, tmp)
         execute("mv $tmp $dest").ok()
     }
 
@@ -48,7 +48,7 @@ abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode {
     /**
      * 上传文件. 子类不需要任何检查
      */
-    protected abstract fun doUpload(input: InputStream, filename: String, dest: String)
+    protected abstract fun doUpload(input: InputStream, dest: String)
 
     override fun unzipTarGzPkg(target: String, dest: String) {
         TODO("Not yet implemented")

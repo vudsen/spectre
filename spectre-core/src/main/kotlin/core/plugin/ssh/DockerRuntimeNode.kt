@@ -12,6 +12,7 @@ class DockerRuntimeNode(
     private val delegate: SshRuntimeNode,
     private val dockerPath: String,
     private val containerId: String,
+    private val homePath: String
 ) : AbstractShellRuntimeNode() {
 
     var user: String? = null
@@ -33,6 +34,10 @@ class DockerRuntimeNode(
         }
     }
 
+    override fun getHomePath(): String {
+        return homePath
+    }
+
     override fun ensureAttachEnvironmentReady() {
         delegate.ensureAttachEnvironmentReady()
     }
@@ -41,7 +46,7 @@ class DockerRuntimeNode(
         return delegate.getConfiguration()
     }
 
-    override fun doUpload(input: InputStream, filename: String, dest: String) {
+    override fun doUpload(input: InputStream, dest: String) {
         createInteractiveShell("cat > $dest").use { shell ->
             input.use { inputStream ->
                 val outputStream = shell.getOutputStream()

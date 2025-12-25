@@ -4,15 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.*
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
+import io.github.vudsen.spectre.api.perm.ABACPermissions
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
+import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.service.ToolchainService
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
 import io.github.vudsen.spectre.core.bean.ArthasClientWrapper
+import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionABACContext
+import io.github.vudsen.spectre.core.integrate.abac.AttachNodeABACContext
 import io.github.vudsen.spectre.core.internal.ArthasClientCacheService
 import io.github.vudsen.spectre.core.lock.RedisDistributedLock
 import io.github.vudsen.spectre.repo.ToolchainItemRepository
@@ -71,6 +75,7 @@ class DefaultArthasExecutionService(
     private val arthasClientCacheService: ArthasClientCacheService,
     private val runtimeNodeService: RuntimeNodeService,
     private val toolchainService: ToolchainService,
+    private val appAccessControlService: AppAccessControlService
 ) : ArthasExecutionService {
 
     companion object {
@@ -103,12 +108,40 @@ class DefaultArthasExecutionService(
         return "${runtimeNodeId}:${jvm.hashCode()}"
     }
 
+    private fun checkTreeNodePermission(channelId: String) {
+        val info = getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
+        checkTreeNodePermission(info.runtimeNodeId, info.treeNodeId)
+    }
+
+    private fun checkTreeNodePermission(runtimeNodeId: Long, treeNodeId: String) {
+        val treeNode = runtimeNodeService.findTreeNode(treeNodeId) ?: throw BusinessException("节点不存在")
+        val node = runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
+        val ctx = AttachNodeABACContext(ABACPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
+        appAccessControlService.checkPolicyPermission(ctx)
+    }
+
+    private fun checkCommandExecPermission(channelId: String, command: String) {
+        val info = getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
+        val runtimeNodeDTO = runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
+
+        appAccessControlService.checkPolicyPermission(
+            ArthasExecutionABACContext(
+                ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE,
+                command.trim(),
+                runtimeNodeDTO,
+                info.jvm
+            )
+        )
+    }
+
 
     override fun requireAttach(
         runtimeNodeId: Long,
         treeNodeId: String,
         bundleId: Long,
     ): AttachStatus {
+        checkTreeNodePermission(runtimeNodeId, treeNodeId)
+
         val runtimeNodeDto =
             runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.runtime.node.not.exist")
 
@@ -171,6 +204,7 @@ class DefaultArthasExecutionService(
     }
 
     override fun joinChannel(channelId: String, ownerIdentifier: String): ArthasConsumerDTO {
+        checkTreeNodePermission(channelId)
         // 除非使用 redis，不然每次重启都会丢失数据
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("Channel 已经关闭，请重新在列表中连接")
         val distributedLockKey = "arthas:channel:join-lock:${ownerIdentifier}"
@@ -324,7 +358,8 @@ class DefaultArthasExecutionService(
     }
 
     override fun execAsync(channelId: String, command: String) {
-        // TODO 把 controller 的策略权限校验移到这里来.
+        checkTreeNodePermission(channelId)
+        checkCommandExecPermission(channelId, command)
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         if (data.restrictedMode) {
@@ -456,6 +491,7 @@ class DefaultArthasExecutionService(
 
 
     override fun pullResults(channelId: String, consumerId: String): Any {
+        checkTreeNodePermission(channelId)
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         return client.pullResults(data.sessionId, consumerId)
@@ -466,12 +502,14 @@ class DefaultArthasExecutionService(
     }
 
     override fun interruptCommand(channelId: String) {
+        checkTreeNodePermission(channelId)
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         client.interruptJob(data.sessionId)
     }
 
-    override fun retransform(channelId: String, source: InputStreamSource) {
+    override fun retransform(channelId: String, source: InputStreamSource): Any {
+        checkCommandExecPermission(channelId, "retransform")
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
 

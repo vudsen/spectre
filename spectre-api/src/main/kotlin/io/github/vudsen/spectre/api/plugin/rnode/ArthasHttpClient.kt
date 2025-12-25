@@ -60,7 +60,8 @@ interface ArthasHttpClient {
     fun getPort(): Int
 
     /**
-     * arthas retransform
+     * arthas retransform.
+     * @return 返回一个 JSON 对象
      */
-    fun retransform(source: InputStreamSource)
+    fun retransform(source: InputStreamSource): Any
 }

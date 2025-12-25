@@ -51,8 +51,8 @@ interface ArthasExecutionService {
     fun interruptCommand(channelId: String)
 
     /**
-     * 替换字节码
+     * 替换字节码. 该命令为同步命令
      */
-    fun retransform(channelId: String, source: InputStreamSource)
+    fun retransform(channelId: String, source: InputStreamSource): Any
 
 }

@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
+import org.slf4j.LoggerFactory
 import org.springframework.core.io.InputStreamSource
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -18,6 +19,11 @@ open class ShellBasedArthasHttpClient(
     protected val arthasHttpEndpoint: String,
     protected val javaPath: String
 ) : ArthasHttpClient {
+
+    companion object {
+        @JvmStatic
+        private val logger = LoggerFactory.getLogger(ShellBasedArthasHttpClient::class.java)
+    }
 
     private val objectMapper = ObjectMapper()
 
@@ -119,8 +125,16 @@ open class ShellBasedArthasHttpClient(
         return URL(arthasHttpEndpoint).port
     }
 
-    override fun retransform(source: InputStreamSource) {
-        TODO()
+    override fun retransform(source: InputStreamSource): Any {
+        val dest = "${runtimeNode.getHomePath()}/downloads/rt${System.currentTimeMillis()}.class"
+        try {
+            runtimeNode.upload(source.inputStream, dest)
+            return exec("retransform $dest")
+        } finally {
+            if (runtimeNode.execute("rm $dest").isFailed()) {
+                logger.warn("Failed to remove file $dest on runtime node ${runtimeNode}")
+            }
+        }
     }
 
 }

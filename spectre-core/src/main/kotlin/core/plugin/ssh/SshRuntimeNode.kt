@@ -228,6 +228,10 @@ open class SshRuntimeNode : CloseableRuntimeNode, AbstractShellRuntimeNode() {
         return SshInteractiveShell(channel, inputStream, channel.invertedIn)
     }
 
+    override fun getHomePath(): String {
+        return nodeConfig.spectreHome
+    }
+
 
     override fun isAlive(): Boolean {
         return !session.isClosed
@@ -299,8 +303,7 @@ open class SshRuntimeNode : CloseableRuntimeNode, AbstractShellRuntimeNode() {
         return nodeConfig
     }
 
-    override fun doUpload(input: InputStream, filename: String, dest: String) {
-        logger.info("Uploading $filename to $dest")
+    override fun doUpload(input: InputStream, dest: String) {
         SftpClientFactory.instance().createSftpClient(session).use { client ->
             client.put(input, dest)
         }

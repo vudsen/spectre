@@ -60,10 +60,9 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
     /**
      * 上传文件
      * @param input 输入流
-     * @param filename 最终的文件名称
      * @param dest 目标路径
      */
-    fun upload(input: InputStream, filename: String, dest: String)
+    fun upload(input: InputStream, dest: String)
 
     /**
      * 是否为 arm 架构
@@ -75,5 +74,9 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
      */
     fun isFileExist(path: String): Boolean
 
+    /**
+     * 获取家路径
+     */
+    fun getHomePath(): String
 
 }

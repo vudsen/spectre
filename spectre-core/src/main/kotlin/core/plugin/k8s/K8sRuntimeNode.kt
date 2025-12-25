@@ -176,6 +176,10 @@ class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig) : AbstractShellRunt
         return createInteractiveShell(command.split(' '))
     }
 
+    override fun getHomePath(): String {
+        return conf.spectreHome
+    }
+
     private class WebSocketWriter(private val ws: WebSocket): Writer() {
         override fun write(cbuf: CharArray, off: Int, len: Int) {
             ws.send(String(cbuf, off, len))
@@ -208,7 +212,7 @@ class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig) : AbstractShellRunt
         return conf
     }
 
-    override fun doUpload(input: InputStream, filename: String, dest: String) {
+    override fun doUpload(input: InputStream, dest: String) {
         val destPath = Path(dest)
         // 1. 优化父路径处理逻辑
         val parentPath = destPath.parent?.let {
