@@ -35,7 +35,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-open class SshRuntimeNode(extension: SshRuntimeNodeExtension) : CloseableRuntimeNode, AbstractShellRuntimeNode(extension) {
+open class SshRuntimeNode : CloseableRuntimeNode, AbstractShellRuntimeNode() {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 

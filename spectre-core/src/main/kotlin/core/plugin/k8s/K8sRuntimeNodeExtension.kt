@@ -94,7 +94,9 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
     override fun createRuntimeNode0(config: K8sRuntimeNodeConfig): K8sRuntimeNode {
         val cached = runtimeNodeCache[config]
         if (cached == null) {
-            val newOne = K8sRuntimeNode(config, this)
+            val newOne = K8sRuntimeNode(config).apply {
+                setExtPoint(this@K8sRuntimeNodeExtension)
+            }
             runtimeNodeCache[config] = cached
             return newOne
         }

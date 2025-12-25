@@ -51,8 +51,9 @@ class SshAttachHandler(
             runtimeNode,
             dockerCnf.executablePath,
             jvm.id,
-            runtimeNode.getExtPoint() as SshRuntimeNodeExtension
-        )
+        ).apply {
+            setExtPoint(runtimeNode.getExtPoint())
+        }
 
         val uid = dockerNode.execute("id -u").tryUnwrap()?.trim() ?: "0"
         val gid = dockerNode.execute("id -g").tryUnwrap()?.trim() ?: "0"

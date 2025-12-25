@@ -24,7 +24,7 @@ import java.io.*
 import java.nio.file.Path
 import kotlin.io.path.Path
 
-class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig, extension: K8sRuntimeNodeExtension) : AbstractShellRuntimeNode(extension) {
+class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig) : AbstractShellRuntimeNode() {
 
     companion object {
         private val objectMapper: ObjectMapper

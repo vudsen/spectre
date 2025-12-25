@@ -12,8 +12,7 @@ class DockerRuntimeNode(
     private val delegate: SshRuntimeNode,
     private val dockerPath: String,
     private val containerId: String,
-    extension: SshRuntimeNodeExtension
-) : AbstractShellRuntimeNode(extension) {
+) : AbstractShellRuntimeNode() {
 
     var user: String? = null
 

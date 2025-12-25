@@ -7,8 +7,9 @@ import java.io.File
 import java.io.InputStream
 import kotlin.text.iterator
 
-abstract class AbstractShellRuntimeNode(private val extensionPoint: RuntimeNodeExtensionPoint) : ShellAvailableRuntimeNode{
+abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode {
 
+    private lateinit var extensionPoint: RuntimeNodeExtensionPoint
 
     override fun isFileExist(path: String): Boolean {
         return execute("test -f $path").exitCode == 0
@@ -90,5 +91,9 @@ abstract class AbstractShellRuntimeNode(private val extensionPoint: RuntimeNodeE
 
     override fun getExtPoint(): RuntimeNodeExtensionPoint {
         return extensionPoint
+    }
+
+    fun setExtPoint(extensionPoint: RuntimeNodeExtensionPoint) {
+        this.extensionPoint = extensionPoint
     }
 }
