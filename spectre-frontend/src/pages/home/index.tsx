@@ -75,11 +75,11 @@ const Home: React.FC = () => {
                         showControls
                         showShadow
                         color="primary"
-                        page={runtimeNodesQlArgs.page}
+                        page={runtimeNodesQlArgs.page + 1}
                         total={totalNodes}
                         onChange={(p) =>
                           setRuntimeNodesQlArgs({
-                            page: p,
+                            page: p - 1,
                             size: runtimeNodesQlArgs.size,
                           })
                         }

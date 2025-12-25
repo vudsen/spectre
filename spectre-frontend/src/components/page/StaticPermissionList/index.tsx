@@ -151,9 +151,9 @@ const StaticPermissionList: React.FC<StaticPermissionListProps> = (props) => {
                     showControls
                     showShadow
                     color="primary"
-                    page={qlArgs.page}
+                    page={qlArgs.page + 1}
                     total={totalPage}
-                    onChange={(p) => setQlArgs({ ...qlArgs, page: p })}
+                    onChange={(p) => setQlArgs({ ...qlArgs, page: p - 1 })}
                   />
                 </div>
               ) : null

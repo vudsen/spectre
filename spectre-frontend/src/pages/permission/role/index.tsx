@@ -23,9 +23,9 @@ import Icon from '@/components/icon/icon.ts'
 import RoleModifyDrawerContent from '@/pages/permission/role/RoleModifyDrawerContent.tsx'
 import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
-import { formatTime } from '@/common/util.ts'
 import { useNavigate } from 'react-router'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
+import Time from '@/components/Time.tsx'
 
 const ListRoleQuery = graphql(`
   query ListRoleQuery($page: Int, $size: Int) {
@@ -92,8 +92,8 @@ const RolePage: React.FC = () => {
                 showShadow
                 color="primary"
                 page={page.page}
-                total={totalPage}
-                onChange={(p) => setPage({ page: p, size: page.size })}
+                total={totalPage + 1}
+                onChange={(p) => setPage({ page: p - 1, size: page.size })}
               />
             </div>
           ) : null
@@ -124,7 +124,9 @@ const RolePage: React.FC = () => {
                   {role.name}
                 </Link>
               </TableCell>
-              <TableCell>{formatTime(role.createdAt)}</TableCell>
+              <TableCell>
+                <Time time={role.createdAt} />
+              </TableCell>
               <TableCell>{role.description}</TableCell>
               <TableCell>
                 <Dropdown>

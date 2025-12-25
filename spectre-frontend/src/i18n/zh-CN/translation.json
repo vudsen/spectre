@@ -8,7 +8,17 @@
     "cancel": "取消",
     "error": "错误",
     "detail": "详细信息",
-    "next": "下一步"
+    "next": "下一步",
+    "secondAgo": "{{count}} 秒前",
+    "minuteAgo": "{{count}} 分钟前",
+    "hourAgo": "{{count}} 小时前",
+    "dayAgo": "{{count}} 天前",
+    "monthAgo": "{{count}} 个月前",
+    "yearAgo": "{{count}} 年前",
+    "opTime": "操作时间",
+    "action": "操作",
+    "status": "状态",
+    "username": "用户名"
   },
   "router": {
     "home": "首页",

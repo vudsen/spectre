@@ -18,7 +18,6 @@ import {
   Tooltip,
   useDisclosure,
 } from '@heroui/react'
-import { formatTime } from '@/common/util.ts'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import LabelsDisplay from '../../../components/LabelsDisplay'
@@ -28,6 +27,7 @@ import ModifyPasswordModalContent, {
 } from '@/components/ModifyPasswordModalContent.tsx'
 import { modifyUserPassword } from '@/api/impl/user.ts'
 import { useNavigate } from 'react-router'
+import Time from '@/components/Time.tsx'
 
 const UserListQuery = graphql(`
   query UserListQuery($page: Int, $size: Int) {
@@ -114,9 +114,9 @@ const UserListPage: React.FC = () => {
                 showControls
                 showShadow
                 color="primary"
-                page={page.page}
+                page={page.page + 1}
                 total={totalPage}
-                onChange={(p) => setPage({ page: p, size: page.size })}
+                onChange={(p) => setPage({ page: p - 1, size: page.size })}
               />
             </div>
           ) : null
@@ -158,7 +158,9 @@ const UserListPage: React.FC = () => {
               <TableCell>
                 <LabelsDisplay attributes={user.labels} />
               </TableCell>
-              <TableCell>{formatTime(user.createdAt)}</TableCell>
+              <TableCell>
+                <Time time={user.createdAt} />
+              </TableCell>
               <TableCell>
                 <Button
                   isIconOnly

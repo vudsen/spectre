@@ -16,9 +16,10 @@ import {
   useDisclosure,
 } from '@heroui/react'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
-import { formatTime } from '@/common/util.ts'
 import LogDetailDrawerContent from '@/pages/audit/LogDetailDrawerContent.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
+import Time from '@/components/Time.tsx'
+import { useTranslation } from 'react-i18next'
 
 const LogEntityQuery = graphql(`
   query LogEntityQuery($page: Int!, $size: Int!) {
@@ -43,13 +44,14 @@ type LogEntity = DocumentResult<
 >['log']['logs']['result'][number]
 
 const AuditPage: React.FC = () => {
+  const { t } = useTranslation()
   const [qlArgs, setQlArgs] = useState({
     page: 0,
     size: 10,
   })
   const [selectedEntity, setSelectedEntity] = useState<LogEntity>()
   const { onOpen, onOpenChange, isOpen } = useDisclosure()
-  const { result } = useGraphQL(LogEntityQuery, qlArgs)
+  const { result, isLoading } = useGraphQL(LogEntityQuery, qlArgs)
 
   const viewLog = (log: LogEntity) => {
     setSelectedEntity(log)
@@ -59,7 +61,7 @@ const AuditPage: React.FC = () => {
   const totalPage = result?.log.logs.totalPages ?? 0
   return (
     <div className="mx-6">
-      <div className="spectre-heading">审计日志</div>
+      <div className="spectre-heading">{t('router.audit')}</div>
       <Table
         removeWrapper
         aria-label="Log list"
@@ -71,9 +73,9 @@ const AuditPage: React.FC = () => {
                 showControls
                 showShadow
                 color="primary"
-                page={qlArgs.page}
+                page={qlArgs.page + 1}
                 total={totalPage}
-                onChange={(p) => setQlArgs({ page: p, size: qlArgs.size })}
+                onChange={(p) => setQlArgs({ page: p - 1, size: qlArgs.size })}
               />
             </div>
           ) : null
@@ -81,13 +83,14 @@ const AuditPage: React.FC = () => {
       >
         <TableHeader>
           <TableColumn>操作名称</TableColumn>
-          <TableColumn>用户名</TableColumn>
+          <TableColumn>{t('common.username')}</TableColumn>
           <TableColumn>IP</TableColumn>
-          <TableColumn>操作时间</TableColumn>
-          <TableColumn>状态</TableColumn>
-          <TableColumn align="end">操作</TableColumn>
+          <TableColumn>{t('common.opTime')}</TableColumn>
+          <TableColumn>{t('common.status')}</TableColumn>
+          <TableColumn align="end">{t('common.action')}</TableColumn>
         </TableHeader>
         <TableBody
+          isLoading={isLoading}
           items={result?.log.logs.result ?? []}
           loadingContent={<TableLoadingMask />}
         >
@@ -98,7 +101,9 @@ const AuditPage: React.FC = () => {
                 <Code>{log.username}</Code>
               </TableCell>
               <TableCell>{log.ip}</TableCell>
-              <TableCell>{formatTime(log.time)}</TableCell>
+              <TableCell>
+                <Time time={log.time} />
+              </TableCell>
               <TableCell>
                 {log.isSuccess ? (
                   <div className="text-success">成功</div>

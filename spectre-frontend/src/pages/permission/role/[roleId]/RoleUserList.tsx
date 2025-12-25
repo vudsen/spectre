@@ -115,9 +115,11 @@ const RoleUserList: React.FC<RoleUserListProps> = (props) => {
                       showControls
                       showShadow
                       color="primary"
-                      page={qlParams.page}
+                      page={qlParams.page + 1}
                       total={totalPage}
-                      onChange={(p) => setQlParams({ ...qlParams, page: p })}
+                      onChange={(p) =>
+                        setQlParams({ ...qlParams, page: p - 1 })
+                      }
                     />
                   </div>
                 ) : null
