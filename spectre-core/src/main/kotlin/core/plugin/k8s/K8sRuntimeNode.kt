@@ -24,7 +24,7 @@ import java.io.*
 import java.nio.file.Path
 import kotlin.io.path.Path
 
-class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig) : AbstractShellRuntimeNode() {
+class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig, extension: K8sRuntimeNodeExtension) : AbstractShellRuntimeNode(extension) {
 
     companion object {
         private val objectMapper: ObjectMapper
@@ -105,40 +105,6 @@ class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig) : AbstractShellRunt
         }
     }
 
-    private fun uploadNormalFile(src: File, destPath: Path, parentPath: String) {
-
-    }
-
-    override fun doUpload(src: File, dest: String) {
-        val destPath = Path(dest)
-        val parentPath = if (destPath.parent == null) {
-            "."
-        } else {
-            if (currentOS == OS.WINDOWS) {
-                destPath.parent.toString().replace('\\', '/')
-            } else {
-                destPath.parent.toString()
-            }
-        }
-
-        createInteractiveShell(listOf("sh", "-c", "tar -xmf - -C $parentPath")).use { shell ->
-            TarArchiveOutputStream(shell.getOutputStream()).use { archiveOutputStream ->
-                archiveOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_ERROR)
-                archiveOutputStream.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_ERROR)
-                archiveOutputStream.setAddPaxHeadersForNonAsciiNames(true)
-                FileInputStream(src).use { inputStream ->
-                    val entry = TarArchiveEntry(src, destPath.fileName.toString())
-                    entry.setModTime(System.currentTimeMillis())
-                    archiveOutputStream.putArchiveEntry(entry)
-
-                    inputStream.transferTo(archiveOutputStream)
-
-                    archiveOutputStream.closeArchiveEntry()
-                }
-            }
-            shell.client.waitClose()
-        }
-    }
 
     fun execute(commands: List<String>): CommandExecuteResult {
         val ctx = execContextHolder.get() ?: throw AppException("Exec context is null!")
@@ -240,5 +206,43 @@ class K8sRuntimeNode(private val conf: K8sRuntimeNodeConfig) : AbstractShellRunt
 
     override fun getConfiguration(): K8sRuntimeNodeConfig {
         return conf
+    }
+
+    override fun doUpload(input: InputStream, filename: String, dest: String) {
+        val destPath = Path(dest)
+        // 1. 优化父路径处理逻辑
+        val parentPath = destPath.parent?.let {
+            if (currentOS == OS.WINDOWS) it.toString().replace('\\', '/') else it.toString()
+        } ?: "."
+
+        createInteractiveShell(listOf("sh", "-c", "tar -xmf - -C $parentPath")).use { shell ->
+            TarArchiveOutputStream(shell.getOutputStream()).use { archiveOutputStream ->
+                archiveOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_ERROR)
+                archiveOutputStream.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_ERROR)
+                archiveOutputStream.setAddPaxHeadersForNonAsciiNames(true)
+
+                // 2. 使用传入的 input 流
+                input.use { inputStream ->
+                    // 注意：filename 建议使用 destPath.fileName.toString() 保持逻辑一致
+                    val entryName = destPath.fileName.toString()
+                    val entry = TarArchiveEntry(entryName)
+
+                    // 3. 关键点：设置文件大小
+                    // 如果能预先知道大小，请传入；如果不知道，InputStream 需要先转为 ByteArray 或临时文件
+                    // 这里假设你可能需要处理未知大小的流，详见下方说明
+                    val bytes = inputStream.readAllBytes()
+                    entry.size = bytes.size.toLong()
+
+                    entry.setModTime(System.currentTimeMillis())
+                    archiveOutputStream.putArchiveEntry(entry)
+
+                    // 4. 写入数据
+                    archiveOutputStream.write(bytes)
+
+                    archiveOutputStream.closeArchiveEntry()
+                }
+            }
+            shell.client.waitClose()
+        }
     }
 }

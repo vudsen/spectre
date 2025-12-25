@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.api.plugin.rnode
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import org.springframework.boot.web.server.PortInUseException
+import org.springframework.core.io.InputStreamSource
 
 interface ArthasHttpClient {
 
@@ -53,6 +54,13 @@ interface ArthasHttpClient {
     @Throws(PortInUseException::class)
     fun test()
 
+    /**
+     * 获取端口
+     */
     fun getPort(): Int
 
+    /**
+     * arthas retransform
+     */
+    fun retransform(source: InputStreamSource)
 }

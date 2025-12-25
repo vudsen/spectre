@@ -4,19 +4,19 @@ import io.github.vudsen.spectre.common.plugin.rnode.AbstractShellRuntimeNode
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
+import org.springframework.util.StreamUtils
 import java.io.File
+import java.io.InputStream
 
 class DockerRuntimeNode(
     private val delegate: SshRuntimeNode,
     private val dockerPath: String,
-    private val containerId: String
-) : AbstractShellRuntimeNode() {
+    private val containerId: String,
+    extension: SshRuntimeNodeExtension
+) : AbstractShellRuntimeNode(extension) {
 
     var user: String? = null
 
-    override fun doUpload(src: File, dest: String) {
-        TODO("Not yet implemented")
-    }
 
     override fun execute(command: String): CommandExecuteResult {
         return if (user == null) {
@@ -27,7 +27,11 @@ class DockerRuntimeNode(
     }
 
     override fun createInteractiveShell(command: String): InteractiveShell {
-        TODO("Not yet implemented")
+        return if (user == null) {
+            delegate.createInteractiveShell("$dockerPath exec -it $containerId $command")
+        } else {
+            delegate.createInteractiveShell("$dockerPath exec -it -u $user $containerId $command")
+        }
     }
 
     override fun ensureAttachEnvironmentReady() {
@@ -37,4 +41,14 @@ class DockerRuntimeNode(
     override fun getConfiguration(): RuntimeNodeConfig {
         return delegate.getConfiguration()
     }
+
+    override fun doUpload(input: InputStream, filename: String, dest: String) {
+        createInteractiveShell("cat > $dest").use { shell ->
+            input.use { inputStream ->
+                val outputStream = shell.getOutputStream()
+                inputStream.transferTo(outputStream)
+            }
+        }
+    }
+
 }

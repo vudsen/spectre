@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.common.plugin.rnode
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
+import java.io.InputStream
 
 /**
  * 表示当前节点可以上传文件
@@ -51,10 +52,18 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
 
     /**
      * 将本地的文件发送到宿主机上面
-     * @param src 本地文件路径
+     * @param src 本地文件路径.
      * @param dest 目标路径，指定文件的绝对路径。 **需要确保父目录存在**
      */
     fun upload(src: String, dest: String)
+
+    /**
+     * 上传文件
+     * @param input 输入流
+     * @param filename 最终的文件名称
+     * @param dest 目标路径
+     */
+    fun upload(input: InputStream, filename: String, dest: String)
 
     /**
      * 是否为 arm 架构

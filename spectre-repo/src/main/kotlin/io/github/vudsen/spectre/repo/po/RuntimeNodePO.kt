@@ -39,7 +39,7 @@ open class RuntimeNodePO (
 
     @Column(nullable = false)
     @JsonRawValue
-    @field:NotEmpty
+    @field:NotEmpty()
     var configuration: String? = null,
 
     @Column(updatable = false, insertable = false)

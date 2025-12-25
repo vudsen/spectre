@@ -135,23 +135,6 @@ const router = createBrowserRouter(
           ],
         },
         {
-          path: 'channel',
-          handle: {
-            crumb: i18n.t('router.connect'),
-          },
-          children: [
-            {
-              path: ':channelId',
-              lazy: async () => {
-                const { default: Home } = await import(
-                  '@/pages/channel/[channelId]'
-                )
-                return { Component: Home, handle: { hideCrumb: true } }
-              },
-            },
-          ],
-        },
-        {
           path: 'permission',
           handle: {
             crumb: i18n.t('router.permission'),
@@ -248,6 +231,23 @@ const router = createBrowserRouter(
         const { default: LoginPage } = await import('@/pages/login')
         return { Component: LoginPage }
       },
+    },
+    {
+      path: 'channel',
+      handle: {
+        crumb: i18n.t('router.connect'),
+      },
+      children: [
+        {
+          path: ':channelId',
+          lazy: async () => {
+            const { default: Home } = await import(
+              '@/pages/channel/[channelId]'
+            )
+            return { Component: Home, handle: { hideCrumb: true } }
+          },
+        },
+      ],
     },
   ],
   {

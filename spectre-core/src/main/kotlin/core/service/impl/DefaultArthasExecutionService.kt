@@ -2,14 +2,11 @@ package io.github.vudsen.spectre.core.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.*
-import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO.Companion.toDTO
-import io.github.vudsen.spectre.api.dto.ToolchainItemDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
-import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.service.ToolchainService
@@ -18,13 +15,11 @@ import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
 import io.github.vudsen.spectre.core.bean.ArthasClientWrapper
 import io.github.vudsen.spectre.core.internal.ArthasClientCacheService
 import io.github.vudsen.spectre.core.lock.RedisDistributedLock
-import io.github.vudsen.spectre.repo.RuntimeNodeRepository
 import io.github.vudsen.spectre.repo.ToolchainItemRepository
-import io.github.vudsen.spectre.repo.entity.ToolchainType
-import io.github.vudsen.spectre.repo.po.ToolchainItemId
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.core.io.InputStreamSource
 import org.springframework.core.task.TaskExecutor
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.expression.spel.SpelNode
@@ -36,7 +31,6 @@ import java.lang.reflect.InvocationTargetException
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.jvm.optionals.getOrNull
 
 
 /**
@@ -75,7 +69,8 @@ class DefaultArthasExecutionService(
     @param:Qualifier("applicationTaskExecutor") private val executor: TaskExecutor,
     private val redisDistributedLock: RedisDistributedLock,
     private val arthasClientCacheService: ArthasClientCacheService,
-    private val runtimeNodeService: RuntimeNodeService
+    private val runtimeNodeService: RuntimeNodeService,
+    private val toolchainService: ToolchainService,
 ) : ArthasExecutionService {
 
     companion object {
@@ -102,14 +97,6 @@ class DefaultArthasExecutionService(
 
     }
 
-    @Autowired
-    private lateinit var toolchainService: ToolchainService
-
-    @Autowired
-    private lateinit var toolchainItemRepository: ToolchainItemRepository
-
-    private val objectMapper: ObjectMapper = ObjectMapper()
-
     private val modifyLock = ReentrantLock()
 
     private fun resolveJvmId(runtimeNodeId: Long, jvm: Jvm): String {
@@ -124,10 +111,9 @@ class DefaultArthasExecutionService(
     ): AttachStatus {
         val runtimeNodeDto =
             runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.runtime.node.not.exist")
-        val extPoint = runtimeNodeService.getExtPoint(runtimeNodeDto.pluginId)
 
         val node = runtimeNodeService.findTreeNode(treeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
-        val jvm = extPoint.createSearcher().deserializeJvm(node)
+        val jvm = runtimeNodeService.deserializeToJvm(runtimeNodeDto.pluginId, node)
         arthasClientCacheService.resolveCachedClient(runtimeNodeId, jvm) ?.let {
             return AttachStatus(true).apply {
                 channelId = it.channelId
@@ -161,7 +147,7 @@ class DefaultArthasExecutionService(
         }
 
         try {
-            attachJvmAsync(extPoint, runtimeNodeDto, jvm, status, bundleId, treeNodeId)
+            attachJvmAsync(runtimeNodeDto, jvm, status, bundleId, treeNodeId)
             return returnAttachingMsg(status)
         } catch (e: Exception) {
             status.clientInitLock.set(false)
@@ -231,8 +217,8 @@ class DefaultArthasExecutionService(
         info: ArthasChannelDTO,
         metadata: ArthasChannelDTO
     ): ArthasHttpClient {
-        val extPoint = runtimeNodeService.getExtPoint(metadata.extPointId)
-        val runtimeNode = runtimeNodeService.resolveRuntimeNode(info.runtimeNodeId)
+        val extPoint = runtimeNodeService.findPluginById(metadata.extPointId)
+        val runtimeNode = runtimeNodeService.connect(info.runtimeNodeId)
 
         val bundle = toolchainService.resolveToolchainBundle(metadata.bundleId) ?: TODO("bundle not found.")
         val handler = extPoint.createAttachHandler(runtimeNode, info.jvm, bundle)
@@ -245,7 +231,6 @@ class DefaultArthasExecutionService(
      * 该方法会设置 [ArthasChannelDTO]，主要用于保存最终连接的端口
      */
     private fun attachJvmAsync(
-        extPoint: RuntimeNodeExtensionPoint,
         runtimeNodeDto: RuntimeNodeDTO,
         jvm: Jvm,
         holder: ArthasClientInitStatus,
@@ -267,15 +252,10 @@ class DefaultArthasExecutionService(
                 }
 
                 val bundle = toolchainService.resolveToolchainBundle(bundleId) ?: TODO("bundle not found.")
-                val runtimeNode =
-                    extPoint.connect(
-                        objectMapper.readValue(
-                            runtimeNodeDto.configuration,
-                            extPoint.getConfigurationClass()
-                        )
-                    )
 
-                val handler = extPoint.createAttachHandler(runtimeNode, jvm, bundle)
+                val runtimeNode = runtimeNodeService.connect(runtimeNodeDto.id)
+
+                val handler = runtimeNode.getExtPoint().createAttachHandler(runtimeNode, jvm, bundle)
                 val client: ArthasHttpClient = handler.attach(null)
 
                 logger.info("Successfully created client for jvm(id = {}), name = {}", jvm.id, jvm.name)
@@ -289,7 +269,7 @@ class DefaultArthasExecutionService(
                     client.getPort(),
                     runtimeNodeDto.restrictedMode,
                     bundleId,
-                    extPoint.getId()
+                    runtimeNode.getExtPoint().getId()
                 ).apply {
                     this.jvm = jvm
                 }
@@ -491,7 +471,12 @@ class DefaultArthasExecutionService(
         client.interruptJob(data.sessionId)
     }
 
+    override fun retransform(channelId: String, source: InputStreamSource) {
+        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
+        val client = tryResolveClient(data, channelId)
 
+        return client.retransform(source)
+    }
 
 
 }

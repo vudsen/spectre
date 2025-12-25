@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
+import org.springframework.core.io.InputStreamSource
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.Base64
@@ -116,6 +117,10 @@ open class ShellBasedArthasHttpClient(
 
     override fun getPort(): Int {
         return URL(arthasHttpEndpoint).port
+    }
+
+    override fun retransform(source: InputStreamSource) {
+        TODO()
     }
 
 }

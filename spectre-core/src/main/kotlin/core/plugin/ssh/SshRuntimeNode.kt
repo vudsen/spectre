@@ -35,7 +35,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
+open class SshRuntimeNode(extension: SshRuntimeNodeExtension) : CloseableRuntimeNode, AbstractShellRuntimeNode(extension) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -239,14 +239,6 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
     }
 
 
-    override fun doUpload(src: File, dest: String) {
-        logger.info("Uploading $src to $dest")
-        SftpClientFactory.instance().createSftpClient(session).use { client ->
-            client.put(src.toPath(), dest)
-        }
-    }
-
-
     override fun ensureAttachEnvironmentReady() {
         if (nodeConfig.spectreHome.isEmpty()) {
             throw BusinessException("error.spectre.home.not.empty")
@@ -305,5 +297,12 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
 
     override fun getConfiguration(): SshRuntimeNodeConfig {
         return nodeConfig
+    }
+
+    override fun doUpload(input: InputStream, filename: String, dest: String) {
+        logger.info("Uploading $filename to $dest")
+        SftpClientFactory.instance().createSftpClient(session).use { client ->
+            client.put(input, dest)
+        }
     }
 }

@@ -172,7 +172,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
     }
 
     override fun createRuntimeNode0(config: SshRuntimeNodeConfig): SshRuntimeNode {
-        return SshRuntimeNode().apply {
+        return SshRuntimeNode(this).apply {
             nodeConfig = config
             executorServiceFactory = MyCloseableExecutorService()
         }

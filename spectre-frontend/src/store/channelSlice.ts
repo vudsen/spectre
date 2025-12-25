@@ -9,6 +9,10 @@ type UpdateRecord = {
   lastUpdate: number
 }
 
+type ChannelContext = {
+  isDebugMode?: boolean
+}
+
 interface ChannelState {
   /**
    * channel id -> 缓存的消息
@@ -18,11 +22,21 @@ interface ChannelState {
    * 记录上次更新时间，并删除长时间不更新的记录
    */
   updates: Record<string, UpdateRecord>
+  /**
+   * 保存当前界面频道上下文
+   */
+  context: ChannelContext
+  /**
+   * 增强功能菜单是否开启
+   */
+  isMenuOpen: boolean
 }
 
 const initialState: ChannelState = {
   messages: {},
   updates: {},
+  context: {},
+  isMenuOpen: true,
 }
 
 type AppendMessagePayload = {
@@ -67,8 +81,29 @@ export const channelSlice = createSlice({
       state.messages = newMessage
       state.updates = newUpdates
     },
+    setupChannelContext(state) {
+      state.context = {}
+    },
+    updateChannelContext(
+      state,
+      action: PayloadAction<Partial<ChannelContext>>,
+    ) {
+      state.context = {
+        ...state.context,
+        ...action.payload,
+      }
+    },
+    setEnhanceMenuOpen(state, action: PayloadAction<boolean>) {
+      state.isMenuOpen = action.payload
+    },
   },
 })
 
-export const { clearExpiredMessages, appendMessages } = channelSlice.actions
+export const {
+  clearExpiredMessages,
+  appendMessages,
+  setupChannelContext,
+  updateChannelContext,
+  setEnhanceMenuOpen,
+} = channelSlice.actions
 export default channelSlice.reducer
