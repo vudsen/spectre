@@ -8,6 +8,7 @@ import storage from 'redux-persist/lib/storage'
 const channelPersistConfig = {
   key: 'channel',
   storage,
+  blacklist: [],
 }
 
 const sessionPersistConfig = {

@@ -14,6 +14,9 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
+/**
+ * 缓存 arthas 客户端，提供定时删除功能以防止内存泄露
+ */
 @Service
 class ArthasClientCacheService {
 

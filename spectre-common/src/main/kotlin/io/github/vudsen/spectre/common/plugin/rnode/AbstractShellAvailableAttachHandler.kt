@@ -33,7 +33,7 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
     protected open fun afterAttachFinished() {}
 
     private fun attachInternal(port: Int?): ArthasHttpClient {
-        val local = resolveSpectreHome()
+        val local = runtimeNode.getHomePath()
         val downloadDirectory = "$local/downloads"
         runtimeNode.mkdirs(downloadDirectory)
 
@@ -97,11 +97,6 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         }
         return dest
     }
-
-    /**
-     * 获取家目录
-     */
-    protected abstract fun resolveSpectreHome(): String
 
     protected fun prepareHttpClient(
         downloadDirectory: String,

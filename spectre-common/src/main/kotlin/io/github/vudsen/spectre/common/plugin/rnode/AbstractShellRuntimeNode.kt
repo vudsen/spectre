@@ -1,11 +1,15 @@
 package io.github.vudsen.spectre.common.plugin.rnode
 
 import io.github.vudsen.spectre.api.exception.BusinessException
+import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
+import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import java.io.File
+import java.io.InputStream
 import kotlin.text.iterator
 
-abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode{
+abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode {
 
+    private lateinit var extensionPoint: RuntimeNodeExtensionPoint
 
     override fun isFileExist(path: String): Boolean {
         return execute("test -f $path").exitCode == 0
@@ -23,19 +27,28 @@ abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode{
         if (file.length() == 0L) {
             return
         }
+        file.inputStream().use { inputStream ->
+            upload(inputStream, dest)
+        }
+    }
+
+    override fun upload(input: InputStream, dest: String) {
+        if (input.available() == 0) {
+            return
+        }
         if (isFileExist(dest)) {
             return
         }
-
         val tmp = "$dest.tmp"
-        doUpload(file, tmp)
+        doUpload(input, tmp)
         execute("mv $tmp $dest").ok()
     }
+
 
     /**
      * 上传文件. 子类不需要任何检查
      */
-    protected abstract fun doUpload(src: File, dest: String)
+    protected abstract fun doUpload(input: InputStream, dest: String)
 
     override fun unzipTarGzPkg(target: String, dest: String) {
         TODO("Not yet implemented")
@@ -74,5 +87,13 @@ abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode{
             return result
         }
         return emptyList()
+    }
+
+    override fun getExtPoint(): RuntimeNodeExtensionPoint {
+        return extensionPoint
+    }
+
+    fun setExtPoint(extensionPoint: RuntimeNodeExtensionPoint) {
+        this.extensionPoint = extensionPoint
     }
 }

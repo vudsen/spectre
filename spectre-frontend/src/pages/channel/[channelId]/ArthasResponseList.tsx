@@ -3,9 +3,10 @@ import type { ArthasResponse } from '@/api/impl/arthas.ts'
 import ArthasResponseItem, {
   type ResponseGroupItem,
 } from '@/pages/channel/[channelId]/components/ArthasResponseItem.tsx'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/store'
 
 interface ArthasResponseListProps {
-  isDebugMode: boolean
   responses: ArthasResponse[]
   onEntitySelect: (e: ArthasResponse) => void
 }
@@ -13,13 +14,16 @@ interface ArthasResponseListProps {
 const IGNORED_TYPES = new Set(['input_status'])
 
 const ArthasResponseList: React.FC<ArthasResponseListProps> = (props) => {
+  const isDebugMode = useSelector<RootState, boolean | undefined>(
+    (state) => state.channel.context.isDebugMode,
+  )
   const [filteredResponses, setFilteredResponse] = useState<
     ResponseGroupItem[]
   >([])
   const [selectedEntityIndex, setSelectedEntityIndex] = useState<number>(-1)
 
   useEffect(() => {
-    if (props.isDebugMode) {
+    if (isDebugMode) {
       setFilteredResponse(
         props.responses.map((r) => ({
           entity: r,
@@ -63,7 +67,7 @@ const ArthasResponseList: React.FC<ArthasResponseListProps> = (props) => {
       }
       setFilteredResponse(result)
     }
-  }, [props.responses, props.isDebugMode])
+  }, [props.responses, isDebugMode])
 
   const onEntitySelect = (index: number) => {
     setSelectedEntityIndex(index)

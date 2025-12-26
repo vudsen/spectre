@@ -6,6 +6,7 @@ import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.plugin.AttachTester
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
@@ -15,6 +16,11 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
 
     @set:Autowired
     lateinit var attachTester: AttachTester
+
+    companion object {
+        @JvmStatic
+        private val logger = LoggerFactory.getLogger(DefaultArthasExecutionServiceTest::class.java)
+    }
 
     @Test
     fun checkOgnlExpression() {

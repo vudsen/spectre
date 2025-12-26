@@ -5,9 +5,10 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
+import io.github.vudsen.spectre.api.plugin.rnode.Jvm
+import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
-import io.github.vudsen.spectre.api.vo.RuntimeNodeVO
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.springframework.data.domain.Page
 
@@ -24,7 +25,7 @@ interface RuntimeNodeService {
      *
      * 如果扩展不存在，则会直接抛出异常
      */
-    fun getExtPoint(extPointId: String): RuntimeNodeExtensionPoint
+    fun findPluginById(extPointId: String): RuntimeNodeExtensionPoint
 
     /**
      * 更新一个宿主机
@@ -78,9 +79,14 @@ interface RuntimeNodeService {
     fun findTreeNode(id: String): JvmSearchNode<Any>?
 
     /**
+     * 将树节点转换为对应的 jvm
+     */
+    fun deserializeToJvm(pluginId: String, node: JvmSearchNode<Any>): Jvm
+
+    /**
      * 获取运行节点
      */
-    fun resolveRuntimeNode(runtimeNodeId: Long): RuntimeNode
+    fun connect(runtimeNodeId: Long): RuntimeNode
 
     /**
      * 获取详情界面

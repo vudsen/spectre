@@ -68,7 +68,5 @@ class K8sAttachHandler(
         return attach0(paths, KUBERNETES_LISTEN_PORT)
     }
 
-    override fun resolveSpectreHome(): String {
-        return runtimeNode.getConfiguration().spectreHome
-    }
+
 }

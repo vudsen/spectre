@@ -1,4 +1,6 @@
 package io.github.vudsen.spectre.repo.util
 
-interface UpdateGroup
-interface CreateGroup
+import jakarta.validation.groups.Default
+
+interface UpdateGroup : Default
+interface CreateGroup : Default
