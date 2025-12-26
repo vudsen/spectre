@@ -4,8 +4,7 @@ import io.github.vudsen.spectre.common.plugin.rnode.AbstractShellRuntimeNode
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
-import org.springframework.util.StreamUtils
-import java.io.File
+import io.github.vudsen.spectre.api.exception.BusinessException
 import java.io.InputStream
 
 class DockerRuntimeNode(
@@ -26,12 +25,17 @@ class DockerRuntimeNode(
         }
     }
 
+    /**
+     * 创建交互性命令行
+     * @param command 命令，不能带单引号!
+     */
     override fun createInteractiveShell(command: String): InteractiveShell {
-        return if (user == null) {
-            delegate.createInteractiveShell("$dockerPath exec -it $containerId $command")
+        val us = if (user == null) {
+            ""
         } else {
-            delegate.createInteractiveShell("$dockerPath exec -it -u $user $containerId $command")
+            "-u $user"
         }
+        return delegate.createInteractiveShell("$dockerPath exec -i $us $containerId sh -c '$command'")
     }
 
     override fun getHomePath(): String {
@@ -49,8 +53,14 @@ class DockerRuntimeNode(
     override fun doUpload(input: InputStream, dest: String) {
         createInteractiveShell("cat > $dest").use { shell ->
             input.use { inputStream ->
-                val outputStream = shell.getOutputStream()
-                inputStream.transferTo(outputStream)
+                shell.getOutputStream().use { outputStream ->
+                    inputStream.transferTo(outputStream)
+                }
+                shell.exitCode()?.let {
+                    if (it != 0) {
+                        throw BusinessException(String(shell.getInputStream().readAllBytes()))
+                    }
+                }
             }
         }
     }

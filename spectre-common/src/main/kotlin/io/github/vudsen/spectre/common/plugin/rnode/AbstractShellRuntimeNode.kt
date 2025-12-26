@@ -2,14 +2,18 @@ package io.github.vudsen.spectre.common.plugin.rnode
 
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import java.io.File
 import java.io.InputStream
 import kotlin.text.iterator
 
-abstract class AbstractShellRuntimeNode : ShellAvailableRuntimeNode {
+abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
 
     private lateinit var extensionPoint: RuntimeNodeExtensionPoint
+
+    constructor(extensionPoint: RuntimeNodeExtensionPoint) : this() {
+        this.extensionPoint = extensionPoint
+    }
+
 
     override fun isFileExist(path: String): Boolean {
         return execute("test -f $path").exitCode == 0

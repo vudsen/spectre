@@ -67,6 +67,8 @@ class SshAttachHandler(
         val readyFlag = "$containerHomePath/READY.flag"
         if (!dockerNode.isDirectoryExist(containerHomePath) || !dockerNode.isFileExist(readyFlag)) {
             dockerNode.mkdirs(arthasHome)
+            // downloads 是给 retransform 或者其它命令用
+            dockerNode.mkdirs("$containerHomePath/downloads")
             runtimeNode.execute("docker cp ${paths.httpClientPath} ${jvm.id}:$httpClientPath").ok()
             runtimeNode.execute("docker cp ${paths.jattachPath} ${jvm.id}:$jattachPath").ok()
             runtimeNode.execute("docker cp ${paths.arthasHome}/. ${jvm.id}:$arthasHome").ok()
