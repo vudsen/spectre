@@ -1,7 +1,5 @@
 package io.github.vudsen.spectre.httpclient;
 
-import demo.MathGame;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,7 +18,6 @@ import java.util.Base64;
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println(MathGame.class );
         var endpoint = args[0];
         var encodedBody = args[1];
         try {
