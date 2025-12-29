@@ -47,24 +47,33 @@ class SshAttachHandler(
             throw BusinessException("未提供 Docker 相关配置")
         }
 
-        val dockerNode = DockerRuntimeNode(runtimeNode, dockerCnf.executablePath, jvm.id)
+        val containerHomePath = dockerCnf.spectreHome ?: runtimeNode.nodeConfig.spectreHome
+        val dockerNode = DockerRuntimeNode(
+            runtimeNode,
+            dockerCnf.executablePath,
+            jvm.id,
+            containerHomePath
+        ).apply {
+            setExtPoint(runtimeNode.getExtPoint())
+        }
 
         val uid = dockerNode.execute("id -u").tryUnwrap()?.trim() ?: "0"
         val gid = dockerNode.execute("id -g").tryUnwrap()?.trim() ?: "0"
 
         dockerNode.user = "root"
-        val home = dockerCnf.spectreHome ?: runtimeNode.nodeConfig.spectreHome
-        val arthasHome = "$home/arthas"
-        val httpClientPath = "$home/http-client.jar"
-        val jattachPath = "$home/jattach"
-        val readyFlag = "$home/READY.flag"
-        if (!dockerNode.isDirectoryExist(home) || !dockerNode.isFileExist(readyFlag)) {
+        val arthasHome = "$containerHomePath/arthas"
+        val httpClientPath = "$containerHomePath/http-client.jar"
+        val jattachPath = "$containerHomePath/jattach"
+        val readyFlag = "$containerHomePath/READY.flag"
+        if (!dockerNode.isDirectoryExist(containerHomePath) || !dockerNode.isFileExist(readyFlag)) {
             dockerNode.mkdirs(arthasHome)
+            // downloads 是给 retransform 或者其它命令用
+            dockerNode.mkdirs("$containerHomePath/downloads")
             runtimeNode.execute("docker cp ${paths.httpClientPath} ${jvm.id}:$httpClientPath").ok()
             runtimeNode.execute("docker cp ${paths.jattachPath} ${jvm.id}:$jattachPath").ok()
             runtimeNode.execute("docker cp ${paths.arthasHome}/. ${jvm.id}:$arthasHome").ok()
             if (uid != "0") {
-                dockerNode.execute("chown -R $uid:$gid $home").ok()
+                dockerNode.execute("chown -R $uid:$gid $containerHomePath").ok()
             }
             dockerNode.execute("touch $readyFlag").ok()
         }
@@ -116,9 +125,6 @@ class SshAttachHandler(
         )
     }
 
-    override fun resolveSpectreHome(): String {
-        return runtimeNode.nodeConfig.spectreHome
-    }
 
     override fun tryFindClient(paths: ToolchainPaths): ArthasHttpClient? {
         val jvm = jvm

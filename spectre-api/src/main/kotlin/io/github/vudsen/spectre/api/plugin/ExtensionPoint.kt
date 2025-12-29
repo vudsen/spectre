@@ -2,6 +2,7 @@ package io.github.vudsen.spectre.api.plugin
 
 /**
  * 系统扩展点.
+ * TODO: rename to plugin.
  */
 interface ExtensionPoint {
 

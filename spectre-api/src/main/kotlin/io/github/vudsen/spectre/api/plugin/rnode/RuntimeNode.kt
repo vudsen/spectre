@@ -1,5 +1,7 @@
 package io.github.vudsen.spectre.api.plugin.rnode
 
+import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
+
 interface RuntimeNode {
 
     /**
@@ -14,5 +16,9 @@ interface RuntimeNode {
      */
     fun getConfiguration(): RuntimeNodeConfig
 
+    /**
+     * 获取当前拓展点
+     */
+    fun getExtPoint(): RuntimeNodeExtensionPoint
 
 }

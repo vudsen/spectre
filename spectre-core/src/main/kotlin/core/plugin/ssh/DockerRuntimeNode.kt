@@ -4,19 +4,18 @@ import io.github.vudsen.spectre.common.plugin.rnode.AbstractShellRuntimeNode
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
-import java.io.File
+import io.github.vudsen.spectre.api.exception.BusinessException
+import java.io.InputStream
 
 class DockerRuntimeNode(
     private val delegate: SshRuntimeNode,
     private val dockerPath: String,
-    private val containerId: String
+    private val containerId: String,
+    private val homePath: String
 ) : AbstractShellRuntimeNode() {
 
     var user: String? = null
 
-    override fun doUpload(src: File, dest: String) {
-        TODO("Not yet implemented")
-    }
 
     override fun execute(command: String): CommandExecuteResult {
         return if (user == null) {
@@ -26,8 +25,21 @@ class DockerRuntimeNode(
         }
     }
 
+    /**
+     * 创建交互性命令行
+     * @param command 命令，不能带单引号!
+     */
     override fun createInteractiveShell(command: String): InteractiveShell {
-        TODO("Not yet implemented")
+        val us = if (user == null) {
+            ""
+        } else {
+            "-u $user"
+        }
+        return delegate.createInteractiveShell("$dockerPath exec -i $us $containerId sh -c '$command'")
+    }
+
+    override fun getHomePath(): String {
+        return homePath
     }
 
     override fun ensureAttachEnvironmentReady() {
@@ -37,4 +49,20 @@ class DockerRuntimeNode(
     override fun getConfiguration(): RuntimeNodeConfig {
         return delegate.getConfiguration()
     }
+
+    override fun doUpload(input: InputStream, dest: String) {
+        createInteractiveShell("cat > $dest").use { shell ->
+            input.use { inputStream ->
+                shell.getOutputStream().use { outputStream ->
+                    inputStream.transferTo(outputStream)
+                }
+                shell.exitCode()?.let {
+                    if (it != 0) {
+                        throw BusinessException(String(shell.getInputStream().readAllBytes()))
+                    }
+                }
+            }
+        }
+    }
+
 }

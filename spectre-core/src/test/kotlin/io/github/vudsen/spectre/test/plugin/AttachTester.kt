@@ -11,14 +11,22 @@ import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import org.springframework.util.ResourceUtils
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
 
 @Component
 class AttachTester {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AttachTester::class.java)
+    }
 
     @set:Autowired
     lateinit var runtimeNodeService: RuntimeNodeService
@@ -35,6 +43,7 @@ class AttachTester {
         arthasExecutionService.execAsync(channelId, "sc demo.*")
 
         checkScResult(pullResultSync(channelId, sessionDTO.consumerId))
+        testRetransform(channelId, sessionDTO.consumerId)
     }
 
     fun pullResultSync(channelId: String, consumerId: String): ArrayNode {
@@ -89,6 +98,40 @@ class AttachTester {
         Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.map { node -> node.asText() })
     }
 
+    private fun testRetransform(channelId: String, consumerId: String) {
+        val result = ResourceUtils.getFile("classpath:MathGame.class").inputStream().use { input ->
+            arthasExecutionService.retransform(channelId) { input }
+        } as ArrayNode
+        val target = result.find { item -> item.get("type").textValue() == "retransform" }!!
+
+        val jobId = target.get("jobId").numberValue().toInt()
+
+        val status = result.find { item -> item.get("jobId").numberValue().toInt() == jobId && item.get("type").textValue() == "status" }!!
+        assertEquals(status.get("statusCode").numberValue().toInt(), 0)
+
+        arthasExecutionService.execAsync(channelId, "watch demo.MathGame primeFactors -n 2 -x 1 'target.illegalArgumentCount'")
+
+        val record = arrayOf(Int.MAX_VALUE, Int.MAX_VALUE)
+        val exactNumberRegx = Regex("@Integer\\[(\\d+)]")
+        var rp = 0
+        loop(5) {
+            val r = pullResultSync(channelId, consumerId)
+            logger.debug("Pull result: {}", r)
+            val watchResult = r.filter { item -> item.get("type").textValue() == "watch" }
+            for (node in watchResult) {
+                val value = node.get("value").textValue()
+                val matchResult = exactNumberRegx.find(value)!!
+                record[rp] = matchResult.groupValues[1].toInt()
+                rp++
+            }
+            if (rp == record.size) {
+                return@loop true
+            }
+            return@loop null
+        }
+        assertTrue(record[0] > record[1])
+    }
+
     private val commonRuntimeNodeId: Long by lazy {
         val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
             withExposedPorts(22)
@@ -121,7 +164,7 @@ class AttachTester {
     }
 
     /**
-     * 新建一个 arthas channel
+     * 获取一个通用的 channel
      * @return channelId
      */
     fun resolveDefaultChannel(): String {

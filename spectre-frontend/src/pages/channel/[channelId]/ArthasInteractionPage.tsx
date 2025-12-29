@@ -1,23 +1,21 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   type ArthasResponse,
-  disconnectSession,
   type InputStatusResponse,
   pullResults,
 } from '@/api/impl/arthas.ts'
-import { Button, Code, Divider, Tooltip } from '@heroui/react'
+import { Divider } from '@heroui/react'
 import ArthasResponseDetail from '@/pages/channel/[channelId]/ArthasResponseDetail.tsx'
 import { isErrorResponse } from '@/api/types.ts'
 import { handleError, showDialog } from '@/common/util.ts'
 import CommandExecuteBlock from '@/pages/channel/[channelId]/CommandExecuteBlock.tsx'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
-import SvgIcon from '@/components/icon/SvgIcon.tsx'
-import Icon from '@/components/icon/icon.ts'
 import ArthasResponseList from '@/pages/channel/[channelId]/ArthasResponseList.tsx'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { appendMessages, clearExpiredMessages } from '@/store/channelSlice'
-import { useNavigate } from 'react-router'
+import Toolbar from '@/pages/channel/[channelId]/Toolbar.tsx'
+import MenuList from '@/pages/channel/[channelId]/MenuList.tsx'
 
 interface ArthasInteractionPageProps {
   channelId: string
@@ -43,10 +41,8 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
   const [selectedEntity, setSelectedEntity] = useState<ArthasResponse>()
   const pullResultsTaskId = useRef<number>(undefined)
   const taskDelay = useRef(0)
-  const [isDebugMode, setDebugMode] = useState(false)
   const isExcited = useRef(false)
   const isFetching = useRef(false)
-  const nav = useNavigate()
 
   const doPullResults = useCallback(async (): Promise<number> => {
     try {
@@ -116,77 +112,34 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
     }
   }, [dispatch, launchPullResultTask, props.channelId])
 
-  const disconnect = useCallback(() => {
-    showDialog({
-      title: '断开连接',
-      message: '您可能会丢失所有的消息，确定断开连接吗?',
-      color: 'danger',
-      onConfirm() {
-        // TODO fullscreen mask.
-        disconnectSession(props.channelId).then(() => {
-          nav('/runtime-node/list')
-        })
-      },
-    })
-  }, [nav, props.channelId])
-
   return (
-    <div className="flex h-screen flex-col">
-      <div className="h-navbar mx-3 flex items-center justify-between">
-        <div className="flex max-w-1/2 items-center">
-          <span className="font-bold text-nowrap">&gt; 已连接到:&nbsp;</span>
-          <Tooltip content={props.appName}>
-            <Code className="cursor-pointer truncate" color="primary">
-              {props.appName}
-            </Code>
-          </Tooltip>
-        </div>
-        <div>
-          <Tooltip content="开启 DEBUG 模式">
-            <Button
-              isIconOnly
-              variant="light"
-              onPress={() => setDebugMode(!isDebugMode)}
-              className={isDebugMode ? 'text-primary' : ''}
-            >
-              <SvgIcon icon={Icon.BUG} size={22} />
-            </Button>
-          </Tooltip>
-          <Tooltip content="断开连接">
-            <Button
-              isIconOnly
-              variant="light"
-              color="danger"
-              onPress={disconnect}
-            >
-              <SvgIcon icon={Icon.DISCONNECT} size={22} />
-            </Button>
-          </Tooltip>
-        </div>
+    <div className="flex h-screen">
+      <MenuList />
+      <div className="z-10 flex h-full w-0 grow flex-col">
+        <Toolbar appName={props.appName} channelId={props.channelId} />
+        <Divider />
+        <PanelGroup
+          direction="horizontal"
+          className="flex w-full grow"
+          autoSaveId="channel-attach"
+        >
+          <Panel minSize={20} defaultSize={40} className="!overflow-y-scroll">
+            <ArthasResponseList
+              responses={messages}
+              onEntitySelect={setSelectedEntity}
+            />
+          </Panel>
+          <PanelResizeHandle className="bg-default-200 border-default-100 border-l-1" />
+          <Panel minSize={30} defaultSize={60}>
+            <ArthasResponseDetail entity={selectedEntity} />
+          </Panel>
+        </PanelGroup>
+        <CommandExecuteBlock
+          onExecute={launchPullResultTask}
+          channelId={props.channelId}
+          inputStatus={inputStatus}
+        />
       </div>
-      <Divider />
-      <PanelGroup
-        direction="horizontal"
-        className="flex w-full grow"
-        autoSaveId="channel-attach"
-      >
-        <Panel minSize={20} defaultSize={40} className="!overflow-y-scroll">
-          <ArthasResponseList
-            isDebugMode={isDebugMode}
-            responses={messages}
-            onEntitySelect={setSelectedEntity}
-          />
-        </Panel>
-        <PanelResizeHandle className="bg-default-200 border-default-100 border-l-1" />
-        <Panel minSize={30} defaultSize={60}>
-          <ArthasResponseDetail entity={selectedEntity} />
-        </Panel>
-      </PanelGroup>
-      <CommandExecuteBlock
-        onExecute={launchPullResultTask}
-        channelId={props.channelId}
-        inputStatus={inputStatus}
-      />
     </div>
   )
 }

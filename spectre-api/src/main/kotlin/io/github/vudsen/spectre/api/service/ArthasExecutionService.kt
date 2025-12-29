@@ -4,6 +4,7 @@ import io.github.vudsen.spectre.api.dto.ArthasChannelDTO
 import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
+import org.springframework.core.io.InputStreamSource
 
 /**
  * Arthas 执行服务
@@ -48,5 +49,10 @@ interface ArthasExecutionService {
      * 中断前台任务
      */
     fun interruptCommand(channelId: String)
+
+    /**
+     * 替换字节码. 该命令为同步命令
+     */
+    fun retransform(channelId: String, source: InputStreamSource): Any
 
 }

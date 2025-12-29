@@ -25,15 +25,8 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
      */
     protected abstract fun doAttach(port: Int?, paths: ToolchainPaths): ArthasHttpClient
 
-    /**
-     * 在 attach 之前进行一些初始化操作
-     */
-    protected open fun beforeAttach() {}
-
-    protected open fun afterAttachFinished() {}
-
     private fun attachInternal(port: Int?): ArthasHttpClient {
-        val local = resolveSpectreHome()
+        val local = runtimeNode.getHomePath()
         val downloadDirectory = "$local/downloads"
         runtimeNode.mkdirs(downloadDirectory)
 
@@ -58,12 +51,7 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
     }
 
     override fun attach(port: Int?): ArthasHttpClient {
-        beforeAttach()
-        try {
-            return attachInternal(port)
-        } finally {
-            afterAttachFinished()
-        }
+        return attachInternal(port)
     }
 
 
@@ -97,11 +85,6 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         }
         return dest
     }
-
-    /**
-     * 获取家目录
-     */
-    protected abstract fun resolveSpectreHome(): String
 
     protected fun prepareHttpClient(
         downloadDirectory: String,

@@ -94,7 +94,7 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
     override fun createRuntimeNode0(config: K8sRuntimeNodeConfig): K8sRuntimeNode {
         val cached = runtimeNodeCache[config]
         if (cached == null) {
-            val newOne = K8sRuntimeNode(config)
+            val newOne = K8sRuntimeNode(config, this)
             runtimeNodeCache[config] = cached
             return newOne
         }
@@ -132,7 +132,7 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
         jvm: Jvm,
         bundles: ToolchainBundleDTO
     ): JvmAttachHandler {
-        return K8sAttachHandler(runtimeNode, jvm, bundles)
+        return K8sAttachHandler(runtimeNode, jvm as K8sContainerJvm, bundles)
     }
 
     override fun getDescription(): String {

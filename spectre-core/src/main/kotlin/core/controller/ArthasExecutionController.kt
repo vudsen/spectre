@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 /**
  * Arthas 交互接口.
@@ -31,24 +32,11 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_READ)")
 class ArthasExecutionController(
-    private val arthasExecutionService: ArthasExecutionService,
-    private val runtimeNodeService: RuntimeNodeService,
-    private val appAccessControlService: AppAccessControlService
+    private val arthasExecutionService: ArthasExecutionService
 ) {
 
     private fun channelSessionDataKey(channelId: String): String = "ChannelIdToConsumerId:${channelId}"
 
-    private fun checkTreeNodePermission(channelId: String) {
-        val info = arthasExecutionService.getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
-        checkTreeNodePermission(info.runtimeNodeId, info.treeNodeId)
-    }
-
-    private fun checkTreeNodePermission(runtimeNodeId: Long, treeNodeId: String) {
-        val treeNode = runtimeNodeService.findTreeNode(treeNodeId) ?: throw BusinessException("节点不存在")
-        val node = runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
-        val ctx = AttachNodeABACContext(ABACPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
-        appAccessControlService.checkPolicyPermission(ctx)
-    }
 
     /**
      * @return Channel Id
@@ -57,7 +45,6 @@ class ArthasExecutionController(
     // 该接口是轮询调用，开启后会记录大量日志
     // @Log("log.arthas.channel.create", "{ runtimeNodeId: #args[0].runtimeNodeId, channelId: #returnObj?.channelId }")
     fun createChannel(@RequestBody @Validated vo: CreateChannelRequestVO, request: HttpServletRequest): AttachStatus {
-        checkTreeNodePermission(vo.runtimeNodeId, vo.treeNodeId)
         return arthasExecutionService.requireAttach(vo.runtimeNodeId, vo.treeNodeId, vo.bundleId)
     }
 
@@ -68,7 +55,6 @@ class ArthasExecutionController(
     @PostMapping("/channel/{channelId}/join")
     @Log("log.arthas.channel.join", "{ channelId: #args[0], consumerId: #returnObj?.consumerId }")
     fun joinChannel(@PathVariable channelId: String, request: HttpServletRequest): ArthasConsumerDTO? {
-        checkTreeNodePermission(channelId)
         return joinChannel0(request, channelId)
     }
 
@@ -94,7 +80,6 @@ class ArthasExecutionController(
 
     @GetMapping("/channel/{channelId}/pull-result")
     fun pullResults(@PathVariable channelId: String, request: HttpServletRequest): Any {
-        checkTreeNodePermission(channelId)
         val channelSession = resolveChannelSession(request, channelId)
         try {
             return arthasExecutionService.pullResults(channelId, channelSession.consumerId)
@@ -120,25 +105,11 @@ class ArthasExecutionController(
         return channelSession
     }
 
-    private fun checkCommandExecPermission(channelId: String, command: String) {
-        val info = arthasExecutionService.getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
-        val runtimeNodeDTO = runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
 
-        appAccessControlService.checkPolicyPermission(
-            ArthasExecutionABACContext(
-                ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE,
-                command.trim(),
-                runtimeNodeDTO,
-                info.jvm
-            )
-        )
-    }
 
     @PostMapping("/channel/{channelId}/execute")
     @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: #args[1].command  }")
     fun execute(@PathVariable channelId: String, @Validated @RequestBody vo: ExecuteCommandRequestVO, request: HttpServletRequest) {
-        checkTreeNodePermission(channelId)
-        checkCommandExecPermission(channelId, vo.command)
         // ensure connected.
         resolveChannelSession(request, channelId)
         arthasExecutionService.execAsync(channelId, vo.command.trim())
@@ -147,10 +118,8 @@ class ArthasExecutionController(
     @PostMapping("/channel/{channelId}/disconnect")
     @Log("log.arthas.channel.disconnect", "{ channelId: #args[0] }")
     fun disconnect(@PathVariable channelId: String, request: HttpServletRequest) {
-        checkTreeNodePermission(channelId)
         val session = request.getSession(false)
         session.removeAttribute(channelSessionDataKey(channelId))
-        // TODO 调用服务清除内存中的数据，防止内存泄露
         // 让 arthas 自己自动删除
 //        arthasExecutionService.execAsync("stop")
     }
@@ -158,9 +127,15 @@ class ArthasExecutionController(
     @PostMapping("/channel/{channelId}/interrupt")
     @Log("log.arthas.channel.interrupt", "{ channelId: #args[0] }")
     fun interruptCommand(@PathVariable channelId: String, request: HttpServletRequest) {
-        checkTreeNodePermission(channelId)
         resolveChannelSession(request, channelId)
         arthasExecutionService.interruptCommand(channelId)
+    }
+
+    @PostMapping("/channel/{channelId}/retransform")
+    @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: '@retransform'  }")
+    fun retransform(@PathVariable channelId: String, file: MultipartFile, request: HttpServletRequest): Any {
+        resolveChannelSession(request, channelId)
+        return arthasExecutionService.retransform(channelId, file)
     }
 
 }

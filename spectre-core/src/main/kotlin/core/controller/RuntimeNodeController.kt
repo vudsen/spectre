@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.core.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
@@ -36,7 +35,7 @@ class RuntimeNodeController(
     @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_UPDATE) or hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_CREATE)")
     @GetMapping("configuration-page")
     fun configurationPage(pluginId: String): PageDescriptor? {
-        return service.getExtPoint(pluginId)?.getConfigurationForm(null)
+        return service.findPluginById(pluginId)?.getConfigurationForm(null)
     }
 
     @PostMapping("create")

@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { expandTree, type JvmTreeNodeDTO } from '@/api/impl/runtime-node.ts'
 import RuntimeNodeTree from '@/pages/runtime-node/[node-id]/tree/RuntimeNodeTree.tsx'
 import TreeContext, {
@@ -48,7 +48,6 @@ const RuntimeNodeTreePage: React.FC = () => {
   const [context, setContext] = useState<NodeTreeContext>()
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const selectedSearchNode = useRef<JvmTreeNodeDTO>(undefined)
-  const nav = useNavigate()
   const [isRootNodeLoading, setRootNodeLoading] = useState(true)
   const [isAlertVisible, setAlertVisible] = React.useState(true)
   const { isLoading, result } = useGraphQL(
@@ -103,9 +102,15 @@ const RuntimeNodeTreePage: React.FC = () => {
   }, [nodeId, onOpen])
 
   const onSelect = (bundleId: string) => {
-    nav(
-      `../attach?treeNodeId=${selectedSearchNode.current!.id}&bundleId=${bundleId}`,
-    )
+    const url = new URL(window.location.href)
+    url.pathname = `${import.meta.env.VITE_BASE_PATH}/channel`
+    url.search = new URLSearchParams({
+      runtimeNodeId: nodeId,
+      treeNodeId: selectedSearchNode.current!.id,
+      bundleId,
+    }).toString()
+
+    window.open(url, '_blank')
   }
 
   const onInput = (e: FormEvent<HTMLInputElement>) => {

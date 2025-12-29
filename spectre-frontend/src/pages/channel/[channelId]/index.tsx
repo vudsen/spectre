@@ -2,6 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { type ChannelSessionDTO, joinChannel } from '@/api/impl/arthas.ts'
 import ArthasInteractionPage from '@/pages/channel/[channelId]/ArthasInteractionPage.tsx'
+import { useDispatch } from 'react-redux'
+import {
+  setupChannelContext,
+  updateChannelContext,
+} from '@/store/channelSlice.ts'
 
 const ChannelPage: React.FC = () => {
   const params = useParams()
@@ -9,26 +14,36 @@ const ChannelPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [channelJoinMsg, setChannelJoinMsg] = useState<string>()
   const [session, setSession] = useState<ChannelSessionDTO>()
+  const dispatch = useDispatch()
 
-  const doJoinChannel = useCallback((channelId: string) => {
-    joinChannel(channelId)
-      .then((session) => {
-        if (session) {
-          setSession(session)
+  const doJoinChannel = useCallback(
+    (channelId: string) => {
+      joinChannel(channelId)
+        .then((session) => {
+          if (session) {
+            setSession(session)
+            dispatch(setupChannelContext())
+            dispatch(
+              updateChannelContext({
+                channelId,
+              }),
+            )
+            setLoading(false)
+          } else {
+            setTimeout(() => {
+              doJoinChannel(channelId)
+            }, 1000)
+          }
+        })
+        .catch((_) => {
+          setChannelJoinMsg('连接到频道失败.')
+        })
+        .finally(() => {
           setLoading(false)
-        } else {
-          setTimeout(() => {
-            doJoinChannel(channelId)
-          }, 1000)
-        }
-      })
-      .catch((_) => {
-        setChannelJoinMsg('连接到频道失败.')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }, [])
+        })
+    },
+    [dispatch],
+  )
 
   useEffect(() => {
     if (!channelId) {

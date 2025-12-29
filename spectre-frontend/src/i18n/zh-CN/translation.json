@@ -18,7 +18,8 @@
     "opTime": "操作时间",
     "action": "操作",
     "status": "状态",
-    "username": "用户名"
+    "username": "用户名",
+    "upload": "上传"
   },
   "router": {
     "home": "首页",

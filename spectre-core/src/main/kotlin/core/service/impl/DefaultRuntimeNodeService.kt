@@ -11,6 +11,7 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
+import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
@@ -38,7 +39,7 @@ class DefaultRuntimeNodeService(
         return saved.id!!
     }
 
-    override fun getExtPoint(extPointId: String): RuntimeNodeExtensionPoint {
+    override fun findPluginById(extPointId: String): RuntimeNodeExtensionPoint {
         return extManager.findById(extPointId)
     }
 
@@ -62,7 +63,7 @@ class DefaultRuntimeNodeService(
 
     override fun saveRuntimeNode(po: RuntimeNodePO): RuntimeNodePO {
         val pluginId = po.pluginId!!
-        val plugin = getExtPoint(pluginId)
+        val plugin = findPluginById(pluginId)
 
         val updated = objectMapper.readValue(po.configuration, plugin.getConfigurationClass())
         po.id?.let {
@@ -85,7 +86,7 @@ class DefaultRuntimeNodeService(
     }
 
     override fun test(testObj: RuntimeNodeTestDTO) {
-        val plugin = getExtPoint(testObj.pluginId)
+        val plugin = findPluginById(testObj.pluginId)
         val conf = objectMapper.readValue(testObj.configuration, plugin.getConfigurationClass())
 
         val runtimeNodeId = testObj.runtimeNodeId
@@ -115,7 +116,7 @@ class DefaultRuntimeNodeService(
     override fun expandRuntimeNodeTree(runtimeNodeId: Long, parentNodeId: String?): List<JvmTreeNodeDTO> {
         val runtimeNode = repository.findById(runtimeNodeId).get().toDTO()
         val ext =
-            getExtPoint(runtimeNode.pluginId)
+            findPluginById(runtimeNode.pluginId)
         val searcher = ext.createSearcher()
 
         val parentNode = if (parentNodeId == null) {
@@ -139,7 +140,7 @@ class DefaultRuntimeNodeService(
     }
 
     private fun filterSensitiveConfiguration(dto: RuntimeNodeDTO) {
-        val extPoint = getExtPoint(dto.pluginId)
+        val extPoint = findPluginById(dto.pluginId)
         val nodeConfig = objectMapper.readValue(dto.configuration, extPoint.getConfigurationClass())
         extPoint.filterSensitiveConfiguration(nodeConfig)
 
@@ -164,13 +165,19 @@ class DefaultRuntimeNodeService(
         return node
     }
 
-    override fun resolveRuntimeNode(runtimeNodeId: Long): RuntimeNode {
+    override fun deserializeToJvm(pluginId: String, node: JvmSearchNode<Any>): Jvm {
+        return findPluginById(pluginId).createSearcher().deserializeJvm(node)
+    }
+
+    override fun connect(runtimeNodeId: Long): RuntimeNode {
         val runtimeNodeDTO = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
 
-        val extPoint = getExtPoint(runtimeNodeDTO.pluginId)
+        val extPoint = findPluginById(runtimeNodeDTO.pluginId)
 
         return extPoint.connect(objectMapper.readValue(runtimeNodeDTO.configuration, extPoint.getConfigurationClass()))
     }
+
+
 
     override fun resolveViewPage(runtimeNodeId: Long): PageDescriptor {
         val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")

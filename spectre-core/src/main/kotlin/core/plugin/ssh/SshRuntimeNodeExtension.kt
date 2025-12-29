@@ -175,6 +175,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         return SshRuntimeNode().apply {
             nodeConfig = config
             executorServiceFactory = MyCloseableExecutorService()
+            setExtPoint(this@SshRuntimeNodeExtension)
         }
     }
 

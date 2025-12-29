@@ -6,8 +6,6 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.core.vo.RuntimeNodePluginVO
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
-import io.github.vudsen.spectre.repo.po.RuntimeNodePO
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.graphql.data.method.annotation.SchemaMapping
@@ -48,7 +46,7 @@ class RuntimeNodeQueriesController(
 
     @SchemaMapping
     fun plugin(@Argument pluginId: String): RuntimeNodePluginVO? {
-        return mapPluginToVo(service.getExtPoint(pluginId) ?: return null)
+        return mapPluginToVo(service.findPluginById(pluginId) ?: return null)
     }
 
     @SchemaMapping

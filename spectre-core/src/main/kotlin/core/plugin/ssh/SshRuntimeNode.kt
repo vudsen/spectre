@@ -35,7 +35,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
+open class SshRuntimeNode : CloseableRuntimeNode, AbstractShellRuntimeNode() {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -228,6 +228,10 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
         return SshInteractiveShell(channel, inputStream, channel.invertedIn)
     }
 
+    override fun getHomePath(): String {
+        return nodeConfig.spectreHome
+    }
+
 
     override fun isAlive(): Boolean {
         return !session.isClosed
@@ -236,14 +240,6 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
     override fun close(): Int {
         session.close()
         return 0
-    }
-
-
-    override fun doUpload(src: File, dest: String) {
-        logger.info("Uploading $src to $dest")
-        SftpClientFactory.instance().createSftpClient(session).use { client ->
-            client.put(src.toPath(), dest)
-        }
     }
 
 
@@ -305,5 +301,11 @@ open class SshRuntimeNode() : CloseableRuntimeNode, AbstractShellRuntimeNode() {
 
     override fun getConfiguration(): SshRuntimeNodeConfig {
         return nodeConfig
+    }
+
+    override fun doUpload(input: InputStream, dest: String) {
+        SftpClientFactory.instance().createSftpClient(session).use { client ->
+            client.put(input, dest)
+        }
     }
 }

@@ -24,7 +24,12 @@
     "opTime": "Operation Time",
     "action": "Actions",
     "status": "Status",
-    "username": "Username"
+    "username": "Username",
+    "createSuccess": "Creation successful",
+    "updateSuccess": "Update successful",
+    "save": "Save",
+    "update": "Update",
+    "upload": "Upload"
   },
   "router": {
     "home": "Home",
