@@ -115,7 +115,7 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
   return (
     <div className="flex h-screen">
       <MenuList />
-      <div className="flex h-full w-0 grow flex-col">
+      <div className="z-10 flex h-full w-0 grow flex-col">
         <Toolbar appName={props.appName} channelId={props.channelId} />
         <Divider />
         <PanelGroup

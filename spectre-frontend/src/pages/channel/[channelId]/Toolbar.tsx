@@ -46,6 +46,10 @@ const Toolbar: React.FC<ToolbarProps> = (props) => {
     })
   }, [nav, props.channelId])
 
+  const toHome = () => {
+    nav('/')
+  }
+
   return (
     <div className="h-navbar mx-3 flex items-center justify-between">
       <div className="flex max-w-1/2 items-center">
@@ -57,6 +61,11 @@ const Toolbar: React.FC<ToolbarProps> = (props) => {
         </Tooltip>
       </div>
       <div>
+        <Tooltip content="回到首页">
+          <Button isIconOnly variant="light" onPress={toHome}>
+            <SvgIcon icon={Icon.HOME} size={22} />
+          </Button>
+        </Tooltip>
         <Tooltip content="开启 DEBUG 模式">
           <Button
             isIconOnly

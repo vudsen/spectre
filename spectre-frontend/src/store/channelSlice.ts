@@ -11,6 +11,7 @@ type UpdateRecord = {
 
 type ChannelContext = {
   isDebugMode?: boolean
+  channelId: string
 }
 
 interface ChannelState {
@@ -35,7 +36,9 @@ interface ChannelState {
 const initialState: ChannelState = {
   messages: {},
   updates: {},
-  context: {},
+  context: {
+    channelId: '-1',
+  },
   isMenuOpen: true,
 }
 
@@ -82,7 +85,9 @@ export const channelSlice = createSlice({
       state.updates = newUpdates
     },
     setupChannelContext(state) {
-      state.context = {}
+      state.context = {
+        channelId: '-1',
+      }
     },
     updateChannelContext(
       state,

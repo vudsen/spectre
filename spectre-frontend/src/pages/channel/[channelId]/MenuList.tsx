@@ -1,12 +1,19 @@
-import React, { useCallback, useEffect, useRef } from 'react'
-import { Button, Tooltip } from '@heroui/react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  Button,
+  Modal,
+  ModalContent,
+  Tooltip,
+  useDisclosure,
+} from '@heroui/react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { motion } from 'framer-motion'
 import clsx from 'clsx'
 import { setEnhanceMenuOpen } from '@/store/channelSlice.ts'
-import { useDispatch, useSelector } from 'react-redux'
-import type { RootState } from '@/store'
+import { useDispatch } from 'react-redux'
+import { store } from '@/store'
+import RetransformModalContent from '@/pages/channel/[channelId]/enhance/RetransformModalContent.tsx'
 
 interface MenuListProps {
   isExpand?: boolean
@@ -43,12 +50,20 @@ const menuItems: MenuItem[] = [
   },
 ]
 
-const CollapsedMenuContent = () => {
+interface MenuContentProps {
+  onAction: (item: MenuItem) => void
+}
+
+const CollapsedMenuContent: React.FC<MenuContentProps> = (props) => {
   return (
     <>
       {menuItems.map((item) => (
         <Tooltip key={item.type} content={item.name} placement="right">
-          <Button variant="light" isIconOnly>
+          <Button
+            variant="light"
+            isIconOnly
+            onPress={() => props.onAction(item)}
+          >
             {item.icon}
           </Button>
         </Tooltip>
@@ -57,11 +72,15 @@ const CollapsedMenuContent = () => {
   )
 }
 
-const ExpandedMenuContent = () => {
+const ExpandedMenuContent: React.FC<MenuContentProps> = (props) => {
   return (
     <>
       {menuItems.map((item) => (
-        <Button variant="light" key={item.type}>
+        <Button
+          variant="light"
+          key={item.type}
+          onPress={() => props.onAction(item)}
+        >
           {item.icon}
           {item.name}
         </Button>
@@ -71,57 +90,89 @@ const ExpandedMenuContent = () => {
 }
 const COLLAPSED_WIDTH = 54
 const MenuList: React.FC<MenuListProps> = () => {
-  const open = useSelector<RootState, boolean>(
-    (state) => state.channel.isMenuOpen,
-  )
+  const [isOpen, setOpen] = useState(true)
   const ref = useRef<HTMLDivElement>(null)
   const menuWidth = useRef(0)
   const dispatch = useDispatch()
+  const retransformDisclosure = useDisclosure()
 
   const switchOpen = useCallback(() => {
-    dispatch(setEnhanceMenuOpen(!open))
-  }, [dispatch, open])
+    dispatch(setEnhanceMenuOpen(!isOpen))
+    setOpen(!isOpen)
+  }, [dispatch, isOpen])
 
   useEffect(() => {
     menuWidth.current = ref.current!.clientWidth
+    setOpen(store.getState().channel.isMenuOpen)
   }, [])
 
+  const onAction = useCallback(
+    (item: MenuItem) => {
+      switch (item.type) {
+        case 'retransform': {
+          retransformDisclosure.onOpen()
+          break
+        }
+      }
+    },
+    [retransformDisclosure],
+  )
+
   return (
-    <motion.aside
-      ref={ref}
-      initial={false}
-      animate={{
-        width: open
-          ? menuWidth.current === 0
-            ? 'auto'
-            : menuWidth.current
-          : COLLAPSED_WIDTH,
-      }}
-      transition={{ duration: 0.25, ease: 'easeInOut' }}
-      style={{
-        height: '100vh',
-        boxShadow: '2px 0 8px rgba(0,0,0,.1)',
-      }}
-    >
-      <div className="border-r-divider flex h-full flex-col items-center space-y-3 overflow-hidden px-2 shadow">
-        <div className="mt-3 flex items-center">
+    <>
+      <motion.aside
+        ref={ref}
+        initial={false}
+        className="z-20 h-screen"
+        animate={{
+          width: isOpen
+            ? menuWidth.current === 0
+              ? 'auto'
+              : menuWidth.current
+            : COLLAPSED_WIDTH,
+        }}
+        transition={{ duration: 0.25, ease: 'easeInOut' }}
+        style={{
+          boxShadow: '2px 0 8px rgba(0,0,0,.1)',
+        }}
+      >
+        <div className="border-r-divider flex h-full flex-col items-center space-y-3 overflow-hidden px-2 shadow">
           <div
-            className={clsx('font-bold text-nowrap', open ? 'mr-2' : 'hidden')}
+            className={clsx(
+              'mt-3 flex items-center justify-between',
+              isOpen ? 'w-full' : undefined,
+            )}
           >
-            <span>✨增强功能</span>
+            <div
+              className={clsx('font-bold text-nowrap', isOpen ? '' : 'hidden')}
+            >
+              <span className="ml-2">✨增强功能</span>
+            </div>
+            <Button isIconOnly variant="light" size="sm" onPress={switchOpen}>
+              <SvgIcon
+                icon={Icon.RIGHT_ARROW}
+                className={isOpen ? 'rotate-180' : ''}
+              />
+            </Button>
           </div>
-          <Button isIconOnly variant="light" size="sm" onPress={switchOpen}>
-            <SvgIcon
-              icon={Icon.RIGHT_ARROW}
-              className={open ? 'rotate-180' : ''}
-            />
-          </Button>
+          <div className="flex flex-col items-center">
+            {isOpen ? (
+              <ExpandedMenuContent onAction={onAction} />
+            ) : (
+              <CollapsedMenuContent onAction={onAction} />
+            )}
+          </div>
         </div>
-        <div className="flex flex-col items-center">
-          {open ? <ExpandedMenuContent /> : <CollapsedMenuContent />}
-        </div>
-      </div>
-    </motion.aside>
+      </motion.aside>
+      <Modal
+        isOpen={retransformDisclosure.isOpen}
+        onOpenChange={retransformDisclosure.onOpenChange}
+      >
+        <ModalContent>
+          {(onClose) => <RetransformModalContent onClose={onClose} />}
+        </ModalContent>
+      </Modal>
+    </>
   )
 }
 

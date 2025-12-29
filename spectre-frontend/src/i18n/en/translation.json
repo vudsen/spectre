@@ -28,7 +28,8 @@
     "createSuccess": "Creation successful",
     "updateSuccess": "Update successful",
     "save": "Save",
-    "update": "Update"
+    "update": "Update",
+    "upload": "Upload"
   },
   "router": {
     "home": "Home",

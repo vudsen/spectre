@@ -77,18 +77,6 @@ const router = createBrowserRouter(
                   },
                 },
                 {
-                  path: 'attach',
-                  lazy: async () => {
-                    const { default: Home } = await import(
-                      '@/pages/runtime-node/[node-id]/attach'
-                    )
-                    return {
-                      Component: Home,
-                      handle: { crumb: i18n.t('router.connect') },
-                    }
-                  },
-                },
-                {
                   path: 'view',
                   lazy: async () => {
                     const { default: View } = await import(
@@ -234,17 +222,25 @@ const router = createBrowserRouter(
     },
     {
       path: 'channel',
-      handle: {
-        crumb: i18n.t('router.connect'),
-      },
       children: [
+        {
+          index: true,
+          lazy: async () => {
+            const { default: AttachPage } = await import(
+              '@/pages/channel/index.tsx'
+            )
+            return {
+              Component: AttachPage,
+            }
+          },
+        },
         {
           path: ':channelId',
           lazy: async () => {
             const { default: Home } = await import(
               '@/pages/channel/[channelId]'
             )
-            return { Component: Home, handle: { hideCrumb: true } }
+            return { Component: Home }
           },
         },
       ],

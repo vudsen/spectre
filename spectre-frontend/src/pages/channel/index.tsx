@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createChannel } from '@/api/impl/arthas.ts'
 import { Button, Spinner } from '@heroui/react'
@@ -76,9 +76,11 @@ type ErrorInfo = {
   nextRetryTime?: number
 }
 
+/**
+ * 连接到 jvm 的加载界面
+ */
 const AttachPage = () => {
   const location = useLocation()
-  const params = useParams()
   const [errorInfo, setErrorInfo] = useState<ErrorInfo>()
   const [progressInfo, setProgressInfo] = useState({
     title: '正在连接中',
@@ -92,7 +94,7 @@ const AttachPage = () => {
   const searchParams = new URLSearchParams(location.search)
   const treeNodeId = searchParams.get('treeNodeId')
   const bundleId = searchParams.get('bundleId')
-  const runtimeNodeId = params['node-id'] ?? '-1'
+  const runtimeNodeId = searchParams.get('runtimeNodeId') ?? '-1'
 
   const tryCreateChannel = useCallback(
     (runtimeNodeId: string, treeNodeId: string) => {

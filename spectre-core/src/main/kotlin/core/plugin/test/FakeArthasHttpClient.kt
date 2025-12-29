@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.core.plugin.test
 
 import io.github.vudsen.spectre.api.entity.ArthasSession
+import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import org.springframework.core.io.InputStreamSource
 import java.util.UUID
@@ -48,6 +49,6 @@ class FakeArthasHttpClient : ArthasHttpClient {
     }
 
     override fun retransform(source: InputStreamSource) {
-        TODO("Not yet implemented")
+        throw BusinessException("This action is not supported by test runtime node.")
     }
 }

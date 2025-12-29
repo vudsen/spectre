@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 /**
  * Arthas 交互接口.
@@ -128,6 +129,13 @@ class ArthasExecutionController(
     fun interruptCommand(@PathVariable channelId: String, request: HttpServletRequest) {
         resolveChannelSession(request, channelId)
         arthasExecutionService.interruptCommand(channelId)
+    }
+
+    @PostMapping("/channel/{channelId}/retransform")
+    @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: '@retransform'  }")
+    fun retransform(@PathVariable channelId: String, file: MultipartFile, request: HttpServletRequest): Any {
+        resolveChannelSession(request, channelId)
+        return arthasExecutionService.retransform(channelId, file)
     }
 
 }
