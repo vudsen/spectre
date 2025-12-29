@@ -21,6 +21,7 @@ class SshAttachHandler(
     companion object {
         private val whiteSpaces =  Pattern.compile(" +")
         private const val DOCKER_LISTEN_PORT = 37555
+        private const val FLAG_VERSION = 1
     }
 
     override fun doAttach(
@@ -35,6 +36,18 @@ class SshAttachHandler(
             return attachDocker(jvm, paths, port != null)
         }
         throw AppException("Unsupported jvm: $jvm, class: ${jvm::class.java}")
+    }
+
+    private fun isNotLatest(node: DockerRuntimeNode, flagPath: String): Boolean {
+        val result = node.execute("cat $flagPath")
+        if (result.isFailed()) {
+            return true
+        }
+        try {
+            return result.ok().toInt() != FLAG_VERSION
+        } catch (_: NumberFormatException) {
+            return true
+        }
     }
 
     private fun attachDocker(
@@ -65,7 +78,7 @@ class SshAttachHandler(
         val httpClientPath = "$containerHomePath/http-client.jar"
         val jattachPath = "$containerHomePath/jattach"
         val readyFlag = "$containerHomePath/READY.flag"
-        if (!dockerNode.isDirectoryExist(containerHomePath) || !dockerNode.isFileExist(readyFlag)) {
+        if (isNotLatest(dockerNode, readyFlag)) {
             dockerNode.mkdirs(arthasHome)
             // downloads 是给 retransform 或者其它命令用
             dockerNode.mkdirs("$containerHomePath/downloads")
