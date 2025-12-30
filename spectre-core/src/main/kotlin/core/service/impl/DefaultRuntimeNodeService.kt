@@ -14,25 +14,27 @@ import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
+import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.slf4j.LoggerFactory
+import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 import kotlin.jvm.optionals.getOrNull
 
 @Service
 class DefaultRuntimeNodeService(
     private val repository: RuntimeNodeRepository,
     private val extManager: RuntimeNodeExtManager,
-    private val redisTemplate: RedisTemplate<String, Any>
+    cacheManager: CacheManager
 ) : RuntimeNodeService {
 
     private val logger = LoggerFactory.getLogger(DefaultRuntimeNodeService::class.java)
 
     private val objectMapper = ObjectMapper()
+
+    private val cache = cacheManager.getCache(CacheConstant.QUICK_EXPIRE_CACHE_KEY)!!
 
     override fun insert(runtimeNodePO: RuntimeNodePO): Long {
         val saved = repository.save(runtimeNodePO)
@@ -134,7 +136,7 @@ class DefaultRuntimeNodeService(
                 // Should we use random id?
                 val id = "tree:$runtimeNodeId:${searchNode.hashCode()}"
                 add(JvmTreeNodeDTO(id, searchNode.name, searchNode.isJvm))
-                redisTemplate.opsForValue().setIfAbsent(id, searchNode, 3, TimeUnit.MINUTES)
+                cache.putIfAbsent(id, searchNode)
             }
         }
     }
@@ -158,11 +160,7 @@ class DefaultRuntimeNodeService(
     }
 
     override fun findTreeNode(id: String): JvmSearchNode<Any>? {
-        val node = redisTemplate.opsForValue().get(id) as JvmSearchNode<Any>?
-        node ?.let {
-            redisTemplate.expire(id, 10, TimeUnit.MINUTES)
-        }
-        return node
+        return cache[id]?.get() as JvmSearchNode<Any>?
     }
 
     override fun deserializeToJvm(pluginId: String, node: JvmSearchNode<Any>): Jvm {

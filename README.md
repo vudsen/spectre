@@ -35,9 +35,6 @@
 - SQLite
 - PostgreSQL
 
-中间件要求:
-- Redis
-
 推荐使用 docker-compose 启动(不推荐以 root 用户启动，请使用 `sudo useradd -m spectre` 来创建一个专用账号):
 
 ```yaml
@@ -47,7 +44,6 @@ services:
     user: spectre
     environment:
       SPECTRE_HOME: '/home/spectre/data'
-    pull_policy: always
     ports:
       - "80:8080"
     volumes:
@@ -71,17 +67,12 @@ spring:
   profiles:
     active: prod
   datasource:
+    # 使用 sqlite，也可以使用 PostGresql，已经内置了驱动
     url: jdbc:sqlite:data/identifier.sqlite
   jpa:
     properties:
       hibernate:
         dialect: org.hibernate.community.dialect.SQLiteDialect
-  data:
-    redis:
-      database: 0
-      password:
-      host:
-      port:
 ```
 
 初始的用户名密码为：`admin`/`P@ssw0rd`

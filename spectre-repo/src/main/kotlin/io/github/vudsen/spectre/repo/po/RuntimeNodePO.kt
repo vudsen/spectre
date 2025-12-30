@@ -24,29 +24,29 @@ open class RuntimeNodePO (
     @Id
     @field:NotNull(groups = [UpdateGroup::class])
     @field:Null(groups = [CreateGroup::class])
-    var id: Long? = null,
+    open var id: Long? = null,
 
     @Column(nullable = false)
     @field:NotEmpty
-    var name: String? = null,
+    open var name: String? = null,
 
     @Column(nullable = false)
     @field:NotEmpty
-    var pluginId: String? = null,
+    open var pluginId: String? = null,
 
     @Convert(converter = LabelsConvert::class)
-    var labels: Map<String, String>? = null,
+    open var labels: Map<String, String>? = null,
 
     @Column(nullable = false)
     @JsonRawValue
     @field:NotEmpty()
-    var configuration: String? = null,
+    open var configuration: String? = null,
 
     @Column(updatable = false, insertable = false)
     @field:Null
-    var createdAt: Timestamp? = null,
+    open var createdAt: Timestamp? = null,
 
-    var restrictedMode: Boolean? = false
+    open var restrictedMode: Boolean? = false
 
     ) {
 

@@ -1,11 +1,12 @@
 package io.github.vudsen.spectre.test
 
 import io.github.vudsen.spectre.SpectreApplication
+import io.github.vudsen.spectre.common.SpectreEnvironment
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -25,13 +26,11 @@ abstract class AbstractSpectreTest {
     lateinit var authenticationManager: AuthenticationManager
 
     companion object {
-        var redis = TestContainerUtils.createRedis()
         @DynamicPropertySource
         @JvmStatic
-        fun redisProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.data.redis.host", redis::getHost)
-            registry.add("spring.data.redis.port") { redis.getMappedPort(6379) }
-            registry.add("spring.data.redis.password") { TestContainerUtils.REDIS_PASSWORD }
+        fun sysProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spectre.home") { SpectreEnvironment.SPECTRE_HOME }
+            System.setProperty("spectre.home", SpectreEnvironment.SPECTRE_HOME)
         }
     }
 

@@ -7,9 +7,3 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.community.dialect.SQLiteDialect
-  data:
-    redis:
-      database: 0
-      password:
-      host:
-      port:

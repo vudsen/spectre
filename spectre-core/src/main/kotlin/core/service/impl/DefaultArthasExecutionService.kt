@@ -1,11 +1,9 @@
 package io.github.vudsen.spectre.core.service.impl
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.*
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.perm.ABACPermissions
-import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.AppAccessControlService
@@ -15,17 +13,16 @@ import io.github.vudsen.spectre.api.service.ToolchainService
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
 import io.github.vudsen.spectre.core.bean.ArthasClientWrapper
+import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionABACContext
 import io.github.vudsen.spectre.core.integrate.abac.AttachNodeABACContext
 import io.github.vudsen.spectre.core.internal.ArthasClientCacheService
-import io.github.vudsen.spectre.core.lock.RedisDistributedLock
-import io.github.vudsen.spectre.repo.ToolchainItemRepository
+import io.github.vudsen.spectre.core.lock.InMemoryDistributedLock
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.cache.CacheManager
 import org.springframework.core.io.InputStreamSource
 import org.springframework.core.task.TaskExecutor
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.expression.spel.SpelNode
 import org.springframework.expression.spel.ast.*
 import org.springframework.expression.spel.standard.SpelExpression
@@ -33,7 +30,6 @@ import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.stereotype.Service
 import java.lang.reflect.InvocationTargetException
 import java.time.Duration
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -69,9 +65,8 @@ import java.util.concurrent.locks.ReentrantLock
  */
 @Service
 class DefaultArthasExecutionService(
-    private val redisTemplate: RedisTemplate<String, Any>,
+    cacheManager: CacheManager,
     @param:Qualifier("applicationTaskExecutor") private val executor: TaskExecutor,
-    private val redisDistributedLock: RedisDistributedLock,
     private val arthasClientCacheService: ArthasClientCacheService,
     private val runtimeNodeService: RuntimeNodeService,
     private val toolchainService: ToolchainService,
@@ -80,7 +75,6 @@ class DefaultArthasExecutionService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
-        private val COMMON_REDIS_EXPIRE_TIME = Duration.ofMinutes(10)
         private val ALLOWED_EXPRESSION: Set<Class<*>> = setOf(
             Literal::class.java,
             PropertyOrFieldReference::class.java,
@@ -103,6 +97,11 @@ class DefaultArthasExecutionService(
     }
 
     private val modifyLock = ReentrantLock()
+
+    private val joinLock = InMemoryDistributedLock()
+
+    private val cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
+
 
     private fun resolveJvmId(runtimeNodeId: Long, jvm: Jvm): String {
         return "${runtimeNodeId}:${jvm.hashCode()}"
@@ -208,30 +207,22 @@ class DefaultArthasExecutionService(
         // 除非使用 redis，不然每次重启都会丢失数据
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("Channel 已经关闭，请重新在列表中连接")
         val distributedLockKey = "arthas:channel:join-lock:${ownerIdentifier}"
-        // 并发概率不高，先这样简单写，主要是防止前端 react 开发模式同时发两次请求
-        var locked = false
-        for (i in 0 until 10) {
-            if (redisTemplate.opsForValue().setIfAbsent(distributedLockKey, 1, 30, TimeUnit.SECONDS) == true) {
-                locked = true
-                break
-            }
-            Thread.sleep(1000)
-        }
-        if (!locked) {
-            throw BusinessException("加入频道超时，请稍后重试")
-        }
+
         val consumerCacheKey = "channel:consumer:${channelId}:${ownerIdentifier}"
+        // 并发概率不高，先这样简单写，主要是防止前端 react 开发模式同时发两次请求
+        joinLock.lock(distributedLockKey)
         try {
-            (redisTemplate.opsForValue().get(consumerCacheKey) as ArthasConsumerDTO?)?.let {
-                return it
+            cache[consumerCacheKey]?.get() ?.let {
+                return it as ArthasConsumerDTO
             }
+
             val jvmId = resolveJvmId(data.runtimeNodeId, data.jvm)
             var client = arthasClientCacheService.resolveCachedClient(jvmId)?.client
             if (client == null) {
                 modifyLock.lock()
                 try {
                     val newClient = createClient(data, data)
-                    // 本地未缓存，但是 redis 有，一般大概率出现在集群环境
+                    // 本地未缓存，但是缓存有，一般大概率出现在集群环境
                     arthasClientCacheService.saveClient(jvmId, ArthasClientWrapper(newClient, channelId))
                     client = newClient
                 } finally {
@@ -240,10 +231,10 @@ class DefaultArthasExecutionService(
             }
             val session = ArthasConsumerDTO(client.joinSession(data.sessionId).consumerId, data.jvm.name)
             // 用于解决创建期间的并发，该方法返回后，相关数据会保存到用户自己的 session 中，这里的数据就没必要了
-            redisTemplate.opsForValue().set(consumerCacheKey, session, 1, TimeUnit.MINUTES)
+            cache.put(consumerCacheKey, session)
             return session
         } finally {
-            redisTemplate.delete(distributedLockKey)
+            joinLock.unlock(distributedLockKey)
         }
     }
 
@@ -273,7 +264,7 @@ class DefaultArthasExecutionService(
     ) {
         executor.execute {
             val lockKey = arthasInitDistributedLockKey(runtimeNodeDto.id)
-            if (!redisDistributedLock.tryLock(lockKey)) {
+            if (!joinLock.tryLock(lockKey)) {
                 return@execute
             }
 
@@ -320,7 +311,7 @@ class DefaultArthasExecutionService(
                     AttachStatus.ErrorInfo(ex.message ?: "<Unknown>", System.currentTimeMillis() + 5000)
                 logger.debug("Failed to attach", e)
             } finally {
-                redisDistributedLock.unlock(lockKey)
+                joinLock.unlock(lockKey)
                 holder.clientInitLock.set(false)
                 ProgressReportHolder.clear()
             }
@@ -328,19 +319,16 @@ class DefaultArthasExecutionService(
     }
 
     private fun resolveArthasChannel(channelId: String): ArthasChannelDTO? {
-        val result = redisTemplate.opsForValue().get("arthas:channel:${channelId}") as ArthasChannelDTO?
-        flushCacheTime(channelId)
-        return result
+        cache["arthas:channel:${channelId}"]?.get() ?.let {
+            return it as ArthasChannelDTO
+        }
+        return null
     }
 
     private fun saveChannelDTO(channelId: String, data: ArthasChannelDTO) {
-        redisTemplate.opsForValue().setIfAbsent("arthas:channel:${channelId}", data, COMMON_REDIS_EXPIRE_TIME)
+        cache.putIfAbsent("arthas:channel:${channelId}", data)
     }
 
-    private fun flushCacheTime(channelId: String) {
-        redisTemplate.expire("arthas:channel:${channelId}", COMMON_REDIS_EXPIRE_TIME)
-        redisTemplate.expire("arthas:channel:metadata:${channelId}", COMMON_REDIS_EXPIRE_TIME)
-    }
 
 
     /**

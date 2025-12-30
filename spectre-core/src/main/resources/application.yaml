@@ -15,10 +15,10 @@ spring:
     jdbc:
       initialize-schema: always
   cache:
-    type: redis
-  data:
-    redis:
-      client-type: lettuce
+    type: jcache
+    jcache:
+      provider: org.ehcache.jsr107.EhcacheCachingProvider
+      config: classpath:ehcache.xml
   liquibase:
     change-log: classpath:/db/changelog-master.xml
 server:

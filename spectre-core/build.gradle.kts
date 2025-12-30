@@ -16,17 +16,18 @@ springBoot {
 }
 
 dependencies {
+    testImplementation(kotlin("test"))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.testcontainers:testcontainers:2.0.2")
     implementation("org.bouncycastle:bcprov-jdk18on:1.82")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.82")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-graphql")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.session:spring-session-data-redis")
     implementation("org.liquibase:liquibase-core:5.0.1")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation(project(":spectre-repo"))
@@ -41,9 +42,10 @@ dependencies {
     implementation("org.hibernate.orm:hibernate-community-dialects:7.0.8.Final")
     // 稳定后再删除.
     implementation("org.xerial:sqlite-jdbc:3.50.3.0")
-    testImplementation(kotlin("test"))
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.testcontainers:testcontainers:2.0.2")
+    implementation("org.ehcache:ehcache:3.11.1:jakarta")
+    implementation("jakarta.xml.bind:jakarta.xml.bind-api")
+    implementation("org.glassfish.jaxb:jaxb-runtime")
+    implementation("com.esotericsoftware:kryo:5.6.2")
 }
 tasks.test {
     useJUnitPlatform()
