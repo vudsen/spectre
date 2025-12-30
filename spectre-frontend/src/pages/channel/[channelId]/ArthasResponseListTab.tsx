@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import type { ArthasResponse } from '@/api/impl/arthas.ts'
 import ArthasResponseItem, {
   type ResponseGroupItem,
-} from '@/pages/channel/[channelId]/components/ArthasResponseItem.tsx'
+} from '@/pages/channel/[channelId]/_component/ArthasResponseItem.tsx'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 
@@ -13,7 +13,7 @@ interface ArthasResponseListProps {
 
 const IGNORED_TYPES = new Set(['input_status'])
 
-const ArthasResponseList: React.FC<ArthasResponseListProps> = (props) => {
+const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
   const isDebugMode = useSelector<RootState, boolean | undefined>(
     (state) => state.channel.context.isDebugMode,
   )
@@ -91,4 +91,4 @@ const ArthasResponseList: React.FC<ArthasResponseListProps> = (props) => {
   )
 }
 
-export default ArthasResponseList
+export default ArthasResponseListTab

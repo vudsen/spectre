@@ -1,13 +1,13 @@
 import React from 'react'
 import type { ArthasResponse } from '@/api/impl/arthas.ts'
 import { Tab, Tabs } from '@heroui/react'
-import ArthasViewFactory from '@/pages/channel/[channelId]/_message_view/ArthasViewFactory.tsx'
+import ArthasResponseDetail from '@/pages/channel/[channelId]/_message_view/ArthasResponseDetail.tsx'
 
 interface ArthasResponseDetailProps {
   entity?: ArthasResponse
 }
 
-const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = ({
+const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
   entity,
 }) => {
   if (!entity) {
@@ -29,7 +29,7 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = ({
         classNames={{ panel: 'overflow-scroll pb-16 h-full p-3' }}
       >
         <Tab title="视图">
-          <ArthasViewFactory msg={entity} />
+          <ArthasResponseDetail message={entity} />
         </Tab>
         <Tab title="原始内容">
           <div className="text-default-700 bg-default-100 mx-3 box-border rounded-xl p-3 text-sm whitespace-pre-wrap">
@@ -41,4 +41,4 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = ({
   )
 }
 
-export default ArthasResponseDetail
+export default ArthasResponseDetailTab

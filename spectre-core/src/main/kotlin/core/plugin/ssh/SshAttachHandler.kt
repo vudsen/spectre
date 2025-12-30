@@ -88,7 +88,7 @@ class SshAttachHandler(
             if (uid != "0") {
                 dockerNode.execute("chown -R $uid:$gid $containerHomePath").ok()
             }
-            dockerNode.execute("touch $readyFlag").ok()
+            dockerNode.execute("sh -c 'echo $FLAG_VERSION' > $readyFlag").ok()
         }
         dockerNode.user = null
         if (!expectBound) {

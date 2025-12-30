@@ -1,8 +1,8 @@
 import type { ArthasResponse } from '@/api/impl/arthas.ts'
 import clsx from 'clsx'
-import ArthasResponseDisplay from './ArthasResponseDisplay.tsx'
 import React, { useMemo } from 'react'
 import './listStyle.css'
+import ArthasResponsePreview from '@/pages/channel/[channelId]/_message_view/ArthasResponsePreview.tsx'
 
 export type ResponseGroupItem = {
   entity: ArthasResponse
@@ -66,7 +66,7 @@ const ArthasResponseItem: React.FC<ArthasResponseItemProps> = ({
       )}
       onClick={() => onEntitySelect(index)}
     >
-      <ArthasResponseDisplay entity={item.entity} />
+      <ArthasResponsePreview message={item.entity} />
     </div>
   )
 }
