@@ -9,7 +9,7 @@ class InMemoryDistributedLock : DistributedLock {
 
     private val modifyLock = ReentrantLock()
 
-    override fun lock(key: String) {
+    private fun lock0(key: String, isTry: Boolean): Boolean {
         val e = locks[key]
         val entry: ReentrantLock = if (e == null) {
             modifyLock.lock()
@@ -28,7 +28,16 @@ class InMemoryDistributedLock : DistributedLock {
         } else {
             e
         }
-        entry.lock()
+        if (isTry) {
+            return entry.tryLock()
+        } else {
+            entry.lock()
+            return true
+        }
+    }
+
+    override fun lock(key: String) {
+        lock0(key, false)
     }
 
     override fun unlock(key: String) {
@@ -41,5 +50,9 @@ class InMemoryDistributedLock : DistributedLock {
                 modifyLock.unlock()
             }
         }
+    }
+
+    override fun tryLock(key: String): Boolean {
+        return lock0(key, true)
     }
 }

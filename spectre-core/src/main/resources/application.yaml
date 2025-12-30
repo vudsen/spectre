@@ -15,7 +15,10 @@ spring:
     jdbc:
       initialize-schema: always
   cache:
-    type: redis
+    type: jcache
+    jcache:
+      provider: org.ehcache.jsr107.EhcacheCachingProvider
+      config: classpath:ehcache.xml
   data:
     redis:
       client-type: lettuce

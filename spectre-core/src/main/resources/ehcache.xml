@@ -1,0 +1,32 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.ehcache.org/v3"
+        xmlns:jsr107="http://www.ehcache.org/v3/jsr107">
+    <service>
+        <jsr107:defaults enable-management="true" enable-statistics="true"/>
+    </service>
+
+    <persistence directory="${spectre.home}/data/ehcache-data"/>
+    
+    <cache alias="defaultCache">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.lang.Object</value-type>
+        <expiry>
+            <tti unit="minutes">10</tti>
+        </expiry>
+        <resources>
+            <heap>1000</heap>
+            <disk unit="MB" persistent="true">100</disk>
+        </resources>
+    </cache>
+
+    <cache alias="quickExpireCache">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.lang.Object</value-type>
+        <expiry>
+            <tti unit="minutes">1</tti>
+        </expiry>
+        <heap>128</heap>
+    </cache>
+
+
+</config>

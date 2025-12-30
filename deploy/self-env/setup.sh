@@ -34,7 +34,6 @@ services:
     user: spectre
     environment:
       SPECTRE_HOME: '/home/spectre/data'
-    pull_policy: always
     ports:
       - "80:8080"
     volumes:
@@ -60,12 +59,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.community.dialect.SQLiteDialect
-  data:
-    redis:
-      database: 0
-      password:
-      host:
-      port:
 EOF
 
 sudo chown -R spectre:spectre /opt/spectre

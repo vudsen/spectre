@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre.core.lock
 
 /**
- * 分布式锁. 在实现时需要考虑由于网络原因导致无法解锁的情况。
+ * ~~分布式~~锁. 在实现时需要考虑由于网络原因导致无法解锁的情况。
  */
 interface DistributedLock {
 
@@ -16,5 +16,10 @@ interface DistributedLock {
      * 解锁.
      */
     fun unlock(key: String)
+
+    /**
+     * 尝试锁定
+     */
+    fun tryLock(key: String): Boolean
 
 }

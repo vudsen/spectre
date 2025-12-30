@@ -40,11 +40,11 @@ open class RuntimeNodePO (
     @Column(nullable = false)
     @JsonRawValue
     @field:NotEmpty()
-    var configuration: String? = null,
+    open var configuration: String? = null,
 
     @Column(updatable = false, insertable = false)
     @field:Null
-    var createdAt: Timestamp? = null,
+    open var createdAt: Timestamp? = null,
 
     var restrictedMode: Boolean? = false
 

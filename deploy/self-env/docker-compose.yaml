@@ -4,7 +4,6 @@ services:
     user: spectre
     environment:
       SPECTRE_HOME: '/home/spectre/data'
-    pull_policy: always
     ports:
       - "80:8080"
     volumes:
