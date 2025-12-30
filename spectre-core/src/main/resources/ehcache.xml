@@ -5,6 +5,9 @@
         <jsr107:defaults enable-management="true" enable-statistics="true"/>
     </service>
 
+    <default-serializers>
+        <serializer type="java.lang.Object">io.github.vudsen.spectre.core.integrate.EhCacheSerializer</serializer>
+    </default-serializers>
     <persistence directory="${spectre.home}/data/ehcache-data"/>
     
     <cache alias="defaultCache">

@@ -19,9 +19,6 @@ spring:
     jcache:
       provider: org.ehcache.jsr107.EhcacheCachingProvider
       config: classpath:ehcache.xml
-  data:
-    redis:
-      client-type: lettuce
   liquibase:
     change-log: classpath:/db/changelog-master.xml
 server:
