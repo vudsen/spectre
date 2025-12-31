@@ -1,12 +1,18 @@
 import type React from 'react'
-import type { CommandMessage } from '@/api/impl/arthas.ts'
 import { Code } from '@heroui/react'
+import type { DetailComponentProps } from '@/pages/channel/[channelId]/_message_view/factory.ts'
 
-interface CommandMessageDetailProps {
-  msg: CommandMessage
+type CommandMessage = {
+  type: 'command'
+  jobId: number
+  state: string
+  command: string
+  message?: string
 }
 
-const CommandMessageDetail: React.FC<CommandMessageDetailProps> = (props) => {
+const CommandMessageDetail: React.FC<DetailComponentProps<CommandMessage>> = (
+  props,
+) => {
   return (
     <div className="space-y-3 text-sm">
       <div>执行了如下命令:</div>

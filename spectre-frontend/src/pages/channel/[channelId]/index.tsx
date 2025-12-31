@@ -7,6 +7,7 @@ import {
   setupChannelContext,
   updateChannelContext,
 } from '@/store/channelSlice.ts'
+import './_message_view/init.ts'
 
 const ChannelPage: React.FC = () => {
   const params = useParams()

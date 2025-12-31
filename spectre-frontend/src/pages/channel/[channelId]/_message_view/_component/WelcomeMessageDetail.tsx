@@ -1,12 +1,21 @@
-import type { WelcomeMessage } from '@/api/impl/arthas.ts'
 import { Code, Link } from '@heroui/react'
 import type React from 'react'
+import type { DetailComponentProps } from '@/pages/channel/[channelId]/_message_view/factory.ts'
 
-interface CommandMessageDetailProps {
-  msg: WelcomeMessage
+type WelcomeMessage = {
+  type: 'welcome'
+  jobId: number
+  mainClass: string
+  pid: string
+  time: string
+  tutorials: string
+  version: string
+  wiki: string
 }
 
-const WelcomeMessageDetail: React.FC<CommandMessageDetailProps> = (props) => {
+const WelcomeMessageDetail: React.FC<DetailComponentProps<WelcomeMessage>> = (
+  props,
+) => {
   return (
     <div className="space-y-3 text-sm">
       <div className="text-primary font-bold">欢迎使用 Arthas!</div>
@@ -14,7 +23,7 @@ const WelcomeMessageDetail: React.FC<CommandMessageDetailProps> = (props) => {
         版本: <Code>{props.msg.version}</Code>
       </div>
       <div>
-        主类: <Code>{props.msg.mainClass}</Code>
+        主类: <Code style={{ textWrap: 'wrap' }}>{props.msg.mainClass}</Code>
       </div>
       <div className="flex">
         <Link href={props.msg.wiki} isExternal size="sm">

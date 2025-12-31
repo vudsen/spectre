@@ -5,12 +5,12 @@ import {
   pullResults,
 } from '@/api/impl/arthas.ts'
 import { Divider } from '@heroui/react'
-import ArthasResponseDetail from '@/pages/channel/[channelId]/ArthasResponseDetail.tsx'
+import ArthasResponseDetailTab from '@/pages/channel/[channelId]/ArthasResponseDetailTab.tsx'
 import { isErrorResponse } from '@/api/types.ts'
 import { handleError, showDialog } from '@/common/util.ts'
 import CommandExecuteBlock from '@/pages/channel/[channelId]/CommandExecuteBlock.tsx'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
-import ArthasResponseList from '@/pages/channel/[channelId]/ArthasResponseList.tsx'
+import ArthasResponseListTab from '@/pages/channel/[channelId]/ArthasResponseListTab.tsx'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { appendMessages, clearExpiredMessages } from '@/store/channelSlice'
@@ -33,7 +33,7 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i]
       if (msg.type === 'input_status') {
-        return msg.inputStatus
+        return (msg as InputStatusResponse).inputStatus
       }
     }
     return 'DISABLED'
@@ -50,7 +50,7 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
       const r = await pullResults(channelId)
       for (const resp of r) {
         if (resp.type === 'input_status') {
-          setInputStatus(resp.inputStatus)
+          setInputStatus((resp as InputStatusResponse).inputStatus)
         }
       }
       if (r.length > 0) {
@@ -124,14 +124,14 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
           autoSaveId="channel-attach"
         >
           <Panel minSize={20} defaultSize={40} className="!overflow-y-scroll">
-            <ArthasResponseList
+            <ArthasResponseListTab
               responses={messages}
               onEntitySelect={setSelectedEntity}
             />
           </Panel>
           <PanelResizeHandle className="bg-default-200 border-default-100 border-l-1" />
           <Panel minSize={30} defaultSize={60}>
-            <ArthasResponseDetail entity={selectedEntity} />
+            <ArthasResponseDetailTab entity={selectedEntity} />
           </Panel>
         </PanelGroup>
         <CommandExecuteBlock

@@ -47,84 +47,11 @@ export type InputStatusResponse = {
   jobId: number
 }
 
-export type MessageResponse = {
-  type: 'message'
-  jobId: number
-  message: string
-}
 
-export type WelcomeMessage = {
-  type: 'welcome'
-  jobId: number
-  mainClass: string
-  pid: string
-  time: string
-  tutorials: string
-  version: string
-  wiki: string
-}
-
-export type CommandMessage = {
-  type: 'command'
-  jobId: number
-  state: string
-  command: string
-  message?: string
-}
-
-export type VersionMessage = {
-  type: 'version'
-  version: string
+export type ArthasResponse = {
+  type: string
   jobId: number
 }
-
-export type StatusMessage = {
-  type: 'status'
-  statusCode: number
-  jobId: number
-  message?: string
-}
-
-export type ClassLoaderMessage = {
-  type: 'classloader'
-  jobId: number
-  classLoaderStats: Record<
-    string,
-    {
-      loadedCount: number
-      numberOfInstance: number
-    }
-  >
-}
-
-export type RowAffectedMessage = {
-  type: 'row_affect'
-  jobId: number
-  rowCount: number
-}
-
-export type WatchMessage = {
-  type: 'watch'
-  jobId: number
-  accessPoint: string
-  className: string
-  cost: number
-  methodName: string
-  sizeLimit: number
-  ts: string
-  value: string
-}
-
-export type ArthasResponse =
-  | RowAffectedMessage
-  | ClassLoaderMessage
-  | StatusMessage
-  | VersionMessage
-  | CommandMessage
-  | InputStatusResponse
-  | WelcomeMessage
-  | MessageResponse
-  | WatchMessage
 
 export const pullResults = (channelId: string): Promise<ArthasResponse[]> => {
   return axios.get(`arthas/channel/${channelId}/pull-result`, {

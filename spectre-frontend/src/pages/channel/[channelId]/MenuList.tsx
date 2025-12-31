@@ -13,7 +13,7 @@ import clsx from 'clsx'
 import { setEnhanceMenuOpen } from '@/store/channelSlice.ts'
 import { useDispatch } from 'react-redux'
 import { store } from '@/store'
-import RetransformModalContent from '@/pages/channel/[channelId]/enhance/RetransformModalContent.tsx'
+import RetransformModalContent from '@/pages/channel/[channelId]/_enhance/RetransformModalContent.tsx'
 
 interface MenuListProps {
   isExpand?: boolean

@@ -1,12 +1,17 @@
-import type { StatusMessage } from '@/api/impl/arthas.ts'
 import type React from 'react'
 import { Code } from '@heroui/react'
+import type { DetailComponentProps } from '@/pages/channel/[channelId]/_message_view/factory.ts'
 
-interface CommandMessageDetailProps {
-  msg: StatusMessage
+type StatusMessage = {
+  type: 'status'
+  statusCode: number
+  jobId: number
+  message?: string
 }
 
-const StatusMessageDetail: React.FC<CommandMessageDetailProps> = ({ msg }) => {
+const StatusMessageDetail: React.FC<DetailComponentProps<StatusMessage>> = ({
+  msg,
+}) => {
   const isSuccess = msg.statusCode === 0
   return (
     <div className="space-y-3 text-sm">
