@@ -75,7 +75,10 @@ const ToolchainCacheStatusLink: React.FC<ToolchainCacheStatusLinkProps> = (
   }
   return (
     <div className="flex items-center">
-      <Tooltip content="服务器本地未缓存该包，可以手动上传(该功能仅限单机部署)，也可以在后面使用到时，自动从 url 下载">
+      <Tooltip
+        classNames={{ content: 'max-w-48 break-all' }}
+        content="服务器本地未缓存该包，可以手动上传，也可以在后续连接 JVM 时，由服务器自动下载"
+      >
         <SvgIcon icon={Icon.NOTE} className="text-warning" />
       </Tooltip>
       <Link
@@ -98,11 +101,13 @@ type UploadArgs = {
   type: string
   tag: string
   isArm: boolean
+  downloadUrl: string
 }
 const initial: UploadArgs = {
   type: '',
   tag: '',
   isArm: false,
+  downloadUrl: '',
 }
 
 const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
@@ -130,6 +135,7 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
       tag: vo.tag,
       type: vo.type,
       isArm,
+      downloadUrl: (isArm ? vo.armUrl : vo.url) ?? '',
     })
     uploadModal.onOpen()
   }
