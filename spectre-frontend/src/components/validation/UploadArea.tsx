@@ -12,7 +12,7 @@ interface UploadAreaProps {
    */
   supportedTypes?: string[]
   ref: React.RefObject<UploadAreaRef | null>
-  onUploadFinished: () => void
+  onUploadFinished?: () => void
   /**
    * 显示的单位大小，默认为 mb
    */
@@ -25,7 +25,7 @@ const SIZE_UNITS = {
 } as const
 
 export interface UploadAreaRef {
-  upload(): void
+  upload(): Promise<void>
 }
 
 type UploadStatus = {
@@ -54,8 +54,15 @@ const UploadArea: React.FC<UploadAreaProps> = (props) => {
 
   const unit = props.sizeUnit ?? 'mb'
 
-  const doUpload = () => {
-    const file = fileStatus!
+  const doUpload = async (): Promise<void> => {
+    const file = fileStatus
+    if (!file) {
+      addToast({
+        title: '请选择文件',
+        color: 'danger',
+      })
+      return
+    }
     const rate = SIZE_UNITS[unit]
     setUploadStatus({
       progress: 0,
@@ -64,36 +71,30 @@ const UploadArea: React.FC<UploadAreaProps> = (props) => {
     })
     const formData = new FormData()
     formData.append('file', fileStatus!)
-    axios
-      .post(props.url, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          const totalLength = progressEvent.total
-          const loaded = progressEvent.loaded
+    await axios.post(props.url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        const totalLength = progressEvent.total
+        const loaded = progressEvent.loaded
 
-          if (totalLength) {
-            const percentCompleted = Math.round((loaded * 100) / totalLength)
+        if (totalLength) {
+          const percentCompleted = Math.round((loaded * 100) / totalLength)
 
-            setUploadStatus({
-              progress: percentCompleted,
-              total: (totalLength / rate).toFixed(2),
-              uploaded: (progressEvent.loaded / rate).toFixed(2),
-            })
-          }
-        },
-      })
-      .then(() => {
-        addToast({
-          title: '上传成功',
-          color: 'success',
-        })
-        props.onClose()
-      })
-      .finally(() => {
-        props.onUploadFinished()
-      })
+          setUploadStatus({
+            progress: percentCompleted,
+            total: (totalLength / rate).toFixed(2),
+            uploaded: (progressEvent.loaded / rate).toFixed(2),
+          })
+        }
+      },
+    })
+    addToast({
+      title: '上传成功',
+      color: 'success',
+    })
+    props.onClose()
   }
 
   useImperativeHandle(props.ref, () => ({
