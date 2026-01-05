@@ -112,7 +112,7 @@ class AttachTester {
         arthasExecutionService.execAsync(channelId, "watch demo.MathGame primeFactors -n 2 -x 1 'target.illegalArgumentCount'")
 
         val record = arrayOf(Int.MAX_VALUE, Int.MAX_VALUE)
-        val exactNumberRegx = Regex("@Integer\\[(\\d+)]")
+        val exactNumberRegx = Regex("@Integer\\[(-?\\d+)]")
         var rp = 0
         loop(5) {
             val r = pullResultSync(channelId, consumerId)
