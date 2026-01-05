@@ -120,9 +120,13 @@ class AttachTester {
             val watchResult = r.filter { item -> item.get("type").textValue() == "watch" }
             for (node in watchResult) {
                 val value = node.get("value").textValue()
-                val matchResult = exactNumberRegx.find(value)!!
-                record[rp] = matchResult.groupValues[1].toInt()
-                rp++
+                val matchResult = exactNumberRegx.find(value)
+                if (matchResult == null) {
+                    Assertions.fail("Can't parse number from '${value}'")
+                } else {
+                    record[rp] = matchResult.groupValues[1].toInt()
+                    rp++
+                }
             }
             if (rp == record.size) {
                 return@loop true

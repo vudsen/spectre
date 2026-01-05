@@ -21,12 +21,12 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
     )
   }
   return (
-    <div className="h-full">
+    <div className="box-border flex h-full flex-col">
       <Tabs
         aria-label="Options"
         color="primary"
         variant="underlined"
-        classNames={{ panel: 'overflow-scroll pb-16 h-full p-3' }}
+        classNames={{ panel: 'overflow-scroll p-3 pb-8 grow' }}
       >
         <Tab title="视图">
           <ArthasResponseDetail message={entity} />

@@ -5,8 +5,8 @@ registerMessageView({
   type: 'trace',
   detailComponent: TraceMessageDetail,
   display: () => ({
-    color: 'success',
+    color: 'default',
     name: `查看链路调用`,
-    tag: 'Trace',
+    tag: 'trace',
   }),
 })
