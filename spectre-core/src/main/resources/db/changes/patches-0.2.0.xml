@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="202601051648" author="vudsen">
+        <createTable tableName="sys_conf">
+            <column name="id" type="bigint" >
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="code" type="java.sql.Types.VARCHAR(32)">
+                <constraints unique="true"/>
+            </column>
+            <column name="value" type="java.sql.Types.VARCHAR(2048)"/>
+            <column name="last_update" type="java.sql.Types.TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <insert tableName="sys_conf">
+            <column name="id" value="1"/>
+            <column name="code" value="spectre.init.step"/>
+            <column name="value" value="0"/>
+        </insert>
+    </changeSet>
+
+
+</databaseChangeLog>
