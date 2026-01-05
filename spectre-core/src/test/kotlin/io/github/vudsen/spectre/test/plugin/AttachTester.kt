@@ -112,7 +112,7 @@ class AttachTester {
         arthasExecutionService.execAsync(channelId, "watch demo.MathGame primeFactors -n 2 -x 1 'target.illegalArgumentCount'")
 
         val record = arrayOf(Int.MAX_VALUE, Int.MAX_VALUE)
-        val exactNumberRegx = Regex("@Integer\\[(\\d+)]")
+        val exactNumberRegx = Regex("@Integer\\[(-?\\d+)]")
         var rp = 0
         loop(5) {
             val r = pullResultSync(channelId, consumerId)
@@ -120,9 +120,13 @@ class AttachTester {
             val watchResult = r.filter { item -> item.get("type").textValue() == "watch" }
             for (node in watchResult) {
                 val value = node.get("value").textValue()
-                val matchResult = exactNumberRegx.find(value)!!
-                record[rp] = matchResult.groupValues[1].toInt()
-                rp++
+                val matchResult = exactNumberRegx.find(value)
+                if (matchResult == null) {
+                    Assertions.fail("Can't parse number from '${value}'")
+                } else {
+                    record[rp] = matchResult.groupValues[1].toInt()
+                    rp++
+                }
             }
             if (rp == record.size) {
                 return@loop true
