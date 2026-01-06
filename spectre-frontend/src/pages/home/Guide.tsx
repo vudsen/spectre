@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Card, CardBody, Link } from '@heroui/react'
 import clsx from 'clsx'
 import { queryCurrentInitStep } from '@/api/impl/sys-conf.ts'
+import { useNavigate } from 'react-router'
 
 interface StepProps {
   number: number
@@ -26,25 +27,30 @@ type MyStep = {
   title: string
   message: string
   goal: string
+  to: string
 }
 
 const steps: MyStep[] = [
   {
-    title: '上传工具包',
+    title: '了解工具包',
     message:
-      'Spectre 需要借助外部工具才能正常使用，该步骤为可选，Spectre 会在使用到这些工具时，自动从指定的 Url 下载。如果在离线环境下，请手动上传工具包。',
+      'Spectre 需要借助外部工具才能正常使用，而并非单独完成了整个流程，只是利用这些工具将其组合了起来。在该任务中，你将了解到工具包的基础维护流程。',
     goal: '为 Arthas 手动上传工具包',
+    to: '/toolchain/items?guide=true',
   },
   {
     title: '创建运行节点',
     message:
       '运行节点是一个抽象概念，任何可以运行 JVM 的东西都可以是一个"运行节点"，例如 一个 SSH 远程服务器、Docker 以及 Kubernetes。通过运行节点，Spectre 将为你过滤出所有可用的 JVM 以便进行进一步操作',
     goal: '创建一个测试节点',
+    to: '/runtime-node/modify?guide=true',
   },
   {
     title: '连接到 JVM',
-    message: '你已经完成了所有基础内容，现在可以直接连接到 JVM 了!',
+    message:
+      '你已经完成了所有内容，欢迎使用 Spectre! 此外，所有教程均可重复体验。',
     goal: '连接到任意 JVM',
+    to: '/runtime-node/list?guide=true',
   },
 ]
 
@@ -60,6 +66,7 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
   currentStep,
 }) => {
   const isFinished = currentStep > index
+  const nav = useNavigate()
   return (
     <div>
       <div
@@ -76,7 +83,7 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
         className={clsx(
           'py-3 pl-5 text-sm',
           index === steps.length - 1
-            ? undefined
+            ? 'ml-3'
             : 'border-l-default ml-3 border-l-2 border-dashed',
         )}
       >
@@ -84,8 +91,9 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
           <>
             <div>{step.message}</div>
             <div className="mt-4">
-              任务目标:{' '}
+              任务目标: {isFinished ? '✅' : null}
               <Link
+                onPress={() => nav(step.to)}
                 underline="always"
                 color={isFinished ? 'foreground' : 'primary'}
                 className={clsx(
@@ -104,7 +112,7 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
   )
 }
 
-const Guid: React.FC = () => {
+const Guide: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0)
 
   useEffect(() => {
@@ -126,4 +134,4 @@ const Guid: React.FC = () => {
   )
 }
 
-export default Guid
+export default Guide

@@ -19,7 +19,7 @@ import LabelsDisplay from '@/components/LabelsDisplay'
 import { useNavigate } from 'react-router'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
-import Guid from '@/pages/home/Guid.tsx'
+import Guide from '@/pages/home/Guide.tsx'
 
 const ListRuntimeNodesSimpleQuery = graphql(`
   query ListRuntimeNodesSimpleQuery($page: Int, $size: Int) {
@@ -57,7 +57,7 @@ const Home: React.FC = () => {
   )
 
   return (
-    <div className="flex h-full flex-col px-5">
+    <div className="flex flex-col px-5 pb-16">
       <div>
         <div className="header-1 mb-8">欢迎使用 Spectre</div>
         <div className="grid grid-cols-2 gap-8">
@@ -147,7 +147,7 @@ const Home: React.FC = () => {
           </Card>
         </div>
       </div>
-      <Guid />
+      <Guide />
     </div>
   )
 }

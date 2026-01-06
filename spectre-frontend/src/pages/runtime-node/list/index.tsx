@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import {
   addToast,
   Button,
@@ -19,12 +19,18 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
-import { showDialog } from '@/common/util.ts'
+import {
+  appendShepherdStepsBeforeShow,
+  shepherdOffset,
+  showDialog,
+} from '@/common/util.ts'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import { deleteRuntimeNode } from '@/api/impl/runtime-node.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import LabelsDisplay from '@/components/LabelsDisplay'
 import Time from '@/components/Time.tsx'
+import 'shepherd.js/dist/css/shepherd.css'
+import Shepherd, { type Tour } from 'shepherd.js'
 
 const ListJvmSource = graphql(`
   query ListJvmSource($page: Int, $size: Int) {
@@ -54,15 +60,25 @@ type NodeType = DocumentResult<
 >['runtimeNode']['runtimeNodes']['result'][number] & {
   typeName: string
 }
+const TEST_RUNTIME_NODE_ID = 'TestRuntimeNodeExtension'
+
+type MyHolder = {
+  testNodeIndex: number
+  nodes: NodeType[]
+}
 
 const JvmSourcePage: React.FC = () => {
   const [page, setPage] = useState(pg)
   const { result, isLoading } = useGraphQL(ListJvmSource, page)
   const nav = useNavigate()
+  const tourRef = useRef<Tour | null>(null)
 
-  const nodes: NodeType[] = useMemo(() => {
+  const { nodes, testNodeIndex }: MyHolder = useMemo(() => {
     if (!result) {
-      return []
+      return {
+        testNodeIndex: 99999,
+        nodes: [],
+      }
     }
     const r: NodeType[] = []
     const map = new Map<string, string>()
@@ -77,8 +93,86 @@ const JvmSourcePage: React.FC = () => {
           `UNKNOWN(${resultElement.pluginId})`,
       })
     }
-    return r
+    const testNodeIndex = r.findIndex(
+      (node) => node.pluginId === TEST_RUNTIME_NODE_ID,
+    )
+    return {
+      testNodeIndex,
+      nodes: r,
+    }
   }, [result])
+
+  useEffect(() => {
+    if (testNodeIndex >= nodes.length) {
+      return
+    }
+    const sp = new URL(location.href).searchParams
+    if (sp.get('guide') !== 'true') {
+      return
+    }
+    if (testNodeIndex < 0) {
+      showDialog({
+        title: '教程：连接到 JVM',
+        message:
+          '你进入了教程模式，但是你似乎并没有创建任何的测试节点，教程将会被跳过。',
+        color: 'danger',
+      })
+      return
+    }
+    const tour = new Shepherd.Tour({
+      useModalOverlay: true,
+      defaultStepOptions: {
+        canClickTarget: false,
+        modalOverlayOpeningPadding: 12,
+
+        floatingUIOptions: {
+          middleware: [shepherdOffset(0, 30)],
+        },
+      },
+    })
+    tour.options.defaultStepOptions!.beforeShowPromise =
+      appendShepherdStepsBeforeShow(tour)
+    tourRef.current = tour
+    tour.addStep({
+      id: 'show-row',
+      title: '测试节点',
+      text: '找到我们刚才创建的测试节点',
+      attachTo: {
+        element: '#test-node-row',
+        on: 'bottom',
+      },
+      buttons: [
+        {
+          text: '下一步',
+          action: tour.next,
+        },
+      ],
+    })
+    tour.addStep({
+      id: 'attach',
+      title: '连接到节点',
+      text: '点击该按钮连接到节点',
+      floatingUIOptions: {
+        middleware: [shepherdOffset(-30, -30)],
+      },
+      attachTo: {
+        element: '#test-node-attach',
+        on: 'left',
+      },
+      canClickTarget: true,
+    })
+    showDialog({
+      title: '教程: 连接到 JVM',
+      message: '在该教程中，我们将引导你连接至 JVM',
+      confirmBtnText: '开始',
+      color: 'primary',
+      hideCancel: true,
+      isDismissable: false,
+      onConfirm() {
+        tour.start()
+      },
+    })
+  }, [nodes.length, testNodeIndex])
 
   const totalPage = result?.runtimeNode.runtimeNodes.totalPages ?? 0
 
@@ -87,7 +181,12 @@ const JvmSourcePage: React.FC = () => {
   }
 
   const toNodeTree = (id: string) => {
-    nav(`/runtime-node/${id}/tree`)
+    if (tourRef.current) {
+      tourRef.current.complete()
+      nav(`/runtime-node/${id}/tree?guide=true`)
+    } else {
+      nav(`/runtime-node/${id}/tree`)
+    }
   }
 
   const viewNode = (id: string) => {
@@ -155,7 +254,10 @@ const JvmSourcePage: React.FC = () => {
           loadingContent={<TableLoadingMask />}
         >
           {(item) => (
-            <TableRow key={item.id}>
+            <TableRow
+              key={item.id}
+              id={item === nodes[testNodeIndex] ? 'test-node-row' : undefined}
+            >
               <TableCell className="flex items-center">
                 {item.restrictedMode ? (
                   <Tooltip content="处于限制模式中" className="outline-0">
@@ -189,6 +291,11 @@ const JvmSourcePage: React.FC = () => {
                 <div className="relative flex items-center justify-end gap-2">
                   <Tooltip content="连接该节点">
                     <Button
+                      id={
+                        item === nodes[testNodeIndex]
+                          ? 'test-node-attach'
+                          : undefined
+                      }
                       size="sm"
                       isIconOnly
                       color="primary"

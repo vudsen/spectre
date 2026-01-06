@@ -25,7 +25,8 @@
     "react-redux": "^9.2.0",
     "react-resizable-panels": "^3.0.5",
     "react-router": "^7.7.1",
-    "redux-persist": "^6.0.0"
+    "redux-persist": "^6.0.0",
+    "shepherd.js": "^14.5.1"
   },
   "devDependencies": {
     "@0no-co/graphqlsp": "^1.14.0",

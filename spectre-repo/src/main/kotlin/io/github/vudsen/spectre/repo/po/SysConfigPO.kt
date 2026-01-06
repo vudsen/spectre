@@ -1,6 +1,8 @@
 package io.github.vudsen.spectre.repo.po
 
+import io.github.vudsen.spectre.repo.convert.InstantToStringConverter
 import io.github.vudsen.spectre.repo.util.SnowFlake
+import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.PrePersist
@@ -8,6 +10,7 @@ import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import org.hibernate.annotations.DynamicUpdate
 import java.sql.Timestamp
+import java.time.Instant
 
 @Entity
 @DynamicUpdate
@@ -21,7 +24,8 @@ class SysConfigPO {
 
     var value: String? = null
 
-    var lastUpdate: Timestamp? = null
+    @Convert(converter = InstantToStringConverter::class)
+    var lastUpdate: Instant? = null
 
     @PrePersist
     fun prePersist() {
@@ -32,7 +36,7 @@ class SysConfigPO {
 
     @PreUpdate
     fun preUpdate() {
-        lastUpdate = Timestamp(System.currentTimeMillis())
+        lastUpdate = Instant.now()
     }
 
 }

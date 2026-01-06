@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.service.impl
 
+import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.SysConfigService
 import io.github.vudsen.spectre.repo.SysConfigRepository
@@ -24,6 +25,19 @@ class DefaultSysConfigService(
             this.value = value
         }
         sysConfigRepository.save(po)
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    override fun updateTourStep(step: Int) {
+        val totalStep = 3
+        val currentStep = findConfigValue(SysConfigIds.SPECTRE_TOUR_STEP).toInt()
+        if (step == currentStep) {
+            if (step >= totalStep) {
+                return
+            } else {
+                updateConfig(SysConfigIds.SPECTRE_TOUR_STEP, (step + 1).toString())
+            }
+        }
     }
 
 }

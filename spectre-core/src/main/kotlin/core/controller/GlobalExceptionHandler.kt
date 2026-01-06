@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.validation.FieldError
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -84,6 +85,12 @@ class GlobalExceptionHandler(
                 return  ResponseEntity
                     .status(403)
                     .body(ErrorResponseVO(messageSource.getMessage("error.permission.deny", emptyArray(), null)))
+            }
+
+            is HttpRequestMethodNotSupportedException -> {
+                return  ResponseEntity
+                    .status(405)
+                    .build()
             }
 
             else -> {

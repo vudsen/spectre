@@ -1,7 +1,5 @@
 package io.github.vudsen.spectre.api.service
 
-import io.github.vudsen.spectre.api.entity.SysConfigCode
-
 interface SysConfigService {
 
     /**
@@ -13,5 +11,10 @@ interface SysConfigService {
      * 更新配置
      */
     fun updateConfig(id: Long, value: String)
+
+    /**
+     * 更新教程当前进行的步骤
+     */
+    fun updateTourStep(step: Int)
 
 }

@@ -13,8 +13,8 @@
                 <constraints unique="true"/>
             </column>
             <column name="value" type="java.sql.Types.VARCHAR(2048)"/>
-            <column name="last_update" type="java.sql.Types.TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
-                <constraints nullable="false"/>
+            <column name="last_update" type="DATETIME">
+                <constraints nullable="true"/>
             </column>
         </createTable>
         <insert tableName="sys_conf">
