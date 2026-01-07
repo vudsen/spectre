@@ -33,9 +33,9 @@
 
 数据库要求：
 - SQLite
-- PostgreSQL
+- Postgresql
 
-推荐使用 docker-compose 启动(不推荐以 root 用户启动，请使用 `sudo useradd -m spectre` 来创建一个专用账号):
+推荐使用 docker-compose 启动(不推荐以 root 用户启动，请使用 `sudo useradd spectre` 来创建一个专用账号):
 
 ```yaml
 name: Spectre
@@ -67,7 +67,7 @@ spring:
   profiles:
     active: prod
   datasource:
-    # 使用 sqlite，也可以使用 PostGresql，已经内置了驱动
+    # 使用 sqlite，也可以使用 Postgresql，已经内置了对应驱动
     url: jdbc:sqlite:data/identifier.sqlite
   jpa:
     properties:
@@ -137,7 +137,12 @@ spring:
 
 ### 启动后端
 
-提供 redis 配置后直接启动即可。
+添加命令行参数：
+
+```
+-Dspring.profiles.active=dev
+```
+
 
 ### 启动前端
 
