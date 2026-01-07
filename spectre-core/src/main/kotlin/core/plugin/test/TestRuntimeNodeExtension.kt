@@ -23,7 +23,11 @@ class TestRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<TestRuntimeNodeC
     private val searcher: JvmSearcher by lazy {
         val builder = SearchTreeBuilder.create()
 
-        builder.addHandler { _, _ ->
+        val testHolder = builder.addHandler { _, _ ->
+            return@addHandler listOf(JvmSearchNode("Test", false, null))
+        }
+
+        testHolder.addHandler { _, _ ->
             return@addHandler listOf(JvmSearchNode("Test Jvm", true, null))
         }
 

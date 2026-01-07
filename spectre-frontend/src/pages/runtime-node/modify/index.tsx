@@ -8,11 +8,18 @@ import {
 } from '@heroui/react'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import { graphql } from '@/graphql/generated'
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { type DocumentResult, execute } from '@/graphql/execute.ts'
 import { useNavigate } from 'react-router'
 import ExtensionPageManager from '@/ext/manager.ts'
 import { useTranslation } from 'react-i18next'
+import 'shepherd.js/dist/css/shepherd.css'
+import Shepherd, { type Tour } from 'shepherd.js'
+import {
+  appendShepherdStepsBeforeShow,
+  shepherdOffset,
+  showDialog,
+} from '@/common/util.ts'
 
 const RuntimeNodePluginQuery = graphql(`
   query RuntimeNodePluginQuery {
@@ -38,6 +45,8 @@ const RuntimeNodePluginDetailQuery = graphql(`
   }
 `)
 
+const TEST_RUNTIME_NODE_ID = 'TestRuntimeNodeExtension'
+
 const JvmSourceModifyPage: React.FC = () => {
   const { t } = useTranslation()
   const { result, isLoading, errors } = useGraphQL(RuntimeNodePluginQuery)
@@ -48,6 +57,7 @@ const JvmSourceModifyPage: React.FC = () => {
     useState<DocumentResult<typeof RuntimeNodePluginDetailQuery>>()
   const info = pluginInfo?.runtimeNode.plugin
   const nav = useNavigate()
+  const tourRef = useRef<Tour | null>(null)
 
   const errorMsg = pluginErrorMsg ?? errors.join(';')
 
@@ -62,7 +72,15 @@ const JvmSourceModifyPage: React.FC = () => {
       reset()
       return
     }
+    if (tourRef.current) {
+      if (TEST_RUNTIME_NODE_ID !== evt.target.value) {
+        setPluginErrorMsg('请选中 Test 以继续教程')
+        return
+      }
+    }
+    setPluginErrorMsg(undefined)
     const plugin = plugins.find((plugin) => plugin.id == evt.target.value)
+
     if (!plugin) {
       setPluginErrorMsg('无法找到对应插件, id = ' + evt.target.value)
       return
@@ -79,11 +97,115 @@ const JvmSourceModifyPage: React.FC = () => {
     execute(RuntimeNodePluginDetailQuery, { pluginId: plugin.id })
       .then((r) => {
         setPluginInfo(r)
+        const tour = tourRef.current
+        if (tour && tour.currentStep?.id === 'select-type') {
+          setTimeout(() => {
+            tour.next()
+          }, 200)
+        }
       })
       .catch((e) => {
         console.log(e)
       })
   }
+
+  useEffect(() => {
+    const sp = new URL(location.href).searchParams
+    if (sp.get('guide') !== 'true') {
+      return
+    }
+    const tour = new Shepherd.Tour({
+      useModalOverlay: true,
+      defaultStepOptions: {
+        canClickTarget: false,
+        modalOverlayOpeningPadding: 12,
+        floatingUIOptions: {
+          middleware: [shepherdOffset(0, 30)],
+        },
+      },
+    })
+    tour.options.defaultStepOptions!.beforeShowPromise =
+      appendShepherdStepsBeforeShow(tour)
+    tourRef.current = tour
+
+    tour.addStep({
+      id: 'select-type',
+      title: '展开类型',
+      text: 'Spectre 支持多种方式来连接 JVM，点击这里可以查看支持的类型。请选择 `Test` 以继续教程',
+      attachTo: {
+        element: '#select-type',
+        on: 'bottom',
+      },
+      buttons: [
+        {
+          text: '了解',
+          action: tour.hide,
+        },
+      ],
+    })
+    tour.addStep({
+      id: 'description',
+      title: '类型信息',
+      text: '此处将显示具体的类型信息',
+      attachTo: {
+        element: '#extension-description',
+        on: 'bottom',
+      },
+      buttons: [
+        {
+          text: '下一步',
+          action: tour.next,
+        },
+      ],
+    })
+    tour.addStep({
+      id: 'confirm',
+      title: '进入配置界面',
+      text: '点击此处进入配置界面',
+      canClickTarget: true,
+      attachTo: {
+        element: '#runtime-node-next-btn',
+        on: 'left',
+      },
+      floatingUIOptions: {
+        middleware: [
+          {
+            name: 'offset',
+            fn: (state) => {
+              return {
+                x: state.x - 30,
+                y: state.y - 30,
+              }
+            },
+          },
+        ],
+      },
+    })
+
+    showDialog({
+      title: '教程',
+      message:
+        '在本教程中，将会创建一个测试节点，该节点仅用于测试功能，不会产生实际连接',
+      hideCancel: true,
+      isDismissable: false,
+      confirmBtnText: '开始',
+      color: 'primary',
+      onConfirm() {
+        tour.start()
+      },
+    })
+  }, [])
+
+  const toNext = useCallback(() => {
+    tourRef.current?.complete()
+    let sp: string
+    if (tourRef.current) {
+      sp = '?guide=true'
+    } else {
+      sp = ''
+    }
+    nav(`${selectedPlugin.current!.id}${sp}`)
+  }, [nav])
 
   return (
     <div>
@@ -96,6 +218,7 @@ const JvmSourceModifyPage: React.FC = () => {
             <div>{t('runtimeNode.selectTypeInfo2')}</div>
             <div>{t('runtimeNode.selectTypeInfo3')}</div>
             <Select
+              id="select-type"
               className="max-w-xs"
               placeholder={t('runtimeNode.selectTypeTip')}
               onChange={onSelect}
@@ -115,12 +238,13 @@ const JvmSourceModifyPage: React.FC = () => {
               <div className="space-y-3">
                 <Divider />
                 <div className="text-base font-bold">{t('common.detail')}</div>
-                <div>{info.description}</div>
+                <div id="extension-description">{info.description}</div>
                 <div className="border-divider flex w-full flex-row-reverse border-t p-2">
                   <Button
                     color="primary"
+                    id="runtime-node-next-btn"
                     isDisabled={!pluginInfo}
-                    onPress={() => nav(selectedPlugin.current!.id)}
+                    onPress={toNext}
                   >
                     {t('common.next')}
                   </Button>

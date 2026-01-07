@@ -19,6 +19,7 @@ import LabelsDisplay from '@/components/LabelsDisplay'
 import { useNavigate } from 'react-router'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
+import Guide from '@/pages/home/Guide.tsx'
 
 const ListRuntimeNodesSimpleQuery = graphql(`
   query ListRuntimeNodesSimpleQuery($page: Int, $size: Int) {
@@ -56,7 +57,7 @@ const Home: React.FC = () => {
   )
 
   return (
-    <div className="flex h-full flex-col justify-between px-5">
+    <div className="flex flex-col px-5 pb-16">
       <div>
         <div className="header-1 mb-8">欢迎使用 Spectre</div>
         <div className="grid grid-cols-2 gap-8">
@@ -146,18 +147,7 @@ const Home: React.FC = () => {
           </Card>
         </div>
       </div>
-      {/*<div className="text-default-500 text-center text-sm">*/}
-      {/*  <Link*/}
-      {/*    color="foreground"*/}
-      {/*    size="sm"*/}
-      {/*    isExternal*/}
-      {/*    showAnchorIcon*/}
-      {/*    href="https://github.com/vudsen/spectre"*/}
-      {/*  >*/}
-      {/*    Spectre Project*/}
-      {/*  </Link>*/}
-      {/*  <div>{import.meta.env.VITE_APP_VERSION ?? 'Unknown'}</div>*/}
-      {/*</div>*/}
+      <Guide />
     </div>
   )
 }

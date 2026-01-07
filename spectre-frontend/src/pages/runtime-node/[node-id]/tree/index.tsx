@@ -27,7 +27,14 @@ import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import LabelsDisplay from '@/components/LabelsDisplay'
-import { formatTime } from '@/common/util.ts'
+import {
+  appendShepherdStepsBeforeShow,
+  formatTime,
+  shepherdOffset,
+} from '@/common/util.ts'
+import Shepherd from 'shepherd.js'
+import { updateTourStep } from '@/api/impl/sys-conf.ts'
+import 'shepherd.js/dist/css/shepherd.css'
 
 const NodeInfoQuery = graphql(`
   query NodeInfoQuery($id: String!) {
@@ -40,6 +47,82 @@ const NodeInfoQuery = graphql(`
     }
   }
 `)
+
+function setupTour() {
+  const sp = new URL(location.href).searchParams
+  if (sp.get('guide') !== 'true') {
+    return
+  }
+  const tour = new Shepherd.Tour({
+    useModalOverlay: true,
+    defaultStepOptions: {
+      canClickTarget: false,
+      modalOverlayOpeningPadding: 12,
+      floatingUIOptions: {
+        middleware: [shepherdOffset(0, 30)],
+      },
+    },
+  })
+  tour.options.defaultStepOptions!.beforeShowPromise =
+    appendShepherdStepsBeforeShow(tour)
+
+  tour.addStep({
+    title: '节点树',
+    text: '节点树会为你列出所有可用的 JVM',
+    attachTo: {
+      element: '#node-tree',
+      on: 'bottom',
+    },
+    buttons: [
+      {
+        text: '下一步',
+        action: tour.next,
+      },
+    ],
+  })
+  tour.addStep({
+    id: 'expand-tree',
+    title: '展开节点树',
+    text: '双击即可展开节点树',
+    attachTo: {
+      element: '#root-tree-0',
+      on: 'bottom',
+    },
+    canClickTarget: true,
+  })
+  tour.addStep({
+    id: 'jvm-flag',
+    title: 'JVM 节点',
+    text: '当节点的图标为"咖啡"时，代表该节点是一个 JVM 节点',
+    attachTo: {
+      element: '#jvm-flag',
+      on: 'top',
+    },
+    floatingUIOptions: {
+      middleware: [shepherdOffset(0, -60)],
+    },
+    buttons: [
+      {
+        text: '下一步',
+        action: tour.next,
+      },
+    ],
+  })
+  tour.addStep({
+    id: 'attach',
+    title: '连接节点',
+    canClickTarget: true,
+    text: '点击该图标，即可连接到 JVM',
+    attachTo: {
+      element: '#plug-flag',
+      on: 'top',
+    },
+    floatingUIOptions: {
+      middleware: [shepherdOffset(0, -60)],
+    },
+  })
+  return tour
+}
 
 const RuntimeNodeTreePage: React.FC = () => {
   const params = useParams()
@@ -59,6 +142,8 @@ const RuntimeNodeTreePage: React.FC = () => {
     }, [nodeId]),
   )
 
+  const tour = useMemo(() => setupTour(), [])
+
   useEffect(() => {
     let listeners: Array<() => void> = []
     const contentListeners: Array<(content: string) => void> = []
@@ -76,6 +161,10 @@ const RuntimeNodeTreePage: React.FC = () => {
       },
       requireAttach: (searchNode) => {
         selectedSearchNode.current = searchNode
+        if (tour && tour.currentStep?.id === 'attach') {
+          tour.complete()
+          updateTourStep(2).then()
+        }
         onOpen()
       },
       subscribeSearchContentChange: (cb) => {
@@ -90,8 +179,8 @@ const RuntimeNodeTreePage: React.FC = () => {
       unsubscribeSearchContentChange: (id: number) => {
         contentListeners.splice(id, 1)
       },
+      tour,
     })
-
     expandTree(nodeId)
       .then((nodes) => {
         setRootnNodes(nodes)
@@ -99,7 +188,18 @@ const RuntimeNodeTreePage: React.FC = () => {
       .finally(() => {
         setRootNodeLoading(false)
       })
-  }, [nodeId, onOpen])
+  }, [nodeId, onOpen, tour])
+
+  useEffect(() => {
+    if (tour && rootNodes.length > 0) {
+      setTimeout(() => {
+        tour.start()
+      }, 200)
+      return () => {
+        tour?.complete()
+      }
+    }
+  }, [rootNodes.length, tour])
 
   const onSelect = (bundleId: string) => {
     const url = new URL(window.location.href)
@@ -115,6 +215,17 @@ const RuntimeNodeTreePage: React.FC = () => {
 
   const onInput = (e: FormEvent<HTMLInputElement>) => {
     context?.onSearchContentChange((e.target as HTMLInputElement).value)
+  }
+
+  const onRootTreeExpand = () => {
+    const tour = context?.tour
+    if (!tour || tour.currentStep?.id !== 'expand-tree') {
+      return
+    }
+    setTimeout(() => {
+      tour.next()
+      context?.onSearchContentChange
+    }, 200)
   }
 
   const runtimeNode = result?.runtimeNode.runtimeNode
@@ -162,7 +273,7 @@ const RuntimeNodeTreePage: React.FC = () => {
           </CardBody>
         </Card>
         <Card>
-          <CardBody>
+          <CardBody id="node-tree">
             <div className="mb-3 text-xl font-semibold">节点树</div>
             <div className="text-sm">
               该卡片中将为您展示一颗树，树形结构可以双击展开/合并。在展开的过程中，可能会出现带有{' '}
@@ -202,9 +313,11 @@ const RuntimeNodeTreePage: React.FC = () => {
                   </div>
                 ) : (
                   <div>
-                    {rootNodes.map((node) => (
+                    {rootNodes.map((node, index) => (
                       <RuntimeNodeTree
+                        id={`root-tree-${index}`}
                         key={node.id}
+                        onExpanded={onRootTreeExpand}
                         searchNode={node}
                         level={0}
                       />

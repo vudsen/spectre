@@ -1,5 +1,6 @@
 import { createContext } from 'react'
 import type { JvmTreeNodeDTO } from '@/api/impl/runtime-node.ts'
+import type { Tour } from 'shepherd.js'
 
 export type NodeTreeContext = {
   nodeId: string
@@ -9,6 +10,7 @@ export type NodeTreeContext = {
   onSearchContentChange: (content: string) => void
   subscribeSearchContentChange: (cb: (content: string) => void) => number
   unsubscribeSearchContentChange: (id: number) => void
+  tour?: Tour
 }
 
 const TreeContext = createContext<NodeTreeContext>({

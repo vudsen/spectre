@@ -9,6 +9,9 @@ import TreeContext from '@/pages/runtime-node/[node-id]/tree/context.ts'
 type NodeProps = {
   searchNode: JvmTreeNodeDTO
   level: number
+  id?: string
+  onExpanded?: () => void
+  isTourAttachTarget?: boolean
 }
 
 const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
@@ -35,6 +38,7 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
       .then((r) => {
         loadedFlag.current = true
         setRootnNodes(r)
+        props.onExpanded?.()
       })
       .catch((_) => {
         setExpand(false)
@@ -78,8 +82,18 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
     }
   }, [ctx, props.searchNode.name])
 
+  useEffect(() => {
+    if (props.isTourAttachTarget) {
+      ctx.onSelectionChange()
+      setSelected(true)
+      ctx.subScribeSelectionChangeOnce(() => {
+        setSelected(false)
+      })
+    }
+  }, [ctx, props.isTourAttachTarget])
+
   return (
-    <div className="w-full px-3">
+    <div className="w-full px-3" id={props.id}>
       <div
         className={`w-full rounded-xl ${highlight ? 'text-yellow-500' : ''} group box-border flex cursor-pointer items-center justify-between px-2 py-3.5 select-none ${selected ? 'bg-primary-100' : 'hover:bg-default-100'}`}
         onDoubleClick={() => toggleTreeNode()}
@@ -94,7 +108,11 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
             <SvgIcon icon={Icon.RIGHT} className={expand ? 'rotate-90' : ''} />
           )}
           {props.searchNode.isJvm ? (
-            <SvgIcon icon={Icon.COFFEE} size={22} />
+            <SvgIcon
+              icon={Icon.COFFEE}
+              size={22}
+              id={props.isTourAttachTarget ? 'jvm-flag' : undefined}
+            />
           ) : null}
           <span className="mx-2 max-w-[90%] truncate">
             {props.searchNode.name}
@@ -111,7 +129,12 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
             className={props.searchNode.isJvm ? '' : 'hidden'}
             onPress={attach}
           >
-            <SvgIcon icon={Icon.PLUG} size={22} className="text-primary" />
+            <SvgIcon
+              icon={Icon.PLUG}
+              size={22}
+              className="text-primary"
+              id={props.isTourAttachTarget ? 'plug-flag' : undefined}
+            />
           </Button>
           <Button
             isIconOnly
@@ -127,6 +150,9 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
         {loadedFlag.current
           ? rootNodes.map((node) => (
               <RuntimeNodeTree
+                isTourAttachTarget={
+                  ctx.tour && node.isJvm && node.name === 'Test Jvm'
+                }
                 key={node.id}
                 searchNode={node}
                 level={props.level + 1}

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import {
   addToast,
   Button,
@@ -34,6 +34,7 @@ import type { DocumentResult } from '@/graphql/execute.ts'
 import UploadToolchainModalContent from './UploadToolchainModalContent.tsx'
 import { deleteToolchainItem } from '@/api/impl/toolchain.ts'
 import Time from '@/components/Time.tsx'
+import { ToolchainItemsContext } from '@/pages/toolchain/items/context.ts'
 
 const ToolchainItemsQuery = graphql(`
   query ToolchainItemsQuery($type: ToolchainType!, $page: Int, $size: Int) {
@@ -62,16 +63,25 @@ interface ToolchainCacheStatusLinkProps {
   isCached: boolean
   isUnavailable?: boolean
   onUploadPress: () => void
+  id?: string
 }
 
 const ToolchainCacheStatusLink: React.FC<ToolchainCacheStatusLinkProps> = (
   props,
 ) => {
   if (props.isUnavailable) {
-    return <span className="italic">Unavailable</span>
+    return (
+      <span className="italic" id={props.id}>
+        Unavailable
+      </span>
+    )
   }
   if (props.isCached) {
-    return <span className="text-success bold">true</span>
+    return (
+      <span className="text-success bold" id={props.id}>
+        true
+      </span>
+    )
   }
   return (
     <div className="flex items-center">
@@ -82,6 +92,7 @@ const ToolchainCacheStatusLink: React.FC<ToolchainCacheStatusLinkProps> = (
         <SvgIcon icon={Icon.NOTE} className="text-warning" />
       </Tooltip>
       <Link
+        id={props.id}
         underline="always"
         color="warning"
         className="ml-1 cursor-pointer"
@@ -120,6 +131,7 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
   const uploadModal = useDisclosure()
   const viewModal = useDisclosure()
   const { isLoading, result } = useGraphQL(ToolchainItemsQuery, args)
+  const context = useContext(ToolchainItemsContext)
   const [uploadArgs, setUploadArgs] = useState(initial)
   const [selectedItem, setSelectedItem] = useState<
     ToolchainItemResponseVO | undefined
@@ -161,9 +173,22 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
     (r: ToolchainItemResponseVO) => {
       setSelectedItem(r)
       viewModal.onOpen()
+      if (context.tour) {
+        if (context.tour.currentStep?.id === 'view-toolchain') {
+          context.tour.hide()
+        }
+      }
     },
-    [viewModal],
+    [context.tour, viewModal],
   )
+
+  const onDetailClose = useCallback(() => {
+    if (context.tour) {
+      if (context.tour.currentStep?.id === 'view-toolchain') {
+        context.tour.next()
+      }
+    }
+  }, [context.tour])
 
   if (!result && !isLoading) {
     return <div>Unknown error!</div>
@@ -217,8 +242,9 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
           isLoading={isLoading}
           emptyContent={<div>没有可用数据</div>}
           loadingContent={<TableLoadingMask />}
+          id={props.type.type}
         >
-          {itemArray.map((item) => (
+          {itemArray.map((item, index) => (
             <TableRow key={item.tag}>
               <TableCell>
                 <Code>{item.tag}</Code>
@@ -230,6 +256,11 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
                 className={item.isX86Cached ? 'text-success' : 'text-warning'}
               >
                 <ToolchainCacheStatusLink
+                  id={
+                    index === 0 && props.type.type === 'ARTHAS'
+                      ? 'cache-status'
+                      : undefined
+                  }
                   isCached={item.isX86Cached}
                   onUploadPress={() => uploadPkg(item, false)}
                 />
@@ -248,6 +279,11 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
                 <Button
                   variant="light"
                   isIconOnly
+                  id={
+                    index === 0 && props.type.type === 'ARTHAS'
+                      ? 'view-arthas'
+                      : undefined
+                  }
                   onPress={() => viewItem(item)}
                 >
                   <SvgIcon icon={Icon.VIEW} />
@@ -290,7 +326,11 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
           )}
         </ModalContent>
       </Modal>
-      <Modal isOpen={viewModal.isOpen} onOpenChange={viewModal.onOpenChange}>
+      <Modal
+        isOpen={viewModal.isOpen}
+        onOpenChange={viewModal.onOpenChange}
+        onClose={onDetailClose}
+      >
         <ModalContent>
           {(onClose) => (
             <>

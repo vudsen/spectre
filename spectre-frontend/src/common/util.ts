@@ -4,6 +4,8 @@ import type { DialogConfig } from '@/components/DialogProvider/ConfirmDialog.tsx
 import { isErrorResponse, isValidationError } from '@/api/types.ts'
 import type { UseFormSetError, FieldPath, FieldValues } from 'react-hook-form'
 import i18n from '@/i18n'
+import type { StepOptions } from 'shepherd.js'
+import { type Tour } from 'shepherd.js'
 
 export const showDialog = (config: DialogConfig) => {
   getDialogQueue().addElement(config)
@@ -86,5 +88,37 @@ export const tryApplyValidationError = <TFieldValues extends FieldValues>(
         message: error.message,
       })
     }
+  }
+}
+
+export const shepherdOffset = (x: number, y: number) => ({
+  name: 'offset',
+  fn: (state: { x: number; y: number }) => {
+    return {
+      x: state.x + x,
+      y: state.y + y,
+    }
+  },
+})
+
+export const appendShepherdStepsBeforeShow = (
+  tour: Tour,
+): StepOptions['beforeShowPromise'] => {
+  return () => {
+    return new Promise((resolve) => {
+      const totalSteps = tour.steps.length
+      const that = tour.currentStep!
+      const currentIndex = tour.steps.indexOf(that) + 1
+
+      // 获取原始标题（假设你在定义步骤时写了 title）
+      const rawTitle = that.options.title || ''
+
+      // 动态更新当前步骤的标题内容
+      that.updateStepOptions({
+        title: `${rawTitle} (${currentIndex}/${totalSteps})`,
+      })
+
+      resolve(undefined)
+    })
   }
 }

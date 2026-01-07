@@ -20,6 +20,7 @@ export type DialogConfig = {
   onCancel?: () => void
   color?: 'primary' | 'danger' | 'warning'
   hideCancel?: boolean
+  isDismissable?: boolean
 }
 
 export interface ConfirmDialogRef {
@@ -65,7 +66,12 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
   }))
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      isDismissable={config.isDismissable}
+      hideCloseButton={!config.isDismissable}
+    >
       <ModalContent>
         {(onClose) => (
           <>

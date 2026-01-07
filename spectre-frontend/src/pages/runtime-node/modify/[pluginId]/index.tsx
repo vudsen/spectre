@@ -1,10 +1,12 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Alert } from '@heroui/react'
 import { useParams } from 'react-router'
 import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import ExtensionPageManager from '@/ext/manager.ts'
 import useCrumb from '@/hook/useCrumb.ts'
+import { showDialog } from '@/common/util.ts'
+import { updateTourStep } from '@/api/impl/sys-conf.ts'
 
 const RuntimeNodeCreatePluginQuery = graphql(`
   query RuntimeNodeCreatePluginQuery(
@@ -29,6 +31,7 @@ const RuntimeNodeCreatePluginQuery = graphql(`
 
 const UPDATE_CRUMB = [{ name: '更新运行节点' }]
 const CREATE_CRUMB = [{ name: '创建运行节点' }]
+const TEST_RUNTIME_NODE_ID = 'TestRuntimeNodeExtension'
 
 const PluginConfPage: React.FC = () => {
   const params = useParams()
@@ -41,6 +44,19 @@ const PluginConfPage: React.FC = () => {
     RuntimeNodeCreatePluginQuery,
     qlParams.current,
   )
+  useEffect(() => {
+    const sp = new URL(location.href).searchParams
+    if (sp.get('guide') !== 'true') {
+      return
+    }
+    showDialog({
+      title: '教程：运行节点',
+      message: '完成页面中的表单，创建一个测试节点',
+      hideCancel: true,
+      color: 'primary',
+      isDismissable: false,
+    })
+  }, [])
 
   if (isLoading) {
     return (
@@ -55,13 +71,17 @@ const PluginConfPage: React.FC = () => {
   const plugin = result.runtimeNode.plugin
   const FormComponent = ExtensionPageManager.getFormPage(plugin.page.pageName)
 
-  const onSumbit = (data: unknown) => {
-    console.log(data)
+  const onSubmit = () => {
+    const sp = new URL(location.href).searchParams
+    if (sp.get('guide') !== 'true' || pluginId !== TEST_RUNTIME_NODE_ID) {
+      return
+    }
+    updateTourStep(1).then()
   }
 
   return (
     <FormComponent
-      onSubmit={onSumbit}
+      onSubmit={onSubmit}
       pluginId={pluginId}
       oldState={result.runtimeNode.runtimeNode}
     />
