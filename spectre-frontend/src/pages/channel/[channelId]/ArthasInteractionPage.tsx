@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  type ArthasResponse,
+  type ArthasResponseWithId,
   type InputStatusResponse,
   pullResults,
 } from '@/api/impl/arthas.ts'
@@ -26,7 +26,7 @@ interface ArthasInteractionPageProps {
 }
 
 const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
-  const messages = useSelector<RootState, ArthasResponse[]>(
+  const messages = useSelector<RootState, ArthasResponseWithId[]>(
     (state) => state.channel.messages[props.channelId] ?? [],
   )
   const dispatch = useDispatch()
@@ -41,7 +41,7 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
     }
     return 'DISABLED'
   })
-  const [selectedEntity, setSelectedEntity] = useState<ArthasResponse>()
+  const [selectedEntity, setSelectedEntity] = useState<ArthasResponseWithId>()
   const pullResultsTaskId = useRef<number>(undefined)
   const taskDelay = useRef(0)
   const isExcited = useRef(false)
