@@ -9,8 +9,4 @@ updates:
     directory: "/spectre-core"
     schedule:
       interval: "weekly"
-    
-  - package-ecosystem: "npm"
-    directory: "/spectre-frontend"
-    schedule:
-      interval: "weekly"
+
