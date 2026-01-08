@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import type { ArthasResponse } from '@/api/impl/arthas.ts'
+import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import ArthasResponseItem, {
   type ResponseGroupItem,
 } from '@/pages/channel/[channelId]/_component/ArthasResponseItem.tsx'
@@ -7,8 +7,8 @@ import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 
 interface ArthasResponseListProps {
-  responses: ArthasResponse[]
-  onEntitySelect: (e: ArthasResponse) => void
+  responses: ArthasResponseWithId[]
+  onEntitySelect: (e: ArthasResponseWithId) => void
 }
 
 const IGNORED_TYPES = new Set(['input_status'])

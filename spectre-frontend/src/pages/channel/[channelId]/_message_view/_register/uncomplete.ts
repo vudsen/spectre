@@ -7,11 +7,13 @@ type VersionMessage = {
   type: 'version'
   version: string
   jobId: number
+  fid: number
 }
 
 type ClassLoaderMessage = {
   type: 'classloader'
   jobId: number
+  fid: number
   classLoaderStats: Record<
     string,
     {
@@ -25,6 +27,7 @@ type RowAffectedMessage = {
   type: 'row_affect'
   jobId: number
   rowCount: number
+  fid: number
 }
 
 registerMessageView<RowAffectedMessage>({

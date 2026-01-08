@@ -43,11 +43,12 @@ export const joinChannel = (
 
 export type InputStatusResponse = {
   type: 'input_status'
+  fid: number
   inputStatus: 'ALLOW_INPUT' | 'DISABLED' | 'ALLOW_INTERRUPT'
   jobId: number
 }
 
-export type ArthasResponse = {
+type ArthasResponse = {
   type: string
   jobId: number
 }
@@ -62,7 +63,7 @@ let fid = Date.now()
 
 export const pullResults = async (
   channelId: string,
-): Promise<ArthasResponse[]> => {
+): Promise<ArthasResponseWithId[]> => {
   const r = await axios.get(`arthas/channel/${channelId}/pull-result`, {
     meta: {
       skipErrorHandler: true,

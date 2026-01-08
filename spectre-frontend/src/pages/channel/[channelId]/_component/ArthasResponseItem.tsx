@@ -1,11 +1,11 @@
-import type { ArthasResponse } from '@/api/impl/arthas.ts'
+import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import clsx from 'clsx'
 import React, { useMemo } from 'react'
 import './listStyle.css'
 import ArthasResponsePreview from '@/pages/channel/[channelId]/_message_view/ArthasResponsePreview.tsx'
 
 export type ResponseGroupItem = {
-  entity: ArthasResponse
+  entity: ArthasResponseWithId
   groupInfo?: {
     colorFlag: number
   }
