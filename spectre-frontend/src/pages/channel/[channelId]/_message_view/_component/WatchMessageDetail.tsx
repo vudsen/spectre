@@ -12,6 +12,7 @@ type WatchMessage = {
   sizeLimit: number
   ts: string
   value: string
+  fid: number
 }
 
 // TODO 解析字符串，构建一颗树形结构

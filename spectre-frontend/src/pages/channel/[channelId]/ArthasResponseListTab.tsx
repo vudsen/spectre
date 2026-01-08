@@ -14,9 +14,10 @@ interface ArthasResponseListProps {
 const IGNORED_TYPES = new Set(['input_status'])
 
 const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
-  const isDebugMode = useSelector<RootState, boolean | undefined>(
-    (state) => state.channel.context.isDebugMode,
-  )
+  const isDebugMode =
+    useSelector<RootState, boolean | undefined>(
+      (state) => state.channel.context.isDebugMode,
+    ) ?? false
   const [filteredResponses, setFilteredResponse] = useState<
     ResponseGroupItem[]
   >([])
@@ -84,6 +85,7 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
           index={index}
           isSelected={index === selectedEntityIndex}
           item={r}
+          key={index + isDebugMode.toString()}
           onEntitySelect={onEntitySelect}
         />
       ))}

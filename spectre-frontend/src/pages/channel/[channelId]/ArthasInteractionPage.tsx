@@ -16,6 +16,9 @@ import type { RootState } from '@/store'
 import { appendMessages, clearExpiredMessages } from '@/store/channelSlice'
 import Toolbar from '@/pages/channel/[channelId]/Toolbar.tsx'
 import MenuList from '@/pages/channel/[channelId]/MenuList.tsx'
+import ChannelContext, {
+  useChannelContext,
+} from '@/pages/channel/[channelId]/context.ts'
 
 interface ArthasInteractionPageProps {
   channelId: string
@@ -112,35 +115,39 @@ const ArthasInteractionPage: React.FC<ArthasInteractionPageProps> = (props) => {
     }
   }, [dispatch, launchPullResultTask, props.channelId])
 
+  const context = useChannelContext()
+
   return (
-    <div className="flex h-screen">
-      <MenuList />
-      <div className="z-10 flex h-full w-0 grow flex-col">
-        <Toolbar appName={props.appName} channelId={props.channelId} />
-        <Divider />
-        <PanelGroup
-          direction="horizontal"
-          className="flex w-full grow"
-          autoSaveId="channel-attach"
-        >
-          <Panel minSize={20} defaultSize={40} className="!overflow-y-scroll">
-            <ArthasResponseListTab
-              responses={messages}
-              onEntitySelect={setSelectedEntity}
-            />
-          </Panel>
-          <PanelResizeHandle className="bg-default-200 border-default-100 border-l-1" />
-          <Panel minSize={30} defaultSize={60}>
-            <ArthasResponseDetailTab entity={selectedEntity} />
-          </Panel>
-        </PanelGroup>
-        <CommandExecuteBlock
-          onExecute={launchPullResultTask}
-          channelId={props.channelId}
-          inputStatus={inputStatus}
-        />
+    <ChannelContext value={context}>
+      <div className="flex h-screen">
+        <MenuList />
+        <div className="z-10 flex h-full w-0 grow flex-col">
+          <Toolbar appName={props.appName} channelId={props.channelId} />
+          <Divider />
+          <PanelGroup
+            direction="horizontal"
+            className="flex w-full grow"
+            autoSaveId="channel-attach"
+          >
+            <Panel minSize={20} defaultSize={40} className="!overflow-y-scroll">
+              <ArthasResponseListTab
+                responses={messages}
+                onEntitySelect={setSelectedEntity}
+              />
+            </Panel>
+            <PanelResizeHandle className="bg-default-200 border-default-100 border-l-1" />
+            <Panel minSize={30} defaultSize={60}>
+              <ArthasResponseDetailTab entity={selectedEntity} />
+            </Panel>
+          </PanelGroup>
+          <CommandExecuteBlock
+            onExecute={launchPullResultTask}
+            channelId={props.channelId}
+            inputStatus={inputStatus}
+          />
+        </div>
       </div>
-    </div>
+    </ChannelContext>
   )
 }
 
