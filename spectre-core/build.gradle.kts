@@ -18,7 +18,7 @@ springBoot {
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.testcontainers:testcontainers:2.0.2")
+    testImplementation("org.testcontainers:testcontainers:2.0.3")
     implementation("org.bouncycastle:bcprov-jdk18on:1.82")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.82")
     implementation("org.springframework.boot:spring-boot-starter-web")
