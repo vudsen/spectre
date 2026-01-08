@@ -1,10 +1,10 @@
 import React from 'react'
-import type { ArthasResponse } from '@/api/impl/arthas.ts'
+import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import { Tab, Tabs } from '@heroui/react'
 import ArthasResponseDetail from '@/pages/channel/[channelId]/_message_view/ArthasResponseDetail.tsx'
 
 interface ArthasResponseDetailProps {
-  entity?: ArthasResponse
+  entity?: ArthasResponseWithId
 }
 
 const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({

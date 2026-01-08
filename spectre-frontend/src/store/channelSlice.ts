@@ -1,4 +1,4 @@
-import type { ArthasResponse } from '@/api/impl/arthas.ts'
+import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 type UpdateRecord = {
@@ -18,7 +18,7 @@ interface ChannelState {
   /**
    * channel id -> 缓存的消息
    */
-  messages: Record<string, ArthasResponse[]>
+  messages: Record<string, ArthasResponseWithId[]>
   /**
    * 记录上次更新时间，并删除长时间不更新的记录
    */
@@ -44,7 +44,7 @@ const initialState: ChannelState = {
 
 type AppendMessagePayload = {
   channelId: string
-  messages: ArthasResponse[]
+  messages: ArthasResponseWithId[]
 }
 
 export const channelSlice = createSlice({
@@ -73,7 +73,7 @@ export const channelSlice = createSlice({
       }
     },
     clearExpiredMessages(state) {
-      const newMessage: Record<string, ArthasResponse[]> = {}
+      const newMessage: Record<string, ArthasResponseWithId[]> = {}
       const newUpdates: Record<string, UpdateRecord> = {}
       Object.entries(state.updates).forEach(([k, v]) => {
         if (Date.now() - v.lastUpdate < 1000 * 60 * 30) {

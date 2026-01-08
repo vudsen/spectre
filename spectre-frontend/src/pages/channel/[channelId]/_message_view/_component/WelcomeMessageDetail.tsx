@@ -11,6 +11,7 @@ type WelcomeMessage = {
   tutorials: string
   version: string
   wiki: string
+  fid: number
 }
 
 const WelcomeMessageDetail: React.FC<DetailComponentProps<WelcomeMessage>> = (

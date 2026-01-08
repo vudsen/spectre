@@ -6,6 +6,7 @@ type MessageResponse = {
   type: 'message'
   jobId: number
   message: string
+  fid: number
 }
 
 const MessageDetail: React.FC<DetailComponentProps<MessageResponse>> = (

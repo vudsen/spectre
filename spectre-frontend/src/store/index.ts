@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import navbarReducer from '@/store/navbarSlice.ts'
 import channelReducer from '@/store/channelSlice.ts'
 import sessionReducer from '@/store/sessionSlice.ts'
+import tipReducer from './tipSlice'
 import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 
@@ -16,10 +17,15 @@ const sessionPersistConfig = {
   storage,
 }
 
+const tipPersistConfig = {
+  key: 'tip',
+  storage,
+}
 const rootReducer = combineReducers({
   navbar: navbarReducer,
   channel: persistReducer(channelPersistConfig, channelReducer),
   session: persistReducer(sessionPersistConfig, sessionReducer),
+  tip: persistReducer(tipPersistConfig, tipReducer),
 })
 
 export const store = configureStore({

@@ -33,6 +33,7 @@ type TraceMessage = {
   jobId: number
   nodeCount: number
   root: Root
+  fid: number
 }
 
 function toKey(invoke: Invoke): string {

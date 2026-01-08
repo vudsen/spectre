@@ -43,22 +43,41 @@ export const joinChannel = (
 
 export type InputStatusResponse = {
   type: 'input_status'
+  fid: number
   inputStatus: 'ALLOW_INPUT' | 'DISABLED' | 'ALLOW_INTERRUPT'
   jobId: number
 }
 
-
-export type ArthasResponse = {
+type ArthasResponse = {
   type: string
   jobId: number
 }
 
-export const pullResults = (channelId: string): Promise<ArthasResponse[]> => {
-  return axios.get(`arthas/channel/${channelId}/pull-result`, {
+export type ArthasResponseWithId = ArthasResponse & {
+  /**
+   * arthas 实际没用这个值，这个是给前端识别用的
+   */
+  fid: number
+}
+let fid = Date.now()
+
+export const pullResults = async (
+  channelId: string,
+): Promise<ArthasResponseWithId[]> => {
+  const r = await axios.get(`arthas/channel/${channelId}/pull-result`, {
     meta: {
       skipErrorHandler: true,
     },
   })
+  const resp = r as unknown as ArthasResponse[]
+  const result: ArthasResponseWithId[] = []
+  for (const arthasRespons of resp) {
+    result.push({
+      ...arthasRespons,
+      fid: fid++,
+    })
+  }
+  return Promise.resolve(result)
 }
 
 export const executeArthasCommand = (channelId: string, command: string) => {

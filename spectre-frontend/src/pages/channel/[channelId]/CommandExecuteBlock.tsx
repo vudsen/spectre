@@ -1,4 +1,10 @@
-import React, { useState, type KeyboardEvent } from 'react'
+import React, {
+  useState,
+  type KeyboardEvent,
+  useContext,
+  useEffect,
+  useCallback,
+} from 'react'
 import ControlledTextarea from '@/components/validation/ControlledTextarea.tsx'
 import { addToast, Button, Tooltip } from '@heroui/react'
 import { useForm } from 'react-hook-form'
@@ -7,6 +13,7 @@ import {
   type InputStatusResponse,
   interruptCommand,
 } from '@/api/impl/arthas.ts'
+import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 
 interface CommandExecuteBlockProps {
   channelId: string
@@ -21,8 +28,9 @@ type FromState = {
 const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
   const { control, trigger, getValues, reset, setValue } = useForm<FromState>()
   const [loading, setLoading] = useState(false)
+  const context = useContext(ChannelContext)
 
-  const execute = async () => {
+  const execute = useCallback(async () => {
     if (!(await trigger())) {
       return
     }
@@ -35,7 +43,7 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
       props.onExecute()
       setLoading(false)
     }
-  }
+  }, [getValues, props, reset, trigger])
 
   const interrupt = () => {
     setLoading(true)
@@ -64,6 +72,17 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
     e.preventDefault()
     execute().then()
   }
+
+  useEffect(() => {
+    const cb = (cmd: string) => {
+      setValue('command', cmd)
+      execute().then()
+    }
+    context.addCommandExecuteListener(cb)
+    return () => {
+      context.removeCommandExecuteListener(cb)
+    }
+  }, [context, execute, setValue])
 
   return (
     <div className="border-t-divider flex flex-col border-t p-3">

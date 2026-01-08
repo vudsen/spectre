@@ -1,4 +1,4 @@
-import type { ArthasResponse } from '@/api/impl/arthas.ts'
+import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import React, { useMemo } from 'react'
 import {
   getArthasMessageView,
@@ -8,7 +8,7 @@ import clsx from 'clsx'
 import { Tooltip } from '@heroui/react'
 
 interface ArthasResponsePreviewProps {
-  message: ArthasResponse
+  message: ArthasResponseWithId
 }
 const ArthasResponsePreview: React.FC<ArthasResponsePreviewProps> = (props) => {
   const state: PreviewInfo = useMemo(() => {

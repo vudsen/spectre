@@ -6,7 +6,7 @@ registerMessageView({
   display: (message) => ({
     name: `${message.className}#${message.methodName}`,
     color: 'success',
-    tag: '观察结果',
+    tag: 'watch',
   }),
   detailComponent: WatchMessageDetail,
 })
