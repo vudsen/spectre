@@ -5,7 +5,7 @@ on:
     branches:
       - master
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.event_name == 'push' && 'push-global' || github.run_id }}
   cancel-in-progress: true
 
 permissions:
