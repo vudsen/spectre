@@ -61,15 +61,8 @@ export type ArthasResponseWithId = ArthasResponse & {
 }
 let fid = Date.now()
 
-export const pullResults = async (
-  channelId: string,
-): Promise<ArthasResponseWithId[]> => {
-  const r = await axios.get(`arthas/channel/${channelId}/pull-result`, {
-    meta: {
-      skipErrorHandler: true,
-    },
-  })
-  const resp = r as unknown as ArthasResponse[]
+function applyIdForArthasResponse(r: unknown): Promise<ArthasResponseWithId[]> {
+  const resp = r as ArthasResponse[]
   const result: ArthasResponseWithId[] = []
   for (const arthasRespons of resp) {
     result.push({
@@ -80,10 +73,32 @@ export const pullResults = async (
   return Promise.resolve(result)
 }
 
+export const pullResults = async (
+  channelId: string,
+): Promise<ArthasResponseWithId[]> =>
+  axios
+    .get(`arthas/channel/${channelId}/pull-result`, {
+      meta: {
+        skipErrorHandler: true,
+      },
+    })
+    .then(applyIdForArthasResponse)
+
 export const executeArthasCommand = (channelId: string, command: string) => {
   return axios.post(`arthas/channel/${channelId}/execute`, {
     command,
   })
+}
+
+export const executeArthasCommandSync = (
+  channelId: string,
+  command: string,
+): Promise<ArthasResponseWithId[]> => {
+  return axios
+    .post(`arthas/channel/${channelId}/execute-sync`, {
+      command,
+    })
+    .then(applyIdForArthasResponse)
 }
 
 export const disconnectSession = (channelId: string) => {
