@@ -115,6 +115,13 @@ class ArthasExecutionController(
         arthasExecutionService.execAsync(channelId, vo.command.trim())
     }
 
+    @PostMapping("/channel/{channelId}/execute-sync")
+    @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: #args[1].command  }")
+    fun executeSync(@PathVariable channelId: String, @Validated @RequestBody vo: ExecuteCommandRequestVO, request: HttpServletRequest): Any {
+        resolveChannelSession(request, channelId)
+        return arthasExecutionService.execSync(channelId, vo.command.trim())
+    }
+
     @PostMapping("/channel/{channelId}/disconnect")
     @Log("log.arthas.channel.disconnect", "{ channelId: #args[0] }")
     fun disconnect(@PathVariable channelId: String, request: HttpServletRequest) {

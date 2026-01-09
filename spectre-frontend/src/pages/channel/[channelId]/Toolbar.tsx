@@ -1,93 +1,115 @@
 import React, { useCallback } from 'react'
-import { Button, Code, Tooltip } from '@heroui/react'
-import SvgIcon from '@/components/icon/SvgIcon.tsx'
-import Icon from '@/components/icon/icon.ts'
-import { useDispatch, useSelector } from 'react-redux'
-import type { RootState } from '@/store'
-import { updateChannelContext } from '@/store/channelSlice.ts'
-import { showDialog } from '@/common/util.ts'
-import { disconnectSession } from '@/api/impl/arthas.ts'
-import { useNavigate } from 'react-router'
+import {
+  Button,
+  Modal,
+  ModalContent,
+  Tooltip,
+  useDisclosure,
+} from '@heroui/react'
+import RetransformModalContent from './_enhance/RetransformModalContent.tsx'
 
-interface ToolbarProps {
-  appName: string
-  channelId: string
+interface MenuListProps {
+  isExpand?: boolean
 }
 
-const Toolbar: React.FC<ToolbarProps> = (props) => {
-  const isDebugMode = useSelector<RootState, boolean | undefined>(
-    (state) => state.channel.context.isDebugMode,
+const RetransformIcon = () => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 640 640"
+      width={20}
+      height={20}
+    >
+      {/*<!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->*/}
+      <path
+        fill="currentColor"
+        d="M192 112L304 112L304 200C304 239.8 336.2 272 376 272L464 272L464 512C464 520.8 456.8 528 448 528L192 528C183.2 528 176 520.8 176 512L176 128C176 119.2 183.2 112 192 112zM352 131.9L444.1 224L376 224C362.7 224 352 213.3 352 200L352 131.9zM192 64C156.7 64 128 92.7 128 128L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 250.5C512 233.5 505.3 217.2 493.3 205.2L370.7 82.7C358.7 70.7 342.5 64 325.5 64L192 64zM298.2 359.6C306.8 349.5 305.7 334.4 295.6 325.8C285.5 317.2 270.4 318.3 261.8 328.4L213.8 384.4C206.1 393.4 206.1 406.6 213.8 415.6L261.8 471.6C270.4 481.7 285.6 482.8 295.6 474.2C305.6 465.6 306.8 450.4 298.2 440.4L263.6 400L298.2 359.6zM378.2 328.4C369.6 318.3 354.4 317.2 344.4 325.8C334.4 334.4 333.2 349.6 341.8 359.6L376.4 400L341.8 440.4C333.2 450.5 334.3 465.6 344.4 474.2C354.5 482.8 369.6 481.7 378.2 471.6L426.2 415.6C433.9 406.6 433.9 393.4 426.2 384.4L378.2 328.4z"
+      />
+    </svg>
   )
-  const dispatch = useDispatch()
-  const nav = useNavigate()
+}
 
-  const setDebugMode = useCallback(
-    (s: boolean) => {
-      dispatch(
-        updateChannelContext({
-          isDebugMode: s,
-        }),
-      )
+type MenuItem = {
+  name: string
+  icon: React.ReactNode
+  type: string
+}
+
+const menuItems: MenuItem[] = [
+  {
+    name: 'Retransform',
+    icon: <RetransformIcon />,
+    type: 'retransform',
+  },
+]
+
+interface MenuContentProps {
+  onAction: (item: MenuItem) => void
+}
+
+const CollapsedMenuContent: React.FC<MenuContentProps> = (props) => {
+  return (
+    <>
+      {menuItems.map((item) => (
+        <Tooltip key={item.type} content={item.name} placement="right">
+          <Button
+            variant="light"
+            isIconOnly
+            onPress={() => props.onAction(item)}
+          >
+            {item.icon}
+          </Button>
+        </Tooltip>
+      ))}
+    </>
+  )
+}
+
+const COLLAPSED_WIDTH = 54
+const Toolbar: React.FC<MenuListProps> = () => {
+  const retransformDisclosure = useDisclosure()
+
+  const onAction = useCallback(
+    (item: MenuItem) => {
+      switch (item.type) {
+        case 'retransform': {
+          retransformDisclosure.onOpen()
+          break
+        }
+      }
     },
-    [dispatch],
+    [retransformDisclosure],
   )
-
-  const disconnect = useCallback(() => {
-    showDialog({
-      title: '断开连接',
-      message: '您可能会丢失所有的消息，确定断开连接吗?',
-      color: 'danger',
-      onConfirm() {
-        // TODO fullscreen mask.
-        disconnectSession(props.channelId).then(() => {
-          nav('/runtime-node/list')
-        })
-      },
-    })
-  }, [nav, props.channelId])
-
-  const toHome = () => {
-    nav('/')
-  }
 
   return (
-    <div className="h-navbar mx-3 flex items-center justify-between">
-      <div className="flex max-w-1/2 items-center">
-        <span className="font-bold text-nowrap">&gt; 已连接到:&nbsp;</span>
-        <Tooltip content={props.appName}>
-          <Code className="cursor-pointer truncate" color="primary">
-            {props.appName}
-          </Code>
-        </Tooltip>
+    <>
+      <div
+        className="z-20 h-screen"
+        style={{
+          boxShadow: '2px 0 8px rgba(0,0,0,.1)',
+          width: COLLAPSED_WIDTH,
+        }}
+      >
+        <div className="border-r-divider flex h-full flex-col items-center space-y-3 overflow-hidden px-2 shadow">
+          <div className="mt-3">
+            <Tooltip content="增强功能" placement="right">
+              ✨
+            </Tooltip>
+          </div>
+          <div className="flex flex-col items-center">
+            <CollapsedMenuContent onAction={onAction} />
+          </div>
+        </div>
       </div>
-      <div>
-        <Tooltip content="回到首页">
-          <Button isIconOnly variant="light" onPress={toHome}>
-            <SvgIcon icon={Icon.HOME} size={22} />
-          </Button>
-        </Tooltip>
-        <Tooltip content="开启 DEBUG 模式">
-          <Button
-            isIconOnly
-            variant="light"
-            onPress={() => setDebugMode(!isDebugMode)}
-            className={isDebugMode ? 'text-primary' : ''}
-          >
-            <SvgIcon icon={Icon.BUG} size={22} />
-          </Button>
-        </Tooltip>
-        <Tooltip content="断开连接">
-          <Button
-            isIconOnly
-            variant="light"
-            color="danger"
-            onPress={disconnect}
-          >
-            <SvgIcon icon={Icon.DISCONNECT} size={22} />
-          </Button>
-        </Tooltip>
-      </div>
-    </div>
+      <Modal
+        isOpen={retransformDisclosure.isOpen}
+        onOpenChange={retransformDisclosure.onOpenChange}
+      >
+        <ModalContent>
+          {(onClose) => <RetransformModalContent onClose={onClose} />}
+        </ModalContent>
+      </Modal>
+    </>
   )
 }
 

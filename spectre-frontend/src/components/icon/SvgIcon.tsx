@@ -1,8 +1,7 @@
 import type { SVGAttributes } from 'react'
-import type { Icons } from '@/components/icon/icon.ts'
 
 interface IconProps extends SVGAttributes<SVGSVGElement> {
-  icon: Icons
+  icon: string
   size?: number
 }
 

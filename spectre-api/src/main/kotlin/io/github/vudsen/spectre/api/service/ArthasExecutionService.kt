@@ -34,6 +34,11 @@ interface ArthasExecutionService {
     fun execAsync(channelId: String, command: String)
 
     /**
+     * 同步执行命令
+     */
+    fun execSync(channelId: String, command: String): Any
+
+    /**
      * 拉取 arthas 执行结果
      * @return arthas http 接口结果，JSON对象
      */

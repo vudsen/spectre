@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { type ChannelSessionDTO, joinChannel } from '@/api/impl/arthas.ts'
-import ArthasInteractionPage from '@/pages/channel/[channelId]/ArthasInteractionPage.tsx'
 import { useDispatch } from 'react-redux'
 import {
   setupChannelContext,
   updateChannelContext,
 } from '@/store/channelSlice.ts'
-import './_message_view/init.ts'
+import ChannelLayout from '@/pages/channel/[channelId]/ChannelLayout.tsx'
 
 const ChannelPage: React.FC = () => {
   const params = useParams()
@@ -65,9 +64,7 @@ const ChannelPage: React.FC = () => {
   } else if (channelJoinMsg) {
     return <div className="text-danger">{channelJoinMsg}</div>
   }
-  return (
-    <ArthasInteractionPage appName={session!.name} channelId={channelId!} />
-  )
+  return <ChannelLayout appName={session!.name} channelId={channelId!} />
 }
 
 export default ChannelPage
