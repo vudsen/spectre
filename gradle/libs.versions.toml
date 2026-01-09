@@ -1,5 +1,5 @@
 [versions]
-springBoot = "3.5.5"
+springBoot = "3.5.9"
 springDependencyManagement = "1.1.7"
 minaSshd = "2.15.0"
 apacheCommons = "1.28.0"
