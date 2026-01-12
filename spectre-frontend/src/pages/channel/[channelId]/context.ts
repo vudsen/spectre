@@ -1,7 +1,20 @@
-import { createContext, useMemo } from 'react'
+import { createContext } from 'react'
+import type { TabsControllerRef } from '@/pages/channel/[channelId]/_tabs/TabsController.tsx'
 
 type CommandExecuteCallback = (cmd: string) => void
-type ChannelContextState = {
+
+export type TabOptions = {
+  name?: string
+  isLocked?: boolean
+  /**
+   * 如果该标签页是唯一的，则需要提供该值，当用户重复打开时，将会跳转而不是开启一个新的
+   */
+  uniqueId?: string
+  hoverMessage?: string
+}
+
+export type ChannelContextState = {
+  getTabsController: () => TabsControllerRef
   /**
    * 执行 arthas 命令
    */
@@ -13,32 +26,10 @@ type ChannelContextState = {
   removeCommandExecuteListener: (cb: CommandExecuteCallback) => void
 }
 const ChannelContext = createContext<ChannelContextState>({
-  addCommandExecuteListener() {},
   execute() {},
+  getTabsController: () => null!,
+  addCommandExecuteListener() {},
   removeCommandExecuteListener() {},
 })
-
-export const useChannelContext = (): ChannelContextState => {
-  return useMemo<ChannelContextState>(() => {
-    const listeners: CommandExecuteCallback[] = []
-    return {
-      execute(cmd) {
-        for (const listener of listeners) {
-          listener(cmd)
-        }
-      },
-      addCommandExecuteListener(listener) {
-        listeners.push(listener)
-      },
-      removeCommandExecuteListener(listener) {
-        const i = listeners.findIndex((v) => v === listener)
-        if (i >= 0) {
-          listeners.splice(i, 1)
-        }
-        console.log(listeners)
-      },
-    }
-  }, [])
-}
 
 export default ChannelContext

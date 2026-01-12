@@ -27,6 +27,7 @@ const Icon = {
   WRENCH: 'fc-screwdriver-wrench',
   RIGHT_ARROW: 'fc-angle-right',
   BOOKMARK: 'fc-bookmark',
+  LOCK: 'fc-lock',
 } as const
 
 export type Icons = (typeof Icon)[keyof typeof Icon]

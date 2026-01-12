@@ -356,6 +356,17 @@ class DefaultArthasExecutionService(
         client.asyncExec(data.sessionId, command)
     }
 
+    override fun execSync(channelId: String, command: String): Any {
+        checkTreeNodePermission(channelId)
+        checkCommandExecPermission(channelId, command)
+        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
+        val client = tryResolveClient(data, channelId)
+        if (data.restrictedMode) {
+            checkOgnlExpression(command)
+        }
+        return client.exec(command)
+    }
+
     fun checkOgnlExpression(command: String) {
         // Ognl 和 SpEL 差不多的
         for (rawExpression in splitOgnlExpression(command)) {
