@@ -12,6 +12,7 @@ type UpdateRecord = {
 type ChannelContext = {
   isDebugMode?: boolean
   channelId: string
+  classloaderHash?: string
 }
 
 interface ChannelState {

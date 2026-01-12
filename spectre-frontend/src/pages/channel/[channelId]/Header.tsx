@@ -1,5 +1,13 @@
-import React, { useCallback } from 'react'
-import { Button, Code, Tooltip } from '@heroui/react'
+import React, {type FormEvent, useCallback, useState} from 'react'
+import {
+  Button,
+  Code,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tooltip
+} from '@heroui/react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { useDispatch, useSelector } from 'react-redux'
@@ -8,6 +16,8 @@ import { updateChannelContext } from '@/store/channelSlice.ts'
 import { showDialog } from '@/common/util.ts'
 import { disconnectSession } from '@/api/impl/arthas.ts'
 import { useNavigate } from 'react-router'
+import ChannelIcon from "@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts";
+import QuickCommand from "@/pages/channel/[channelId]/_component/QuickCommand";
 
 interface ToolbarProps {
   appName: string
@@ -18,6 +28,10 @@ const Header: React.FC<ToolbarProps> = (props) => {
   const isDebugMode = useSelector<RootState, boolean | undefined>(
     (state) => state.channel.context.isDebugMode,
   )
+  const classloaderHash = useSelector<RootState, string | undefined>(
+    (state) => state.channel.context.classloaderHash,
+  )
+  const [isClassloaderSetterOpen, setClassloaderStterOpen] = useState(false)
   const dispatch = useDispatch()
   const nav = useNavigate()
 
@@ -50,17 +64,45 @@ const Header: React.FC<ToolbarProps> = (props) => {
     nav('/')
   }
 
+  const saveClassloaderHash = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const target = (e.target as HTMLFormElement)
+    const data = new FormData(target)
+    const hash = data.get('hash')
+    dispatch(updateChannelContext({
+      classloaderHash: typeof hash === 'string' && hash.length > 0 ? hash : undefined
+    }))
+    setClassloaderStterOpen(false)
+  }
+
+
   return (
     <div className="border-b-divider mx-3 flex items-center justify-between border-b-1">
       <div className="flex max-w-1/2 items-center">
         <span className="font-bold text-nowrap">&gt; 已连接到:&nbsp;</span>
-        <Tooltip content={props.appName}>
+        <Tooltip content={props.appName} isOpen={isClassloaderSetterOpen} onOpenChange={(open) => setClassloaderStterOpen(open)}>
           <Code className="cursor-pointer truncate" color="primary">
             {props.appName}
           </Code>
         </Tooltip>
       </div>
-      <div>
+      <div className="flex items-center">
+        <QuickCommand/>
+        <Popover>
+          <PopoverTrigger className="mr-2">
+            <div className="flex items-center cursor-pointer text-sm">
+              <SvgIcon icon={ChannelIcon.HASH}/>
+              {classloaderHash ?? '<default>'}
+              <SvgIcon icon={Icon.RIGHT_ARROW} className="rotate-90"/>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent>
+            <form className="pt-3 flex flex-col" onSubmit={saveClassloaderHash}>
+              <Input label="Classloader Hash" name="hash" labelPlacement="outside-top"/>
+              <Button type="submit" color="primary" size="sm" variant="light" className="self-end mt-2">保存</Button>
+            </form>
+          </PopoverContent>
+        </Popover>
         <Tooltip content="回到首页">
           <Button isIconOnly variant="light" onPress={toHome}>
             <SvgIcon icon={Icon.HOME} size={22} />
