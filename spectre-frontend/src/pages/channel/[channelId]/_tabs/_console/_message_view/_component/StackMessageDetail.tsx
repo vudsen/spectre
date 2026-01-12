@@ -8,8 +8,6 @@ import React, {
   useState,
 } from 'react'
 import Time from '@/components/Time.tsx'
-import RightClickMenu from '../../_component/RightClickMenu.tsx'
-import useRightClickMenu from '../../_component/useRightClickMenu.ts'
 import Icon from '@/components/icon/icon.ts'
 import clsx from 'clsx'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
@@ -18,6 +16,8 @@ import type { RootState } from '@/store'
 import { Button, ListboxItem, Tooltip } from '@heroui/react'
 import { setTipRead } from '@/store/tipSlice'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
+import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
+import RightClickMenu from '@/components/RightClickMenu/RightClickMenu.tsx'
 
 type Trace = {
   fileName: string
@@ -166,11 +166,9 @@ const StackMessageDetail: React.FC<DetailComponentProps<StackMessage>> = ({
       const trace = msg.stackTrace[selectedIndex.current]
       switch (key) {
         case Actions.JAD:
-          context.openTab(
-            'JAD',
-            { name: trace.fileName, uniqueId: `jad:${trace.fileName}` },
-            { classname: trace.className },
-          )
+          context
+            .getTabsController()
+            .openTab('JAD', {}, { classname: trace.className })
           break
         case Actions.WATCH:
           context.execute(`watch ${trace.className} ${trace.methodName} -x 2`)

@@ -16,7 +16,7 @@ import type { RootState } from '@/store'
 import { appendMessages, clearExpiredMessages } from '@/store/channelSlice'
 import './_message_view/init.ts'
 
-const Index: React.FC = () => {
+const ConsoleTab: React.FC = () => {
   const channelId = useSelector<RootState, string>(
     (state) => state.channel.context.channelId,
   )
@@ -138,4 +138,4 @@ const Index: React.FC = () => {
   )
 }
 
-export default Index
+export default ConsoleTab

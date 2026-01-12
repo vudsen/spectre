@@ -1,8 +1,11 @@
-import React, { useMemo } from 'react'
+import React, { useContext, useMemo, useRef } from 'react'
 import clsx from 'clsx'
 import { formatTime } from '@/common/util.ts'
-import { Popover, PopoverContent, PopoverTrigger, Tooltip } from '@heroui/react'
+import { ListboxItem, Tooltip } from '@heroui/react'
 import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import RightClickMenu from '@/components/RightClickMenu/RightClickMenu.tsx'
+import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
+import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 type Invoke = {
   className: string
   cost: number
@@ -46,6 +49,7 @@ interface TraceRowProps {
   level: number
   isTail: boolean
   isAbnormal?: boolean
+  onMenuContext: (invoke: Invoke, e: React.MouseEvent<unknown>) => void
 }
 
 const GAP = 12
@@ -59,6 +63,7 @@ const TraceRow: React.FC<TraceRowProps> = ({
   level,
   isTail,
   isAbnormal,
+  onMenuContext,
 }) => {
   const childes = invoke.children ?? EMPTY_ARRAY
   const abnormalIndex = useMemo(() => {
@@ -74,7 +79,10 @@ const TraceRow: React.FC<TraceRowProps> = ({
   }, [childes])
   return (
     <div className={className} style={{ marginLeft: GAP * level }}>
-      <div className="relative flex items-center py-1">
+      <div
+        className="relative flex items-center py-1 hover:opacity-80"
+        onContextMenu={(e) => onMenuContext(invoke, e)}
+      >
         <span
           className={clsx(
             'bg-primary absolute top-0 left-0 w-0.5',
@@ -82,45 +90,30 @@ const TraceRow: React.FC<TraceRowProps> = ({
           )}
         />
         <div className="bg-primary mt-1 h-0.5 w-4"></div>
-        <span className="ml-1 w-0">
-          <Popover placement="right-start">
-            <PopoverTrigger>
-              <span
-                className={clsx(
-                  isAbnormal ? 'text-danger' : 'text-default-600',
-                  'cursor-pointer text-sm',
-                )}
-              >
-                <span>
-                  [
-                  {invoke.cost
-                    ? `${(invoke.cost / unit).toFixed(4)}ms`
-                    : `min=${invoke.minCost}; max=${invoke.maxCost}`}
-                  ]&nbsp;
-                </span>
-                <span>
-                  {invoke.className}#{invoke.methodName}:{invoke.lineNumber}
-                </span>
-              </span>
-            </PopoverTrigger>
-            <PopoverContent>
-              <div className="p-3 whitespace-pre-wrap">
-                {JSON.stringify(
-                  {
-                    ...invoke,
-                    children: [],
-                  },
-                  null,
-                  2,
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-        </span>
+        <div className="ml-1 w-0">
+          <span
+            className={clsx(
+              isAbnormal ? 'text-danger' : 'text-default-600',
+              'cursor-pointer text-sm',
+            )}
+          >
+            <span>
+              [
+              {invoke.cost
+                ? `${(invoke.cost / unit).toFixed(4)}ms`
+                : `min=${invoke.minCost}; max=${invoke.maxCost}`}
+              ]&nbsp;
+            </span>
+            <span>
+              {invoke.className}#{invoke.methodName}:{invoke.lineNumber}
+            </span>
+          </span>
+        </div>
       </div>
       {childes.map((ivk, index) => (
         <TraceRow
           key={toKey(ivk)}
+          onMenuContext={onMenuContext}
           level={level + 1}
           invoke={ivk}
           isTail={index === childes.length - 1}
@@ -186,12 +179,48 @@ function getMedian(arr: number[]): number {
 const TraceMessageDetail: React.FC<DetailComponentProps<TraceMessage>> = (
   props,
 ) => {
+  const currentSelected = useRef<Invoke | undefined>(undefined)
+  const context = useContext(ChannelContext)
   const root = props.msg.root
   const msg = `${root.threadName}(id=${root.threadId}; daemon=${root.daemon}; priority=
         ${root.priority}; classloader=${root.classloader}; ts=
         ${formatTime(root.timestamp)})`
+
+  const { onContextMenu, menuProps } = useRightClickMenu()
+
+  const onContextMenu0 = (invoke: Invoke, e: React.MouseEvent<unknown>) => {
+    currentSelected.current = invoke
+    onContextMenu(e)
+  }
+
+  const onAction = (key: string | number) => {
+    const invoke = currentSelected.current!
+    switch (key) {
+      case 'jad':
+        context
+          .getTabsController()
+          .openTab('JAD', {}, { classname: invoke.className })
+        break
+      case 'watch':
+        context.execute(`watch ${invoke.className} -x 2`)
+        break
+      case 'trace':
+        context.execute(`trace ${invoke.className}`)
+        break
+      case 'stack':
+        context.execute(`stack ${invoke.className}`)
+        break
+    }
+  }
+
   return (
     <div>
+      <RightClickMenu {...menuProps} onAction={onAction}>
+        <ListboxItem key="jad">反编译</ListboxItem>
+        <ListboxItem key="watch">Watch</ListboxItem>
+        <ListboxItem key="trace">Trace</ListboxItem>
+        <ListboxItem key="stack">Stack</ListboxItem>
+      </RightClickMenu>
       <div className="overflow-x-hidden font-bold">
         <Tooltip content={msg} className="">
           <div className="max-w-full overflow-x-hidden text-nowrap text-ellipsis">
@@ -203,6 +232,7 @@ const TraceMessageDetail: React.FC<DetailComponentProps<TraceMessage>> = (
         <TraceRow
           invoke={invoke}
           key={toKey(invoke)}
+          onMenuContext={onContextMenu0}
           level={1}
           isTail={index === root.children.length - 1}
         />

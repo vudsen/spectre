@@ -2,32 +2,28 @@ import React, { useEffect, useState } from 'react'
 import { executeArthasCommandSync } from '@/api/impl/arthas.ts'
 import { store } from '@/store'
 import { addToast } from '@heroui/react'
+import Code from '@/components/Code.tsx'
+import type { JadMessage } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/_component/JadMessageDetail.tsx'
 
 export interface JadPageProps {
+  /**
+   * 如果提供该值，则不好发送请求进行反编译
+   */
+  loaded?: JadMessage
   classname: string
-}
-
-type JadMessage = {
-  classInfo: {
-    classLoaderHash: string
-    classloader: string[]
-    name: string
-  }
-  jobId: number
-  location: string
-  mappings: Record<string, number>
-  source: string
-  type: 'jad'
-  fid: number
 }
 
 const JadPage: React.FC<JadPageProps> = (props) => {
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<undefined | string>()
 
-  const [messages, setMessages] = useState<string[]>([])
+  const [code, setCode] = useState<string | undefined>(props.loaded?.source)
 
   useEffect(() => {
+    if (code) {
+      setLoading(false)
+      return
+    }
     const channelId = store.getState().channel.context.channelId
     executeArthasCommandSync(channelId, `jad ${props.classname}`)
       .then((r) => {
@@ -46,13 +42,13 @@ const JadPage: React.FC<JadPageProps> = (props) => {
           console.log(r)
           return
         }
-        setMessages(jadMsg.source.split('\n'))
+        setCode(jadMsg.source)
         setLoading(false)
       })
       .catch((e) => {
         setErrorMessage(`反编译失败: ${e.message ?? '未知原因'}`)
       })
-  }, [props.classname])
+  }, [code, props.classname])
 
   if (errorMessage) {
     return (
@@ -69,20 +65,7 @@ const JadPage: React.FC<JadPageProps> = (props) => {
     )
   }
 
-  return (
-    <div className="overflow-scroll">
-      <code className="block font-mono text-sm leading-6 whitespace-pre text-gray-800 [counter-reset:line]">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className="before:mr-4 before:inline-block before:w-10 before:text-right before:text-gray-600 before:content-[counter(line)] before:select-none before:[counter-increment:line]"
-          >
-            {msg}
-          </div>
-        ))}
-      </code>
-    </div>
-  )
+  return <Code code={code} />
 }
 
 export default JadPage
