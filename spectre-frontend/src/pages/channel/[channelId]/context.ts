@@ -1,7 +1,8 @@
 import { createContext } from 'react'
 import type { TabsControllerRef } from '@/pages/channel/[channelId]/_tabs/TabsController.tsx'
+import type { QuickCommandRef } from '@/pages/channel/[channelId]/_component/QuickCommand'
 
-type CommandExecuteCallback = (cmd: string) => void
+type CommandExecuteCallback = (cmd: string, interruptCurrent?: boolean) => void
 
 export type TabOptions = {
   name?: string
@@ -15,6 +16,7 @@ export type TabOptions = {
 
 export type ChannelContextState = {
   getTabsController: () => TabsControllerRef
+  getQuickCommandExecutor: () => QuickCommandRef
   /**
    * 执行 arthas 命令
    */
@@ -28,6 +30,7 @@ export type ChannelContextState = {
 const ChannelContext = createContext<ChannelContextState>({
   execute() {},
   getTabsController: () => null!,
+  getQuickCommandExecutor: () => null!,
   addCommandExecuteListener() {},
   removeCommandExecuteListener() {},
 })

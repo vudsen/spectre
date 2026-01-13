@@ -8,38 +8,117 @@ import {
   PopoverTrigger,
   useDisclosure,
 } from '@heroui/react'
-import React, { useState } from 'react'
-import WatchCommandModalContent from '@/pages/channel/[channelId]/_component/QuickCommand/WatchCommandModalContent.tsx'
+import React, { useImperativeHandle, useState } from 'react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
-import { createPortal } from 'react-dom'
+import CommandFormContent, { type FormHandle } from './CommandFormContent'
+import {
+  stack,
+  trace,
+  watch,
+} from '@/pages/channel/[channelId]/_component/QuickCommand/commands.ts'
 
 interface QuickCommands {
   watch: {
     classname: string
+    methodName: string
   }
   trace: {
     classname: string
+    methodName: string
   }
   stack: {
     classname: string
+    methodName: string
   }
   jad: {
     classname: string
   }
 }
 
-const QuickCommand: React.FC = () => {
-  const watchDisclosure = useDisclosure()
+type OpenArgs<K extends keyof QuickCommands> =
+  QuickCommands[K] extends undefined ? [K] : [K, QuickCommands[K]]
+
+type OpenFunc = <K extends keyof QuickCommands>(...args: OpenArgs<K>) => void
+
+type HandleActionArgs = {
+  classname: string
+  methodName: string
+}
+/**
+ * 处理右键动作
+ * @return 返回 true 表示事件已经被处理
+ */
+type HandleActionsFunc = (
+  actionKey: string | number,
+  args: HandleActionArgs,
+) => boolean
+
+export interface QuickCommandRef {
+  open: OpenFunc
+  handleActions: HandleActionsFunc
+}
+
+interface QuickCommandProps {
+  ref: React.RefObject<QuickCommandRef | null>
+}
+
+type MyFormProps = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handle: FormHandle<any>
+  defaultValues: object
+}
+
+const QuickCommand: React.FC<QuickCommandProps> = (props) => {
+  const modalDisclosure = useDisclosure()
+  const [modalProps, setModalProps] = useState<MyFormProps | undefined>(
+    undefined,
+  )
   const [isListOpen, setListOpen] = useState(false)
-  const onAction = (key: string | number) => {
-    console.log(key)
+  const onAction0 = (key: string | number, args: object = {}): boolean => {
+    let notFound = false
     switch (key) {
       case 'watch':
-        watchDisclosure.onOpen()
+        setModalProps({
+          handle: watch,
+          defaultValues: args,
+        })
+        break
+      case 'trace':
+        setModalProps({
+          handle: trace,
+          defaultValues: args,
+        })
+        break
+      case 'stack':
+        setModalProps({
+          handle: stack,
+          defaultValues: args,
+        })
+        break
+      default:
+        notFound = true
         break
     }
+    if (notFound) {
+      return false
+    }
+    modalDisclosure.onOpen()
     setListOpen(false)
+    return true
+  }
+
+  useImperativeHandle(props.ref, () => ({
+    open(...args) {
+      onAction0(args[0], args[1])
+    },
+    handleActions(key: string | number, args) {
+      return onAction0(key, args)
+    },
+  }))
+
+  const onAction = (key: string | number) => {
+    onAction0(key)
   }
   return (
     <>
@@ -59,16 +138,18 @@ const QuickCommand: React.FC = () => {
             <ListboxItem key="watch">Watch</ListboxItem>
             <ListboxItem key="trace">Trace</ListboxItem>
             <ListboxItem key="stack">Stack</ListboxItem>
-            <ListboxItem key="jad">反编译</ListboxItem>
           </Listbox>
         </PopoverContent>
       </Popover>
       <Modal
-        isOpen={watchDisclosure.isOpen}
-        onOpenChange={watchDisclosure.onOpenChange}
+        size="2xl"
+        isOpen={modalDisclosure.isOpen}
+        onOpenChange={modalDisclosure.onOpenChange}
       >
         <ModalContent>
-          {(onClose) => <WatchCommandModalContent onClose={onClose} />}
+          {(onClose) => (
+            <CommandFormContent {...modalProps!} onClose={onClose} />
+          )}
         </ModalContent>
       </Modal>
     </>

@@ -164,23 +164,22 @@ const StackMessageDetail: React.FC<DetailComponentProps<StackMessage>> = ({
   const onAction = useCallback(
     (key: string | number) => {
       const trace = msg.stackTrace[selectedIndex.current]
+      if (
+        context.getQuickCommandExecutor().handleActions(key, {
+          classname: trace.className,
+          methodName: trace.methodName,
+        })
+      ) {
+        return
+      }
       switch (key) {
         case Actions.JAD:
           context
             .getTabsController()
             .openTab('JAD', {}, { classname: trace.className })
           break
-        case Actions.WATCH:
-          context.execute(`watch ${trace.className} ${trace.methodName} -x 2`)
-          break
         case Actions.FLAG:
           changeFlag()
-          break
-        case Actions.TRACE:
-          context.execute(`trace ${trace.className} ${trace.methodName}`)
-          break
-        case Actions.STACK:
-          context.execute(`stack ${trace.className} ${trace.methodName} -x 2`)
           break
       }
     },

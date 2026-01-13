@@ -53,7 +53,7 @@ registerMessageView<VersionMessage>({
   display: (message) => ({
     name: message.version,
     color: 'secondary',
-    tag: '服务器消息',
+    tag: 'version',
   }),
 })
 

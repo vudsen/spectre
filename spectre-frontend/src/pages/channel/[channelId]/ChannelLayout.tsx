@@ -8,6 +8,7 @@ import React, { useMemo, useRef } from 'react'
 import ChannelContext, {
   type ChannelContextState,
 } from '@/pages/channel/[channelId]/context.ts'
+import type { QuickCommandRef } from '@/pages/channel/[channelId]/_component/QuickCommand'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyFn = (...args: any[]) => void
@@ -45,11 +46,12 @@ interface ChannelLayoutProps {
 
 const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
   const tabsController = useRef<TabsControllerRef>(null)
+  const quickCommandRef = useRef<QuickCommandRef>(null)
   const contextValue = useMemo<ChannelContextState>(() => {
     const commandExecuteDispatcher = createListenerDispatcher()
     return {
-      execute(cmd) {
-        commandExecuteDispatcher.trigger(cmd)
+      execute(...args) {
+        commandExecuteDispatcher.trigger(...args)
       },
       addCommandExecuteListener(listener) {
         commandExecuteDispatcher.addListener(listener)
@@ -60,6 +62,9 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
       getTabsController() {
         return tabsController.current!
       },
+      getQuickCommandExecutor() {
+        return quickCommandRef.current!
+      },
     }
   }, [])
 
@@ -67,7 +72,7 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
     <>
       <ChannelSvgSymbols />
       <ChannelContext value={contextValue}>
-        <Header {...props} />
+        <Header {...props} ref={quickCommandRef} />
         <div>
           <div className="flex">
             <Toolbar />
