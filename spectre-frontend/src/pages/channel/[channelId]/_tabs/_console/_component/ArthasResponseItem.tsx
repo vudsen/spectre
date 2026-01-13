@@ -33,25 +33,25 @@ const ArthasResponseItem: React.FC<ArthasResponseItemProps> = ({
     if (item.groupInfo) {
       if (item.groupInfo.colorFlag === 0) {
         return {
-          normal: 'normalColorFlag0',
-          selected: 'normalColorFlag0Selected',
+          normal: 'groupEven',
+          selected: 'evenSelected',
         }
       } else {
         return {
-          normal: 'normalColorFlag1',
-          selected: 'normalColorFlag1Selected',
+          normal: 'groupOdd',
+          selected: 'oddSelected',
         }
       }
     } else {
       if ((index & 1) === 0) {
         return {
-          normal: 'normalUngrouped0',
-          selected: 'normalUngrouped0Selected',
+          normal: 'groupEven',
+          selected: 'evenSelected',
         }
       } else {
         return {
-          normal: 'normalUngrouped1',
-          selected: 'normalUngrouped1Selected',
+          normal: 'groupOdd',
+          selected: 'oddSelected',
         }
       }
     }

@@ -2,13 +2,7 @@ import UploadArea, {
   type UploadAreaRef,
 } from '@/components/validation/UploadArea.tsx'
 import { useRef, useState } from 'react'
-import {
-  Button,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from '@heroui/react'
+import { Button, ModalBody, ModalFooter, ModalHeader } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
@@ -35,35 +29,33 @@ const RetransformModalContent: React.FC<RetransformModalContentProps> = (
   }
   return (
     <>
-      <ModalContent>
-        <ModalHeader>Retransform</ModalHeader>
-        <ModalBody>
-          <div className="text-sm">
-            上传 class 文件快速替换，文件会在使用完毕后立即删除。
-          </div>
-          <UploadArea
-            onUploadFinished={() => setLoading(false)}
-            onClose={props.onClose}
-            sizeUnit="kb"
-            supportedTypes={SUPPORTED_TYPES}
-            url={`/arthas/channel/${channelId}/retransform`}
-            ref={uploadRef}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            color="danger"
-            variant="light"
-            onPress={props.onClose}
-            isDisabled={loading}
-          >
-            {t('common.cancel')}
-          </Button>
-          <Button color="primary" onPress={onConfirm} isLoading={loading}>
-            {t('common.upload')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
+      <ModalHeader>Retransform</ModalHeader>
+      <ModalBody>
+        <div className="text-sm">
+          上传 class 文件快速替换，文件会在使用完毕后立即删除。
+        </div>
+        <UploadArea
+          onUploadFinished={() => setLoading(false)}
+          onClose={props.onClose}
+          sizeUnit="kb"
+          supportedTypes={SUPPORTED_TYPES}
+          url={`/arthas/channel/${channelId}/retransform`}
+          ref={uploadRef}
+        />
+      </ModalBody>
+      <ModalFooter>
+        <Button
+          color="danger"
+          variant="light"
+          onPress={props.onClose}
+          isDisabled={loading}
+        >
+          {t('common.cancel')}
+        </Button>
+        <Button color="primary" onPress={onConfirm} isLoading={loading}>
+          {t('common.upload')}
+        </Button>
+      </ModalFooter>
     </>
   )
 }

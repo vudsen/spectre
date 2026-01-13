@@ -13,7 +13,11 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import ArthasResponseListTab from './ArthasResponseListTab.tsx'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/store'
-import { appendMessages, clearExpiredMessages } from '@/store/channelSlice'
+import {
+  appendMessages,
+  clearExpiredMessages,
+  updateInputStatus,
+} from '@/store/channelSlice'
 import './_message_view/init.ts'
 
 const ConsoleTab: React.FC = () => {
@@ -23,18 +27,12 @@ const ConsoleTab: React.FC = () => {
   const messages = useSelector<RootState, ArthasResponseWithId[]>(
     (state) => state.channel.messages[state.channel.context.channelId] ?? [],
   )
-  const dispatch = useDispatch()
-  const [inputStatus, setInputStatus] = useState<
+  const inputStatus = useSelector<
+    RootState,
     InputStatusResponse['inputStatus']
-  >(() => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const msg = messages[i]
-      if (msg.type === 'input_status') {
-        return (msg as InputStatusResponse).inputStatus
-      }
-    }
-    return 'DISABLED'
-  })
+  >((state) => state.channel.context.inputStatus)
+  const dispatch = useDispatch()
+
   const [selectedEntity, setSelectedEntity] = useState<ArthasResponseWithId>()
   const pullResultsTaskId = useRef<number>(undefined)
   const taskDelay = useRef(0)
@@ -46,7 +44,8 @@ const ConsoleTab: React.FC = () => {
       const r = await pullResults(channelId)
       for (const resp of r) {
         if (resp.type === 'input_status') {
-          setInputStatus((resp as InputStatusResponse).inputStatus)
+          const status = (resp as InputStatusResponse).inputStatus
+          dispatch(updateInputStatus(status))
         }
       }
       if (r.length > 0) {
@@ -85,7 +84,7 @@ const ConsoleTab: React.FC = () => {
         if (messageCount > 0) {
           taskDelay.current = 0
         } else {
-          taskDelay.current = Math.min(taskDelay.current + 1000, 10 * 1000)
+          taskDelay.current = Math.min(taskDelay.current + 1000, 20 * 1000)
         }
         pullResultsTaskId.current = setTimeout(() => {
           launchPullResultTask()
@@ -117,7 +116,7 @@ const ConsoleTab: React.FC = () => {
           className="flex h-0! w-full grow"
           autoSaveId="channel-attach"
         >
-          <Panel minSize={20} defaultSize={40} className="!overflow-y-scroll">
+          <Panel minSize={20} defaultSize={40}>
             <ArthasResponseListTab
               responses={messages}
               onEntitySelect={setSelectedEntity}

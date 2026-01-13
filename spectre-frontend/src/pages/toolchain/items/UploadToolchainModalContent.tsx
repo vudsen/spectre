@@ -3,7 +3,6 @@ import {
   Button,
   Link,
   ModalBody,
-  ModalContent,
   ModalFooter,
   ModalHeader,
 } from '@heroui/react'
@@ -37,44 +36,42 @@ const UploadToolchainModalContent: React.FC<
 
   return (
     <>
-      <ModalContent>
-        <ModalHeader>上传 {props.type}</ModalHeader>
-        <ModalBody>
-          <div className="relative w-full max-w-lg">
-            <UploadArea
-              supportedTypes={SUPPORTED_TYPES}
-              url={`toolchain/upload?type=${props.type}&tag=${props.tag}&isArm=${props.isArm}`}
-              onClose={props.onClose}
-              ref={uploadRef}
-            />
-            <Link
-              size="sm"
-              isExternal
-              showAnchorIcon
-              underline="focus"
-              href={props.downloadUrl}
-              className="cursor-pointer"
-            >
-              点击此处下载对应工具包
-            </Link>
-          </div>
-        </ModalBody>
-        <ModalFooter>
-          <div>
-            <Button
-              color="danger"
-              variant="light"
-              isDisabled={uploading}
-              onPress={props.onClose}
-            >
-              取消
-            </Button>
-            <Button color="primary" onPress={doUpload} isLoading={uploading}>
-              上传
-            </Button>
-          </div>
-        </ModalFooter>
-      </ModalContent>
+      <ModalHeader>上传 {props.type}</ModalHeader>
+      <ModalBody>
+        <div className="relative w-full max-w-lg">
+          <UploadArea
+            supportedTypes={SUPPORTED_TYPES}
+            url={`toolchain/upload?type=${props.type}&tag=${props.tag}&isArm=${props.isArm}`}
+            onClose={props.onClose}
+            ref={uploadRef}
+          />
+          <Link
+            size="sm"
+            isExternal
+            showAnchorIcon
+            underline="focus"
+            href={props.downloadUrl}
+            className="cursor-pointer"
+          >
+            点击此处下载对应工具包
+          </Link>
+        </div>
+      </ModalBody>
+      <ModalFooter>
+        <div>
+          <Button
+            color="danger"
+            variant="light"
+            isDisabled={uploading}
+            onPress={props.onClose}
+          >
+            取消
+          </Button>
+          <Button color="primary" onPress={doUpload} isLoading={uploading}>
+            上传
+          </Button>
+        </div>
+      </ModalFooter>
     </>
   )
 }

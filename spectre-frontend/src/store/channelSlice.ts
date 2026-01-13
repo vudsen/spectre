@@ -1,4 +1,7 @@
-import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
+import type {
+  ArthasResponseWithId,
+  InputStatusResponse,
+} from '@/api/impl/arthas.ts'
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 type UpdateRecord = {
@@ -12,6 +15,8 @@ type UpdateRecord = {
 type ChannelContext = {
   isDebugMode?: boolean
   channelId: string
+  classloaderHash?: string
+  inputStatus: InputStatusResponse['inputStatus']
 }
 
 interface ChannelState {
@@ -38,6 +43,7 @@ const initialState: ChannelState = {
   updates: {},
   context: {
     channelId: '-1',
+    inputStatus: 'DISABLED',
   },
   isMenuOpen: true,
 }
@@ -84,9 +90,19 @@ export const channelSlice = createSlice({
       state.messages = newMessage
       state.updates = newUpdates
     },
-    setupChannelContext(state) {
+    setupChannelContext(state, action: PayloadAction<{ channelId: string }>) {
+      const messages = state.messages[action.payload.channelId] ?? []
+      let inputStatus: InputStatusResponse['inputStatus'] = 'DISABLED'
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i]
+        if (msg.type === 'input_status') {
+          inputStatus = (msg as InputStatusResponse).inputStatus
+          break
+        }
+      }
       state.context = {
-        channelId: '-1',
+        channelId: action.payload.channelId,
+        inputStatus,
       }
     },
     updateChannelContext(
@@ -101,6 +117,12 @@ export const channelSlice = createSlice({
     setEnhanceMenuOpen(state, action: PayloadAction<boolean>) {
       state.isMenuOpen = action.payload
     },
+    updateInputStatus(
+      state,
+      action: PayloadAction<InputStatusResponse['inputStatus']>,
+    ) {
+      state.context.inputStatus = action.payload
+    },
   },
 })
 
@@ -110,5 +132,6 @@ export const {
   setupChannelContext,
   updateChannelContext,
   setEnhanceMenuOpen,
+  updateInputStatus,
 } = channelSlice.actions
 export default channelSlice.reducer

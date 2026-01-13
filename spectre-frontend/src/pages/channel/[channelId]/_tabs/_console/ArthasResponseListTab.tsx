@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
@@ -21,9 +21,15 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
   const [filteredResponses, setFilteredResponse] = useState<
     ResponseGroupItem[]
   >([])
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [selectedEntityIndex, setSelectedEntityIndex] = useState<number>(-1)
 
   useEffect(() => {
+    const container = scrollRef.current!
+    const isAtBottom =
+      container.scrollHeight - container.scrollTop <=
+      container.clientHeight + 100
+
     if (isDebugMode) {
       setFilteredResponse(
         props.responses.map((r) => ({
@@ -36,13 +42,6 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
       let groupColorFlag = -1
       for (const entity of props.responses) {
         if (IGNORED_TYPES.has(entity.type)) {
-          continue
-        }
-        if (entity.jobId === 0) {
-          result.push({
-            entity,
-          })
-          lastJobId = entity.jobId
           continue
         }
         if (entity.jobId === lastJobId) {
@@ -68,7 +67,26 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
       }
       setFilteredResponse(result)
     }
+    if (isAtBottom) {
+      setTimeout(() => {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+      }, 200)
+    }
   }, [props.responses, isDebugMode])
+
+  useLayoutEffect(() => {
+    const container = scrollRef.current
+    if (container) {
+      const isAtBottom =
+        container.scrollHeight - container.scrollTop <=
+        container.clientHeight + 100
+      console.log(isAtBottom)
+
+      if (isAtBottom) {
+        container.scrollTo({ top: container.scrollHeight })
+      }
+    }
+  }, [filteredResponses])
 
   const onEntitySelect = (index: number) => {
     setSelectedEntityIndex(index)
@@ -79,16 +97,18 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
   }
 
   return (
-    <div className="text-content text-sm">
-      {filteredResponses.map((r, index) => (
-        <ArthasResponseItem
-          index={index}
-          isSelected={index === selectedEntityIndex}
-          item={r}
-          key={index + isDebugMode.toString()}
-          onEntitySelect={onEntitySelect}
-        />
-      ))}
+    <div className="h-full overflow-y-scroll" ref={scrollRef}>
+      <div className="text-content text-sm">
+        {filteredResponses.map((r, index) => (
+          <ArthasResponseItem
+            index={index}
+            isSelected={index === selectedEntityIndex}
+            item={r}
+            key={index + isDebugMode.toString()}
+            onEntitySelect={onEntitySelect}
+          />
+        ))}
+      </div>
     </div>
   )
 }

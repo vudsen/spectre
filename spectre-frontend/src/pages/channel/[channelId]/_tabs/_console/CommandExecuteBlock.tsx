@@ -14,6 +14,7 @@ import {
   interruptCommand,
 } from '@/api/impl/arthas.ts'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import { store } from '@/store'
 
 interface CommandExecuteBlockProps {
   channelId: string
@@ -24,6 +25,8 @@ interface CommandExecuteBlockProps {
 type FromState = {
   command: string
 }
+
+const classloaderHashRegx = /-c +[\da-zA-Z]{8}/
 
 const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
   const { control, trigger, getValues, reset, setValue } = useForm<FromState>()
@@ -45,9 +48,9 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
     }
   }, [getValues, props, reset, trigger])
 
-  const interrupt = () => {
+  const interrupt = useCallback(() => {
     setLoading(true)
-    interruptCommand(props.channelId)
+    return interruptCommand(store.getState().channel.context.channelId)
       .then(() => {
         addToast({
           title: '中断前台任务成功',
@@ -57,7 +60,7 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
       .finally(() => {
         setLoading(false)
       })
-  }
+  }, [])
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key !== 'Enter') {
@@ -74,15 +77,31 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
   }
 
   useEffect(() => {
-    const cb = (cmd: string) => {
-      setValue('command', cmd)
-      execute().then()
+    const cb = async (cmd: string, interruptCurrent?: boolean) => {
+      const channelContext = store.getState().channel.context
+      if (
+        interruptCurrent &&
+        channelContext.inputStatus === 'ALLOW_INTERRUPT'
+      ) {
+        await interrupt()
+      }
+      if (channelContext.classloaderHash) {
+        const r = classloaderHashRegx.exec(cmd)
+        if (!r || r.length === 0) {
+          setValue('command', `${cmd} -c ${channelContext.classloaderHash}`)
+        } else {
+          setValue('command', cmd)
+        }
+      } else {
+        setValue('command', cmd)
+      }
+      await execute()
     }
     context.addCommandExecuteListener(cb)
     return () => {
       context.removeCommandExecuteListener(cb)
     }
-  }, [context, execute, setValue])
+  }, [context, execute, interrupt, setValue])
 
   return (
     <div className="border-t-divider box-border flex h-48 flex-col border-t p-3">

@@ -195,20 +195,19 @@ const TraceMessageDetail: React.FC<DetailComponentProps<TraceMessage>> = (
 
   const onAction = (key: string | number) => {
     const invoke = currentSelected.current!
+    if (
+      context.getQuickCommandExecutor().handleActions(key, {
+        classname: invoke.className,
+        methodName: invoke.methodName,
+      })
+    ) {
+      return
+    }
     switch (key) {
       case 'jad':
         context
           .getTabsController()
           .openTab('JAD', {}, { classname: invoke.className })
-        break
-      case 'watch':
-        context.execute(`watch ${invoke.className} -x 2`)
-        break
-      case 'trace':
-        context.execute(`trace ${invoke.className}`)
-        break
-      case 'stack':
-        context.execute(`stack ${invoke.className}`)
         break
     }
   }
