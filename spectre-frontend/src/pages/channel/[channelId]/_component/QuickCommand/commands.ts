@@ -8,8 +8,9 @@ type WatchValues = {
   expression: string
   extraArgs?: string
 }
+
 const DEFAULT_EXPRESSION = '{params, target, returnObj}'
-export const watch: FormHandle<WatchValues> = {
+const watch: FormHandle<WatchValues> = {
   name: 'Watch',
   defaultValues: {
     count: -1,
@@ -53,7 +54,7 @@ type TraceValues = {
   extraArgs?: string
 }
 
-export const trace: FormHandle<TraceValues> = {
+const trace: FormHandle<TraceValues> = {
   name: 'Trace',
   defaultValues: {
     count: -1,
@@ -89,7 +90,7 @@ type StackValues = {
   count: number
   extraArgs?: string
 }
-export const stack: FormHandle<StackValues> = {
+const stack: FormHandle<StackValues> = {
   name: 'Stack',
   defaultValues: {
     count: -1,
@@ -112,3 +113,28 @@ export const stack: FormHandle<StackValues> = {
     return commands.join(' ')
   },
 }
+
+type JadValues = {
+  classname: string
+}
+
+const jad: FormHandle<JadValues> = {
+  name: '反编译(jad)',
+  buildCommand(values) {
+    return `jad ${values.classname}`
+  },
+  items: [{ name: 'classname', isRequired: true, label: 'Classname' }],
+  execute({ channelContext, values }) {
+    channelContext.getTabsController().openTab('JAD', {}, values)
+  },
+  isSync: true,
+}
+
+export const quickCommandHandles = {
+  watch,
+  stack,
+  trace,
+  jad,
+}
+
+export type QuickCommandKeys = keyof typeof quickCommandHandles

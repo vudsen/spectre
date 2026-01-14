@@ -1,34 +1,31 @@
 import React, {
   useState,
   type KeyboardEvent,
+  useCallback,
   useContext,
   useEffect,
-  useCallback,
 } from 'react'
 import ControlledTextarea from '@/components/validation/ControlledTextarea.tsx'
 import { addToast, Button, Tooltip } from '@heroui/react'
 import { useForm } from 'react-hook-form'
 import {
-  executeArthasCommand,
   type InputStatusResponse,
   interruptCommand,
 } from '@/api/impl/arthas.ts'
+import { type RootState, store } from '@/store'
+import { useSelector } from 'react-redux'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
-import { store } from '@/store'
-
-interface CommandExecuteBlockProps {
-  channelId: string
-  inputStatus: InputStatusResponse['inputStatus']
-  onExecute: () => void
-}
 
 type FromState = {
   command: string
 }
 
-const classloaderHashRegx = /-c +[\da-zA-Z]{8}/
+const CommandExecuteBlock: React.FC = () => {
+  const inputStatus = useSelector<
+    RootState,
+    InputStatusResponse['inputStatus']
+  >((state) => state.channel.context.inputStatus)
 
-const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
   const { control, trigger, getValues, reset, setValue } = useForm<FromState>()
   const [loading, setLoading] = useState(false)
   const context = useContext(ChannelContext)
@@ -40,13 +37,12 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
     const values = getValues()
     setLoading(true)
     try {
-      await executeArthasCommand(props.channelId, values.command)
+      await context.messageBus.execute(values.command)
       reset({ command: '' })
     } finally {
-      props.onExecute()
       setLoading(false)
     }
-  }, [getValues, props, reset, trigger])
+  }, [context.messageBus, getValues, reset, trigger])
 
   const interrupt = useCallback(() => {
     setLoading(true)
@@ -77,31 +73,17 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
   }
 
   useEffect(() => {
-    const cb = async (cmd: string, interruptCurrent?: boolean) => {
-      const channelContext = store.getState().channel.context
-      if (
-        interruptCurrent &&
-        channelContext.inputStatus === 'ALLOW_INTERRUPT'
-      ) {
-        await interrupt()
-      }
-      if (channelContext.classloaderHash) {
-        const r = classloaderHashRegx.exec(cmd)
-        if (!r || r.length === 0) {
-          setValue('command', `${cmd} -c ${channelContext.classloaderHash}`)
-        } else {
-          setValue('command', cmd)
+    const id = context.messageBus.addListener({
+      afterExecute(command, fail) {
+        if (fail) {
+          setValue('command', command)
         }
-      } else {
-        setValue('command', cmd)
-      }
-      await execute()
-    }
-    context.addCommandExecuteListener(cb)
+      },
+    })
     return () => {
-      context.removeCommandExecuteListener(cb)
+      context.messageBus.removeListener(id)
     }
-  }, [context, execute, interrupt, setValue])
+  }, [context.messageBus, setValue])
 
   return (
     <div className="border-t-divider box-border flex h-48 flex-col border-t p-3">
@@ -118,11 +100,11 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
       />
       <div className="my-2 flex flex-row-reverse items-center">
         <Button
-          isDisabled={props.inputStatus !== 'ALLOW_INPUT'}
+          isDisabled={inputStatus !== 'ALLOW_INPUT'}
           color="primary"
           onPress={execute}
           className="ml-3"
-          isLoading={loading && props.inputStatus === 'ALLOW_INPUT'}
+          isLoading={loading && inputStatus === 'ALLOW_INPUT'}
         >
           执行
         </Button>
@@ -131,8 +113,8 @@ const CommandExecuteBlock: React.FC<CommandExecuteBlockProps> = (props) => {
             onPress={interrupt}
             variant="flat"
             color="danger"
-            isLoading={loading && props.inputStatus === 'ALLOW_INTERRUPT'}
-            isDisabled={props.inputStatus !== 'ALLOW_INTERRUPT'}
+            isLoading={loading && inputStatus === 'ALLOW_INTERRUPT'}
+            isDisabled={inputStatus !== 'ALLOW_INTERRUPT'}
           >
             中断前台任务
           </Button>

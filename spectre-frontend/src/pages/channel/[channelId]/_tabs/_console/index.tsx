@@ -1,111 +1,20 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  type ArthasResponseWithId,
-  type InputStatusResponse,
-  pullResults,
-} from '@/api/impl/arthas.ts'
+import React, { useState } from 'react'
+import { type ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import { Divider } from '@heroui/react'
 import ArthasResponseDetailTab from './ArthasResponseDetailTab.tsx'
-import { isErrorResponse } from '@/api/types.ts'
-import { handleError, showDialog } from '@/common/util.ts'
 import CommandExecuteBlock from './CommandExecuteBlock.tsx'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import ArthasResponseListTab from './ArthasResponseListTab.tsx'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
-import {
-  appendMessages,
-  clearExpiredMessages,
-  updateInputStatus,
-} from '@/store/channelSlice'
+
 import './_message_view/init.ts'
 
 const ConsoleTab: React.FC = () => {
-  const channelId = useSelector<RootState, string>(
-    (state) => state.channel.context.channelId,
-  )
   const messages = useSelector<RootState, ArthasResponseWithId[]>(
     (state) => state.channel.messages[state.channel.context.channelId] ?? [],
   )
-  const inputStatus = useSelector<
-    RootState,
-    InputStatusResponse['inputStatus']
-  >((state) => state.channel.context.inputStatus)
-  const dispatch = useDispatch()
-
   const [selectedEntity, setSelectedEntity] = useState<ArthasResponseWithId>()
-  const pullResultsTaskId = useRef<number>(undefined)
-  const taskDelay = useRef(0)
-  const isExcited = useRef(false)
-  const isFetching = useRef(false)
-
-  const doPullResults = useCallback(async (): Promise<number> => {
-    try {
-      const r = await pullResults(channelId)
-      for (const resp of r) {
-        if (resp.type === 'input_status') {
-          const status = (resp as InputStatusResponse).inputStatus
-          dispatch(updateInputStatus(status))
-        }
-      }
-      if (r.length > 0) {
-        dispatch(
-          appendMessages({
-            messages: r,
-            channelId,
-          }),
-        )
-      }
-      return r.length
-    } catch (e) {
-      if (isErrorResponse(e) && e.code === '0001') {
-        showDialog({
-          title: '拉取结果失败',
-          message: e.message,
-          color: 'danger',
-          onConfirm() {
-            location.reload()
-          },
-        })
-      } else {
-        handleError(e)
-      }
-      return Promise.reject(e)
-    }
-  }, [channelId, dispatch])
-
-  const launchPullResultTask = useCallback(() => {
-    if (isExcited.current || isFetching.current) {
-      return
-    }
-    isFetching.current = true
-    doPullResults()
-      .then((messageCount) => {
-        if (messageCount > 0) {
-          taskDelay.current = 0
-        } else {
-          taskDelay.current = Math.min(taskDelay.current + 1000, 20 * 1000)
-        }
-        pullResultsTaskId.current = setTimeout(() => {
-          launchPullResultTask()
-        }, taskDelay.current)
-      })
-      .finally(() => {
-        isFetching.current = false
-      })
-  }, [doPullResults])
-
-  useEffect(() => {
-    isExcited.current = false
-    launchPullResultTask()
-    dispatch(clearExpiredMessages())
-    return () => {
-      isExcited.current = true
-      if (pullResultsTaskId.current) {
-        clearTimeout(pullResultsTaskId.current)
-      }
-    }
-  }, [dispatch, launchPullResultTask, channelId])
 
   return (
     <div className="flex h-full">
@@ -127,11 +36,7 @@ const ConsoleTab: React.FC = () => {
             <ArthasResponseDetailTab entity={selectedEntity} />
           </Panel>
         </PanelGroup>
-        <CommandExecuteBlock
-          onExecute={launchPullResultTask}
-          channelId={channelId}
-          inputStatus={inputStatus}
-        />
+        <CommandExecuteBlock />
       </div>
     </div>
   )

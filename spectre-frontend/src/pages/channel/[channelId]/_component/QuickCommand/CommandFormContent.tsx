@@ -2,7 +2,9 @@ import { useContext } from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import type { InputStatusResponse } from '@/api/impl/arthas.ts'
-import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import ChannelContext, {
+  type ChannelContextState,
+} from '@/pages/channel/[channelId]/context.ts'
 import { useForm, type Path, type FieldValues } from 'react-hook-form'
 import { Button, ModalBody, ModalFooter, ModalHeader } from '@heroui/react'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
@@ -16,14 +18,33 @@ type FormItem<T extends AnyValues> = {
   isRequired?: boolean
 }
 
+type ExecutionContext<T> = {
+  channelContext: ChannelContextState
+  values: T
+}
+
+/**
+ * 自定义表单。{@link FormHandle#buildCommand} 和 {@link FormHandle#execute} 必须指定一个
+ */
 export type FormHandle<T extends AnyValues> = {
   /**
    * 使用数组时会在一行显示
    */
   items: (FormItem<T> | FormItem<T>[])[]
-  buildCommand: (values: T) => string
+  /**
+   * 构建命令
+   */
+  buildCommand?: (values: T) => string
+  /**
+   * 替换默认的执行行为.
+   */
+  execute?: (context: ExecutionContext<T>) => void
   defaultValues?: Partial<T>
   name: string
+  /**
+   * 表示该命令是同步命令，不会中断当前命令
+   */
+  isSync?: boolean
 }
 
 interface CommandFormContentProps<T extends AnyValues> {
@@ -55,7 +76,18 @@ export default function CommandFormContent<T extends AnyValues>({
       return
     }
     const values = getValues()
-    context.execute(handle.buildCommand(values), true)
+    if (handle.execute) {
+      handle.execute({
+        channelContext: context,
+        values,
+      })
+    } else if (handle.buildCommand) {
+      context.messageBus.execute(handle.buildCommand(values), true).then()
+    } else {
+      throw new Error(
+        'The FormHandle should contains one of `execute` or `buildCommand` field at least.',
+      )
+    }
     onClose()
   }
 
@@ -101,7 +133,7 @@ export default function CommandFormContent<T extends AnyValues>({
       </ModalBody>
       <ModalFooter className="flex items-center justify-between text-sm">
         <div className="text-danger w-0 grow">
-          {inputStatus === 'ALLOW_INTERRUPT'
+          {inputStatus === 'ALLOW_INTERRUPT' && !handle.isSync
             ? '注意: 继续执行将中断当前正在监听的命令'
             : ''}
         </div>

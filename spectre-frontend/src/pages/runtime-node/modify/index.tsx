@@ -204,7 +204,7 @@ const JvmSourceModifyPage: React.FC = () => {
     } else {
       sp = ''
     }
-    nav(`${selectedPlugin.current!.id}${sp}`)
+    nav(`./${selectedPlugin.current!.id}${sp}`)
   }, [nav])
 
   return (
