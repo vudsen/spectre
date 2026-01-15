@@ -77,11 +77,7 @@ export const pullResults = async (
   channelId: string,
 ): Promise<ArthasResponseWithId[]> =>
   axios
-    .get(`arthas/channel/${channelId}/pull-result`, {
-      meta: {
-        skipErrorHandler: true,
-      },
-    })
+    .get(`arthas/channel/${channelId}/pull-result`)
     .then(applyIdForArthasResponse)
 
 export const executeArthasCommand = (channelId: string, command: string) => {

@@ -15,9 +15,7 @@ import type { SharedSelection } from '@heroui/system'
 import { graphql } from '@/graphql/generated'
 import { execute } from '@/graphql/execute.ts'
 import { handleError } from '@/common/util.ts'
-import toolchainTypes, {
-  type ToolchainItemType,
-} from './ToolchainItemType.ts'
+import toolchainTypes, { type ToolchainItemType } from './ToolchainItemType.ts'
 
 interface ToolchainItemModifyDrawerContentProps {
   onClose: () => void

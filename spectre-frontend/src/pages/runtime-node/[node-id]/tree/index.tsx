@@ -224,7 +224,6 @@ const RuntimeNodeTreePage: React.FC = () => {
     }
     setTimeout(() => {
       tour.next()
-      context?.onSearchContentChange
     }, 200)
   }
 

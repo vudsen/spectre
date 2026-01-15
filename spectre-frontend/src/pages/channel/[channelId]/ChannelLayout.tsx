@@ -9,35 +9,7 @@ import ChannelContext, {
   type ChannelContextState,
 } from '@/pages/channel/[channelId]/context.ts'
 import type { QuickCommandRef } from '@/pages/channel/[channelId]/_component/QuickCommand'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFn = (...args: any[]) => void
-type Dispatcher<T extends AnyFn> = {
-  trigger: (...arg: Parameters<T>) => void
-  addListener: (listener: T) => void
-  removeListener: (listener: T) => void
-}
-
-function createListenerDispatcher<T extends AnyFn>(): Dispatcher<T> {
-  const listeners: T[] = []
-  return {
-    addListener(listener) {
-      listeners.push(listener)
-    },
-    removeListener(listener) {
-      const pos = listeners.findIndex((l) => l === listener)
-      if (pos < 0) {
-        return
-      }
-      listeners.splice(pos, 1)
-    },
-    trigger: function (...args) {
-      for (const listener of listeners) {
-        listener(...args)
-      }
-    },
-  }
-}
+import useArthasMessageBus from '@/pages/channel/[channelId]/useArthasMessageBus.tsx'
 
 interface ChannelLayoutProps {
   channelId: string
@@ -45,20 +17,12 @@ interface ChannelLayoutProps {
 }
 
 const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
+  const bus = useArthasMessageBus()
   const tabsController = useRef<TabsControllerRef>(null)
   const quickCommandRef = useRef<QuickCommandRef>(null)
   const contextValue = useMemo<ChannelContextState>(() => {
-    const commandExecuteDispatcher = createListenerDispatcher()
     return {
-      execute(...args) {
-        commandExecuteDispatcher.trigger(...args)
-      },
-      addCommandExecuteListener(listener) {
-        commandExecuteDispatcher.addListener(listener)
-      },
-      removeCommandExecuteListener(listener) {
-        commandExecuteDispatcher.removeListener(listener)
-      },
+      messageBus: bus,
       getTabsController() {
         return tabsController.current!
       },
@@ -66,7 +30,7 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
         return quickCommandRef.current!
       },
     }
-  }, [])
+  }, [bus])
 
   return (
     <>

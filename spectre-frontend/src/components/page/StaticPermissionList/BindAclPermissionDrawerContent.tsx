@@ -105,7 +105,8 @@ const BindAclPermissionDrawerContent: React.FC<
         .then((r) => {
           const p: ACLPermissionEntityWithState[] = []
           const bound = parseBoundPermissions(resource, r)
-          for (const permissions of r.staticPermission.listPermissionsByResource) {
+          for (const permissions of r.staticPermission
+            .listPermissionsByResource) {
             const code = `${resource}:${permissions.action}`
             if (selectionMap.current[code] === undefined) {
               selectionMap.current[code] = bound.has(code)

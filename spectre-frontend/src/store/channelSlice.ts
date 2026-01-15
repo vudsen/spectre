@@ -4,14 +4,6 @@ import type {
 } from '@/api/impl/arthas.ts'
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
-type UpdateRecord = {
-  channelId: string
-  /**
-   * 上次更新时间
-   */
-  lastUpdate: number
-}
-
 type ChannelContext = {
   isDebugMode?: boolean
   channelId: string
@@ -27,15 +19,11 @@ interface ChannelState {
   /**
    * 记录上次更新时间，并删除长时间不更新的记录
    */
-  updates: Record<string, UpdateRecord>
+  updates: Record<string, number>
   /**
-   * 保存当前界面频道上下文
+   * 保存当前界面频道上下文. 不会被持久化
    */
   context: ChannelContext
-  /**
-   * 增强功能菜单是否开启
-   */
-  isMenuOpen: boolean
 }
 
 const initialState: ChannelState = {
@@ -45,7 +33,6 @@ const initialState: ChannelState = {
     channelId: '-1',
     inputStatus: 'DISABLED',
   },
-  isMenuOpen: true,
 }
 
 type AppendMessagePayload = {
@@ -68,21 +55,13 @@ export const channelSlice = createSlice({
       } else {
         state.messages[payload.channelId] = payload.messages
       }
-      const updateTarget = state.updates[payload.channelId]
-      if (updateTarget) {
-        updateTarget.lastUpdate = Date.now()
-      } else {
-        state.updates[payload.channelId] = {
-          lastUpdate: Date.now(),
-          channelId: payload.channelId,
-        }
-      }
+      state.updates[payload.channelId] = Date.now()
     },
     clearExpiredMessages(state) {
       const newMessage: Record<string, ArthasResponseWithId[]> = {}
-      const newUpdates: Record<string, UpdateRecord> = {}
+      const newUpdates: Record<string, number> = {}
       Object.entries(state.updates).forEach(([k, v]) => {
-        if (Date.now() - v.lastUpdate < 1000 * 60 * 30) {
+        if (Date.now() - v < 1000 * 60 * 30) {
           newMessage[k] = state.messages[k]
           newUpdates[k] = v
         }
@@ -114,9 +93,6 @@ export const channelSlice = createSlice({
         ...action.payload,
       }
     },
-    setEnhanceMenuOpen(state, action: PayloadAction<boolean>) {
-      state.isMenuOpen = action.payload
-    },
     updateInputStatus(
       state,
       action: PayloadAction<InputStatusResponse['inputStatus']>,
@@ -131,7 +107,6 @@ export const {
   appendMessages,
   setupChannelContext,
   updateChannelContext,
-  setEnhanceMenuOpen,
   updateInputStatus,
 } = channelSlice.actions
 export default channelSlice.reducer

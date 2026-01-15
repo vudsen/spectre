@@ -10,19 +10,6 @@ type VersionMessage = {
   fid: number
 }
 
-type ClassLoaderMessage = {
-  type: 'classloader'
-  jobId: number
-  fid: number
-  classLoaderStats: Record<
-    string,
-    {
-      loadedCount: number
-      numberOfInstance: number
-    }
-  >
-}
-
 type RowAffectedMessage = {
   type: 'row_affect'
   jobId: number
@@ -36,15 +23,6 @@ registerMessageView<RowAffectedMessage>({
     name: `影响了 ${message.rowCount} 个类`,
     color: 'secondary',
     tag: '影响数量',
-  }),
-})
-
-registerMessageView<ClassLoaderMessage>({
-  type: 'classloader',
-  display: () => ({
-    name: '列出所有的类加载器',
-    color: 'success',
-    tag: '类加载器',
   }),
 })
 

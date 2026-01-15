@@ -1,8 +1,7 @@
 import { createContext } from 'react'
 import type { TabsControllerRef } from '@/pages/channel/[channelId]/_tabs/TabsController.tsx'
 import type { QuickCommandRef } from '@/pages/channel/[channelId]/_component/QuickCommand'
-
-type CommandExecuteCallback = (cmd: string, interruptCurrent?: boolean) => void
+import type { ArthasMessageBus } from '@/pages/channel/[channelId]/useArthasMessageBus.tsx'
 
 export type TabOptions = {
   name?: string
@@ -17,22 +16,12 @@ export type TabOptions = {
 export type ChannelContextState = {
   getTabsController: () => TabsControllerRef
   getQuickCommandExecutor: () => QuickCommandRef
-  /**
-   * 执行 arthas 命令
-   */
-  execute: CommandExecuteCallback
-  /**
-   * 当执行命令时的回调，该方法仅用于对接 {@link ChannelContextState#execute} 方法，不要用在其它地方
-   */
-  addCommandExecuteListener: (cb: CommandExecuteCallback) => void
-  removeCommandExecuteListener: (cb: CommandExecuteCallback) => void
+  messageBus: ArthasMessageBus
 }
 const ChannelContext = createContext<ChannelContextState>({
-  execute() {},
+  messageBus: null!,
   getTabsController: () => null!,
   getQuickCommandExecutor: () => null!,
-  addCommandExecuteListener() {},
-  removeCommandExecuteListener() {},
 })
 
 export default ChannelContext
