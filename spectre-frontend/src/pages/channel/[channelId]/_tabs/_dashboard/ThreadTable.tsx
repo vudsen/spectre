@@ -1,0 +1,48 @@
+import type { DashboardMessage } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/_component/DashboardMessageDetail.tsx'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from '@heroui/react'
+import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
+import React from 'react'
+
+interface ThreadTableProps {
+  lastMessage: DashboardMessage
+}
+
+const ThreadTable: React.FC<ThreadTableProps> = ({ lastMessage }) => {
+  return (
+    <Table>
+      <TableHeader>
+        <TableColumn>ID</TableColumn>
+        <TableColumn>名称</TableColumn>
+        <TableColumn>CPU</TableColumn>
+        <TableColumn>优先级</TableColumn>
+        <TableColumn>状态</TableColumn>
+        <TableColumn>中断</TableColumn>
+        <TableColumn>组</TableColumn>
+      </TableHeader>
+      <TableBody items={lastMessage.threads}>
+        {(thread) => (
+          <TableRow key={thread.id}>
+            <TableCell>{thread.id}</TableCell>
+            <TableCell>{thread.name}</TableCell>
+            <TableCell>
+              <PercentageData rate={thread.cpu} />
+            </TableCell>
+            <TableCell>{thread.priority}</TableCell>
+            <TableCell>{thread.state}</TableCell>
+            <TableCell>{thread.interrupted.toString()}</TableCell>
+            <TableCell>{thread.group}</TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
+  )
+}
+
+export default ThreadTable

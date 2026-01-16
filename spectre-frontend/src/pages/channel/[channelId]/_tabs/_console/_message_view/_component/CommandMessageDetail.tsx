@@ -2,7 +2,7 @@ import type React from 'react'
 import { Code } from '@heroui/react'
 import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
 
-type CommandMessage = {
+export type CommandMessage = {
   type: 'command'
   jobId: number
   state: string

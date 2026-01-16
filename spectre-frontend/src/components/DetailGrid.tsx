@@ -9,6 +9,9 @@ interface DetailGridProps {
   details: Detail[]
 }
 
+/**
+ * @deprecated use `KVGrid` instead
+ */
 const DetailGrid: React.FC<DetailGridProps> = (props) => {
   return (
     <div

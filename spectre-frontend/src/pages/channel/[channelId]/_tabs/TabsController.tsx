@@ -195,8 +195,9 @@ const TabsController: React.FC<TabsControllerProps> = (props) => {
               key={tab.id}
               className={clsx(
                 activeTabId === tab.id ? undefined : 'hidden',
-                'h-full overflow-scroll',
+                'relative h-full overflow-scroll',
               )}
+              style={{ transform: 'translate3d(0, 0, 0)' }}
             >
               {tab.node}
             </div>

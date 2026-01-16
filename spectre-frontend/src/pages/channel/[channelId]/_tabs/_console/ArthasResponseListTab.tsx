@@ -1,78 +1,116 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import { useSelector } from 'react-redux'
-import type { RootState } from '@/store'
+import { type RootState, store } from '@/store'
 import ArthasResponseItem, {
   type ResponseGroupItem,
 } from '@/pages/channel/[channelId]/_tabs/_console/_component/ArthasResponseItem.tsx'
+import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 
 interface ArthasResponseListProps {
-  responses: ArthasResponseWithId[]
   onEntitySelect: (e: ArthasResponseWithId) => void
 }
 
 const IGNORED_TYPES = new Set(['input_status'])
+function buildArray0() {
+  const channelSlice = store.getState().channel
+  const isDebugMode = channelSlice.context.isDebugMode
+  return buildArray(
+    channelSlice.messages[channelSlice.context.channelId] ?? [],
+    '',
+    isDebugMode,
+  )
+}
+function buildArray(
+  messages: ArthasResponseWithId[],
+  lastMsgType: string,
+  isDebugMode?: boolean,
+): ResponseGroupItem[] {
+  let result: ResponseGroupItem[]
+  if (isDebugMode) {
+    result = messages.map((msg) => ({
+      entity: msg,
+    }))
+  } else {
+    let lastJobId = -1
+    result = []
+    let groupColorFlag = -1
+    for (const entity of messages) {
+      if (IGNORED_TYPES.has(entity.type)) {
+        continue
+      }
+      // dashboard 仅显示第一条
+      if ('dashboard' === entity.type && lastMsgType === entity.type) {
+        continue
+      }
+      lastMsgType = entity.type
+      if (entity.jobId === lastJobId) {
+        result.push({
+          entity,
+          groupInfo: {
+            colorFlag: groupColorFlag,
+          },
+        })
+      } else {
+        groupColorFlag++
+        if (groupColorFlag === 2) {
+          groupColorFlag = 0
+        }
+        result.push({
+          entity,
+          groupInfo: {
+            colorFlag: groupColorFlag,
+          },
+        })
+      }
+      lastJobId = entity.jobId
+    }
+  }
+  return result
+}
 
 const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
   const isDebugMode =
     useSelector<RootState, boolean | undefined>(
       (state) => state.channel.context.isDebugMode,
     ) ?? false
-  const [filteredResponses, setFilteredResponse] = useState<
-    ResponseGroupItem[]
-  >([])
+  const [filteredResponses, setFilteredResponse] =
+    useState<ResponseGroupItem[]>(buildArray0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [selectedEntityIndex, setSelectedEntityIndex] = useState<number>(-1)
+  const context = useContext(ChannelContext)
 
   useEffect(() => {
-    const container = scrollRef.current!
-    const isAtBottom =
-      container.scrollHeight - container.scrollTop <=
-      container.clientHeight + 100
+    const id = context.messageBus.addListener({
+      onMessage(messages) {
+        setFilteredResponse((prevState) => {
+          return [
+            ...prevState,
+            ...buildArray(
+              messages,
+              prevState.length > 0
+                ? prevState[prevState.length - 1].entity.type
+                : '',
+              store.getState().channel.context.isDebugMode,
+            ),
+          ]
+        })
+      },
+    })
+    return () => {
+      context.messageBus.removeListener(id)
+    }
+  }, [context.messageBus])
 
-    if (isDebugMode) {
-      setFilteredResponse(
-        props.responses.map((r) => ({
-          entity: r,
-        })),
-      )
-    } else {
-      let lastJobId = -1
-      const result: ResponseGroupItem[] = []
-      let groupColorFlag = -1
-      for (const entity of props.responses) {
-        if (IGNORED_TYPES.has(entity.type)) {
-          continue
-        }
-        if (entity.jobId === lastJobId) {
-          result.push({
-            entity,
-            groupInfo: {
-              colorFlag: groupColorFlag,
-            },
-          })
-        } else {
-          groupColorFlag++
-          if (groupColorFlag === 2) {
-            groupColorFlag = 0
-          }
-          result.push({
-            entity,
-            groupInfo: {
-              colorFlag: groupColorFlag,
-            },
-          })
-        }
-        lastJobId = entity.jobId
-      }
-      setFilteredResponse(result)
-    }
-    if (isAtBottom) {
-      setTimeout(() => {
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
-      }, 200)
-    }
-  }, [props.responses, isDebugMode])
+  useEffect(() => {
+    setFilteredResponse(buildArray0())
+  }, [isDebugMode])
 
   useLayoutEffect(() => {
     const container = scrollRef.current

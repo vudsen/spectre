@@ -5,15 +5,10 @@ import ArthasResponseDetailTab from './ArthasResponseDetailTab.tsx'
 import CommandExecuteBlock from './CommandExecuteBlock.tsx'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import ArthasResponseListTab from './ArthasResponseListTab.tsx'
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/store'
 
 import './_message_view/init.ts'
 
 const ConsoleTab: React.FC = () => {
-  const messages = useSelector<RootState, ArthasResponseWithId[]>(
-    (state) => state.channel.messages[state.channel.context.channelId] ?? [],
-  )
   const [selectedEntity, setSelectedEntity] = useState<ArthasResponseWithId>()
 
   return (
@@ -26,10 +21,7 @@ const ConsoleTab: React.FC = () => {
           autoSaveId="channel-attach"
         >
           <Panel minSize={20} defaultSize={40}>
-            <ArthasResponseListTab
-              responses={messages}
-              onEntitySelect={setSelectedEntity}
-            />
+            <ArthasResponseListTab onEntitySelect={setSelectedEntity} />
           </Panel>
           <PanelResizeHandle className="bg-default-200 border-default-100 border-l-1" />
           <Panel minSize={30} defaultSize={60}>

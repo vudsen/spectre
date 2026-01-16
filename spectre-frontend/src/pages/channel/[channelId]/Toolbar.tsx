@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useContext } from 'react'
 import {
   Button,
   Modal,
@@ -7,39 +7,30 @@ import {
   useDisclosure,
 } from '@heroui/react'
 import RetransformModalContent from './_enhance/RetransformModalContent.tsx'
+import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
+import SvgIcon from '@/components/icon/SvgIcon.tsx'
+import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 
 interface MenuListProps {
   isExpand?: boolean
 }
 
-const RetransformIcon = () => {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 640 640"
-      width={20}
-      height={20}
-    >
-      {/*<!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->*/}
-      <path
-        fill="currentColor"
-        d="M192 112L304 112L304 200C304 239.8 336.2 272 376 272L464 272L464 512C464 520.8 456.8 528 448 528L192 528C183.2 528 176 520.8 176 512L176 128C176 119.2 183.2 112 192 112zM352 131.9L444.1 224L376 224C362.7 224 352 213.3 352 200L352 131.9zM192 64C156.7 64 128 92.7 128 128L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 250.5C512 233.5 505.3 217.2 493.3 205.2L370.7 82.7C358.7 70.7 342.5 64 325.5 64L192 64zM298.2 359.6C306.8 349.5 305.7 334.4 295.6 325.8C285.5 317.2 270.4 318.3 261.8 328.4L213.8 384.4C206.1 393.4 206.1 406.6 213.8 415.6L261.8 471.6C270.4 481.7 285.6 482.8 295.6 474.2C305.6 465.6 306.8 450.4 298.2 440.4L263.6 400L298.2 359.6zM378.2 328.4C369.6 318.3 354.4 317.2 344.4 325.8C334.4 334.4 333.2 349.6 341.8 359.6L376.4 400L341.8 440.4C333.2 450.5 334.3 465.6 344.4 474.2C354.5 482.8 369.6 481.7 378.2 471.6L426.2 415.6C433.9 406.6 433.9 393.4 426.2 384.4L378.2 328.4z"
-      />
-    </svg>
-  )
-}
-
 type MenuItem = {
   name: string
-  icon: React.ReactNode
+  icon: string
   type: string
 }
 
 const menuItems: MenuItem[] = [
   {
     name: 'Retransform',
-    icon: <RetransformIcon />,
+    icon: ChannelIcon.HOT_SWAP,
     type: 'retransform',
+  },
+  {
+    name: 'Dashboard',
+    icon: ChannelIcon.DASHBOARD,
+    type: 'dashboard',
   },
 ]
 
@@ -57,7 +48,7 @@ const CollapsedMenuContent: React.FC<MenuContentProps> = (props) => {
             isIconOnly
             onPress={() => props.onAction(item)}
           >
-            {item.icon}
+            <SvgIcon icon={item.icon} />
           </Button>
         </Tooltip>
       ))}
@@ -68,6 +59,7 @@ const CollapsedMenuContent: React.FC<MenuContentProps> = (props) => {
 const COLLAPSED_WIDTH = 54
 const Toolbar: React.FC<MenuListProps> = () => {
   const retransformDisclosure = useDisclosure()
+  const context = useContext(ChannelContext)
 
   const onAction = useCallback(
     (item: MenuItem) => {
@@ -76,9 +68,13 @@ const Toolbar: React.FC<MenuListProps> = () => {
           retransformDisclosure.onOpen()
           break
         }
+        case 'dashboard': {
+          context.messageBus.execute('dashboard', true)
+          context.getTabsController().openTab('DASHBOARD', {})
+        }
       }
     },
-    [retransformDisclosure],
+    [context, retransformDisclosure],
   )
 
   return (
