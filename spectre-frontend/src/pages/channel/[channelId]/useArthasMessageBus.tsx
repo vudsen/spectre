@@ -102,11 +102,14 @@ const createArthasMessageBusInternal = (
           state.taskDelay = Math.min(state.taskDelay + 1000, 20 * 1000)
         }
       })
+      .catch((_) => {
+        state.taskDelay = Math.min(state.taskDelay + 5000, 20 * 1000)
+      })
       .finally(() => {
-        state.isFetching = false
         state.pullResultsTaskId = setTimeout(() => {
           launchPullResultTask()
         }, state.taskDelay)
+        state.isFetching = false
       })
   }
 

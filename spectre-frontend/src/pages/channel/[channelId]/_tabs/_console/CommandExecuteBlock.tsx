@@ -25,6 +25,9 @@ const CommandExecuteBlock: React.FC = () => {
     RootState,
     InputStatusResponse['inputStatus']
   >((state) => state.channel.context.inputStatus)
+  const isDebugMode = useSelector<RootState, boolean | undefined>(
+    (state) => state.channel.context.isDebugMode,
+  )
 
   const { control, trigger, getValues, reset, setValue } = useForm<FromState>()
   const [loading, setLoading] = useState(false)
@@ -113,8 +116,10 @@ const CommandExecuteBlock: React.FC = () => {
             onPress={interrupt}
             variant="flat"
             color="danger"
-            isLoading={loading && inputStatus === 'ALLOW_INTERRUPT'}
-            isDisabled={inputStatus !== 'ALLOW_INTERRUPT'}
+            isLoading={
+              !isDebugMode && loading && inputStatus === 'ALLOW_INTERRUPT'
+            }
+            isDisabled={!isDebugMode && inputStatus !== 'ALLOW_INTERRUPT'}
           >
             中断前台任务
           </Button>

@@ -1,3 +1,9 @@
+/**
+ * This file uses icons from:
+ * - Font Awesome Free v7.1.0 (Font Awesome Free License)
+ *
+ * See NOTICE for full license texts.
+ */
 import type React from 'react'
 import Icon from '@/components/icon/icon.ts'
 import { createPortal } from 'react-dom'

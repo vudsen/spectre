@@ -4,9 +4,11 @@ import JadPage, {
 import type React from 'react'
 import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
 import type { TabOptions } from '@/pages/channel/[channelId]/context.ts'
+import DashBoardTab from '@/pages/channel/[channelId]/_tabs/_dashboard'
 
 export interface TabArgs {
   JAD: JadPageProps
+  DASHBOARD: undefined
 }
 
 type ComponentHolder<T> = {
@@ -26,7 +28,18 @@ const JAD: ComponentHolder<JadPageProps> = {
     hoverMessage: props.classname,
   }),
 }
+
+const DASHBOARD: ComponentHolder<object> = {
+  Component: DashBoardTab,
+  icon: ChannelIcon.DASHBOARD,
+  defaultPropsFactory: () => ({
+    uniqueId: 'dashboard',
+    name: 'Dashboard',
+  }),
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const TabComponents: Record<string, ComponentHolder<any>> = {
   JAD,
+  DASHBOARD,
 }

@@ -55,6 +55,13 @@ export const channelSlice = createSlice({
       } else {
         state.messages[payload.channelId] = payload.messages
       }
+      const len = state.messages[payload.channelId].length
+      if (len > 64) {
+        // TODO 优化代码，避免频繁清除
+        state.messages[payload.channelId] = state.messages[
+          payload.channelId
+        ].slice(len - 64)
+      }
       state.updates[payload.channelId] = Date.now()
     },
     clearExpiredMessages(state) {

@@ -62,7 +62,7 @@ export const toDate = (time: number | string): Date => {
 
 export const formatTime = (time: number | string): string => {
   const date = toDate(time)
-  return `${date.getFullYear()}/${ensureSize(date.getMonth() + 1)}/${ensureSize(date.getDate())} ${ensureSize(date.getHours())}:${ensureSize(date.getMinutes())}`
+  return `${date.getFullYear()}/${ensureSize(date.getMonth() + 1)}/${ensureSize(date.getDate())} ${ensureSize(date.getHours())}:${ensureSize(date.getMinutes())}:${ensureSize(date.getSeconds())}`
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
