@@ -23,13 +23,13 @@ function buildArray0() {
   const isDebugMode = channelSlice.context.isDebugMode
   return buildArray(
     channelSlice.messages[channelSlice.context.channelId] ?? [],
-    '',
+    undefined,
     isDebugMode,
   )
 }
 function buildArray(
   messages: ArthasResponseWithId[],
-  lastMsgType: string,
+  previousMessage?: ResponseGroupItem,
   isDebugMode?: boolean,
 ): ResponseGroupItem[] {
   let result: ResponseGroupItem[]
@@ -38,9 +38,10 @@ function buildArray(
       entity: msg,
     }))
   } else {
-    let lastJobId = -1
     result = []
-    let groupColorFlag = -1
+    let lastJobId = previousMessage?.entity.jobId ?? -1
+    let groupColorFlag = previousMessage?.groupInfo?.colorFlag ?? -1
+    let lastMsgType = previousMessage ? previousMessage.entity.type : ''
     for (const entity of messages) {
       if (IGNORED_TYPES.has(entity.type)) {
         continue
@@ -95,8 +96,8 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
             ...buildArray(
               messages,
               prevState.length > 0
-                ? prevState[prevState.length - 1].entity.type
-                : '',
+                ? prevState[prevState.length - 1]
+                : undefined,
               store.getState().channel.context.isDebugMode,
             ),
           ]

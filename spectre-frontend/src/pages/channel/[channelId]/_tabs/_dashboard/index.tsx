@@ -13,7 +13,8 @@ import clsx from 'clsx'
 const DashBoardTab: React.FC = () => {
   const context = useContext(ChannelContext)
   const [state, setState] = useState<DashboardMessage>()
-
+  const [isRestartDashboardLoading, setRestartDashboardLoading] =
+    useState(false)
   const [stopped, setStopped] = useState(false)
 
   useEffect(() => {
@@ -40,6 +41,18 @@ const DashBoardTab: React.FC = () => {
     }
   }, [context.messageBus])
 
+  const restartDashboard = () => {
+    setRestartDashboardLoading(true)
+    context.messageBus
+      .execute('dashboard', true)
+      .then((_) => {
+        setStopped(false)
+      })
+      .finally(() => {
+        setRestartDashboardLoading(false)
+      })
+  }
+
   if (!state) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -51,12 +64,18 @@ const DashBoardTab: React.FC = () => {
     <>
       <div
         className={clsx(
-          'bg-warning-50 text-warning-700 border-bottom-1 border-bottom-divider sticky top-0 z-100 flex items-center justify-between px-3 py-2 text-sm',
+          'bg-warning-50 text-warning-700 border-bottom-1 border-bottom-divider sticky top-0 z-10 flex items-center justify-between px-3 py-2 text-sm',
           stopped ? undefined : 'hidden',
         )}
       >
         <div>Dashboard 任务已经停止</div>
-        <Button color="warning" size="sm" variant="flat">
+        <Button
+          color="warning"
+          size="sm"
+          variant="flat"
+          onPress={restartDashboard}
+          isLoading={isRestartDashboardLoading}
+        >
           重新开始
         </Button>
       </div>
