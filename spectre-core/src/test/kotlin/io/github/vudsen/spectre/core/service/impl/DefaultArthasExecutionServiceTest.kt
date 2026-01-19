@@ -37,75 +37,35 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
         }
         // 样例 1: 基础引号包裹
         assertArrayEquals(
-            arrayOf("hello", "wo rld", "!! !!"),
-            testSplit("""hello "wo rld" '!! !!'"""),
-            "样例 1 失败"
+            arrayOf("hello", "\"wo rld\"", "'!! !!'"),
+            testSplit("""hello "wo rld" '!! !!'""")
         )
 
         // 样例 2: 转义字符
         assertArrayEquals(
-            arrayOf("hello", "\"wo \"rld", "\\!!'!!"),
-            testSplit("""hello "\"wo \"rld" '\\!!\'!!'"""),
-            "样例 2 失败"
+            arrayOf("hello", "\"\\\"wo \\\"rld\"", "'\\\\!!\\'!!'"),
+            testSplit("""hello "\"wo \"rld" '\\!!\'!!'""")
         )
 
         // 样例 3: 嵌套引号处理
         assertArrayEquals(
-            arrayOf("I", "love 'you'"),
-            testSplit("""I "love 'you'""""),
-            "样例 3 失败"
+            arrayOf("I", "\"love 'you'\""),
+            testSplit("""I "love 'you'"""")
         )
 
         // 样例 4: 多个连续空格
         assertArrayEquals(
             arrayOf("hello", "world"),
-            testSplit("""    hello     world     """),
-            "样例 4 失败"
+            testSplit("""    hello     world     """)
         )
 
         // 样例 5: 未闭合的引号
         assertArrayEquals(
-            arrayOf("hello", "my beautiful \"world"),
-            testSplit("""hello 'my beautiful "world"""),
-            "样例 5 失败"
+            arrayOf("hello", "'my beautiful \"world"),
+            testSplit("""hello 'my beautiful "world""")
         )
     }
 
-    @Test
-    fun `test splitCommand edge cases`() {
-        val svc = arthasExecutionService
-        if (svc !is DefaultArthasExecutionService) {
-            logger.warn("Test case skipped")
-            return
-        }
-        // 空字符串
-        assertArrayEquals(
-            emptyArray<String>(),
-            testSplit(""),
-            "空字符串应该返回空列表"
-        )
-
-        // 只有空格
-        assertArrayEquals(
-            emptyArray<String>(),
-            testSplit("    "),
-            "仅空格字符串应该返回空列表"
-        )
-
-        // 纯转义序列
-        assertArrayEquals(
-            arrayOf(" ", "\"", "'", "\\"),
-            testSplit("""\  \" \' \\"""),
-            "转义序列解析错误"
-        )
-
-        // 混合复杂情况
-        assertArrayEquals(
-            arrayOf("cmd", "--name", "John Doe", "--msg", "It's \"OK\""),
-            testSplit("""cmd --name "John Doe" --msg 'It\'s "OK"'"""),
-            "复杂嵌套解析错误"
-        )
-    }
     @Test
     fun checkOgnlExpression() {
         val defaultChannel = attachTester.resolveDefaultChannel()

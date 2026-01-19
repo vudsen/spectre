@@ -378,8 +378,11 @@ class DefaultArthasExecutionService(
             if (!(command[0] == '\'' || command[0] == '"')) {
                 continue
             }
+            if (command.length <= 2) {
+                continue
+            }
             val expression = try {
-                parser.parseExpression(command) as SpelExpression
+                parser.parseExpression(command.substring(1, command.length - 1)) as SpelExpression
             } catch (_: Exception) {
                 throw BusinessException("error.ognl.parse.failed")
             }
@@ -393,7 +396,7 @@ class DefaultArthasExecutionService(
      *
      * 帮我写一个 Kotlin 工具函数，这个函数输入一个字符串，你需要将这个字符串以空格分割后将这些子串以一个 `List<String>` 返回。但是需要注意:
      *
-     * 1. 使用一对`'`或`"`包裹的字符串是一个整体，你不能将其分割。
+     * 1. 使用一对`'`或`"`包裹的字符串是一个整体，你不能将其分割，并且需要将 `'` 或 `"` 保留到输出中，不要省略。
      * 2. 可以使用 `\` 来对 `'` 或 `"` 进行转义
      *
      * ## 样例
@@ -401,7 +404,7 @@ class DefaultArthasExecutionService(
      *
      * 输入: `hello "wo rld" '!! !!'`
      *
-     * 输出: `[hello, wo rld, !! !!]`
+     * 输出: `[hello, "wo rld", '!! !!']`
      *
      * 解释: `"wo rld"` 和 `'!! !!'` 虽然中间有空格，但是它们被`"` 和 `'` 包裹了，是一个整体。
      *
@@ -409,7 +412,7 @@ class DefaultArthasExecutionService(
      *
      * 输入: `hello "\"wo \"rld" '\\!!\'!!'`
      *
-     * 输出: `[hello, "wo "rld, \!!'!!]`
+     * 输出: `[hello, ""wo "rld", '\!!'!!']`
      *
      * 解释: `\` 为转义符，`\"` 或 `\'` 不应该视为开始或结束的标志
      *
@@ -417,7 +420,7 @@ class DefaultArthasExecutionService(
      *
      * 输入: `I "love 'you'"`
      *
-     * 输出: `[I, love 'you']`
+     * 输出: `[I, "love 'you'"]`
      *
      * 解释: 虽然 `you` 被单引号包裹，但是它已经被双引号包裹了，所以需要将其当做普通的单引号
      *
@@ -433,7 +436,7 @@ class DefaultArthasExecutionService(
      *
      * 输入: `hello 'my beautiful "world`
      *
-     * 输出: `[hello, my beautiful "world]`
+     * 输出: `[hello, 'my beautiful "world]`
      *
      * 解释: 当你开始匹配一个子串时，如果没有匹配到对应的符号，则将其整个视为一个子串
      *
@@ -447,50 +450,48 @@ class DefaultArthasExecutionService(
      */
     fun splitCommand(input: String): List<String> {
         val result = mutableListOf<String>()
-        val currentToken = StringBuilder()
-        var i = 0
-        var quoteChar: Char? = null // 用于记录当前是被 ' 还是 " 包裹
+        val current = StringBuilder()
+        var quoteChar: Char? = null // 记录当前是否在引号内，以及是哪种引号 (' 或 ")
+        var isEscaped = false      // 记录当前字符是否被转义
 
-        while (i < input.length) {
-            val c = input[i]
-
+        for (char in input) {
             when {
-                // 情况 1: 处理转义字符 \
-                c == '\\' && i + 1 < input.length -> {
-                    currentToken.append(input[i + 1])
-                    i += 1 // 跳过下一个被转义的字符
+                // 1. 处理转义逻辑
+                isEscaped -> {
+                    current.append(char)
+                    isEscaped = false
+                }
+                char == '\\' -> {
+                    current.append(char)
+                    isEscaped = true
                 }
 
-                // 情况 2: 处理引号 (只有当不在另一种引号包裹中时才起作用)
-                (c == '"' || c == '\'') -> {
-                    when {
-                        quoteChar == null -> quoteChar = c // 进入引号包裹模式
-                        quoteChar == c -> quoteChar = null // 退出引号包裹模式
-                        else -> currentToken.append(c)     // 在双引号里遇到单引号（或反之），视为普通字符
+                // 2. 处理引号逻辑
+                quoteChar != null -> {
+                    current.append(char)
+                    if (char == quoteChar) {
+                        quoteChar = null // 匹配到配对的引号，退出引用状态
                     }
                 }
-
-                // 情况 3: 处理空格
-                c.isWhitespace() -> {
-                    if (quoteChar == null) {
-                        if (currentToken.isNotEmpty()) {
-                            result.add(currentToken.toString())
-                            currentToken.setLength(0)
-                        }
-                    } else {
-                        currentToken.append(c) // 在引号包裹中，空格视为普通字符
-                    }
+                char == '\'' || char == '"' -> {
+                    quoteChar = char
+                    current.append(char)
                 }
 
-                // 情况 4: 普通字符
-                else -> currentToken.append(c)
+                // 3. 处理空格和普通字符
+                char.isWhitespace() -> {
+                    if (current.isNotEmpty()) {
+                        result.add(current.toString())
+                        current.clear()
+                    }
+                }
+                else -> current.append(char)
             }
-            i++
         }
 
-        // 处理最后一个存留在 buffer 中的字符串
-        if (currentToken.isNotEmpty()) {
-            result.add(currentToken.toString())
+        // 处理最后一个残余的子串
+        if (current.isNotEmpty()) {
+            result.add(current.toString())
         }
 
         return result
