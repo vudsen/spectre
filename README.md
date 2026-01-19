@@ -20,9 +20,21 @@
 
 ## 增强功能
 
-增强功能可以在连接到 JVM 后在左侧菜单选中(顶部预览图左侧菜单)。这些功能用于简化一些基础的操作：
+我们对一些命令进行了增强，能更方便的进行使用和查看。
 
-- Retransform：允许直接在 web 界面上传 class 文件替换字节码
+### Retransform 
+
+Retransform 可以直接在 web 界面上传 class 文件替换字节码，文件在替换后会被立马删除。
+
+![retransform](images/retransform.png)
+
+### Dashboard
+
+![dashboard](images/dashboard.png)
+
+### Jad
+
+![jad](images/jad.png)
 
 
 ## 本地部署
