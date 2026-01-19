@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component
 class ArthasExecutionPolicyAuthenticationExtension : PolicyAuthenticationExtensionPoint() {
 
     companion object {
+        const val ID = "PolicyAuthenticationExtensionPoint:ArthasExecutionPolicyAuthenticationExtension"
         private val arthasCommands = setOf(
             "auth",
             "base64",
@@ -108,9 +109,9 @@ class ArthasExecutionPolicyAuthenticationExtension : PolicyAuthenticationExtensi
         context: Map<String, Any>,
         conf: Any
     ): Boolean {
-        val fullCommand = context["command"] as String
+        val commands = context["commands"] as List<String>
         conf as ArthasExecutionConfiguration
-        val command = fullCommand.substringBefore(' ')
+        val command = commands[0]
         if (!arthasCommands.contains(command)) {
             // unknown command.
             if (!conf.allowUnknownCommand) {
@@ -123,7 +124,7 @@ class ArthasExecutionPolicyAuthenticationExtension : PolicyAuthenticationExtensi
                 httpStatus = HttpStatus.FORBIDDEN.value()
             }
         }
-        if (fullCommand.contains('>') || fullCommand.contains('<')) {
+        if (commands.indexOf(">") >= 0 || commands.indexOf("<") >= 0) {
             if (!conf.allowRedirect) {
                 throw BusinessException("您没有执行使用重定向符的权限", emptyArray()).apply {
                     httpStatus = HttpStatus.FORBIDDEN.value()
@@ -138,7 +139,7 @@ class ArthasExecutionPolicyAuthenticationExtension : PolicyAuthenticationExtensi
     }
 
     override fun getId(): String {
-        return "PolicyAuthenticationExtensionPoint:ArthasExecutionPolicyAuthenticationExtension"
+        return ID
     }
 
     override fun getExtensionPointName(): String {

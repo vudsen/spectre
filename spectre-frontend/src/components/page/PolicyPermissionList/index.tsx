@@ -4,6 +4,7 @@ import { graphql } from '@/graphql/generated'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import {
+  addToast,
   Button,
   Card,
   CardBody,
@@ -26,6 +27,8 @@ import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import BindPolicyPermissionDrawer from '@/components/page/PolicyPermissionList/BindPolicyPermissionDrawer.tsx'
 import ModifyPermissionDrawerContent from '@/components/page/PolicyPermissionList/ModifyPermissionDrawerContent.tsx'
 import Time from '@/components/Time.tsx'
+import { deletePermissionPolicy } from '@/api/impl/policy-permission.ts'
+import { showDialog } from '@/common/util.ts'
 
 interface PolicyPermissionListProps {
   subjectId: string
@@ -103,6 +106,26 @@ const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
       ...prev,
     }))
   }, [])
+
+  const deletePermission = useCallback((permission: Permission) => {
+    showDialog({
+      title: '删除策略权限',
+      message: `确定删除 '${permission.name}' 吗?`,
+      color: 'danger',
+      async onConfirm() {
+        try {
+          return await deletePermissionPolicy(permission.id)
+        } finally {
+          setQlArgs((prevState) => ({ ...prevState }))
+          addToast({
+            title: '删除成功',
+            color: 'success',
+          })
+        }
+      },
+    })
+  }, [])
+
   return (
     <>
       <Card>
@@ -181,7 +204,13 @@ const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
                     >
                       <SvgIcon icon={Icon.EDIT} />
                     </Button>
-                    <Button isIconOnly variant="light" color="danger" size="sm">
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      color="danger"
+                      size="sm"
+                      onPress={() => deletePermission(permission)}
+                    >
                       <SvgIcon icon={Icon.TRASH} />
                     </Button>
                   </TableCell>

@@ -4,3 +4,6 @@ INSERT INTO toolchain_item (type, tag, url, arm_url, created_at) VALUES ('HTTP_C
 
 INSERT INTO toolchain_bundle (id, name, created_at, jattach_tag, arthas_tag, http_client_tag) VALUES (1191016456452571136, 'latest', '2025-11-26 03:15:16', 'v2.2', 'v4.0.5', 'v0.0.1');
 
+INSERT INTO user(id, username, password) values (2, 'tester', '$2a$10$HYWbzz/kgOxgklyf5pF0Vu2Hyfpir1xCeVua.NqpHynWurqRa2QI.');
+INSERT INTO role(id, name) VALUES ('2', 'test');
+INSERT INTO user_role(user_id, role_id) VALUES(2, 2);

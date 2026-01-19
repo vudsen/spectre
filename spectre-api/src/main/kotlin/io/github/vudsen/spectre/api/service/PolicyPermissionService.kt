@@ -15,7 +15,7 @@ interface PolicyPermissionService {
     /**
      * 保存策略
      */
-    fun save(policy: PolicyPermissionPO)
+    fun save(policy: PolicyPermissionPO): PolicyPermissionPO
 
     /**
      * 根据id查询策略权限
@@ -28,6 +28,11 @@ interface PolicyPermissionService {
      * 根据权限名称获取权限
      */
     fun listAllPermissions(): Set<PermissionEntity>
+
+    /**
+     * 删除权限
+     */
+    fun deletePermission(id: Long)
 
     /**
      * 列出主体已经绑定的权限

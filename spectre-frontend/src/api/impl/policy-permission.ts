@@ -48,3 +48,7 @@ export const getEnhanceAuthenticationPages = (
     `permission/policy/enhance-pages?resource=${resource}&action=${action}`,
   )
 }
+
+export const deletePermissionPolicy = (id: string) => {
+  return axios.post(`permission/policy/delete/${id}`)
+}

@@ -34,10 +34,9 @@ abstract class AbstractSpectreTest {
         }
     }
 
-    @BeforeEach
-    fun setupSecurityContext() {
+    fun setupSecurityContext(username: String, password: String) {
         val authToken =
-            UsernamePasswordAuthenticationToken(TestConstant.ROOT_USER_USERNAME, TestConstant.ROOT_USER_PASSWORD)
+            UsernamePasswordAuthenticationToken(username, password)
         val authentication = authenticationManager.authenticate(authToken)
 
         val context = SecurityContextHolder.createEmptyContext()
@@ -45,8 +44,13 @@ abstract class AbstractSpectreTest {
         SecurityContextHolder.setContext(context)
     }
 
+    @BeforeEach
+    fun _setupSecurityContext() {
+        setupSecurityContext(TestConstant.ROOT_USER_USERNAME, TestConstant.ROOT_USER_PASSWORD)
+    }
+
     @AfterEach
-    fun cleanSecurityContext() {
+    fun _cleanSecurityContext() {
         SecurityContextHolder.clearContext()
     }
 

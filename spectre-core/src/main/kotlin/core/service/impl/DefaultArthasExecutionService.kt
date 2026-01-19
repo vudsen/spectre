@@ -29,7 +29,6 @@ import org.springframework.expression.spel.standard.SpelExpression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.stereotype.Service
 import java.lang.reflect.InvocationTargetException
-import java.time.Duration
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -93,7 +92,7 @@ class DefaultArthasExecutionService(
             NullLiteral::class.java,
         )
         val parser = SpelExpressionParser()
-
+        private val DISALLOWED_ARTHAS_COMMAND = setOf("auth", "cat", "base64", "cls", "dump", "grep", "keymap", "mc", "quit", "pwd", "tee")
     }
 
     private val modifyLock = ReentrantLock()
@@ -119,14 +118,17 @@ class DefaultArthasExecutionService(
         appAccessControlService.checkPolicyPermission(ctx)
     }
 
-    private fun checkCommandExecPermission(channelId: String, command: String) {
+    private fun checkCommandExecPermission(channelId: String, commands: List<String>) {
+        if (DISALLOWED_ARTHAS_COMMAND.contains(commands[0])) {
+            throw BusinessException("error.command.not.allowed", arrayOf(commands[0]))
+        }
         val info = getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
         val runtimeNodeDTO = runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
 
         appAccessControlService.checkPolicyPermission(
             ArthasExecutionABACContext(
                 ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE,
-                command.trim(),
+                commands,
                 runtimeNodeDTO,
                 info.jvm
             )
@@ -347,31 +349,40 @@ class DefaultArthasExecutionService(
 
     override fun execAsync(channelId: String, command: String) {
         checkTreeNodePermission(channelId)
-        checkCommandExecPermission(channelId, command)
+        val commands = splitCommand(command)
+        checkCommandExecPermission(channelId, commands)
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         if (data.restrictedMode) {
-            checkOgnlExpression(command)
+            checkOgnlExpression(commands)
         }
         client.asyncExec(data.sessionId, command)
     }
 
     override fun execSync(channelId: String, command: String): Any {
         checkTreeNodePermission(channelId)
-        checkCommandExecPermission(channelId, command)
+        val commands = splitCommand(command)
+        checkCommandExecPermission(channelId, commands)
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
         if (data.restrictedMode) {
-            checkOgnlExpression(command)
+            checkOgnlExpression(commands)
         }
         return client.exec(command)
     }
 
-    fun checkOgnlExpression(command: String) {
+
+    fun checkOgnlExpression(commands: List<String>) {
         // Ognl 和 SpEL 差不多的
-        for (rawExpression in splitOgnlExpression(command)) {
+        for (command in commands) {
+            if (!(command[0] == '\'' || command[0] == '"')) {
+                continue
+            }
+            if (command.length <= 2) {
+                continue
+            }
             val expression = try {
-                parser.parseExpression(rawExpression) as SpelExpression
+                parser.parseExpression(command.substring(1, command.length - 1)) as SpelExpression
             } catch (_: Exception) {
                 throw BusinessException("error.ognl.parse.failed")
             }
@@ -379,23 +390,29 @@ class DefaultArthasExecutionService(
         }
     }
 
+
     /**
      * **AI GENERATED**:
      *
-     * 帮我写一个 Kotlin 工具函数，这个函数输入一个字符串，你需要提取出所有双引号或单引号包裹的子字符串，返回为一个字符串列表。
+     * 帮我写一个 Kotlin 工具函数，这个函数输入一个字符串，你需要将这个字符串以空格分割后将这些子串以一个 `List<String>` 返回。但是需要注意:
+     *
+     * 1. 使用一对`'`或`"`包裹的字符串是一个整体，你不能将其分割，并且需要将 `'` 或 `"` 保留到输出中，不要省略。
+     * 2. 可以使用 `\` 来对 `'` 或 `"` 进行转义
      *
      * ## 样例
      * ### 样例 1
      *
      * 输入: `hello "wo rld" '!! !!'`
      *
-     * 输出: `["wo rld", "!! !!"]`
+     * 输出: `[hello, "wo rld", '!! !!']`
+     *
+     * 解释: `"wo rld"` 和 `'!! !!'` 虽然中间有空格，但是它们被`"` 和 `'` 包裹了，是一个整体。
      *
      * ### 样例 2
      *
      * 输入: `hello "\"wo \"rld" '\\!!\'!!'`
      *
-     * 输出: `["\"wo \"rld", "\\!!\'!!"]`
+     * 输出: `[hello, ""wo "rld", '\!!'!!']`
      *
      * 解释: `\` 为转义符，`\"` 或 `\'` 不应该视为开始或结束的标志
      *
@@ -403,78 +420,80 @@ class DefaultArthasExecutionService(
      *
      * 输入: `I "love 'you'"`
      *
-     * 输出: `[love 'you']`
+     * 输出: `[I, "love 'you'"]`
      *
      * 解释: 虽然 `you` 被单引号包裹，但是它已经被双引号包裹了，所以需要将其当做普通的单引号
      *
-     * ## 注意事项
+     * ### 样例 4
+     *
+     * 输入: `    hello     world     `
+     *
+     * 输出: `[hello, world]`
+     *
+     * 解释: 对于多个空格要进行忽略
+     *
+     * ### 样例 5
+     *
+     * 输入: `hello 'my beautiful "world`
+     *
+     * 输出: `[hello, 'my beautiful "world]`
+     *
+     * 解释: 当你开始匹配一个子串时，如果没有匹配到对应的符号，则将其整个视为一个子串
+     *
+     * ## 代码要去
      *
      * 1. 不要使用正则表达式，一个字符一个字符解析
      * 2. 未来不需要扩展，**保持代码简洁，不要考虑扩展性**
      *
      * @param input 需要解析的命令
-     * @return 识别到的子串
+     * @return 解析后的子串
      */
-    private fun splitOgnlExpression(input: String): List<String> {
+    fun splitCommand(input: String): List<String> {
         val result = mutableListOf<String>()
-        var currentIndex = 0
+        val current = StringBuilder()
+        var quoteChar: Char? = null // 记录当前是否在引号内，以及是哪种引号 (' 或 ")
+        var isEscaped = false      // 记录当前字符是否被转义
 
-        while (currentIndex < input.length) {
-            val startChar = input[currentIndex]
+        for (char in input) {
+            when {
+                // 1. 处理转义逻辑
+                isEscaped -> {
+                    current.append(char)
+                    isEscaped = false
+                }
+                char == '\\' -> {
+                    current.append(char)
+                    isEscaped = true
+                }
 
-            // 检查当前字符是否是引号的起始
-            if (startChar == '"' || startChar == '\'') {
-                val closingQuote = startChar // 匹配的结束引号
-                val contentBuilder = StringBuilder()
-                var isEscaped = false // 跟踪前一个字符是否是转义符 '\'
-
-                // 从引号后的下一个字符开始
-                var innerIndex = currentIndex + 1
-
-                // 循环直到字符串结束或者找到匹配的结束引号
-                while (innerIndex < input.length) {
-                    val currentChar = input[innerIndex]
-                    if (isEscaped) {
-                        // 如果前一个字符是转义符，则当前字符被视为普通字符，
-                        // 无论它是什么（包括引号或转义符本身），并添加到内容中。
-                        contentBuilder.append(currentChar)
-                        isEscaped = false
-                    } else {
-                        // 没有转义的情况
-                        when (currentChar) {
-                            '\\' -> {
-                                // 遇到转义符，设置标志，但不添加到内容中。
-                                isEscaped = true
-                            }
-                            closingQuote -> {
-                                // 遇到未转义的匹配结束引号，说明子字符串提取完成
-                                result.add(contentBuilder.toString())
-                                currentIndex = innerIndex + 1 // 更新外部循环的起始位置到结束引号的下一个字符
-                                innerIndex = -1 // 标记内部循环结束
-                                break
-                            }
-                            else -> {
-                                // 遇到普通字符，添加到内容中
-                                contentBuilder.append(currentChar)
-                            }
-                        }
-                    }
-                    if (innerIndex != -1) {
-                        innerIndex++
+                // 2. 处理引号逻辑
+                quoteChar != null -> {
+                    current.append(char)
+                    if (char == quoteChar) {
+                        quoteChar = null // 匹配到配对的引号，退出引用状态
                     }
                 }
-                // 如果内部循环因为达到字符串末尾而结束，但没有找到结束引号，
-                // 那么该引号块是不完整的，我们继续从原先的currentIndex的下一个位置开始扫描。
-                // 这种情况下，我们不更新currentIndex，因为它在内部循环中已经被正确更新。
-                if (innerIndex != -1) {
-                    // 如果内部循环没有break (即没有找到匹配的结束引号)
-                    currentIndex++
+                char == '\'' || char == '"' -> {
+                    quoteChar = char
+                    current.append(char)
                 }
-            } else {
-                // 如果当前字符不是引号，则跳过它
-                currentIndex++
+
+                // 3. 处理空格和普通字符
+                char.isWhitespace() -> {
+                    if (current.isNotEmpty()) {
+                        result.add(current.toString())
+                        current.clear()
+                    }
+                }
+                else -> current.append(char)
             }
         }
+
+        // 处理最后一个残余的子串
+        if (current.isNotEmpty()) {
+            result.add(current.toString())
+        }
+
         return result
     }
 
@@ -508,7 +527,7 @@ class DefaultArthasExecutionService(
     }
 
     override fun retransform(channelId: String, source: InputStreamSource): Any {
-        checkCommandExecPermission(channelId, "retransform")
+        checkCommandExecPermission(channelId, listOf("retransform"))
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)
 

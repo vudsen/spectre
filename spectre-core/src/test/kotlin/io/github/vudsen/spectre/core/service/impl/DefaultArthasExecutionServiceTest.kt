@@ -22,6 +22,50 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionServiceTest::class.java)
     }
 
+    private fun testSplit(input: String): Array<String> {
+        // 假设 splitArguments 定义在同包下的工具类中或作为全局函数
+        val service = arthasExecutionService as DefaultArthasExecutionService
+        return service.splitCommand(input).toTypedArray()
+    }
+
+    @Test
+    fun `test splitCommand provided samples`() {
+        val svc = arthasExecutionService
+        if (svc !is DefaultArthasExecutionService) {
+            logger.warn("Test case skipped")
+            return
+        }
+        // 样例 1: 基础引号包裹
+        assertArrayEquals(
+            arrayOf("hello", "\"wo rld\"", "'!! !!'"),
+            testSplit("""hello "wo rld" '!! !!'""")
+        )
+
+        // 样例 2: 转义字符
+        assertArrayEquals(
+            arrayOf("hello", "\"\\\"wo \\\"rld\"", "'\\\\!!\\'!!'"),
+            testSplit("""hello "\"wo \"rld" '\\!!\'!!'""")
+        )
+
+        // 样例 3: 嵌套引号处理
+        assertArrayEquals(
+            arrayOf("I", "\"love 'you'\""),
+            testSplit("""I "love 'you'"""")
+        )
+
+        // 样例 4: 多个连续空格
+        assertArrayEquals(
+            arrayOf("hello", "world"),
+            testSplit("""    hello     world     """)
+        )
+
+        // 样例 5: 未闭合的引号
+        assertArrayEquals(
+            arrayOf("hello", "'my beautiful \"world"),
+            testSplit("""hello 'my beautiful "world""")
+        )
+    }
+
     @Test
     fun checkOgnlExpression() {
         val defaultChannel = attachTester.resolveDefaultChannel()

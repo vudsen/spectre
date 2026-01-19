@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.test.plugin
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
+import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeConfig
@@ -136,7 +137,7 @@ class AttachTester {
         assertTrue(record[0] > record[1])
     }
 
-    private val commonRuntimeNodeId: Long by lazy {
+    val commonRuntimeNodeId: Long by lazy {
         val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
             withExposedPorts(22)
         }
@@ -167,11 +168,7 @@ class AttachTester {
         ).id!!
     }
 
-    /**
-     * 获取一个通用的 channel
-     * @return channelId
-     */
-    fun resolveDefaultChannel(): String {
+    fun resolveDefaultJvm(): JvmTreeNodeDTO {
         val root = runtimeNodeService.expandRuntimeNodeTree(commonRuntimeNodeId, null)
         val localeNode = root[0]
 
@@ -180,8 +177,15 @@ class AttachTester {
 
         val mathGame = localJvms[0]
         Assertions.assertTrue(mathGame.isJvm)
+        return mathGame
+    }
 
-        return doAttach(commonRuntimeNodeId, mathGame)
+    /**
+     * 获取一个通用的 channel
+     * @return channelId
+     */
+    fun resolveDefaultChannel(): String {
+        return doAttach(commonRuntimeNodeId, resolveDefaultJvm())
     }
 
 }
