@@ -12,7 +12,7 @@ class ArthasExecutionABACAuthProvider : ABACAuthenticationProvider {
         val context = ctx as ArthasExecutionABACContext
         val ctxMap = mutableMapOf<String, Any>()
 
-        ctxMap.put("command", context.command)
+        ctxMap.put("commands", context.commands)
         ctxMap.put("runtimeNodeDTO", context.runtimeNodeDTO)
         ctxMap.put("jvm", context.jvm)
         return ctxMap

@@ -18,4 +18,12 @@ object TestConstant {
 
     const val ENV_K8S_TOKEN = "K8S_TOKEN"
 
+    const val USER_TESTER_ID = 2L
+
+    const val ROLE_TEST_ID = 2L
+
+    const val USER_TESTER_USERNAME = "tester"
+
+    const val USER_TESTER_PASSWORD = "P@ssw0rd"
+
 }

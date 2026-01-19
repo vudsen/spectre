@@ -8,10 +8,10 @@ import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.perm.ABACPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -50,5 +50,13 @@ class PolicyPermissionController(
         val entity = ABACPermissions.findByResourceAndActions(resource, action)
         return policyPermissionService.resolveEnhanceConfigurationPage(entity)
     }
+
+    @PostMapping("delete/{id}")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).PERMISSION_BIND)")
+    @Log("log.policy_perm.delete", contextResolveExp = "{id: #args[0]}")
+    fun deletePermission(@PathVariable id: Long) {
+        policyPermissionService.deletePermission(id)
+    }
+
 
 }

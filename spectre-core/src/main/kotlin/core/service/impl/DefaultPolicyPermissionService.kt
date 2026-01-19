@@ -25,7 +25,7 @@ class DefaultPolicyPermissionService(
 
     private val objectMapper = ObjectMapper()
 
-    override fun save(policy: PolicyPermissionPO) {
+    override fun save(policy: PolicyPermissionPO): PolicyPermissionPO {
         for (plugin in policy.enhancePlugins) {
             val extPoint = policyAuthenticationExtManager.getById(plugin.pluginId)
             val clazz = extPoint.getConfigurationClass()
@@ -36,7 +36,7 @@ class DefaultPolicyPermissionService(
             }
             plugin.configuration = objectMapper.writeValueAsString(obj)
         }
-        policyPermissionRepository.save(policy)
+        return policyPermissionRepository.save(policy)
     }
 
     override fun findById(id: Long): PolicyPermissionDTO? {
@@ -46,6 +46,10 @@ class DefaultPolicyPermissionService(
 
     override fun listAllPermissions(): Set<PermissionEntity> {
         return ABACPermissions.listAllPermissions()
+    }
+
+    override fun deletePermission(id: Long) {
+        policyPermissionRepository.deleteById(id)
     }
 
     override fun listSubjectPermissions(

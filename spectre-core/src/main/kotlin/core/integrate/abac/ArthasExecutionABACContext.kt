@@ -7,7 +7,7 @@ import io.github.vudsen.spectre.api.perm.PermissionEntity
 
 class ArthasExecutionABACContext(
     entity: PermissionEntity,
-    val command: String,
+    val commands: List<String>,
     val runtimeNodeDTO: RuntimeNodeDTO,
     val jvm: Jvm
 ) : ABACContext(entity)
