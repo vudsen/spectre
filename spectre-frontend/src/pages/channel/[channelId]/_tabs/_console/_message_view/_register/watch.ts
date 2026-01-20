@@ -5,7 +5,7 @@ registerMessageView({
   type: 'watch',
   display: (message) => ({
     name: `${message.className}#${message.methodName}`,
-    color: 'success',
+    color: 'default',
     tag: 'watch',
   }),
   detailComponent: WatchMessageDetail,

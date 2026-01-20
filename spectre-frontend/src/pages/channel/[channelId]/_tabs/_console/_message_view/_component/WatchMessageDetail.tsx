@@ -1,6 +1,6 @@
-import { Code } from '@heroui/react'
 import type React from 'react'
 import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import OgnlMessageView from '@/pages/channel/[channelId]/_tabs/_console/_message_view/_component/_ognl_result/OgnlMessageView.tsx'
 
 type WatchMessage = {
   type: 'watch'
@@ -15,14 +15,12 @@ type WatchMessage = {
   fid: number
 }
 
-// TODO 解析字符串，构建一颗树形结构
 const WatchMessageDetail: React.FC<DetailComponentProps<WatchMessage>> = ({
   msg,
 }) => {
   return (
-    <div className="space-y-3 text-sm">
-      <div>Watch 命令结果: </div>
-      <Code className="w-full whitespace-pre-wrap">{msg.value}</Code>
+    <div className="text-sm">
+      <OgnlMessageView raw={msg.value} />
     </div>
   )
 }
