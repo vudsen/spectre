@@ -110,6 +110,7 @@ const Header: React.FC<ToolbarProps> = (props) => {
               <Input
                 label="Classloader Hash"
                 name="hash"
+                defaultValue={classloaderHash}
                 labelPlacement="outside-top"
               />
               <Button
