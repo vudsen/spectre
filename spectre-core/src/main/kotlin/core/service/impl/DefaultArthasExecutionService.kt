@@ -92,7 +92,7 @@ class DefaultArthasExecutionService(
             NullLiteral::class.java,
         )
         val parser = SpelExpressionParser()
-        private val DISALLOWED_ARTHAS_COMMAND = setOf("auth", "cat", "base64", "cls", "dump", "grep", "keymap", "mc", "quit", "pwd", "tee")
+        private val DISALLOWED_ARTHAS_COMMAND = setOf("auth", "cat", "base64", "cls", "dump", "grep", "keymap", "mc", "quit", "pwd", "tee", "echo")
     }
 
     private val modifyLock = ReentrantLock()
