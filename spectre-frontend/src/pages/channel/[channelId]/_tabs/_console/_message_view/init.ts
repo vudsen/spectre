@@ -1,1 +1,1 @@
-import.meta.glob('./_register/*.ts', { eager: true })
+import.meta.glob('./_register/*.{ts,tsx}', { eager: true })
