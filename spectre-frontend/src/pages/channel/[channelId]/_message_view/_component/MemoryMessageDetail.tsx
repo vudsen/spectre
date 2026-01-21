@@ -7,7 +7,7 @@ import {
   TableRow,
 } from '@heroui/react'
 import React, { useMemo } from 'react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
 
 type MemoryInfo = {

@@ -2,7 +2,7 @@ import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import clsx from 'clsx'
 import React, { useMemo } from 'react'
 import './listStyle.css'
-import ArthasResponsePreview from '@/pages/channel/[channelId]/_tabs/_console/_message_view/ArthasResponsePreview.tsx'
+import ArthasResponsePreview from '@/pages/channel/[channelId]/_message_view/ArthasResponsePreview.tsx'
 
 export type ResponseGroupItem = {
   entity: ArthasResponseWithId

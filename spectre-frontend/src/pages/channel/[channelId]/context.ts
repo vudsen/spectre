@@ -9,7 +9,7 @@ export type TabOptions = {
   /**
    * 如果该标签页是唯一的，则需要提供该值，当用户重复打开时，将会跳转而不是开启一个新的
    */
-  uniqueId?: string
+  uniqueId?: React.Key
   hoverMessage?: string
 }
 

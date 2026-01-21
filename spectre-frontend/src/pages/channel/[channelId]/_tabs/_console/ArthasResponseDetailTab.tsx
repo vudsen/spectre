@@ -1,7 +1,10 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
-import { Tab, Tabs } from '@heroui/react'
-import ArthasResponseDetail from './_message_view/ArthasResponseDetail.tsx'
+import { Tab, Tabs, Tooltip } from '@heroui/react'
+import ArthasResponseDetail from '@/pages/channel/[channelId]/_message_view/ArthasResponseDetail.tsx'
+import SvgIcon from '@/components/icon/SvgIcon.tsx'
+import Icon from '@/components/icon/icon.ts'
+import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 
 interface ArthasResponseDetailProps {
   entity?: ArthasResponseWithId
@@ -10,6 +13,7 @@ interface ArthasResponseDetailProps {
 const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
   entity,
 }) => {
+  const context = useContext(ChannelContext)
   if (!entity) {
     return (
       <div className="m-3 text-sm select-none">
@@ -20,13 +24,24 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
       </div>
     )
   }
+  const openInNewTab = () => {
+    context
+      .getTabsController()
+      .openTab('MESSAGE_DETAIL', { name: 'TODO' }, { msg: entity })
+  }
   return (
-    <div className="box-border flex h-full flex-col">
+    <div className="relative box-border flex h-full flex-col">
       <Tabs
         aria-label="Options"
         color="primary"
         variant="underlined"
-        classNames={{ panel: 'overflow-scroll p-3 pb-8 grow' }}
+        classNames={{
+          panel: 'overflow-scroll p-3 pb-8 grow',
+          cursor: 'w-full',
+          base: 'p-2',
+          tab: 'max-w-fit',
+          tabList: ' w-full relative rounded-none p-0 border-b border-divider',
+        }}
       >
         <Tab title="视图">
           <ArthasResponseDetail message={entity} />
@@ -37,6 +52,15 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
           </div>
         </Tab>
       </Tabs>
+      <div className="absolute top-3.5 right-5">
+        <Tooltip content="新标签页打开">
+          <SvgIcon
+            onClick={openInNewTab}
+            icon={Icon.EXTERNAL}
+            className="text-primary cursor-pointer"
+          />
+        </Tooltip>
+      </div>
     </div>
   )
 }

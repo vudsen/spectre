@@ -5,10 +5,14 @@ import type React from 'react'
 import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
 import type { TabOptions } from '@/pages/channel/[channelId]/context.ts'
 import DashBoardTab from '@/pages/channel/[channelId]/_tabs/_dashboard'
+import MessageDetailPage, {
+  type MessageDetailPageProps,
+} from '@/pages/channel/[channelId]/_tabs/_message_detail'
 
 export interface TabArgs {
   JAD: JadPageProps
   DASHBOARD: undefined
+  MESSAGE_DETAIL: MessageDetailPageProps
 }
 
 type ComponentHolder<T> = {
@@ -38,8 +42,16 @@ const DASHBOARD: ComponentHolder<object> = {
   }),
 }
 
+const MESSAGE_DETAIL: ComponentHolder<MessageDetailPageProps> = {
+  Component: MessageDetailPage,
+  defaultPropsFactory: (props) => ({
+    uniqueId: props.msg.fid,
+  }),
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const TabComponents: Record<string, ComponentHolder<any>> = {
   JAD,
   DASHBOARD,
+  MESSAGE_DETAIL,
 }

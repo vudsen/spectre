@@ -10,6 +10,7 @@ import ChannelContext, {
 } from '@/pages/channel/[channelId]/context.ts'
 import type { QuickCommandRef } from '@/pages/channel/[channelId]/_component/QuickCommand'
 import useArthasMessageBus from '@/pages/channel/[channelId]/useArthasMessageBus.tsx'
+import './_message_view/init.ts'
 
 interface ChannelLayoutProps {
   channelId: string

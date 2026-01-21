@@ -6,8 +6,6 @@ import CommandExecuteBlock from './CommandExecuteBlock.tsx'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import ArthasResponseListTab from './ArthasResponseListTab.tsx'
 
-import './_message_view/init.ts'
-
 const ConsoleTab: React.FC = () => {
   const [selectedEntity, setSelectedEntity] = useState<ArthasResponseWithId>()
 
