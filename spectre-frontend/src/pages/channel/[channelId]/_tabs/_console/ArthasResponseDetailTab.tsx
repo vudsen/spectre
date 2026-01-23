@@ -41,11 +41,11 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
         color="primary"
         variant="underlined"
         classNames={{
-          panel: 'overflow-scroll p-3 pb-8 grow',
+          panel: 'overflow-scroll grow p-0',
           cursor: 'w-full',
-          base: 'p-2',
+          base: '',
           tab: 'max-w-fit',
-          tabList: ' w-full relative rounded-none p-0 border-b border-divider',
+          tabList: ' w-full relative rounded-none p-2 border-b border-divider',
         }}
       >
         <Tab title="视图">

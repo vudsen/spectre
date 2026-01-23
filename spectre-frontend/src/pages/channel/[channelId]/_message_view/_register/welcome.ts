@@ -5,7 +5,7 @@ registerMessageView({
   type: 'welcome',
   detailComponent: WelcomeMessageDetail,
   display: (message) => ({
-    name: message.mainClass,
+    name: message.value.mainClass,
     color: 'primary',
     tag: '欢迎信息',
   }),

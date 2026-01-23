@@ -5,8 +5,8 @@ registerMessageView({
   type: 'status',
   detailComponent: StatusMessageDetail,
   display: (message) => ({
-    name: message.message ?? '成功',
-    color: message.statusCode === 0 ? 'success' : 'danger',
-    tag: message.statusCode === 0 ? '执行成功' : '执行失败',
+    name: message.value.message ?? '成功',
+    color: message.value.statusCode === 0 ? 'success' : 'danger',
+    tag: message.value.statusCode === 0 ? '执行成功' : '执行失败',
   }),
 })

@@ -11,11 +11,12 @@ const ArthasResponsePreview: React.FC<ArthasResponsePreviewProps> = (props) => {
   const state: PreviewInfo = useMemo(() => {
     return (
       getArthasMessageView(props.message.value.type)?.display(
-        props.message.value,
+        props.message,
       ) ?? {
         name: '<Unknown>',
         color: 'default',
         tag: props.message.value.type,
+        tabName: 'Unknown',
       }
     )
   }, [props.message])

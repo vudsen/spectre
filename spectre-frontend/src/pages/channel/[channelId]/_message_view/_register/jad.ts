@@ -5,7 +5,7 @@ registerMessageView({
   detailComponent: JadMessageDetail,
   type: 'jad',
   display: (message) => ({
-    name: message.classInfo.name,
+    name: message.value.classInfo.name,
     tag: 'jad',
     color: 'default',
   }),

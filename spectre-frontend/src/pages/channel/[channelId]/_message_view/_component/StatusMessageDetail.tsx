@@ -2,7 +2,7 @@ import type React from 'react'
 import { Code } from '@heroui/react'
 import type { DetailComponentProps } from '../factory.ts'
 
-type StatusMessage = {
+export type StatusMessage = {
   type: 'status'
   statusCode: number
   jobId: number

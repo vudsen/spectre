@@ -18,12 +18,13 @@ interface ArthasResponseListProps {
   onEntitySelect: (e: ArthasMessage) => void
 }
 
-const IGNORED_TYPES = new Set(['input_status'])
+const IGNORED_TYPES = new Set(['input_status', 'command', 'status'])
 function buildArray0(bus: ArthasMessageBus) {
   const channelSlice = store.getState().channel
   const isDebugMode = channelSlice.context.isDebugMode
   return buildArray(bus.messages, undefined, isDebugMode)
 }
+
 function buildArray(
   messages: ArthasMessage[],
   previousMessage?: ResponseGroupItem,
@@ -37,26 +38,22 @@ function buildArray(
   } else {
     result = []
     let lastJobId = previousMessage?.entity.value.jobId ?? -1
-    let groupColorFlag = previousMessage?.groupInfo?.colorFlag ?? -1
+    let groupColorFlag = previousMessage?.colorFlag ?? -1
     let lastMsgType = previousMessage ? previousMessage.entity.value.type : ''
     for (const entity of messages) {
-      if (IGNORED_TYPES.has(entity.value.type)) {
+      const type = entity.value.type
+      if (IGNORED_TYPES.has(type)) {
         continue
       }
       // dashboard 仅显示第一条
-      if (
-        'dashboard' === entity.value.type &&
-        lastMsgType === entity.value.type
-      ) {
+      if ('dashboard' === type && lastMsgType === type) {
         continue
       }
-      lastMsgType = entity.value.type
+      lastMsgType = type
       if (entity.value.jobId === lastJobId) {
         result.push({
           entity,
-          groupInfo: {
-            colorFlag: groupColorFlag,
-          },
+          colorFlag: groupColorFlag,
         })
       } else {
         groupColorFlag++
@@ -65,9 +62,7 @@ function buildArray(
         }
         result.push({
           entity,
-          groupInfo: {
-            colorFlag: groupColorFlag,
-          },
+          colorFlag: groupColorFlag,
         })
       }
       lastJobId = entity.value.jobId

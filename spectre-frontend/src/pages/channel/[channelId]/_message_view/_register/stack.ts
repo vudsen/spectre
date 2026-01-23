@@ -6,7 +6,7 @@ registerMessageView({
   detailComponent: StackMessageDetail,
   display: (message) => ({
     tag: 'stack',
-    name: `调用栈(${(message.cost / 1024 / 1024).toFixed(4)}ms)`,
+    name: `调用栈(${(message.value.cost / 1024 / 1024).toFixed(4)}ms)`,
     color: 'default',
   }),
 })
