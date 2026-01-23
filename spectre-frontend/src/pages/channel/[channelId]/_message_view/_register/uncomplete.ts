@@ -20,7 +20,7 @@ type RowAffectedMessage = {
 registerMessageView<RowAffectedMessage>({
   type: 'row_affect',
   display: (message) => ({
-    name: `影响了 ${message.rowCount} 个类`,
+    name: `影响了 ${message.value.rowCount} 个类`,
     color: 'secondary',
     tag: '影响数量',
   }),
@@ -29,7 +29,7 @@ registerMessageView<RowAffectedMessage>({
 registerMessageView<VersionMessage>({
   type: 'version',
   display: (message) => ({
-    name: message.version,
+    name: message.value.version,
     color: 'secondary',
     tag: 'version',
   }),
@@ -38,8 +38,7 @@ registerMessageView<VersionMessage>({
 registerMessageView<InputStatusResponse>({
   type: 'input_status',
   display: (message) => ({
-    name: message.inputStatus,
-    color: 'default',
+    name: message.value.inputStatus,
     tag: '输入状态',
   }),
 })

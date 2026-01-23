@@ -4,7 +4,7 @@ import CommandMessageDetail from '../_component/CommandMessageDetail.tsx'
 registerMessageView({
   type: 'command',
   display: (entity) => ({
-    name: entity.command,
+    name: entity.value.command,
     color: 'primary',
     tag: '执行命令',
   }),

@@ -130,7 +130,7 @@ const Header: React.FC<ToolbarProps> = (props) => {
             <SvgIcon icon={Icon.HOME} size={22} />
           </Button>
         </Tooltip>
-        <Tooltip content="开启 DEBUG 模式">
+        <Tooltip content="显示所有消息">
           <Button
             isIconOnly
             variant="light"

@@ -1,11 +1,13 @@
 import type { ChipProps } from '@heroui/react'
 import type { PureArthasResponse } from '@/api/impl/arthas.ts'
 import type React from 'react'
+import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 
 export type PreviewInfo = {
   name: string
   color: ChipProps['color']
   tag: string
+  tabName: string
 }
 
 export interface DetailComponentProps<T extends PureArthasResponse> {
@@ -19,19 +21,35 @@ export interface DetailComponentProps<T extends PureArthasResponse> {
 export type RegisterConfiguration<T extends PureArthasResponse> = {
   type: string
   detailComponent?: React.FC<DetailComponentProps<T>>
-  display: (message: T) => PreviewInfo
+  display: (message: ArthasMessage<T>) => Partial<PreviewInfo>
 }
 
-const configMap: Record<string, RegisterConfiguration<PureArthasResponse>> = {}
+export type ArthasMessageView<T extends PureArthasResponse> = {
+  detailComponent?: React.FC<DetailComponentProps<T>>
+  display: (message: ArthasMessage<T>) => PreviewInfo
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const configMap: Record<string, ArthasMessageView<any>> = {}
 
 export function registerMessageView<T extends PureArthasResponse>(
   conf: RegisterConfiguration<T>,
 ) {
-  configMap[conf.type] = conf as RegisterConfiguration<PureArthasResponse>
+  configMap[conf.type] = {
+    detailComponent: conf.detailComponent,
+    display(message): PreviewInfo {
+      const base: PreviewInfo = {
+        name: conf.type,
+        tag: conf.type,
+        color: 'default',
+        tabName: message.context.command ?? conf.type,
+      }
+      return Object.assign(base, conf.display(message))
+    },
+  }
 }
 
 export function getArthasMessageView(
   type: string,
-): RegisterConfiguration<PureArthasResponse> | undefined {
+): ArthasMessageView<PureArthasResponse> | undefined {
   return configMap[type]
 }

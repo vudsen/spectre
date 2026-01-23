@@ -28,7 +28,7 @@ type WatchMessage = {
 registerMessageView({
   type: 'watch',
   display: (message) => ({
-    name: `${message.className}#${message.methodName}`,
+    name: `${message.value.className}#${message.value.methodName}`,
     color: 'default',
     tag: 'watch',
   }),
@@ -46,7 +46,7 @@ type GetStaticMessage = {
 registerMessageView({
   type: 'getstatic',
   display: (message) => ({
-    name: `查看静态属性: ${message.fieldName}`,
+    name: `查看静态属性: ${message.value.fieldName}`,
     color: 'default',
     tag: 'getstatic',
   }),

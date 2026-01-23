@@ -28,6 +28,7 @@ const CommandExecuteBlock: React.FC = () => {
   const isDebugMode = useSelector<RootState, boolean | undefined>(
     (state) => state.channel.context.isDebugMode,
   )
+  const [runningCommand, setRunningCommand] = useState<string | undefined>()
 
   const { control, trigger, getValues, reset, setValue } = useForm<FromState>()
   const [loading, setLoading] = useState(false)
@@ -81,6 +82,7 @@ const CommandExecuteBlock: React.FC = () => {
         if (fail) {
           setValue('command', command)
         }
+        setRunningCommand(command)
       },
     })
     return () => {
@@ -101,29 +103,41 @@ const CommandExecuteBlock: React.FC = () => {
           maxRows: 16,
         }}
       />
-      <div className="my-2 flex flex-row-reverse items-center">
-        <Button
-          isDisabled={inputStatus !== 'ALLOW_INPUT'}
-          color="primary"
-          onPress={execute}
-          className="ml-3"
-          isLoading={loading && inputStatus === 'ALLOW_INPUT'}
-        >
-          执行
-        </Button>
-        <Tooltip content="中断当前的前台任务(例如 watch 等命令)">
+      <div className="my-2 flex items-center justify-between">
+        <div className="text-sm">
+          <span>任务状态:&nbsp;</span>
+          {inputStatus === 'ALLOW_INPUT' ? (
+            <span className="text-success">空闲</span>
+          ) : undefined}
+          {inputStatus === 'ALLOW_INTERRUPT' ? (
+            <span className="text-warning">{runningCommand}</span>
+          ) : undefined}
+        </div>
+        <div>
           <Button
-            onPress={interrupt}
-            variant="flat"
-            color="danger"
-            isLoading={
-              !isDebugMode && loading && inputStatus === 'ALLOW_INTERRUPT'
-            }
-            isDisabled={!isDebugMode && inputStatus !== 'ALLOW_INTERRUPT'}
+            isDisabled={inputStatus !== 'ALLOW_INPUT'}
+            color="primary"
+            onPress={execute}
+            className="ml-3"
+            isLoading={loading && inputStatus === 'ALLOW_INPUT'}
           >
-            中断前台任务
+            执行
           </Button>
-        </Tooltip>
+          <Tooltip content="中断当前的前台任务(例如 watch 等命令)">
+            <Button
+              onPress={interrupt}
+              variant="flat"
+              className="ml-2"
+              color="danger"
+              isLoading={
+                !isDebugMode && loading && inputStatus === 'ALLOW_INTERRUPT'
+              }
+              isDisabled={!isDebugMode && inputStatus !== 'ALLOW_INTERRUPT'}
+            >
+              中断前台任务
+            </Button>
+          </Tooltip>
+        </div>
       </div>
     </div>
   )

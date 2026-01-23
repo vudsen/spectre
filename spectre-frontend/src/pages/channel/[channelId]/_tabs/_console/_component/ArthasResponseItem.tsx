@@ -6,9 +6,7 @@ import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 
 export type ResponseGroupItem = {
   entity: ArthasMessage
-  groupInfo?: {
-    colorFlag: number
-  }
+  colorFlag?: number
 }
 
 interface ArthasResponseItemProps {
@@ -30,8 +28,8 @@ const ArthasResponseItem: React.FC<ArthasResponseItemProps> = ({
   onEntitySelect,
 }) => {
   const colors = useMemo<MyColors>(() => {
-    if (item.groupInfo) {
-      if (item.groupInfo.colorFlag === 0) {
+    if (item.colorFlag !== undefined) {
+      if (item.colorFlag === 0) {
         return {
           normal: 'groupEven',
           selected: 'evenSelected',
@@ -55,7 +53,7 @@ const ArthasResponseItem: React.FC<ArthasResponseItemProps> = ({
         }
       }
     }
-  }, [index, item.groupInfo])
+  }, [index, item.colorFlag])
 
   return (
     <div
