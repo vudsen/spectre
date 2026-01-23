@@ -16,15 +16,16 @@ import {
 import { LineChart, type LineSeriesOption } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { UniversalTransition } from 'echarts/features'
-import type {
-  DashboardMessage,
-  MemoryInfo,
-} from '@/pages/channel/[channelId]/_tabs/_console/_message_view/_component/DashboardMessageDetail.tsx'
+
 import { formatTime } from '@/common/util.ts'
 import { Card, CardBody } from '@heroui/react'
 import KVGird from '@/components/KVGird'
 import KVGridItem from '@/components/KVGird/KVGridItem.tsx'
 import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
+import type {
+  DashboardMessage,
+  MemoryInfo,
+} from '@/pages/channel/[channelId]/_message_view/_component/DashboardMessageDetail.tsx'
 
 type EChartsOption = echarts.ComposeOption<
   | TitleComponentOption

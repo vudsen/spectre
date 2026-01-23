@@ -21,19 +21,17 @@ type MemoryMessage = {
   jobId: number
   memoryInfo: Record<string, MemoryInfo[]>
   type: 'memory'
-  fid: number
 }
 const MemoryMessageDetail: React.FC<DetailComponentProps<MemoryMessage>> = ({
   msg,
 }) => {
   const infos = useMemo(() => {
     const infos: MemoryInfo[] = []
-    console.log(msg.memoryInfo)
     for (const entry of Object.entries(msg.memoryInfo)) {
       infos.push(...entry[1])
     }
     return infos
-  }, [msg.fid])
+  }, [msg.memoryInfo])
   return (
     <Table>
       <TableHeader>

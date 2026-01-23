@@ -43,42 +43,19 @@ export const joinChannel = (
 
 export type InputStatusResponse = {
   type: 'input_status'
-  fid: number
   inputStatus: 'ALLOW_INPUT' | 'DISABLED' | 'ALLOW_INTERRUPT'
   jobId: number
 }
 
-type ArthasResponse = {
+export type PureArthasResponse = {
   type: string
   jobId: number
 }
 
-export type ArthasResponseWithId = ArthasResponse & {
-  /**
-   * arthas 实际没用这个值，这个是给前端识别用的
-   */
-  fid: number
-}
-let fid = Date.now()
-
-function applyIdForArthasResponse(r: unknown): Promise<ArthasResponseWithId[]> {
-  const resp = r as ArthasResponse[]
-  const result: ArthasResponseWithId[] = []
-  for (const arthasRespons of resp) {
-    result.push({
-      ...arthasRespons,
-      fid: fid++,
-    })
-  }
-  return Promise.resolve(result)
-}
-
 export const pullResults = async (
   channelId: string,
-): Promise<ArthasResponseWithId[]> =>
-  axios
-    .get(`arthas/channel/${channelId}/pull-result`)
-    .then(applyIdForArthasResponse)
+): Promise<PureArthasResponse[]> =>
+  axios.get(`arthas/channel/${channelId}/pull-result`)
 
 export const executeArthasCommand = (channelId: string, command: string) => {
   return axios.post(`arthas/channel/${channelId}/execute`, {
@@ -89,12 +66,10 @@ export const executeArthasCommand = (channelId: string, command: string) => {
 export const executeArthasCommandSync = (
   channelId: string,
   command: string,
-): Promise<ArthasResponseWithId[]> => {
-  return axios
-    .post(`arthas/channel/${channelId}/execute-sync`, {
-      command,
-    })
-    .then(applyIdForArthasResponse)
+): Promise<PureArthasResponse[]> => {
+  return axios.post(`arthas/channel/${channelId}/execute-sync`, {
+    command,
+  })
 }
 
 export const disconnectSession = (channelId: string) => {

@@ -8,7 +8,6 @@ export type CommandMessage = {
   state: string
   command: string
   message?: string
-  fid: number
 }
 
 const CommandMessageDetail: React.FC<DetailComponentProps<CommandMessage>> = (

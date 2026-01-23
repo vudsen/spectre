@@ -1,14 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
-import type { DashboardMessage } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/_component/DashboardMessageDetail.tsx'
 import { Button, Card, CardBody } from '@heroui/react'
 import KVGird from '@/components/KVGird'
 import KVGridItem from '@/components/KVGird/KVGridItem.tsx'
-import type { CommandMessage } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/_component/CommandMessageDetail.tsx'
 import MemoryChart from '@/pages/channel/[channelId]/_tabs/_dashboard/MemoryChart.tsx'
 import ThreadTable from '@/pages/channel/[channelId]/_tabs/_dashboard/ThreadTable.tsx'
 import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
 import clsx from 'clsx'
+import type { DashboardMessage } from '@/pages/channel/[channelId]/_message_view/_component/DashboardMessageDetail.tsx'
+import type { CommandMessage } from '../../_message_view/_component/CommandMessageDetail'
 
 const DashBoardTab: React.FC = () => {
   const context = useContext(ChannelContext)
@@ -19,18 +19,18 @@ const DashBoardTab: React.FC = () => {
 
   useEffect(() => {
     const id = context.messageBus.addListener({
-      onMessage(msg) {
+      onMessage: function (msg) {
         const current = msg[msg.length - 1]
         if (
-          current.type === 'command' &&
-          (current as CommandMessage).command === 'dashboard'
+          current.value.type === 'command' &&
+          (current.value as CommandMessage).command === 'dashboard'
         ) {
           return
-        } else if (current.type !== 'dashboard') {
+        } else if (current.value.type !== 'dashboard') {
           setStopped(true)
           return
         } else {
-          const dashboardMessage = current as DashboardMessage
+          const dashboardMessage = current.value as DashboardMessage
           setState(dashboardMessage)
           return
         }

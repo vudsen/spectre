@@ -45,7 +45,7 @@ const DASHBOARD: ComponentHolder<object> = {
 const MESSAGE_DETAIL: ComponentHolder<MessageDetailPageProps> = {
   Component: MessageDetailPage,
   defaultPropsFactory: (props) => ({
-    uniqueId: props.msg.fid,
+    uniqueId: props.msg.id,
   }),
 }
 

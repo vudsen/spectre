@@ -10,7 +10,6 @@ type EnhancerMessage = {
   }
   jobId: number
   success: boolean
-  fid: number
   type: 'enhancer'
 }
 

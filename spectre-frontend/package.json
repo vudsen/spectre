@@ -19,6 +19,7 @@
     "echarts": "^6.0.0",
     "framer-motion": "^12.23.9",
     "i18next": "^25.7.3",
+    "idb": "^8.0.3",
     "react": "~19.1.2",
     "react-dom": "~19.1.2",
     "react-hook-form": "^7.61.1",

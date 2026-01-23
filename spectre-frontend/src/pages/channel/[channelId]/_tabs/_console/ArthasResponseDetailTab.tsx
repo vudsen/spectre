@@ -1,13 +1,14 @@
 import React, { useContext } from 'react'
-import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import { Tab, Tabs, Tooltip } from '@heroui/react'
 import ArthasResponseDetail from '@/pages/channel/[channelId]/_message_view/ArthasResponseDetail.tsx'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
+import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
 
 interface ArthasResponseDetailProps {
-  entity?: ArthasResponseWithId
+  entity?: ArthasMessage
 }
 
 const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
@@ -27,7 +28,11 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
   const openInNewTab = () => {
     context
       .getTabsController()
-      .openTab('MESSAGE_DETAIL', { name: 'TODO' }, { msg: entity })
+      .openTab(
+        'MESSAGE_DETAIL',
+        { name: entity.context.command, icon: ChannelIcon.ALIGN_LEFT },
+        { msg: entity },
+      )
   }
   return (
     <div className="relative box-border flex h-full flex-col">

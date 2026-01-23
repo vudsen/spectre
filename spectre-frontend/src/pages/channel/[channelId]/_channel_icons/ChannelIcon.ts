@@ -6,6 +6,7 @@ const ChannelIcon = {
   DASHBOARD: 'fc-chart-line',
   FIELD: 'jb-field',
   ARRAY: 'jb-db-array',
+  ALIGN_LEFT: 'fc-align-left',
 }
 
 export default ChannelIcon

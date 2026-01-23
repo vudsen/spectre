@@ -6,6 +6,7 @@ import type { ArthasMessageBus } from '@/pages/channel/[channelId]/useArthasMess
 export type TabOptions = {
   name?: string
   isLocked?: boolean
+  icon?: string
   /**
    * 如果该标签页是唯一的，则需要提供该值，当用户重复打开时，将会跳转而不是开启一个新的
    */

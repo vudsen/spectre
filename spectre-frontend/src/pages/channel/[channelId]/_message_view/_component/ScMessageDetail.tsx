@@ -49,7 +49,6 @@ type ClassInfo = {
   synthetic: boolean
 }
 type ScMessage = {
-  fid: number
   withField: boolean
   type: 'sc'
   segment: number

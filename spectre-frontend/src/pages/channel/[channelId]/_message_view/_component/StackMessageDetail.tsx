@@ -27,7 +27,6 @@ type Trace = {
 }
 
 type StackMessage = {
-  fid: number
   type: 'stack'
   threadId: number
   threadName: string

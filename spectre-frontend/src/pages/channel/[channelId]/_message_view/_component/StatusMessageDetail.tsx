@@ -7,7 +7,6 @@ type StatusMessage = {
   statusCode: number
   jobId: number
   message?: string
-  fid: number
 }
 
 const StatusMessageDetail: React.FC<DetailComponentProps<StatusMessage>> = ({

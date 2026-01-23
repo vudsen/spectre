@@ -20,8 +20,7 @@ import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.
 
 type TabInfo = {
   node: React.ReactNode
-  icon?: string
-  id: number | string
+  id: React.Key
 } & TabOptions
 
 type OpenTabFuncArgs<K extends keyof TabArgs> = TabArgs[K] extends undefined
@@ -43,7 +42,7 @@ interface TabsControllerProps {
 }
 
 const TabsController: React.FC<TabsControllerProps> = (props) => {
-  const [activeTabId, setActiveTabId] = useState<string | number>(0)
+  const [activeTabId, setActiveTabId] = useState<React.Key>(0)
   const { menuProps, onContextMenu } = useRightClickMenu()
   const currentHoverTab = useRef<TabInfo | undefined>(undefined)
   const [tabs, setTabs] = useState<TabInfo[]>(() => {
@@ -84,7 +83,7 @@ const TabsController: React.FC<TabsControllerProps> = (props) => {
           {
             ...options,
             node,
-            icon: holder.icon,
+            icon: holder.icon ?? options.icon,
             id,
           },
         ]
@@ -93,12 +92,12 @@ const TabsController: React.FC<TabsControllerProps> = (props) => {
     },
   }))
 
-  const switchTab = (id: number | string) => {
+  const switchTab = (id: React.Key) => {
     setActiveTabId(id)
   }
 
   const closeCurrentTab = (
-    id: number | string,
+    id: React.Key,
     e?: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
     e?.stopPropagation()

@@ -1,22 +1,19 @@
 import {
-  type ArthasResponseWithId,
   executeArthasCommand,
   type InputStatusResponse,
   interruptCommand,
   pullResults,
 } from '@/api/impl/arthas.ts'
-import { useEffect, useMemo } from 'react'
-import {
-  appendMessages,
-  clearExpiredMessages,
-  updateInputStatus,
-} from '@/store/channelSlice.ts'
+import { useEffect, useState } from 'react'
+import { setupChannelContext, updateInputStatus } from '@/store/channelSlice.ts'
 import { store } from '@/store'
 import { useDispatch } from 'react-redux'
 import type { Dispatch } from '@reduxjs/toolkit'
+import setupDB, { type ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
+import type { CommandMessage } from '@/pages/channel/[channelId]/_message_view/_component/CommandMessageDetail.tsx'
 
 interface Listener {
-  onMessage?: (messages: ArthasResponseWithId[]) => void
+  onMessage?: (messages: ArthasMessage[]) => void
   afterExecute?: (command: string, fail: boolean) => void
 }
 
@@ -37,6 +34,10 @@ export type ArthasMessageBus = {
    * @param interruptCurrent 是否中止当前正在执行的命令
    */
   execute(command: string, interruptCurrent?: boolean): Promise<void>
+  /**
+   * 当前 channel 上的消息. 不一定是全部消息
+   */
+  messages: ArthasMessage[]
 }
 
 let globalId = Date.now()
@@ -51,40 +52,92 @@ type PollState = {
 type ArthasMessageBusInternal = {
   launchPullResultTask: () => void
   pullNow: () => void
-  state: PollState
+  close: () => void
 } & ArthasMessageBus
 
 const classloaderHashRegx = /-c +[\da-zA-Z]{8}/
+const INPUT_STATUS = 'input_status'
+const MAX_BUS_MESSAGE_SIZE = 100
+/**
+ * 达到最大值后，清理至这么多消息
+ */
+const BUS_MESSAGE_THRESHOLD = 90
 
-const createArthasMessageBusInternal = (
+const createArthasMessageBusInternal = async (
+  channelId: string,
   dispatch: Dispatch,
-): ArthasMessageBusInternal => {
+): Promise<ArthasMessageBusInternal> => {
   const listenerMap = new Map<number, Listener>()
+  const db = await setupDB()
+  let currentContextId =
+    (await db.findLastContextId(channelId)) ??
+    (await db.createNewContext({
+      channelId,
+    }))
+  const messages = await setupMessages()
   const state: PollState = {
     taskDelay: 0,
     isFetching: false,
     isExcited: false,
   }
 
+  async function setupMessages() {
+    const messages = await db.listAllMessages(channelId, MAX_BUS_MESSAGE_SIZE)
+    if (messages.length === 0) {
+      dispatch(
+        setupChannelContext({
+          channelId,
+          inputStatus: 'DISABLED',
+        }),
+      )
+      return messages
+    }
+    const status = await db.findLastMessage(channelId, INPUT_STATUS)
+    dispatch(
+      setupChannelContext({
+        channelId,
+        inputStatus: status
+          ? (status.value as InputStatusResponse).inputStatus
+          : 'ALLOW_INPUT',
+      }),
+    )
+    return messages
+  }
+
   const doPullResults = async (): Promise<number> => {
     const channelId = store.getState().channel.context.channelId
     const r = await pullResults(channelId)
     for (const resp of r) {
-      if (resp.type === 'input_status') {
-        const status = (resp as InputStatusResponse).inputStatus
-        dispatch(updateInputStatus(status))
+      switch (resp.type) {
+        case INPUT_STATUS: {
+          const status = (resp as InputStatusResponse).inputStatus
+          dispatch(updateInputStatus(status))
+          break
+        }
+        case 'command': {
+          const command = resp as CommandMessage
+          currentContextId = await db.createNewContext({
+            command: command.command,
+            channelId,
+          })
+        }
       }
     }
     if (r.length > 0) {
-      for (const entry of listenerMap.entries()) {
-        entry[1].onMessage?.(r)
-      }
-      dispatch(
-        appendMessages({
-          messages: r,
+      const dbMsg = await db.insertAllMessages(
+        r.map((msg) => ({
+          value: msg,
           channelId,
-        }),
+          contextId: currentContextId,
+        })),
       )
+      messages.push(...dbMsg)
+      if (messages.length > MAX_BUS_MESSAGE_SIZE) {
+        messages.splice(0, messages.length - BUS_MESSAGE_THRESHOLD)
+      }
+      for (const entry of listenerMap.entries()) {
+        entry[1].onMessage?.(dbMsg)
+      }
     }
     return r.length
   }
@@ -161,37 +214,57 @@ const createArthasMessageBusInternal = (
     }
   }
 
+  function close() {
+    state.isExcited = true
+    if (state.pullResultsTaskId) {
+      clearTimeout(state.pullResultsTaskId)
+    }
+    db.close()
+  }
+
   return {
     launchPullResultTask,
     pullNow,
     addListener,
     removeListener,
     execute,
-    state,
+    messages,
+    close,
   }
 }
 
-const useArthasMessageBus = (): ArthasMessageBus => {
+const useArthasMessageBus = (
+  channelId: string,
+): ArthasMessageBus | undefined => {
   const dispatch = useDispatch()
-  const internalBus = useMemo(
-    () => createArthasMessageBusInternal(dispatch),
-    [dispatch],
-  )
+  const [internalBus, setInternalBus] = useState<
+    ArthasMessageBusInternal | undefined
+  >()
 
   useEffect(() => {
-    const state = internalBus.state
-    state.isExcited = false
-    internalBus.launchPullResultTask()
-    dispatch(clearExpiredMessages())
+    let isDestroyed = false
+    let myBus: ArthasMessageBusInternal | undefined
+    createArthasMessageBusInternal(channelId, dispatch)
+      .then((r) => {
+        if (isDestroyed) {
+          myBus = r
+          r.close()
+        } else {
+          setInternalBus(r)
+          r.launchPullResultTask()
+        }
+      })
+      .catch((e) => {
+        console.error(e)
+      })
     return () => {
-      state.isExcited = true
-      if (state.pullResultsTaskId) {
-        clearTimeout(state.pullResultsTaskId)
+      isDestroyed = true
+      if (myBus) {
+        myBus.close()
       }
     }
-  }, [dispatch, internalBus])
+  }, [channelId, dispatch])
 
-  // 偷个懒
   return internalBus
 }
 

@@ -19,7 +19,6 @@ type Classloader = {
 export type ClassLoaderMessage = {
   type: 'classloader'
   jobId: number
-  fid: number
   classLoaderStats?: Record<
     string,
     {

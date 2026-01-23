@@ -15,7 +15,6 @@ export type JadMessage = {
   mappings: Record<string, number>
   source: string
   type: 'jad'
-  fid: number
 }
 
 const JadMessageDetail: React.FC<DetailComponentProps<JadMessage>> = (

@@ -1,4 +1,3 @@
-import type { DashboardMessage } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/_component/DashboardMessageDetail.tsx'
 import {
   Table,
   TableBody,
@@ -9,6 +8,7 @@ import {
 } from '@heroui/react'
 import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
 import React from 'react'
+import type { DashboardMessage } from '@/pages/channel/[channelId]/_message_view/_component/DashboardMessageDetail.tsx'
 
 interface ThreadTableProps {
   lastMessage: DashboardMessage

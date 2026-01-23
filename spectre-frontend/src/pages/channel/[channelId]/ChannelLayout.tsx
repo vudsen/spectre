@@ -18,10 +18,13 @@ interface ChannelLayoutProps {
 }
 
 const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
-  const bus = useArthasMessageBus()
+  const bus = useArthasMessageBus(props.channelId)
   const tabsController = useRef<TabsControllerRef>(null)
   const quickCommandRef = useRef<QuickCommandRef>(null)
-  const contextValue = useMemo<ChannelContextState>(() => {
+  const contextValue = useMemo<ChannelContextState | null>(() => {
+    if (!bus) {
+      return null
+    }
     return {
       messageBus: bus,
       getTabsController() {
@@ -33,6 +36,9 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
     }
   }, [bus])
 
+  if (!contextValue) {
+    return
+  }
   return (
     <>
       <ChannelSvgSymbols />
