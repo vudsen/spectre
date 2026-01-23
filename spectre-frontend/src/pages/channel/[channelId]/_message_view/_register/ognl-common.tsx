@@ -1,9 +1,9 @@
 import { type DetailComponentProps, registerMessageView } from '../factory.ts'
 import OgnlCommonMessageDetail from '../_component/OgnlCommonMessageDetail.tsx'
-import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import React from 'react'
+import type { PureArthasResponse } from '@/api/impl/arthas.ts'
 
-function createComponent<T extends ArthasResponseWithId>(
+function createComponent<T extends PureArthasResponse>(
   ognlResultGetter: (r: T) => string,
 ): React.FC<DetailComponentProps<T>> {
   const Component: React.FC<DetailComponentProps<T>> = (props) => {

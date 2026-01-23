@@ -50,7 +50,6 @@ export type DashboardMessage = {
   runtimeInfo: RuntimeInfo
   threads: Thread[]
   type: 'dashboard'
-  fid: number
 }
 
 export const DashboardMessageDetail: React.FC = () => {

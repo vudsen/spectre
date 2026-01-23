@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useRef } from 'react'
 import clsx from 'clsx'
 import { formatTime } from '@/common/util.ts'
 import { ListboxItem, Tooltip } from '@heroui/react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 import RightClickMenu from '@/components/RightClickMenu/RightClickMenu.tsx'
 import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
@@ -36,7 +36,6 @@ type TraceMessage = {
   jobId: number
   nodeCount: number
   root: Root
-  fid: number
 }
 
 function toKey(invoke: Invoke): string {

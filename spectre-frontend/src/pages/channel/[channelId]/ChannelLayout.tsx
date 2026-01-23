@@ -10,6 +10,7 @@ import ChannelContext, {
 } from '@/pages/channel/[channelId]/context.ts'
 import type { QuickCommandRef } from '@/pages/channel/[channelId]/_component/QuickCommand'
 import useArthasMessageBus from '@/pages/channel/[channelId]/useArthasMessageBus.tsx'
+import './_message_view/init.ts'
 
 interface ChannelLayoutProps {
   channelId: string
@@ -17,10 +18,13 @@ interface ChannelLayoutProps {
 }
 
 const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
-  const bus = useArthasMessageBus()
+  const bus = useArthasMessageBus(props.channelId)
   const tabsController = useRef<TabsControllerRef>(null)
   const quickCommandRef = useRef<QuickCommandRef>(null)
-  const contextValue = useMemo<ChannelContextState>(() => {
+  const contextValue = useMemo<ChannelContextState | null>(() => {
+    if (!bus) {
+      return null
+    }
     return {
       messageBus: bus,
       getTabsController() {
@@ -32,6 +36,9 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
     }
   }, [bus])
 
+  if (!contextValue) {
+    return
+  }
   return (
     <>
       <ChannelSvgSymbols />

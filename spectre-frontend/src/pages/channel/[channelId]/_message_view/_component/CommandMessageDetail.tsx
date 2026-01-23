@@ -1,6 +1,6 @@
 import type React from 'react'
 import { Code } from '@heroui/react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 
 export type CommandMessage = {
   type: 'command'
@@ -8,7 +8,6 @@ export type CommandMessage = {
   state: string
   command: string
   message?: string
-  fid: number
 }
 
 const CommandMessageDetail: React.FC<DetailComponentProps<CommandMessage>> = (

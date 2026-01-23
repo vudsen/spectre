@@ -1,6 +1,6 @@
 import { Code, Link } from '@heroui/react'
 import type React from 'react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 
 type WelcomeMessage = {
   type: 'welcome'
@@ -11,7 +11,6 @@ type WelcomeMessage = {
   tutorials: string
   version: string
   wiki: string
-  fid: number
 }
 
 const WelcomeMessageDetail: React.FC<DetailComponentProps<WelcomeMessage>> = (

@@ -1,11 +1,11 @@
-import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import clsx from 'clsx'
 import React, { useMemo } from 'react'
 import './listStyle.css'
-import ArthasResponsePreview from '@/pages/channel/[channelId]/_tabs/_console/_message_view/ArthasResponsePreview.tsx'
+import ArthasResponsePreview from '@/pages/channel/[channelId]/_message_view/ArthasResponsePreview.tsx'
+import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 
 export type ResponseGroupItem = {
-  entity: ArthasResponseWithId
+  entity: ArthasMessage
   groupInfo?: {
     colorFlag: number
   }
@@ -59,7 +59,7 @@ const ArthasResponseItem: React.FC<ArthasResponseItemProps> = ({
 
   return (
     <div
-      key={`${item.entity.type}:${item.entity.jobId}:${index}`}
+      key={item.entity.id}
       className={clsx(
         isSelected ? colors.selected : colors.normal,
         'cursor-pointer px-3 py-3 select-none',

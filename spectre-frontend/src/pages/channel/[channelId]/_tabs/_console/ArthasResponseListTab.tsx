@@ -5,30 +5,27 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import { useSelector } from 'react-redux'
 import { type RootState, store } from '@/store'
 import ArthasResponseItem, {
   type ResponseGroupItem,
 } from '@/pages/channel/[channelId]/_tabs/_console/_component/ArthasResponseItem.tsx'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
+import type { ArthasMessageBus } from '@/pages/channel/[channelId]/useArthasMessageBus.tsx'
 
 interface ArthasResponseListProps {
-  onEntitySelect: (e: ArthasResponseWithId) => void
+  onEntitySelect: (e: ArthasMessage) => void
 }
 
 const IGNORED_TYPES = new Set(['input_status'])
-function buildArray0() {
+function buildArray0(bus: ArthasMessageBus) {
   const channelSlice = store.getState().channel
   const isDebugMode = channelSlice.context.isDebugMode
-  return buildArray(
-    channelSlice.messages[channelSlice.context.channelId] ?? [],
-    undefined,
-    isDebugMode,
-  )
+  return buildArray(bus.messages, undefined, isDebugMode)
 }
 function buildArray(
-  messages: ArthasResponseWithId[],
+  messages: ArthasMessage[],
   previousMessage?: ResponseGroupItem,
   isDebugMode?: boolean,
 ): ResponseGroupItem[] {
@@ -39,19 +36,22 @@ function buildArray(
     }))
   } else {
     result = []
-    let lastJobId = previousMessage?.entity.jobId ?? -1
+    let lastJobId = previousMessage?.entity.value.jobId ?? -1
     let groupColorFlag = previousMessage?.groupInfo?.colorFlag ?? -1
-    let lastMsgType = previousMessage ? previousMessage.entity.type : ''
+    let lastMsgType = previousMessage ? previousMessage.entity.value.type : ''
     for (const entity of messages) {
-      if (IGNORED_TYPES.has(entity.type)) {
+      if (IGNORED_TYPES.has(entity.value.type)) {
         continue
       }
       // dashboard 仅显示第一条
-      if ('dashboard' === entity.type && lastMsgType === entity.type) {
+      if (
+        'dashboard' === entity.value.type &&
+        lastMsgType === entity.value.type
+      ) {
         continue
       }
-      lastMsgType = entity.type
-      if (entity.jobId === lastJobId) {
+      lastMsgType = entity.value.type
+      if (entity.value.jobId === lastJobId) {
         result.push({
           entity,
           groupInfo: {
@@ -70,22 +70,22 @@ function buildArray(
           },
         })
       }
-      lastJobId = entity.jobId
+      lastJobId = entity.value.jobId
     }
   }
   return result
 }
-
 const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
   const isDebugMode =
     useSelector<RootState, boolean | undefined>(
       (state) => state.channel.context.isDebugMode,
     ) ?? false
-  const [filteredResponses, setFilteredResponse] =
-    useState<ResponseGroupItem[]>(buildArray0)
+  const context = useContext(ChannelContext)
+  const [filteredResponses, setFilteredResponse] = useState<
+    ResponseGroupItem[]
+  >(() => buildArray0(context.messageBus))
   const scrollRef = useRef<HTMLDivElement>(null)
   const [selectedEntityIndex, setSelectedEntityIndex] = useState<number>(-1)
-  const context = useContext(ChannelContext)
 
   useEffect(() => {
     const id = context.messageBus.addListener({
@@ -110,7 +110,7 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
   }, [context.messageBus])
 
   useEffect(() => {
-    setFilteredResponse(buildArray0())
+    setFilteredResponse(buildArray0(context.messageBus))
   }, [isDebugMode])
 
   useLayoutEffect(() => {
@@ -119,7 +119,6 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
       const isAtBottom =
         container.scrollHeight - container.scrollTop <=
         container.clientHeight + 100
-      console.log(isAtBottom)
 
       if (isAtBottom) {
         container.scrollTo({ top: container.scrollHeight })

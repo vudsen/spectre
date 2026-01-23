@@ -7,7 +7,7 @@ import {
   TableRow,
 } from '@heroui/react'
 import React, { useMemo } from 'react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
 
 type MemoryInfo = {
@@ -21,19 +21,17 @@ type MemoryMessage = {
   jobId: number
   memoryInfo: Record<string, MemoryInfo[]>
   type: 'memory'
-  fid: number
 }
 const MemoryMessageDetail: React.FC<DetailComponentProps<MemoryMessage>> = ({
   msg,
 }) => {
   const infos = useMemo(() => {
     const infos: MemoryInfo[] = []
-    console.log(msg.memoryInfo)
     for (const entry of Object.entries(msg.memoryInfo)) {
       infos.push(...entry[1])
     }
     return infos
-  }, [msg.fid])
+  }, [msg.memoryInfo])
   return (
     <Table>
       <TableHeader>

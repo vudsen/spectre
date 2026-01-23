@@ -1,5 +1,5 @@
 import { Code } from '@heroui/react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 
 type EnhancerMessage = {
   effect: {
@@ -10,7 +10,6 @@ type EnhancerMessage = {
   }
   jobId: number
   success: boolean
-  fid: number
   type: 'enhancer'
 }
 

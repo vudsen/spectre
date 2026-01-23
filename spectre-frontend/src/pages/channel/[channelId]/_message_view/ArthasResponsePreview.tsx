@@ -1,19 +1,21 @@
-import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import React, { useMemo } from 'react'
 import { getArthasMessageView, type PreviewInfo } from './factory.ts'
 import clsx from 'clsx'
 import { Tooltip } from '@heroui/react'
+import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 
 interface ArthasResponsePreviewProps {
-  message: ArthasResponseWithId
+  message: ArthasMessage
 }
 const ArthasResponsePreview: React.FC<ArthasResponsePreviewProps> = (props) => {
   const state: PreviewInfo = useMemo(() => {
     return (
-      getArthasMessageView(props.message.type)?.display(props.message) ?? {
+      getArthasMessageView(props.message.value.type)?.display(
+        props.message.value,
+      ) ?? {
         name: '<Unknown>',
         color: 'default',
-        tag: props.message.type,
+        tag: props.message.value.type,
       }
     )
   }, [props.message])

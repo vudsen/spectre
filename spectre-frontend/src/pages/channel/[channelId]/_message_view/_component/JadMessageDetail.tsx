@@ -1,5 +1,5 @@
 import React, { useCallback, useContext } from 'react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 import Code from '@/components/Code.tsx'
 import { Link } from '@heroui/react'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
@@ -15,7 +15,6 @@ export type JadMessage = {
   mappings: Record<string, number>
   source: string
   type: 'jad'
-  fid: number
 }
 
 const JadMessageDetail: React.FC<DetailComponentProps<JadMessage>> = (

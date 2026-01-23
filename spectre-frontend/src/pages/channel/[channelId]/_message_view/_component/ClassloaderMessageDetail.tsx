@@ -1,5 +1,5 @@
 import type React from 'react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 import {
   Table,
   TableBody,
@@ -19,7 +19,6 @@ type Classloader = {
 export type ClassLoaderMessage = {
   type: 'classloader'
   jobId: number
-  fid: number
   classLoaderStats?: Record<
     string,
     {

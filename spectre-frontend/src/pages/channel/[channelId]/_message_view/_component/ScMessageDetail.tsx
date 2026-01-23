@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 import {
   Card,
   CardBody,
@@ -49,7 +49,6 @@ type ClassInfo = {
   synthetic: boolean
 }
 type ScMessage = {
-  fid: number
   withField: boolean
   type: 'sc'
   segment: number

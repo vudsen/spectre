@@ -1,19 +1,22 @@
-import type { ArthasResponseWithId } from '@/api/impl/arthas.ts'
+import type { PureArthasResponse } from '@/api/impl/arthas.ts'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { type DetailComponentProps, getArthasMessageView } from './factory.ts'
+import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 
 interface ArthasResponseDetailProps {
-  message: ArthasResponseWithId
+  message: ArthasMessage
 }
 const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
   const Component = useMemo(() => {
-    return getArthasMessageView(props.message.type)?.detailComponent
-  }, [props.message.type])
+    return getArthasMessageView(props.message.value.type)?.detailComponent
+  }, [props.message.value.type]) as React.FC<
+    DetailComponentProps<PureArthasResponse>
+  >
   const componentCache = useRef(new Map())
-  const [dirtyIds, setDirtyIds] = useState(new Set<number>())
+  const [dirtyIds, setDirtyIds] = useState(new Set<string>())
 
   const handleOnDirty = useCallback(
-    (id: number) => {
+    (id: string) => {
       if (!dirtyIds.has(id)) {
         setDirtyIds((prev) => new Set(prev).add(id))
       }
@@ -23,8 +26,8 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
 
   const renderDetail = useCallback(
     (
-      id: number,
-      Component: React.FC<DetailComponentProps<ArthasResponseWithId>>,
+      id: string,
+      Component: React.FC<DetailComponentProps<PureArthasResponse>>,
     ) => {
       // 1. 如果已经在缓存池里，直接返回缓存的实例
       if (componentCache.current.has(id)) {
@@ -34,8 +37,8 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
       // 2. 如果不在缓存中，创建一个新的实例
       const newComponent = (
         <Component
-          key={props.message.fid} // 必须有稳定的 key
-          msg={props.message}
+          key={props.message.id} // 必须有稳定的 key
+          msg={props.message.value}
           onDirty={() => handleOnDirty(id)}
         />
       )
@@ -54,15 +57,15 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
     )
   }
   if (
-    dirtyIds.has(props.message.fid) &&
-    !componentCache.current.has(props.message.fid)
+    dirtyIds.has(props.message.id) &&
+    !componentCache.current.has(props.message.id)
   ) {
     componentCache.current.set(
-      props.message.fid,
-      renderDetail(props.message.fid, Component),
+      props.message.id,
+      renderDetail(props.message.id, Component),
     )
   }
-  const currentId = props.message.fid
+  const currentId = props.message.id
   return (
     <>
       {/* 策略：对于脏组件，我们全部渲染但在 CSS 上隐藏；对于非脏组件，动态切换 */}

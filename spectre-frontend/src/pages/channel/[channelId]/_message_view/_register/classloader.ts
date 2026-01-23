@@ -1,4 +1,4 @@
-import { registerMessageView } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import { registerMessageView } from '../factory.ts'
 import ClassloaderMessageDetail from '../_component/ClassloaderMessageDetail'
 
 registerMessageView({

@@ -1,15 +1,13 @@
 import React, { useState } from 'react'
-import { type ArthasResponseWithId } from '@/api/impl/arthas.ts'
 import { Divider } from '@heroui/react'
 import ArthasResponseDetailTab from './ArthasResponseDetailTab.tsx'
 import CommandExecuteBlock from './CommandExecuteBlock.tsx'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import ArthasResponseListTab from './ArthasResponseListTab.tsx'
-
-import './_message_view/init.ts'
+import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 
 const ConsoleTab: React.FC = () => {
-  const [selectedEntity, setSelectedEntity] = useState<ArthasResponseWithId>()
+  const [selectedEntity, setSelectedEntity] = useState<ArthasMessage>()
 
   return (
     <div className="flex h-full">

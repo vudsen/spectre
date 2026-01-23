@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { type ChannelSessionDTO, joinChannel } from '@/api/impl/arthas.ts'
 import { useDispatch } from 'react-redux'
-import { setupChannelContext } from '@/store/channelSlice.ts'
 import ChannelLayout from '@/pages/channel/[channelId]/ChannelLayout.tsx'
 
 const ChannelPage: React.FC = () => {
@@ -19,11 +18,6 @@ const ChannelPage: React.FC = () => {
         .then((session) => {
           if (session) {
             setSession(session)
-            dispatch(
-              setupChannelContext({
-                channelId,
-              }),
-            )
             setLoading(false)
           } else {
             setTimeout(() => {

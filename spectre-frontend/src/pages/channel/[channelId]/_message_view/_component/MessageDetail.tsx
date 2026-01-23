@@ -1,12 +1,11 @@
 import type React from 'react'
 import { Code } from '@heroui/react'
-import type { DetailComponentProps } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/factory.ts'
+import type { DetailComponentProps } from '../factory.ts'
 
 type MessageResponse = {
   type: 'message'
   jobId: number
   message: string
-  fid: number
 }
 
 const MessageDetail: React.FC<DetailComponentProps<MessageResponse>> = (

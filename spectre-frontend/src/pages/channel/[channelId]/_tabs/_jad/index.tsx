@@ -3,7 +3,7 @@ import { executeArthasCommandSync } from '@/api/impl/arthas.ts'
 import { store } from '@/store'
 import { addToast } from '@heroui/react'
 import Code from '@/components/Code.tsx'
-import type { JadMessage } from '@/pages/channel/[channelId]/_tabs/_console/_message_view/_component/JadMessageDetail.tsx'
+import type { JadMessage } from '../../_message_view/_component/JadMessageDetail'
 
 export interface JadPageProps {
   /**
