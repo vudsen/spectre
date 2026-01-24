@@ -82,7 +82,7 @@ const CommandExecuteBlock: React.FC = () => {
         if (fail) {
           setValue('command', command)
         }
-        setRunningCommand(command)
+        setRunningCommand(command.trim())
       },
     })
     return () => {
@@ -113,7 +113,7 @@ const CommandExecuteBlock: React.FC = () => {
             <span className="text-warning">{runningCommand}</span>
           ) : undefined}
         </div>
-        <div>
+        <div className="flex items-center">
           <Button
             isDisabled={inputStatus !== 'ALLOW_INPUT'}
             color="primary"

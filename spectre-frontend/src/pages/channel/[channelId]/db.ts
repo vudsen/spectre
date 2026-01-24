@@ -122,14 +122,19 @@ async function setupDB() {
       const tx = db.transaction('channelInfo')
       const store = tx.objectStore('channelInfo')
 
+      const ids: string[] = []
       for (
         let cursor = await store.openCursor();
         cursor;
         cursor = await cursor.continue()
       ) {
         if (Date.now() - cursor.value.lastAccess >= MAX_ALIVE) {
-          await doClear(cursor.primaryKey)
+          ids.push(cursor.primaryKey)
         }
+      }
+      await tx.done
+      for (const id of ids) {
+        await doClear(id)
       }
     },
     /**

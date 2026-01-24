@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && dotenvx run -f .env -- vite build",
+    "build": "eslint . && tsc -b && dotenvx run -f .env -- vite build",
     "lint": "eslint . --fix",
+    "check": "eslint . && tsc -b",
     "preview": "vite preview",
     "generate": "dotenvx run -f .env.local -f .env -- gql-gen --config codegen.ts"
   },

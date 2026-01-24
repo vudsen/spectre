@@ -130,11 +130,48 @@ const jad: FormHandle<JadValues> = {
   isSync: true,
 }
 
+type TTValues = {
+  index: string
+  count: number
+  depth: number
+  expression: string
+  extraArgs?: string
+}
+
+const tt: FormHandle<TTValues> = {
+  name: 'Time Tunnel',
+  buildCommand(values) {
+    let base = `tt -w '${values.expression}' -x ${values.depth} -i ${values.index}`
+    if (values.count > 0) {
+      base += ' -n ' + values.count
+    }
+    if (values.extraArgs) {
+      base += ' ' + values.extraArgs
+    }
+    return base
+  },
+  defaultValues: {
+    count: -1,
+    depth: 3,
+    expression: DEFAULT_EXPRESSION,
+  },
+  items: [
+    { name: 'index', isRequired: true, label: 'Index', type: 'number' },
+    [
+      { name: 'count', label: '监听数量', type: 'number' },
+      { name: 'depth', label: '递归深度', type: 'number' },
+    ],
+    { name: 'expression', label: '表达式' },
+    { name: 'extraArgs', label: '额外参数' },
+  ],
+}
+
 export const quickCommandHandles = {
   watch,
   stack,
   trace,
   jad,
+  tt,
 }
 
 export type QuickCommandKeys = keyof typeof quickCommandHandles

@@ -3,7 +3,6 @@ import type { DetailComponentProps } from '../factory.ts'
 import {
   Card,
   CardBody,
-  Code,
   Link,
   Table,
   TableBody,
@@ -17,6 +16,7 @@ import { updateChannelContext } from '@/store/channelSlice.ts'
 import { useDispatch } from 'react-redux'
 import KVGird from '@/components/KVGird'
 import KVGridItem from '@/components/KVGird/KVGridItem.tsx'
+import SimpleList from '@/components/SimpleList.tsx'
 
 type Fields = {
   annotations: string[]
@@ -56,29 +56,6 @@ type ScMessage = {
   detailed: boolean
   classNames?: string[]
   classInfo?: ClassInfo
-}
-
-const ListDisplay: React.FC<{
-  entities: string[]
-  name: string
-  color?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
-}> = ({ entities, color, name }) => {
-  return (
-    <div>
-      <span className="text-sm font-bold">{name}:</span>
-      {entities.length > 0 ? (
-        <ul className="mt-3 ml-6 list-disc space-y-2">
-          {entities.map((entity) => (
-            <li key={entity}>
-              <Code color={color}>{entity}</Code>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <span className="ml-2">无</span>
-      )}
-    </div>
-  )
 }
 
 const ClassInfoDisplay: React.FC<{ classInfo: ClassInfo }> = ({
@@ -135,17 +112,17 @@ const ClassInfoDisplay: React.FC<{ classInfo: ClassInfo }> = ({
               </Tooltip>
             </KVGridItem>
           </KVGird>
-          <ListDisplay
+          <SimpleList
             name="注解"
             color="warning"
             entities={classInfo.annotations}
           />
-          <ListDisplay
+          <SimpleList
             name="接口"
             color="primary"
             entities={classInfo.interfaces}
           />
-          <ListDisplay name="Classloader" entities={classInfo.classloader} />
+          <SimpleList name="Classloader" entities={classInfo.classloader} />
           {classInfo.fields ? (
             <>
               <div className="header-2">字段信息</div>
@@ -179,7 +156,7 @@ const ScMessageDetail: React.FC<DetailComponentProps<ScMessage>> = ({
   msg,
 }) => {
   if (msg.classNames) {
-    return <ListDisplay name="搜索到以下类" entities={msg.classNames} />
+    return <SimpleList name="搜索到以下类" entities={msg.classNames} />
   } else if (msg.classInfo) {
     return <ClassInfoDisplay classInfo={msg.classInfo} />
   }

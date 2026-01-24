@@ -68,13 +68,15 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
   const currentId = props.message.id
   return (
     <>
-      <div className="bg-primary-50 text-primary-700 mb-2 px-6 py-3 text-sm">
-        命令: {props.message.context.command}
-      </div>
+      {props.message.context.command ? (
+        <div className="bg-primary-50 text-primary-700 px-6 py-3 text-sm">
+          命令: {props.message.context.command}
+        </div>
+      ) : null}
       {/* 策略：对于脏组件，我们全部渲染但在 CSS 上隐藏；对于非脏组件，动态切换 */}
       {Array.from(componentCache.current.entries()).map(([id, node]) => (
         <div
-          className="px-2"
+          className="mt-2 px-2 pb-6"
           key={id}
           style={{ display: currentId === id ? 'block' : 'none' }}
         >
@@ -84,7 +86,7 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
 
       {/* 处理尚未变脏且未进入缓存的新组件 */}
       {!componentCache.current.has(currentId) && (
-        <div className="px-2" key={currentId}>
+        <div className="mt-2 px-2 pb-6" key={currentId}>
           {renderDetail(currentId, Component)}
         </div>
       )}
