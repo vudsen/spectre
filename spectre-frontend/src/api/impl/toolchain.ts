@@ -15,3 +15,15 @@ export const deleteToolchainItem = (vo: DeleteToolchainItemVO) => {
 export const deleteToolchainBundle = (id: string) => {
   return axios.post(`toolchain/bundle/delete?id=${id}`)
 }
+
+type ToolchainBundlePO = {
+  id: string
+  name: string
+  jattachTag: string
+  arthasTag: string
+  httpClientTag: string
+}
+
+export const updateToolchainBundle = (po: ToolchainBundlePO) => {
+  return axios.post('toolchain/bundle/update', po)
+}

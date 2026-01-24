@@ -58,7 +58,7 @@ class DefaultToolchainService(
         return toolchainItemRepository.save(po)
     }
 
-    override fun updateOrCreateToolchainBundle(po: ToolchainBundlePO): ToolchainBundlePO {
+    override fun saveToolchainBundle(po: ToolchainBundlePO): ToolchainBundlePO {
         return toolchainBundleRepository.save(po)
     }
 

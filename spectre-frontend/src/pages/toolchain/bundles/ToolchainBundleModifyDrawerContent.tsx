@@ -15,10 +15,18 @@ import useGraphQL from '@/hook/useGraphQL.ts'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import { execute } from '@/graphql/execute.ts'
 import { handleError } from '@/common/util.ts'
+import { updateToolchainBundle } from '@/api/impl/toolchain.ts'
+
+type OldEntity = {
+  id: string
+  jattachTag: string
+  arthasTag: string
+  httpClientTag: string
+}
 
 interface ToolchainBundleModifyDrawerContentProps {
   onClose: () => void
-  oldEntity?: unknown
+  oldEntity?: OldEntity
   onModified: () => void
 }
 
@@ -77,7 +85,9 @@ const ToolchainBundleModifyDrawerContent: React.FC<
   const { isLoading: isVersionsLoading, result } = useGraphQL(
     QueryToolchainVersions,
   )
-  const { control, trigger, getValues } = useForm<Values>()
+  const { control, trigger, getValues } = useForm<Values>({
+    defaultValues: props.oldEntity,
+  })
   const [isLoading, setLoading] = useState(false)
 
   const arthasVersions = result?.arthas.toolchainItems.result ?? []
@@ -92,13 +102,24 @@ const ToolchainBundleModifyDrawerContent: React.FC<
     setLoading(true)
     try {
       const values = getValues()
-      await execute(CreateToolchainBundle, {
-        vo: values,
-      })
-      addToast({
-        title: '添加成功',
-        color: 'success',
-      })
+      if (props.oldEntity) {
+        await updateToolchainBundle({
+          id: props.oldEntity.id,
+          ...values,
+        })
+        addToast({
+          title: '更新成功',
+          color: 'success',
+        })
+      } else {
+        await execute(CreateToolchainBundle, {
+          vo: values,
+        })
+        addToast({
+          title: '添加成功',
+          color: 'success',
+        })
+      }
       props.onClose()
       props.onModified()
     } catch (e) {

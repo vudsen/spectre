@@ -7,7 +7,6 @@ import io.github.vudsen.spectre.core.vo.ToolchainItemModifyVO
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
 import io.github.vudsen.spectre.repo.po.ToolchainItemPO
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.graphql.data.method.annotation.SchemaMapping
@@ -42,7 +41,7 @@ class ToolchainMutationsController(
     fun createToolchainBundle(
         @Argument @Validated(CreateGroup::class) vo: ToolchainBundleModifyVO
     ): ToolchainBundlePO {
-        return toolchainService.updateOrCreateToolchainBundle(ToolchainBundlePO(
+        return toolchainService.saveToolchainBundle(ToolchainBundlePO(
             null,
             vo.name,
             null,

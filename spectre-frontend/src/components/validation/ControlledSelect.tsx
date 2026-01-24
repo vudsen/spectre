@@ -35,7 +35,10 @@ function ControlledSelect<Values extends FieldValues>(
       const ks0 = ks as Iterable<string | number>
       defaultValue = ks0[Symbol.iterator]().next().value
     }
+  } else if (props.control._defaultValues) {
+    defaultValue = props.control._defaultValues[props.name]
   }
+  console.log(props, defaultValue)
   return (
     <Controller
       control={props.control}
@@ -48,6 +51,7 @@ function ControlledSelect<Values extends FieldValues>(
           {...field}
           validationBehavior="aria"
           isInvalid={fieldState.invalid}
+          defaultSelectedKeys={defaultValue ? [defaultValue] : undefined}
           name={props.name}
           errorMessage={fieldState.error?.message}
         >

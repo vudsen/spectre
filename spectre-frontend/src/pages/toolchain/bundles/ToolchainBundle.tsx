@@ -19,10 +19,11 @@ import Icon from '@/components/icon/icon.ts'
 import { graphql } from '@/graphql/generated'
 import ToolchainBundleModifyDrawerContent from './ToolchainBundleModifyDrawerContent.tsx'
 import useGraphQL from '@/hook/useGraphQL.ts'
-import { formatTime, showDialog } from '@/common/util.ts'
+import { showDialog } from '@/common/util.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import { deleteToolchainBundle } from '@/api/impl/toolchain.ts'
+import Time from '@/components/Time.tsx'
 
 const ToolchainBundleQuery = graphql(`
   query ToolchainBundleQuery($page: Int, $size: Int) {
@@ -50,6 +51,7 @@ const ToolchainBundle: React.FC = () => {
     page: 0,
     size: 10,
   })
+  const [selectedEntity, setSelectedEntity] = useState<ToolchainBundleResp>()
   const { result, isLoading } = useGraphQL(ToolchainBundleQuery, qlArgs)
 
   const deleteBundle = useCallback((r: ToolchainBundleResp) => {
@@ -71,6 +73,18 @@ const ToolchainBundle: React.FC = () => {
   const onModified = () => {
     setQlArgs({ ...qlArgs })
   }
+
+  const editBundle = (r: ToolchainBundleResp) => {
+    setSelectedEntity(r)
+    console.log(r)
+    onOpen()
+  }
+
+  const createNew = () => {
+    setSelectedEntity(undefined)
+    onOpen()
+  }
+
   const bundles = result?.toolchain.toolchainBundles.result ?? []
   return (
     <div className="space-y-3">
@@ -86,12 +100,12 @@ const ToolchainBundle: React.FC = () => {
           className="ml-3 self-end"
           variant="flat"
           size="sm"
-          onPress={onOpen}
+          onPress={createNew}
         >
           + 新增
         </Button>
       </div>
-      <Table removeWrapper>
+      <Table removeWrapper aria-label="Toolchain bundle">
         <TableHeader>
           <TableColumn>名称</TableColumn>
           <TableColumn>Arthas</TableColumn>
@@ -117,11 +131,20 @@ const ToolchainBundle: React.FC = () => {
               <TableCell>
                 <Code>{bundle.httpClientTag}</Code>
               </TableCell>
-              <TableCell>{formatTime(bundle.createdAt)}</TableCell>
+              <TableCell>
+                <Time time={bundle.createdAt} />
+              </TableCell>
               <TableCell
                 align="right"
                 className="relative flex items-center justify-end gap-2"
               >
+                <Button
+                  isIconOnly
+                  variant="light"
+                  onPress={() => editBundle(bundle)}
+                >
+                  <SvgIcon icon={Icon.EDIT} />
+                </Button>
                 <Button
                   isIconOnly
                   color="danger"
@@ -139,6 +162,7 @@ const ToolchainBundle: React.FC = () => {
         <DrawerContent>
           {(onClose) => (
             <ToolchainBundleModifyDrawerContent
+              oldEntity={selectedEntity}
               onClose={onClose}
               onModified={onModified}
             />
