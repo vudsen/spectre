@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.core.controller
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.ToolchainService
 import io.github.vudsen.spectre.repo.entity.ToolchainType
+import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
 import io.github.vudsen.spectre.repo.po.ToolchainItemPO
 import org.springframework.security.access.prepost.PreAuthorize
@@ -48,6 +49,12 @@ class ToolchainController(
     @PostMapping("bundle/delete")
     fun deleteToolchainBundle(id: String) {
         toolchainService.deleteToolchainBundleById(id.toLong())
+    }
+
+    @PostMapping("bundle/update")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_BUNDLE_UPDATE)")
+    fun updateToolchainBundle(@Validated @RequestBody po: ToolchainBundlePO) {
+        toolchainService.saveToolchainBundle(po)
     }
 
 }

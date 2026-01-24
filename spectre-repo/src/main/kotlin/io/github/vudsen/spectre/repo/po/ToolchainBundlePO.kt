@@ -6,6 +6,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.PrePersist
 import jakarta.persistence.Table
+import jakarta.validation.constraints.Null
 import org.hibernate.annotations.DynamicUpdate
 import java.sql.Timestamp
 
@@ -17,6 +18,7 @@ data class ToolchainBundlePO(
     var id: Long? = null,
     var name: String? = null,
     @Column(name = "created_at", updatable = false, insertable = false)
+    @Null
     var createdAt: Timestamp? = null,
     var jattachTag: String? = null,
     var arthasTag: String? = null,
