@@ -33,6 +33,9 @@ interface QuickCommands {
   jad: {
     classname: string
   }
+  tt: {
+    index: number
+  }
 }
 
 type OpenArgs<K extends keyof QuickCommands> =
@@ -77,6 +80,7 @@ const QuickCommand: React.FC<QuickCommandProps> = (props) => {
   const onAction0 = (key: string | number, args: object = {}): boolean => {
     const qck = key as QuickCommandKeys
     const handle = quickCommandHandles[qck]
+    console.log('1')
     if (!handle) {
       return false
     }

@@ -100,7 +100,7 @@ const DashBoardTab: React.FC = () => {
           </CardBody>
         </Card>
         <MemoryChart lastMessage={state} />
-        <ThreadTable lastMessage={state} />
+        <ThreadTable threads={state.threads} />
       </div>
     </>
   )

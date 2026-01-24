@@ -11,12 +11,12 @@ import React from 'react'
 import type { DashboardMessage } from '@/pages/channel/[channelId]/_message_view/_component/DashboardMessageDetail.tsx'
 
 interface ThreadTableProps {
-  lastMessage: DashboardMessage
+  threads: DashboardMessage['threads']
 }
 
-const ThreadTable: React.FC<ThreadTableProps> = ({ lastMessage }) => {
+const ThreadTable: React.FC<ThreadTableProps> = ({ threads }) => {
   return (
-    <Table>
+    <Table aria-label="Threads">
       <TableHeader>
         <TableColumn>ID</TableColumn>
         <TableColumn>名称</TableColumn>
@@ -26,7 +26,7 @@ const ThreadTable: React.FC<ThreadTableProps> = ({ lastMessage }) => {
         <TableColumn>中断</TableColumn>
         <TableColumn>组</TableColumn>
       </TableHeader>
-      <TableBody items={lastMessage.threads}>
+      <TableBody items={threads}>
         {(thread) => (
           <TableRow key={thread.id}>
             <TableCell>{thread.id}</TableCell>

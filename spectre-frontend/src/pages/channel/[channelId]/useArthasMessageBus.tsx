@@ -53,6 +53,7 @@ type ArthasMessageBusInternal = {
   launchPullResultTask: () => void
   pullNow: () => void
   close: () => void
+  cleanExpiredMessage: () => void
 } & ArthasMessageBus
 
 const classloaderHashRegx = /-c +[\da-zA-Z]{8}/
@@ -222,6 +223,12 @@ const createArthasMessageBusInternal = async (
     db.close()
   }
 
+  function cleanExpiredMessage() {
+    db.clearUnusedMessages().catch((e) => {
+      console.error('Failed to clean unused message', e)
+    })
+  }
+
   return {
     launchPullResultTask,
     pullNow,
@@ -230,6 +237,7 @@ const createArthasMessageBusInternal = async (
     execute,
     messages,
     close,
+    cleanExpiredMessage,
   }
 }
 
@@ -251,6 +259,7 @@ const useArthasMessageBus = (
           r.close()
         } else {
           setInternalBus(r)
+          r.cleanExpiredMessage()
           r.launchPullResultTask()
         }
       })

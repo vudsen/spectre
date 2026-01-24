@@ -29,6 +29,8 @@ const Icon = {
   BOOKMARK: 'fc-bookmark',
   LOCK: 'fc-lock',
   EXTERNAL: 'fc-arrow-up-right-from-square',
+  COPY: 'fc-copy',
+  CHECK: 'fc-check',
 } as const
 
 export type Icons = (typeof Icon)[keyof typeof Icon]

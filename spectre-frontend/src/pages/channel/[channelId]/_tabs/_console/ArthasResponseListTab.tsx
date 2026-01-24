@@ -13,12 +13,13 @@ import ArthasResponseItem, {
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 import type { ArthasMessageBus } from '@/pages/channel/[channelId]/useArthasMessageBus.tsx'
+import type { StatusMessage } from '@/pages/channel/[channelId]/_message_view/_component/StatusMessageDetail.tsx'
 
 interface ArthasResponseListProps {
   onEntitySelect: (e: ArthasMessage) => void
 }
 
-const IGNORED_TYPES = new Set(['input_status', 'command', 'status'])
+const IGNORED_TYPES = new Set(['input_status', 'command'])
 function buildArray0(bus: ArthasMessageBus) {
   const channelSlice = store.getState().channel
   const isDebugMode = channelSlice.context.isDebugMode
@@ -43,6 +44,11 @@ function buildArray(
     for (const entity of messages) {
       const type = entity.value.type
       if (IGNORED_TYPES.has(type)) {
+        continue
+      } else if (
+        type === 'status' &&
+        (entity.value as StatusMessage).statusCode === 0
+      ) {
         continue
       }
       // dashboard 仅显示第一条
@@ -106,7 +112,7 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
 
   useEffect(() => {
     setFilteredResponse(buildArray0(context.messageBus))
-  }, [isDebugMode])
+  }, [context.messageBus, isDebugMode])
 
   useLayoutEffect(() => {
     const container = scrollRef.current
