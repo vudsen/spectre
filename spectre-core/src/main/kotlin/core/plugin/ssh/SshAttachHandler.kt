@@ -26,14 +26,15 @@ class SshAttachHandler(
 
     override fun doAttach(
         port: Int?,
+        password: String,
         paths: ToolchainPaths,
     ): ArthasHttpClient {
         val jvm = jvm
         if (jvm is LocalJvm) {
             // 本地服务器一般都有 ss 命令，可以用随机端口
-            return attachLocal(port != null, paths, port ?: Random.nextInt(10000, 65535), jvm)
+            return attachLocal(port != null, password, paths, port ?: Random.nextInt(10000, 65535), jvm)
         } else if (jvm is DockerJvm) {
-            return attachDocker(jvm, paths, port != null)
+            return attachDocker(jvm, paths, port != null, password)
         }
         throw AppException("Unsupported jvm: $jvm, class: ${jvm::class.java}")
     }
@@ -43,10 +44,10 @@ class SshAttachHandler(
         if (result.isFailed()) {
             return true
         }
-        try {
-            return result.ok().toInt() != FLAG_VERSION
+        return try {
+            result.ok().toInt() != FLAG_VERSION
         } catch (_: NumberFormatException) {
-            return true
+            true
         }
     }
 
@@ -54,6 +55,7 @@ class SshAttachHandler(
         jvm: DockerJvm,
         paths: ToolchainPaths,
         expectBound: Boolean,
+        password: String
     ): ShellBasedArthasHttpClient {
         val dockerCnf = runtimeNode.nodeConfig.docker
         if (dockerCnf == null || !dockerCnf.enabled) {
@@ -92,7 +94,7 @@ class SshAttachHandler(
         }
         dockerNode.user = null
         if (!expectBound) {
-            dockerNode.execute("$jattachPath ${jvm.pid} load instrument false \"${arthasHome}/arthas-agent.jar=;httpPort=$DOCKER_LISTEN_PORT;telnetPort=-1;\"")
+            dockerNode.execute("$jattachPath ${jvm.pid} load instrument false \"${arthasHome}/arthas-agent.jar=;localConnectionNonAuth=false;password=${password};httpPort=$DOCKER_LISTEN_PORT;telnetPort=-1;\"")
                 .ok()
         }
         return ShellBasedArthasHttpClient(
@@ -103,12 +105,14 @@ class SshAttachHandler(
                 "java"
             } else {
                 "${dockerCnf.javaHome}/bin/java"
-            }
+            },
+            password
         )
     }
 
     private fun attachLocal(
         expectBound: Boolean,
+        password: String,
         paths: ToolchainPaths,
         port: Int,
         jvm: LocalJvm
@@ -123,34 +127,36 @@ class SshAttachHandler(
                 runtimeNode,
                 paths.httpClientPath,
                 "http://127.0.0.1:${port}/api",
-                "${localConf.javaHome}/bin/java"
+                "${localConf.javaHome}/bin/java",
+                password
             )
             return client
         }
-        runtimeNode.execute("${paths.jattachPath} ${jvm.id} load instrument false \"${paths.arthasHome}/arthas-agent.jar=;httpPort=$port;telnetPort=-1;\"")
+        runtimeNode.execute("${paths.jattachPath} ${jvm.id} load instrument false \"${paths.arthasHome}/arthas-agent.jar=;localConnectionNonAuth=false;password=${password};httpPort=$port;telnetPort=-1;\"")
             .ok()
 
         return ShellBasedArthasHttpClient(
             runtimeNode,
             paths.httpClientPath,
             "http://127.0.0.1:$port/api",
-            if (localConf.javaHome.isNullOrEmpty()) { "java" } else { "${localConf.javaHome}/bin/java" }
+            if (localConf.javaHome.isNullOrEmpty()) { "java" } else { "${localConf.javaHome}/bin/java" },
+            password
         )
     }
 
 
-    override fun tryFindClient(paths: ToolchainPaths): ArthasHttpClient? {
+    override fun tryFindClient(password: String, paths: ToolchainPaths): ArthasHttpClient? {
         val jvm = jvm
         if (jvm is LocalJvm) {
-            return tryFindLocalClient(runtimeNode, jvm.id.toInt(), paths)
+            return tryFindLocalClient(runtimeNode, jvm.id.toInt(), paths, password)
         } else if (jvm is DockerJvm) {
-            return tryFindLocalClient(runtimeNode, jvm.pid, paths) ?: doAttach(DOCKER_LISTEN_PORT, paths)
+            return doAttach(DOCKER_LISTEN_PORT, password, paths)
         }
         return null
     }
 
 
-    private fun tryFindLocalClient(runtimeNode: ShellAvailableRuntimeNode, processPid: Int, paths: ToolchainPaths): ArthasHttpClient? {
+    private fun tryFindLocalClient(runtimeNode: ShellAvailableRuntimeNode, processPid: Int, paths: ToolchainPaths, password: String): ArthasHttpClient? {
         val data = runtimeNode.execute("ss -tulnp | grep $processPid").tryUnwrap() ?: return null
         val binds = data.split("\n")
         for (bind in binds) {
@@ -169,7 +175,7 @@ class SshAttachHandler(
                 continue
             }
             try {
-                val client = doAttach(port, paths)
+                val client = doAttach(port, password, paths)
                 client.test()
                 return client
             } catch (_: Exception) { }

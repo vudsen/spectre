@@ -1,6 +1,9 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
+import io.github.vudsen.spectre.api.exception.BusinessException
+import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
+import io.github.vudsen.spectre.common.plugin.rnode.ShellBasedArthasHttpClient
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.Disposer
@@ -22,6 +25,8 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     @set:Autowired
     lateinit var attachTester: AttachTester
 
+    @set:Autowired
+    lateinit var arthasInstanceService: ArthasInstanceService
 
     @RegisterExtension
     val disposer = Disposer()
@@ -91,22 +96,56 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
 
     @Test
     fun testLocalAttach() {
-        val runtimeNodeId = setupContainerForLocal()
+        val pair = setupContainerForLocal()
+        val runtimeNodeId = pair.second
 
-        val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
-        val localeNode = root.get(0)
+        try {
+            val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
+            val localeNode = root.get(0)
 
-        val localJvms =
-            runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, localeNode.id)
+            val localJvms =
+                runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, localeNode.id)
 
-        val mathGame = localJvms.get(0)
-        Assertions.assertTrue(mathGame.isJvm)
+            val mathGame = localJvms.get(0)
+            Assertions.assertTrue(mathGame.isJvm)
 
-
-        attachTester.testAttach(runtimeNodeId, mathGame)
+            attachTester.testAttach(runtimeNodeId, mathGame)
+        } finally {
+            pair.first.close()
+        }
     }
 
-    private fun setupContainerForLocal(): Long {
+    @Test
+    fun testExecWithWrongPassword() {
+        val pair = setupContainerForLocal()
+        val runtimeNodeId = pair.second
+
+        try {
+            val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
+            val localeNode = root.get(0)
+
+            val localJvms =
+                runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, localeNode.id)
+
+            val mathGame = localJvms.get(0)
+            Assertions.assertTrue(mathGame.isJvm)
+
+            val channelId = attachTester.attachSync(runtimeNodeId, mathGame)
+            val clientPair = arthasInstanceService.resolveCachedClientByChannelId(channelId)!!
+            val client = clientPair.first!! as ShellBasedArthasHttpClient
+            client.password = "invalid"
+            try {
+                client.exec("version")
+            } catch (e: BusinessException) {
+                Assertions.assertNotNull(e.message)
+                Assertions.assertTrue(e.message!!.contains("Server returned HTTP response code: 401 for URL"))
+            }
+        } finally {
+            pair.first.close()
+        }
+    }
+
+    private fun setupContainerForLocal(): Pair<GenericContainer<*>, Long> {
         val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
             withExposedPorts(22)
         }
@@ -137,7 +176,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
                 configuration = objectMapper.writeValueAsString(conf)
             )
         ).id!!
-        return runtimeNodeId
+        return Pair(container,runtimeNodeId)
     }
 
 

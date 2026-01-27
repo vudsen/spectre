@@ -6,8 +6,6 @@
 
     <!-- id：唯一id author：修改人-->
     <changeSet id="20221226-01" author="user">
-        <sqlFile path="classpath:db/init/schema-all.sql"/>
-        <sqlFile path="classpath:db/init/data-all.sql"/>
         <sqlFile path="classpath:db-test/init/additional.sql"/>
     </changeSet>
 
