@@ -1,15 +1,27 @@
 import { BreadcrumbItem, Breadcrumbs } from '@heroui/react'
-import { Outlet, type UIMatch, useMatches, useNavigate } from 'react-router'
-import React, { useCallback } from 'react'
+import {
+  Outlet,
+  type UIMatch,
+  useMatches,
+  useNavigate,
+  useNavigation,
+} from 'react-router'
+import React, { useCallback, useEffect } from 'react'
 import type { RootState } from '@/store'
 import { useSelector } from 'react-redux'
 import Menu from '@/pages/Menu.tsx'
+import nProgress from 'nprogress'
+import 'nprogress/nprogress.css'
 
 type RouteHandle = {
   crumb: string
   crumbHref?: string
   hideCrumb: boolean
 }
+
+nProgress.configure({
+  showSpinner: false,
+})
 
 const NavBreadcrumbs: React.FC = () => {
   const matches = useMatches() as UIMatch<unknown, RouteHandle>[]
@@ -55,6 +67,15 @@ const NavBreadcrumbs: React.FC = () => {
 }
 
 const Layout: React.FC = () => {
+  const navigation = useNavigation()
+
+  useEffect(() => {
+    if (navigation.state === 'loading') {
+      nProgress.start()
+    } else {
+      nProgress.done()
+    }
+  }, [navigation.state])
   return (
     <div>
       <div className="flex">
