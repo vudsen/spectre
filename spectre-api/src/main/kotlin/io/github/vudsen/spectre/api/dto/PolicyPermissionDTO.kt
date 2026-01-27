@@ -1,6 +1,6 @@
 package io.github.vudsen.spectre.api.dto
 
-import io.github.vudsen.spectre.api.perm.ABACPermissions
+import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.repo.entity.PolicyPermissionEnhancePlugin
 import io.github.vudsen.spectre.repo.entity.SubjectType
 import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
@@ -30,7 +30,7 @@ class PolicyPermissionDTO(
                 conditionExpression!!,
                 description,
                 createdAt!!,
-                ABACPermissions.findByResourceAndActions(resource!!, action!!).name,
+                PolicyPermissions.findByResourceAndActions(resource!!, action!!).name,
                 enhancePlugins
             )
         }

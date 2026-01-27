@@ -8,7 +8,7 @@ import io.github.vudsen.spectre.repo.PolicyPermissionRepository
 import io.github.vudsen.spectre.api.dto.PolicyPermissionDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.service.PolicyPermissionService
 import io.github.vudsen.spectre.api.entity.PageDescriptor
-import io.github.vudsen.spectre.api.perm.ABACPermissions
+import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.repo.entity.SubjectType
 import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
@@ -45,7 +45,7 @@ class DefaultPolicyPermissionService(
 
 
     override fun listAllPermissions(): Set<PermissionEntity> {
-        return ABACPermissions.listAllPermissions()
+        return PolicyPermissions.listAllPermissions()
     }
 
     override fun deletePermission(id: Long) {

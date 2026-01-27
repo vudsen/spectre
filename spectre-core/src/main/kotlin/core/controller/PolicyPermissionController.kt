@@ -5,8 +5,10 @@ import io.github.vudsen.spectre.api.service.PolicyPermissionService
 import io.github.vudsen.spectre.repo.util.CreateGroup
 import io.github.vudsen.spectre.repo.util.UpdateGroup
 import io.github.vudsen.spectre.api.entity.PageDescriptor
-import io.github.vudsen.spectre.api.perm.ABACPermissions
+import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
+import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
+import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -22,7 +24,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("permission/policy")
 @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).PERMISSION_READ)")
 class PolicyPermissionController(
-    private val policyPermissionService: PolicyPermissionService
+    private val policyPermissionService: PolicyPermissionService,
+    private val appAccessControlService: AppAccessControlService
 
 ) {
 
@@ -47,7 +50,7 @@ class PolicyPermissionController(
 
     @GetMapping("enhance-pages")
     fun resolveEnhanceConfigurationPage(@RequestParam resource: String, @RequestParam action: String): List<PageDescriptor> {
-        val entity = ABACPermissions.findByResourceAndActions(resource, action)
+        val entity = PolicyPermissions.findByResourceAndActions(resource, action)
         return policyPermissionService.resolveEnhanceConfigurationPage(entity)
     }
 
@@ -58,5 +61,10 @@ class PolicyPermissionController(
         policyPermissionService.deletePermission(id)
     }
 
+    @GetMapping("example")
+    fun example(resource: String, action: String): List<PolicyPermissionContextExample> {
+        val permissionEntity = PolicyPermissions.findByResourceAndActions(resource, action)
+        return appAccessControlService.resolveExamplePolicyPermissionContext(permissionEntity)
+    }
 
 }

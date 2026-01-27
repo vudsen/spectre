@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.UserDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
-import io.github.vudsen.spectre.api.perm.ABACContext
+import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
 import io.github.vudsen.spectre.api.perm.ACLPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
-import io.github.vudsen.spectre.api.plugin.policy.ABACAuthenticationProvider
+import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.common.plugin.PolicyAuthenticationExtManager
+import io.github.vudsen.spectre.common.plugin.PolicyAuthenticationProviderManager
 import io.github.vudsen.spectre.core.integrate.UserWithID
 import io.github.vudsen.spectre.repo.PolicyPermissionRepository
 import io.github.vudsen.spectre.repo.StaticPermissionRepository
@@ -32,7 +33,7 @@ class DefaultAppAccessControlService(
     private val policyPermissionRepository: PolicyPermissionRepository,
     private val roleRepository: RoleRepository,
     private val userRepository: UserRepository,
-    private val providers: List<ABACAuthenticationProvider>,
+    private val policyAuthenticationProviderManager: PolicyAuthenticationProviderManager,
     private val policyAuthenticationExtManager: PolicyAuthenticationExtManager,
 ) : AppAccessControlService {
 
@@ -42,6 +43,24 @@ class DefaultAppAccessControlService(
 
     private val objectMapper = ObjectMapper()
 
+    private fun fulfillContext(map: MutableMap<String, Any>): UserWithID {
+        val principal = SecurityContextHolder.getContext().authentication.principal
+        if (principal !is UserWithID) {
+            throw NamedExceptions.FORBIDDEN.toException()
+        }
+        val user = userRepository.findById(principal.id).getOrNull()?.toDTO() ?: throw NamedExceptions.FORBIDDEN.toException()
+        map.put("user", user)
+        return principal
+    }
+
+    override fun resolveExamplePolicyPermissionContext(permissionEntity: PermissionEntity): List<PolicyPermissionContextExample> {
+        val provider = policyAuthenticationProviderManager.findByPermissionEntity(permissionEntity)
+        val examples = provider.createExampleContext()
+        for (example in examples) {
+            fulfillContext(example.context)
+        }
+        return examples
+    }
 
     override fun isAccessibleByAcl(
         userId: Long,
@@ -63,22 +82,13 @@ class DefaultAppAccessControlService(
         return aclEntries.isNotEmpty()
     }
 
-    override fun checkPolicyPermission(context: ABACContext) {
-        var provider: ABACAuthenticationProvider? = null
-        for (pro in providers) {
-            if (pro.isSupport(context::class.java)) {
-                provider = pro
-            }
-        }
-        provider ?: throw IllegalStateException("No provider suitable for context class '${context::class}'")
 
-        val principal = SecurityContextHolder.getContext().authentication.principal
-        if (principal !is UserWithID) {
-            throw NamedExceptions.FORBIDDEN.toException()
-        }
-        val user = userRepository.findById(principal.id).getOrNull()?.toDTO() ?: throw NamedExceptions.FORBIDDEN.toException()
+
+    override fun checkPolicyPermission(context: PolicyPermissionContext) {
+        var provider = policyAuthenticationProviderManager.findByContext(context)
         val spelContext = provider.toContextMap(context)
-        spelContext.put("user", user)
+        val user = fulfillContext(spelContext)
+
         if (isAccessibleByPolicy(user.id, context.resource, spelContext)) {
             return
         }

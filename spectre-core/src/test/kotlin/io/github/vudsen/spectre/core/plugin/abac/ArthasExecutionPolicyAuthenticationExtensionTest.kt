@@ -3,13 +3,13 @@ package io.github.vudsen.spectre.core.plugin.abac
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.api.perm.ABACPermissions
+import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.PolicyPermissionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
-import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionABACContext
-import io.github.vudsen.spectre.core.plugin.abac.ArthasExecutionPolicyAuthenticationExtension.ArthasExecutionConfiguration
+import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
+import io.github.vudsen.spectre.core.plugin.abac.ArthasExecutionEnhancePolicyAuthenticationExtension.ArthasExecutionConfiguration
 import io.github.vudsen.spectre.repo.entity.PolicyPermissionEnhancePlugin
 import io.github.vudsen.spectre.repo.entity.SubjectType
 import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
@@ -18,7 +18,6 @@ import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.plugin.AttachTester
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 
 class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
@@ -37,8 +36,7 @@ class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
     lateinit var attachTester: AttachTester
 
     private fun checkPermission(command: List<String>, runtimeNodeDTO: RuntimeNodeDTO, jvm: Jvm) {
-        val context = ArthasExecutionABACContext(
-            ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE,
+        val context = ArthasExecutionPolicyPermissionContext(
             command,
             runtimeNodeDTO,
             jvm
@@ -53,11 +51,11 @@ class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
         val id = policyPermissionService.save(PolicyPermissionPO().apply {
             subjectType = SubjectType.ROLE
             subjectId = TestConstant.ROLE_TEST_ID
-            resource = ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.resource
-            action = ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.action
+            resource = PolicyPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.resource
+            action = PolicyPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.action
             conditionExpression = "'true'"
             enhancePlugins = listOf(PolicyPermissionEnhancePlugin().apply {
-                pluginId = ArthasExecutionPolicyAuthenticationExtension.ID
+                pluginId = ArthasExecutionEnhancePolicyAuthenticationExtension.ID
                 configuration = objectMapper.writeValueAsString(ArthasExecutionConfiguration().apply {
                     allowedCommands = setOf("watch")
                     allowRedirect = false

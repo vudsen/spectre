@@ -7,14 +7,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.node.ArrayNode
 import io.github.vudsen.spectre.api.entity.TypedPageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.api.perm.ABACPermissions
+import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
-import io.github.vudsen.spectre.api.plugin.PolicyAuthenticationExtensionPoint
+import io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 
 @Component
-class ArthasExecutionPolicyAuthenticationExtension : PolicyAuthenticationExtensionPoint() {
+class ArthasExecutionEnhancePolicyAuthenticationExtension : EnhancePolicyAuthenticationExtensionPoint() {
 
     companion object {
         const val ID = "PolicyAuthenticationExtensionPoint:ArthasExecutionPolicyAuthenticationExtension"
@@ -95,7 +95,7 @@ class ArthasExecutionPolicyAuthenticationExtension : PolicyAuthenticationExtensi
     }
 
     override fun getEnhanceTarget(): PermissionEntity {
-        return ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE
+        return PolicyPermissions.RUNTIME_NODE_ARTHAS_EXECUTE
     }
 
     override fun getConfigurationPage(): TypedPageDescriptor<EnhancePageParameterVO> {

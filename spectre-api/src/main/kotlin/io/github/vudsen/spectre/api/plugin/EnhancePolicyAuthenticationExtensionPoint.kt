@@ -8,9 +8,9 @@ import io.github.vudsen.spectre.api.perm.PermissionEntity
  *
  * 该扩展允许策略权限添加自己的表单以提供更加具体的权限控制。
  *
- * 在扩展会在 `SpEL` 表达式执行完后再调用 [hasPermission] 来进行增强鉴权。
+ * 详见: [io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider]
  */
-abstract class PolicyAuthenticationExtensionPoint : ExtensionPoint {
+abstract class EnhancePolicyAuthenticationExtensionPoint : ExtensionPoint {
 
     class EnhancePageParameterVO(var pluginId: String)
 

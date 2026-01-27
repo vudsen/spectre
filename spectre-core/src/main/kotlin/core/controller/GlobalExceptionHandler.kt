@@ -63,7 +63,7 @@ class GlobalExceptionHandler(
         when (ex) {
             is BusinessException -> {
                 return ResponseEntity
-                    .status(ex.httpStatus ?: 200)
+                    .status(ex.httpStatus ?: 400)
                     .body(
                         ErrorResponseVO(
                             messageSource.getMessage(ex.messageKey, ex.messageArgs, null)
