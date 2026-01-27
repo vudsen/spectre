@@ -1,5 +1,8 @@
 package io.github.vudsen.spectre.api.perm
 
-abstract class ABACContext(
+/**
+ * 策略权限上下文
+ */
+abstract class PolicyPermissionContext(
     val resource: PermissionEntity
 )

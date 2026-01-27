@@ -52,3 +52,14 @@ export const getEnhanceAuthenticationPages = (
 export const deletePermissionPolicy = (id: string) => {
   return axios.post(`permission/policy/delete/${id}`)
 }
+
+export type PolicyPermissionContextExample = {
+  name: string
+  context: Record<string, unknown>
+}
+
+export const getPolicyPermissionContextExample = (
+  resource: string,
+  action: string,
+): Promise<PolicyPermissionContextExample[]> =>
+  axios.get(`permission/policy/example?resource=${resource}&action=${action}`)

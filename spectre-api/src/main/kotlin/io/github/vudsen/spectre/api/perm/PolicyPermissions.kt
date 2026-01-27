@@ -1,6 +1,6 @@
 package io.github.vudsen.spectre.api.perm
 
-object ABACPermissions : BasePermissionsHolder() {
+object PolicyPermissions : BasePermissionsHolder() {
 
     @JvmStatic
     val RUNTIME_NODE_TREE_EXPAND = PermissionEntity("runtime_node", "tree", "展开节点树")

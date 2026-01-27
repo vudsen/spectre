@@ -4,14 +4,14 @@ import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.core.integrate.abac.RuntimeNodeABACContext
+import io.github.vudsen.spectre.core.integrate.abac.RuntimeNodePolicyPermissionContext
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.repo.util.CreateGroup
 import io.github.vudsen.spectre.repo.util.UpdateGroup
 import io.github.vudsen.spectre.core.vo.RuntimeNodeExpandRequestVO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
-import io.github.vudsen.spectre.api.perm.ABACPermissions
+import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -61,7 +61,7 @@ class RuntimeNodeController(
     @PostMapping("expand-tree")
     fun expandRuntimeNodeTree(@RequestBody vo: RuntimeNodeExpandRequestVO): List<JvmTreeNodeDTO> {
         val node = service.getRuntimeNode(vo.runtimeNodeId) ?: throw BusinessException("节点不存在")
-        val ctx = RuntimeNodeABACContext(node, ABACPermissions.RUNTIME_NODE_TREE_EXPAND)
+        val ctx = RuntimeNodePolicyPermissionContext(node, PolicyPermissions.RUNTIME_NODE_TREE_EXPAND)
         appAccessControlService.checkPolicyPermission(ctx)
 
         return service.expandRuntimeNodeTree(vo.runtimeNodeId, vo.parentNodeId)

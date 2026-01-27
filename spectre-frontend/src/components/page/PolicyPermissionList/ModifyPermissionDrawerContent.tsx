@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form'
 import {
   createPolicyPermission,
   getEnhanceAuthenticationPages,
+  getPolicyPermissionContextExample,
+  type PolicyPermissionContextExample,
   type PolicyPermissionEnhancePlugin,
   updatePolicyPermission,
 } from '@/api/impl/policy-permission.ts'
@@ -95,8 +97,15 @@ const ModifyPermissionDrawerContent: React.FC<
   const [enhanceForms, setEnhanceForms] = useState<EnhanceForm[]>([])
   const [isLoading, setLoading] = useState(true)
   const refs = useRef<Array<FormComponentRef | null>>([])
+  const [examples, setExamples] = useState<PolicyPermissionContextExample[]>([])
 
   useEffect(() => {
+    getPolicyPermissionContextExample(
+      props.permission.resource,
+      props.permission.action,
+    ).then((r) => {
+      setExamples(r)
+    })
     getEnhanceAuthenticationPages(
       props.permission.resource,
       props.permission.action,
@@ -213,6 +222,19 @@ const ModifyPermissionDrawerContent: React.FC<
             pluginId={form.pluginId}
           />
         ))}
+        {examples.length > 0 ? (
+          <div className="space-y-3">
+            <div>SpEL 上下文示例</div>
+            {examples.map((example) => (
+              <div key={example.name}>
+                <div className="my-3 text-sm">{example.name}</div>
+                <div className="text-default-700 bg-default-100 mx-3 box-border rounded-xl p-3 text-sm whitespace-pre-wrap">
+                  {JSON.stringify(example.context, null, 2)}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </DrawerBody>
       <DrawerFooter className="border-divider border-t-1">
         <Button

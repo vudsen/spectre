@@ -3,7 +3,7 @@ package io.github.vudsen.spectre.core.service.impl
 import io.github.vudsen.spectre.api.dto.*
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
-import io.github.vudsen.spectre.api.perm.ABACPermissions
+import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.AppAccessControlService
@@ -14,8 +14,8 @@ import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
 import io.github.vudsen.spectre.core.bean.ArthasClientWrapper
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
-import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionABACContext
-import io.github.vudsen.spectre.core.integrate.abac.AttachNodeABACContext
+import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
+import io.github.vudsen.spectre.core.integrate.abac.AttachNodePolicyPermissionContext
 import io.github.vudsen.spectre.core.internal.ArthasClientCacheService
 import io.github.vudsen.spectre.core.lock.InMemoryDistributedLock
 import org.slf4j.LoggerFactory
@@ -114,7 +114,7 @@ class DefaultArthasExecutionService(
     private fun checkTreeNodePermission(runtimeNodeId: Long, treeNodeId: String) {
         val treeNode = runtimeNodeService.findTreeNode(treeNodeId) ?: throw BusinessException("节点不存在")
         val node = runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
-        val ctx = AttachNodeABACContext(ABACPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
+        val ctx = AttachNodePolicyPermissionContext(PolicyPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
         appAccessControlService.checkPolicyPermission(ctx)
     }
 
@@ -126,8 +126,7 @@ class DefaultArthasExecutionService(
         val runtimeNodeDTO = runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
 
         appAccessControlService.checkPolicyPermission(
-            ArthasExecutionABACContext(
-                ABACPermissions.RUNTIME_NODE_ARTHAS_EXECUTE,
+            ArthasExecutionPolicyPermissionContext(
                 commands,
                 runtimeNodeDTO,
                 info.jvm
