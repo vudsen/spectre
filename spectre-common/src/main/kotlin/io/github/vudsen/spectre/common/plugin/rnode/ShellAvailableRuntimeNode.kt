@@ -1,9 +1,9 @@
 package io.github.vudsen.spectre.common.plugin.rnode
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
-import java.io.InputStream
 
 /**
  * 表示当前节点可以上传文件
@@ -59,10 +59,10 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
 
     /**
      * 上传文件
-     * @param input 输入流
+     * @param source 输入流
      * @param dest 目标路径
      */
-    fun upload(input: InputStream, dest: String)
+    fun upload(source: BoundedInputStreamSource, dest: String)
 
     /**
      * 是否为 arm 架构

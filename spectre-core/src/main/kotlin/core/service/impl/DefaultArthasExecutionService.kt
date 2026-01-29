@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.service.impl
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.dto.*
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
@@ -525,7 +526,7 @@ class DefaultArthasExecutionService(
         client.interruptJob(data.sessionId)
     }
 
-    override fun retransform(channelId: String, source: InputStreamSource): Any {
+    override fun retransform(channelId: String, source: BoundedInputStreamSource): Any {
         checkCommandExecPermission(channelId, listOf("retransform"))
         val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
         val client = tryResolveClient(data, channelId)

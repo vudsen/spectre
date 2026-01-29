@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.CloseableRuntimeNode
@@ -303,9 +304,9 @@ open class SshRuntimeNode : CloseableRuntimeNode, AbstractShellRuntimeNode() {
         return nodeConfig
     }
 
-    override fun doUpload(input: InputStream, dest: String) {
+    override fun doUpload(source: BoundedInputStreamSource, dest: String) {
         SftpClientFactory.instance().createSftpClient(session).use { client ->
-            client.put(input, dest)
+            client.put(source.inputStream, dest)
         }
     }
 }

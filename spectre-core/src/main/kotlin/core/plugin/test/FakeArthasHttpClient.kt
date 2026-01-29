@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.test
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
@@ -48,7 +49,8 @@ class FakeArthasHttpClient : ArthasHttpClient {
         return 4567
     }
 
-    override fun retransform(source: InputStreamSource) {
+    override fun retransform(source: BoundedInputStreamSource): Any {
         throw BusinessException("This action is not supported by test runtime node.")
     }
+
 }

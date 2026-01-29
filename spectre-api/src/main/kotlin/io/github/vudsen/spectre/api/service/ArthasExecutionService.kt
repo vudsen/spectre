@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.api.service
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.dto.ArthasChannelDTO
 import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
@@ -58,6 +59,6 @@ interface ArthasExecutionService {
     /**
      * 替换字节码. 该命令为同步命令
      */
-    fun retransform(channelId: String, source: InputStreamSource): Any
+    fun retransform(channelId: String, source: BoundedInputStreamSource): Any
 
 }

@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.api.plugin.rnode
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import org.springframework.boot.web.server.PortInUseException
@@ -63,5 +64,5 @@ interface ArthasHttpClient {
      * arthas retransform.
      * @return 返回一个 JSON 对象
      */
-    fun retransform(source: InputStreamSource): Any
+    fun retransform(source: BoundedInputStreamSource): Any
 }

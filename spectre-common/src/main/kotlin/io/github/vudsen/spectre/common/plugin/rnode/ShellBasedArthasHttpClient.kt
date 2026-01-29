@@ -2,6 +2,7 @@ package io.github.vudsen.spectre.common.plugin.rnode
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
@@ -125,10 +126,10 @@ open class ShellBasedArthasHttpClient(
         return URL(arthasHttpEndpoint).port
     }
 
-    override fun retransform(source: InputStreamSource): Any {
+    override fun retransform(source: BoundedInputStreamSource): Any {
         val dest = "${runtimeNode.getHomePath()}/downloads/rt${System.currentTimeMillis()}.class"
         try {
-            runtimeNode.upload(source.inputStream, dest)
+            runtimeNode.upload(source, dest)
             return exec("retransform $dest")
         } finally {
             if (runtimeNode.execute("rm $dest").isFailed()) {
