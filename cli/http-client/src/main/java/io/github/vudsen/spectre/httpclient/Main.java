@@ -20,15 +20,16 @@ public class Main {
     public static void main(String[] args) {
         var endpoint = args[0];
         var encodedBody = args[1];
+        var password = args[2];
         try {
-            doRequest(encodedBody, endpoint);
+            doRequest(encodedBody, endpoint, password);
         } catch (IOException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }
     }
 
-    private static void doRequest(String encodedBody, String endpoint) throws IOException {
+    private static void doRequest(String encodedBody, String endpoint, String password) throws IOException {
         var body = Base64.getDecoder().decode(encodedBody);
 
         var url = new URL(endpoint);
@@ -36,6 +37,10 @@ public class Main {
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
         connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty(
+                "Authorization",
+                "Basic " + Base64.getEncoder()
+                        .encodeToString(("arthas:" + password).getBytes(StandardCharsets.UTF_8)));
 
         try (var out = connection.getOutputStream()) {
             out.write(body);

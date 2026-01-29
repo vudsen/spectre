@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
     kotlin("jvm")
     kotlin("plugin.spring") version "2.3.0"
@@ -47,12 +49,37 @@ dependencies {
     implementation("org.glassfish.jaxb:jaxb-runtime")
     implementation("com.esotericsoftware:kryo:5.6.2")
 }
+
+
+fun Copy.configureTokenReplace() {
+    inputs.properties(
+        mapOf(
+            "version" to project.version.toString(),
+        )
+    )
+
+    filesMatching("**/*.yaml") {
+        filter(
+            ReplaceTokens::class,
+            "tokens" to mapOf(
+                "version" to project.version.toString(),
+            )
+        )
+    }
+}
+
+
 tasks.test {
     useJUnitPlatform()
 }
-
 tasks.register("prepareKotlinBuildScriptModel"){}
 tasks.register("wrapper"){}
+tasks.processResources {
+    configureTokenReplace()
+}
+tasks.processTestResources {
+    configureTokenReplace()
+}
 
 kotlin {
     jvmToolchain(17)

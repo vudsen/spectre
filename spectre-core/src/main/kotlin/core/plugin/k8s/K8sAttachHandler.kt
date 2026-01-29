@@ -33,16 +33,17 @@ class K8sAttachHandler(
 
     override fun doAttach(
         port: Int?,
+        password: String,
         paths: ToolchainPaths
     ): ArthasHttpClient {
         if (jvm !is K8sContainerJvm) {
             throw AppException("Unsupported jvm: $jvm, class: ${jvm::class.java}")
         }
-        return attach0(paths, port)
+        return attach0(paths, password, port)
     }
 
 
-    private fun attach0(paths: ToolchainPaths, port: Int?): ArthasHttpClient {
+    private fun attach0(paths: ToolchainPaths, password: String, port: Int?): ArthasHttpClient {
         if (port == null) {
             // TODO 支持切换 pid
             runtimeNode.execute(
@@ -51,23 +52,24 @@ class K8sAttachHandler(
                 "load",
                 "instrument",
                 "false",
-                "${paths.arthasHome}/arthas-agent.jar=;httpPort=${KUBERNETES_LISTEN_PORT};telnetPort=-1;"
+                "${paths.arthasHome}/arthas-agent.jar=;password=${password};httpPort=${KUBERNETES_LISTEN_PORT};telnetPort=-1;"
             ).ok()
         }
         return ShellBasedArthasHttpClient(
             runtimeNode,
             paths.httpClientPath,
             "http://127.0.0.1:${KUBERNETES_LISTEN_PORT}/api",
-            "java"
+            "java",
+            password
         )
     }
 
 
-    override fun tryFindClient(paths: ToolchainPaths): ArthasHttpClient? {
+    override fun tryFindClient(password: String, paths: ToolchainPaths): ArthasHttpClient? {
         if (jvm !is K8sContainerJvm) {
             return null
         }
-        return attach0(paths, KUBERNETES_LISTEN_PORT)
+        return attach0(paths, password, KUBERNETES_LISTEN_PORT)
     }
 
 

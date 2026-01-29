@@ -43,8 +43,18 @@ jobs:
           kubectl wait --for=condition=ready pod -l app=math-game -n spectre --timeout=60s
           K8S_TOKEN=`kubectl create token spectre -n spectre`
           echo "token=$K8S_TOKEN" >> $GITHUB_OUTPUT
-#          API_SERVER_URL=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' k3s-latest`
-#          echo "apiServerUrl=https://$API_SERVER_URL:6443" >> $GITHUB_OUTPUT
+          
+          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Backend
+        run: >
+          sh ./gradlew build -x test
+
+      - name: Copy Http Client
+        run: |
+          mkdir -p /opt/spectre/downloads
+          cp cli/http-client/build/libs/http-client-${{ steps.env.outputs.APP_VERSION }}.jar /opt/spectre/downloads/http-client-v${{ steps.env.outputs.APP_VERSION }}.jar
 
       - name: Tests
         id: test

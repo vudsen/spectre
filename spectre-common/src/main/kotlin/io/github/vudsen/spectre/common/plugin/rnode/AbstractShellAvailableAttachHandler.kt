@@ -23,9 +23,9 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
      * @param paths 目标宿主机/容器上的工具链路径
      * @see [attach]
      */
-    protected abstract fun doAttach(port: Int?, paths: ToolchainPaths): ArthasHttpClient
+    protected abstract fun doAttach(port: Int?, password: String, paths: ToolchainPaths): ArthasHttpClient
 
-    private fun attachInternal(port: Int?): ArthasHttpClient {
+    private fun attachInternal(port: Int?, password: String): ArthasHttpClient {
         val local = runtimeNode.getHomePath()
         val downloadDirectory = "$local/downloads"
         runtimeNode.mkdirs(downloadDirectory)
@@ -35,14 +35,14 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
             prepareArthas(downloadDirectory, local),
             prepareHttpClient(downloadDirectory, local),
         )
-        val client = doAttach(port, paths)
+        val client = doAttach(port, password, paths)
         try {
             // TODO handle port in use.
             client.test()
             return client
         } catch (e: Exception) {
             if (port == null) {
-                val client = tryFindClient(paths) ?: throw e
+                val client = tryFindClient(password, paths) ?: throw e
                 return client
             }
             logger.error("", e)
@@ -50,8 +50,8 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         }
     }
 
-    override fun attach(port: Int?): ArthasHttpClient {
-        return attachInternal(port)
+    override fun attach(port: Int?, password: String): ArthasHttpClient {
+        return attachInternal(port, password)
     }
 
 
@@ -60,7 +60,7 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
      *
      * 对于容器环境，可以尝试每次都绑定固定的端口
      */
-    protected abstract fun tryFindClient(paths: ToolchainPaths): ArthasHttpClient?
+    protected abstract fun tryFindClient(password: String, paths: ToolchainPaths): ArthasHttpClient?
 
     private fun prepareBundle(baseDirectory: String, item: ToolchainItemDTO): String {
         val armUrl = item.armUrl

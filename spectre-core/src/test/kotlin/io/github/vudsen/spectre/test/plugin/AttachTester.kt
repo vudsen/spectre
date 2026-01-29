@@ -39,7 +39,7 @@ class AttachTester {
 
 
     fun testAttach(runtimeNodeId: Long, jvmNode: JvmTreeNodeDTO) {
-        val channelId = doAttach(runtimeNodeId, jvmNode)
+        val channelId = attachSync(runtimeNodeId, jvmNode)
         val sessionDTO = arthasExecutionService.joinChannel(channelId, "test")
         arthasExecutionService.execAsync(channelId, "sc demo.*")
 
@@ -64,7 +64,10 @@ class AttachTester {
         return r!!
     }
 
-    private fun doAttach(
+    /**
+     * @return channelId
+     */
+    fun attachSync(
         runtimeNodeId: Long,
         jvmNode: JvmTreeNodeDTO
     ): String {
@@ -186,7 +189,7 @@ class AttachTester {
      * @return channelId
      */
     fun resolveDefaultChannel(): String {
-        return doAttach(commonRuntimeNodeId, resolveDefaultJvm())
+        return attachSync(commonRuntimeNodeId, resolveDefaultJvm())
     }
 
 }
