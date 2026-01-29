@@ -22,7 +22,6 @@ import io.github.vudsen.spectre.core.lock.InMemoryDistributedLock
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.CacheManager
-import org.springframework.core.io.InputStreamSource
 import org.springframework.core.task.TaskExecutor
 import org.springframework.expression.spel.SpelNode
 import org.springframework.expression.spel.ast.*
@@ -408,15 +407,7 @@ class DefaultArthasExecutionService(
         return Pair(client, pair.second)
     }
 
-    override fun execAsync(channelId: String, command: String) {
-        checkTreeNodePermission(channelId)
-        val commands = splitCommand(command)
-        checkCommandExecPermission(channelId, commands)
-        val pair = tryResolveClient(channelId)
-        pair.first.asyncExec(pair.second.sessionId, command)
-    }
-
-    override fun execSync(channelId: String, command: String): Any {
+    private fun checkAndGetNode(channelId: String, command: String): Pair<ArthasHttpClient, ArthasInstanceDTO> {
         checkTreeNodePermission(channelId)
         val commands = splitCommand(command)
         checkCommandExecPermission(channelId, commands)
@@ -424,6 +415,17 @@ class DefaultArthasExecutionService(
         if (pair.second.restrictedMode) {
             checkOgnlExpression(commands)
         }
+        return pair
+    }
+
+    override fun execAsync(channelId: String, command: String) {
+        val pair = checkAndGetNode(channelId, command)
+        pair.first.asyncExec(pair.second.sessionId, command)
+    }
+
+
+    override fun execSync(channelId: String, command: String): Any {
+        val pair = checkAndGetNode(channelId, command)
         return pair.first.exec(command)
     }
 
