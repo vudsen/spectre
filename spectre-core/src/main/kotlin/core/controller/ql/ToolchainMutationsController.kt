@@ -47,7 +47,6 @@ class ToolchainMutationsController(
             null,
             vo.jattachTag,
             vo.arthasTag,
-            vo.httpClientTag
         ))
     }
 }

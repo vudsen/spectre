@@ -59,7 +59,6 @@ type ToolchainBundlePO {
     createdAt: Timestamp!
     jattachTag: String!
     arthasTag: String!
-    httpClientTag: String!
 }
 
 type ToolchainItemId {

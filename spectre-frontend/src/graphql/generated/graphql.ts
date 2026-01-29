@@ -307,7 +307,6 @@ export type ToolchainBundlePo = {
   __typename?: 'ToolchainBundlePO';
   arthasTag: Scalars['String']['output'];
   createdAt: Scalars['Timestamp']['output'];
-  httpClientTag: Scalars['String']['output'];
   id: Scalars['Long']['output'];
   jattachTag: Scalars['String']['output'];
   name: Scalars['String']['output'];
@@ -635,12 +634,12 @@ export type ToolchainBundleQueryQueryVariables = Exact<{
 }>;
 
 
-export type ToolchainBundleQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainBundles: { __typename?: 'ToolchainBundlePage', result: Array<{ __typename?: 'ToolchainBundlePO', id: string, name: string, createdAt: any, jattachTag: string, arthasTag: string, httpClientTag: string }> } } };
+export type ToolchainBundleQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainBundles: { __typename?: 'ToolchainBundlePage', result: Array<{ __typename?: 'ToolchainBundlePO', id: string, name: string, createdAt: any, jattachTag: string, arthasTag: string }> } } };
 
 export type QueryToolchainVersionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type QueryToolchainVersionsQuery = { __typename?: 'Query', arthas: { __typename?: 'ToolchainItemQueries', toolchainItems: { __typename?: 'ToolchainItemsPage', result: Array<{ __typename?: 'ToolchainItemPO', id: { __typename?: 'ToolchainItemId', tag: string } }> } }, jattach: { __typename?: 'ToolchainItemQueries', toolchainItems: { __typename?: 'ToolchainItemsPage', result: Array<{ __typename?: 'ToolchainItemPO', id: { __typename?: 'ToolchainItemId', tag: string } }> } }, httpClient: { __typename?: 'ToolchainItemQueries', toolchainItems: { __typename?: 'ToolchainItemsPage', result: Array<{ __typename?: 'ToolchainItemPO', id: { __typename?: 'ToolchainItemId', tag: string } }> } } };
+export type QueryToolchainVersionsQuery = { __typename?: 'Query', arthas: { __typename?: 'ToolchainItemQueries', toolchainItems: { __typename?: 'ToolchainItemsPage', result: Array<{ __typename?: 'ToolchainItemPO', id: { __typename?: 'ToolchainItemId', tag: string } }> } }, jattach: { __typename?: 'ToolchainItemQueries', toolchainItems: { __typename?: 'ToolchainItemsPage', result: Array<{ __typename?: 'ToolchainItemPO', id: { __typename?: 'ToolchainItemId', tag: string } }> } } };
 
 export type CreateToolchainBundleMutationVariables = Exact<{
   vo?: InputMaybe<ToolchainBundleModifyVo>;
@@ -1036,7 +1035,6 @@ export const ToolchainBundleQueryDocument = new TypedDocumentString(`
         createdAt
         jattachTag
         arthasTag
-        httpClientTag
       }
     }
   }
@@ -1055,15 +1053,6 @@ export const QueryToolchainVersionsDocument = new TypedDocumentString(`
   }
   jattach: toolchain {
     toolchainItems(type: "JATTACH", page: 0, size: 10) {
-      result {
-        id {
-          tag
-        }
-      }
-    }
-  }
-  httpClient: toolchain {
-    toolchainItems(type: "HTTP_CLIENT", page: 0, size: 10) {
       result {
         id {
           tag

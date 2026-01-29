@@ -24,14 +24,6 @@ const toolchainTypes: ToolchainItemType[] = [
     url: 'https://github.com/jattach/jattach/releases',
     hasMultiplatformBundle: true,
   },
-  {
-    name: 'HttpClient',
-    description: '一个简单的 http 客户端，用于和 arthas http endpoint 交互',
-    type: 'HTTP_CLIENT',
-    urlGuide: '链接应该指向对应的 jar 包',
-    url: '',
-    hasMultiplatformBundle: false,
-  },
 ]
 
 export default toolchainTypes
