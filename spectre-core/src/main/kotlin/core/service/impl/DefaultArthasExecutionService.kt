@@ -9,27 +9,29 @@ import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
+import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.service.ToolchainService
+import io.github.vudsen.spectre.common.SecureRandomFactory
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
-import io.github.vudsen.spectre.core.bean.ArthasClientWrapper
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
 import io.github.vudsen.spectre.core.integrate.abac.AttachNodePolicyPermissionContext
-import io.github.vudsen.spectre.core.internal.ArthasClientCacheService
 import io.github.vudsen.spectre.core.lock.InMemoryDistributedLock
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.CacheManager
-import org.springframework.core.io.InputStreamSource
 import org.springframework.core.task.TaskExecutor
 import org.springframework.expression.spel.SpelNode
 import org.springframework.expression.spel.ast.*
 import org.springframework.expression.spel.standard.SpelExpression
 import org.springframework.expression.spel.standard.SpelExpressionParser
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.lang.reflect.InvocationTargetException
+import java.time.Instant
+import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -67,14 +69,15 @@ import java.util.concurrent.locks.ReentrantLock
 class DefaultArthasExecutionService(
     cacheManager: CacheManager,
     @param:Qualifier("applicationTaskExecutor") private val executor: TaskExecutor,
-    private val arthasClientCacheService: ArthasClientCacheService,
     private val runtimeNodeService: RuntimeNodeService,
     private val toolchainService: ToolchainService,
-    private val appAccessControlService: AppAccessControlService
+    private val appAccessControlService: AppAccessControlService,
+    private val arthasInstanceService: ArthasInstanceService
 ) : ArthasExecutionService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
+        private const val MAX_IDLE_MILLISECONDS = 1000 * 60 * 5
         private val ALLOWED_EXPRESSION: Set<Class<*>> = setOf(
             Literal::class.java,
             PropertyOrFieldReference::class.java,
@@ -93,7 +96,8 @@ class DefaultArthasExecutionService(
             NullLiteral::class.java,
         )
         val parser = SpelExpressionParser()
-        private val DISALLOWED_ARTHAS_COMMAND = setOf("auth", "cat", "base64", "cls", "dump", "grep", "keymap", "mc", "quit", "pwd", "tee", "echo")
+        private val DISALLOWED_ARTHAS_COMMAND =
+            setOf("auth", "cat", "base64", "cls", "dump", "grep", "keymap", "mc", "quit", "pwd", "tee", "echo")
     }
 
     private val modifyLock = ReentrantLock()
@@ -102,19 +106,24 @@ class DefaultArthasExecutionService(
 
     private val cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
 
+    private val clientInitMap = HashMap<String, ArthasClientInitStatus>()
+
 
     private fun resolveJvmId(runtimeNodeId: Long, jvm: Jvm): String {
         return "${runtimeNodeId}:${jvm.hashCode()}"
     }
 
     private fun checkTreeNodePermission(channelId: String) {
-        val info = getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
-        checkTreeNodePermission(info.runtimeNodeId, info.treeNodeId)
+        val info = arthasInstanceService.findInstanceByChannelId(channelId)
+            ?: throw BusinessException("error.channel.not.exist")
+        checkTreeNodePermission(info.runtimeNodeId, info.id)
     }
 
     private fun checkTreeNodePermission(runtimeNodeId: Long, treeNodeId: String) {
-        val treeNode = runtimeNodeService.findTreeNode(treeNodeId) ?: throw BusinessException("节点不存在")
-        val node = runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
+        val treeNode = runtimeNodeService.findTreeNode(treeNodeId)
+            ?: throw BusinessException("节点不存在")
+        val node =
+            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
         val ctx = AttachNodePolicyPermissionContext(PolicyPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
         appAccessControlService.checkPolicyPermission(ctx)
     }
@@ -123,8 +132,10 @@ class DefaultArthasExecutionService(
         if (DISALLOWED_ARTHAS_COMMAND.contains(commands[0])) {
             throw BusinessException("error.command.not.allowed", arrayOf(commands[0]))
         }
-        val info = getChannelInfo(channelId) ?: throw BusinessException("error.channel.not.exist")
-        val runtimeNodeDTO = runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
+        val info = arthasInstanceService.findInstanceByChannelId(channelId)
+            ?: throw BusinessException("error.channel.not.exist")
+        val runtimeNodeDTO =
+            runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
 
         appAccessControlService.checkPolicyPermission(
             ArthasExecutionPolicyPermissionContext(
@@ -133,6 +144,41 @@ class DefaultArthasExecutionService(
                 info.jvm
             )
         )
+    }
+
+    @Scheduled(cron = "0 0/5 * * * ?")
+    fun cleanerTask() {
+        val current = System.currentTimeMillis()
+
+        val iterator1 = clientInitMap.entries.iterator()
+        while (iterator1.hasNext()) {
+            val nx = iterator1.next()
+            if (current - nx.value.lastAccess >= MAX_IDLE_MILLISECONDS) {
+                iterator1.remove()
+            }
+        }
+    }
+
+    fun startInitClient(jvmId: String): ArthasClientInitStatus? {
+        clientInitMap[jvmId]?.let {
+            it.lastAccess = System.currentTimeMillis()
+            return it
+        }
+        if (!modifyLock.tryLock()) {
+            return null
+        }
+        try {
+            clientInitMap[jvmId]?.let {
+                it.lastAccess = System.currentTimeMillis()
+                return it
+            }
+            val arthasClientInitStatus =
+                ArthasClientInitStatus(UUID.randomUUID().toString(), System.currentTimeMillis())
+            clientInitMap[jvmId] = arthasClientInitStatus
+            return arthasClientInitStatus
+        } finally {
+            modifyLock.unlock()
+        }
     }
 
 
@@ -144,23 +190,26 @@ class DefaultArthasExecutionService(
         checkTreeNodePermission(runtimeNodeId, treeNodeId)
 
         val runtimeNodeDto =
-            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.runtime.node.not.exist")
+            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId)
+                ?: throw BusinessException("error.runtime.node.not.exist")
 
         val node = runtimeNodeService.findTreeNode(treeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
         val jvm = runtimeNodeService.deserializeToJvm(runtimeNodeDto.pluginId, node)
-        arthasClientCacheService.resolveCachedClient(runtimeNodeId, jvm) ?.let {
-            return AttachStatus(true).apply {
-                channelId = it.channelId
+        arthasInstanceService.resolveCachedClient(treeNodeId)?.let {
+            if (it.first != null) {
+                return AttachStatus(true).apply {
+                    channelId = it.second.channelId
+                }
             }
         }
 
-        val jvmId = arthasClientCacheService.resolveJvmId(runtimeNodeId, jvm)
+        val jvmId = resolveJvmId(runtimeNodeId, jvm)
 
         // start init channel
-        val status = arthasClientCacheService.startInit(jvmId) ?: return AttachStatus(false)
+        val status = startInitClient(jvmId) ?: return AttachStatus(false)
 
         // error check
-        status.error ?.let {
+        status.error?.let {
             if (System.currentTimeMillis() >= it.nextRetryTime) {
                 status.error = null
             } else {
@@ -174,9 +223,11 @@ class DefaultArthasExecutionService(
         }
 
         // recheck
-        arthasClientCacheService.resolveCachedClient(jvmId)?.let {
-            return AttachStatus(true).apply {
-                channelId = it.channelId
+        arthasInstanceService.resolveCachedClient(treeNodeId)?.let {
+            if (it.first != null) {
+                return AttachStatus(true).apply {
+                    channelId = it.second.channelId
+                }
             }
         }
 
@@ -204,34 +255,37 @@ class DefaultArthasExecutionService(
         return "runtime-node-lock:${runtimeNodeId}"
     }
 
+
     override fun joinChannel(channelId: String, ownerIdentifier: String): ArthasConsumerDTO {
         checkTreeNodePermission(channelId)
-        // 除非使用 redis，不然每次重启都会丢失数据
-        val data = resolveArthasChannel(channelId) ?: throw BusinessException("Channel 已经关闭，请重新在列表中连接")
+        val arthasInstanceDTO = arthasInstanceService.findInstanceByChannelId(channelId)
+            ?: throw BusinessException("Channel 不存在，请重新在列表中连接")
         val distributedLockKey = "arthas:channel:join-lock:${ownerIdentifier}"
 
         val consumerCacheKey = "channel:consumer:${channelId}:${ownerIdentifier}"
         // 并发概率不高，先这样简单写，主要是防止前端 react 开发模式同时发两次请求
         joinLock.lock(distributedLockKey)
         try {
-            cache[consumerCacheKey]?.get() ?.let {
+            cache[consumerCacheKey]?.get()?.let {
                 return it as ArthasConsumerDTO
             }
 
-            val jvmId = resolveJvmId(data.runtimeNodeId, data.jvm)
-            var client = arthasClientCacheService.resolveCachedClient(jvmId)?.client
+            var client =
+                arthasInstanceService.resolveCachedClientByChannelId(channelId)?.first
             if (client == null) {
                 modifyLock.lock()
                 try {
-                    val newClient = createClient(data, data)
-                    // 本地未缓存，但是缓存有，一般大概率出现在集群环境
-                    arthasClientCacheService.saveClient(jvmId, ArthasClientWrapper(newClient, channelId))
+                    val newClient = createClient(arthasInstanceDTO)
+                    clientInitMap.remove(resolveJvmId(arthasInstanceDTO.runtimeNodeId, arthasInstanceDTO.jvm))
                     client = newClient
                 } finally {
                     modifyLock.unlock()
                 }
             }
-            val session = ArthasConsumerDTO(client.joinSession(data.sessionId).consumerId, data.jvm.name)
+            val session = ArthasConsumerDTO(
+                client.joinSession(arthasInstanceDTO.sessionId).consumerId,
+                arthasInstanceDTO.jvm.name
+            )
             // 用于解决创建期间的并发，该方法返回后，相关数据会保存到用户自己的 session 中，这里的数据就没必要了
             cache.put(consumerCacheKey, session)
             return session
@@ -241,15 +295,22 @@ class DefaultArthasExecutionService(
     }
 
     private fun createClient(
-        info: ArthasChannelDTO,
-        metadata: ArthasChannelDTO
+        arthasInstanceDTO: ArthasInstanceDTO,
     ): ArthasHttpClient {
-        val extPoint = runtimeNodeService.findPluginById(metadata.extPointId)
-        val runtimeNode = runtimeNodeService.connect(info.runtimeNodeId)
+        val extPoint = runtimeNodeService.findPluginById(arthasInstanceDTO.extPointId)
+        val runtimeNode = runtimeNodeService.connect(arthasInstanceDTO.runtimeNodeId)
 
-        val bundle = toolchainService.resolveToolchainBundle(metadata.bundleId) ?: TODO("bundle not found.")
-        val handler = extPoint.createAttachHandler(runtimeNode, info.jvm, bundle)
-        return handler.attach(info.port)
+        val bundle = toolchainService.resolveToolchainBundle(arthasInstanceDTO.bundleId) ?: TODO("bundle not found.")
+        val handler = extPoint.createAttachHandler(runtimeNode, arthasInstanceDTO.jvm, bundle)
+        val httpClient = handler.attach(arthasInstanceDTO.boundPort, arthasInstanceDTO.endpointPassword)
+        if (httpClient.getPort() != arthasInstanceDTO.boundPort) {
+            arthasInstanceService.updateBoundPortAndClient(arthasInstanceDTO, httpClient.getPort(), httpClient)
+        }
+        return httpClient
+    }
+
+    private fun generatePassword(): String {
+        return SecureRandomFactory.randomString(32)
     }
 
     /**
@@ -273,7 +334,7 @@ class DefaultArthasExecutionService(
             ProgressReportHolder.startProgress(holder.progressManager)
             logger.info("Start creating new http client for jvm(id = {}), name = {}", jvm.id, jvm.name)
             try {
-                val channelData = resolveArthasChannel(holder.channelId)
+                val channelData = arthasInstanceService.findInstanceByChannelId(holder.channelId)
                 if (channelData != null) {
                     return@execute
                 }
@@ -283,26 +344,38 @@ class DefaultArthasExecutionService(
                 val runtimeNode = runtimeNodeService.connect(runtimeNodeDto.id)
 
                 val handler = runtimeNode.getExtPoint().createAttachHandler(runtimeNode, jvm, bundle)
-                val client: ArthasHttpClient = handler.attach(null)
+                var arthasInstance = arthasInstanceService.findInstanceById(treeNodeId)
+                var password = arthasInstance?.endpointPassword ?: generatePassword()
+
+                var client = if (arthasInstance == null) {
+                    handler.attach(null, password)
+                } else {
+                    handler.attach(arthasInstance.boundPort, password)
+                }
 
                 logger.info("Successfully created client for jvm(id = {}), name = {}", jvm.id, jvm.name)
 
                 val session = client.initSession()
 
-                val data = ArthasChannelDTO(
-                    session.sessionId,
-                    runtimeNodeDto.id,
-                    treeNodeId,
-                    client.getPort(),
-                    runtimeNodeDto.restrictedMode,
-                    bundleId,
-                    runtimeNode.getExtPoint().getId()
-                ).apply {
-                    this.jvm = jvm
+                if (arthasInstance == null) {
+                    arthasInstanceService.save(
+                        ArthasInstanceDTO(
+                            treeNodeId,
+                            holder.channelId,
+                            password,
+                            client.getPort(),
+                            session.sessionId,
+                            runtimeNodeDto.id,
+                            runtimeNodeDto.restrictedMode,
+                            bundleId,
+                            runtimeNode.getExtPoint().getId(),
+                            jvm,
+                            Instant.now()
+                        ), client
+                    )
+                } else if (client.getPort() != arthasInstance.boundPort) {
+                    arthasInstanceService.updateBoundPortAndClient(arthasInstance, client.getPort(), client)
                 }
-                saveChannelDTO(holder.channelId, data)
-                val jvmId = arthasClientCacheService.resolveJvmId(runtimeNodeDto.id, jvm)
-                arthasClientCacheService.saveClient(jvmId, ArthasClientWrapper(client, holder.channelId))
             } catch (e: Exception) {
                 val ex = if (e is InvocationTargetException) {
                     e.targetException
@@ -320,55 +393,40 @@ class DefaultArthasExecutionService(
         }
     }
 
-    private fun resolveArthasChannel(channelId: String): ArthasChannelDTO? {
-        cache["arthas:channel:${channelId}"]?.get() ?.let {
-            return it as ArthasChannelDTO
-        }
-        return null
-    }
-
-    private fun saveChannelDTO(channelId: String, data: ArthasChannelDTO) {
-        cache.putIfAbsent("arthas:channel:${channelId}", data)
-    }
-
-
 
     /**
      * 尝试获取 client，如果没有，则尝试创建一个新的
      */
-    private fun tryResolveClient(channelInfo: ArthasChannelDTO, channelId: String): ArthasHttpClient {
-        val jvmId = resolveJvmId(channelInfo.runtimeNodeId, channelInfo.jvm)
-        arthasClientCacheService.resolveCachedClient(jvmId)?.let {
-            return it.client
+    private fun tryResolveClient(channelId: String): Pair<ArthasHttpClient, ArthasInstanceDTO> {
+        val pair = arthasInstanceService.resolveCachedClientByChannelId(channelId)
+            ?: throw BusinessException("节点已过期，请刷新页面")
+        pair.first?.let {
+            return Pair(it, pair.second)
         }
+        val client = createClient(pair.second)
+        return Pair(client, pair.second)
+    }
 
-        val client = createClient(channelInfo, channelInfo)
-        arthasClientCacheService.saveClient(jvmId, ArthasClientWrapper(client, channelId))
-        return client
+    private fun checkAndGetNode(channelId: String, command: String): Pair<ArthasHttpClient, ArthasInstanceDTO> {
+        checkTreeNodePermission(channelId)
+        val commands = splitCommand(command)
+        checkCommandExecPermission(channelId, commands)
+        val pair = tryResolveClient(channelId)
+        if (pair.second.restrictedMode) {
+            checkOgnlExpression(commands)
+        }
+        return pair
     }
 
     override fun execAsync(channelId: String, command: String) {
-        checkTreeNodePermission(channelId)
-        val commands = splitCommand(command)
-        checkCommandExecPermission(channelId, commands)
-        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
-        val client = tryResolveClient(data, channelId)
-        if (data.restrictedMode) {
-            checkOgnlExpression(commands)
-        }
-        client.asyncExec(data.sessionId, command)
+        val pair = checkAndGetNode(channelId, command)
+        pair.first.asyncExec(pair.second.sessionId, command)
     }
 
+
     override fun execSync(channelId: String, command: String): Any {
-        checkTreeNodePermission(channelId)
-        val commands = splitCommand(command)
-        checkCommandExecPermission(channelId, commands)
-        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
-        val client = tryResolveClient(data, channelId)
-        if (data.restrictedMode) {
-            checkOgnlExpression(commands)
-        }
-        return client.exec(command)
+        val pair = checkAndGetNode(channelId, command)
+        return pair.first.exec(command)
     }
 
 
@@ -461,6 +519,7 @@ class DefaultArthasExecutionService(
                     current.append(char)
                     isEscaped = false
                 }
+
                 char == '\\' -> {
                     current.append(char)
                     isEscaped = true
@@ -473,6 +532,7 @@ class DefaultArthasExecutionService(
                         quoteChar = null // 匹配到配对的引号，退出引用状态
                     }
                 }
+
                 char == '\'' || char == '"' -> {
                     quoteChar = char
                     current.append(char)
@@ -485,6 +545,7 @@ class DefaultArthasExecutionService(
                         current.clear()
                     }
                 }
+
                 else -> current.append(char)
             }
         }
@@ -510,28 +571,22 @@ class DefaultArthasExecutionService(
 
     override fun pullResults(channelId: String, consumerId: String): Any {
         checkTreeNodePermission(channelId)
-        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
-        val client = tryResolveClient(data, channelId)
-        return client.pullResults(data.sessionId, consumerId)
+        val pair = tryResolveClient(channelId)
+        return pair.first.pullResults(pair.second.sessionId, consumerId)
     }
 
-    override fun getChannelInfo(channelId: String): ArthasChannelDTO? {
-        return resolveArthasChannel(channelId)
-    }
 
     override fun interruptCommand(channelId: String) {
         checkTreeNodePermission(channelId)
-        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
-        val client = tryResolveClient(data, channelId)
-        client.interruptJob(data.sessionId)
+        val pair = tryResolveClient(channelId)
+        pair.first.interruptJob(pair.second.sessionId)
     }
 
     override fun retransform(channelId: String, source: BoundedInputStreamSource): Any {
         checkCommandExecPermission(channelId, listOf("retransform"))
-        val data = resolveArthasChannel(channelId) ?: throw BusinessException("会话过期，请刷新页面")
-        val client = tryResolveClient(data, channelId)
+        val pair = tryResolveClient(channelId)
 
-        return client.retransform(source)
+        return pair.first.retransform(source)
     }
 
 

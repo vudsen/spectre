@@ -13,6 +13,16 @@ object SpectreEnvironment {
      */
     val GRAPHQL_AUTHORIZATION_TOKEN: String?
 
+    /**
+     * 加密器的 key
+     */
+    val ENCRYPTOR_KEY: String?
+
+    /**
+     * 加密器的 salt
+     */
+    val ENCRYPTOR_SALT: String?
+
     init {
         var home = System.getenv("SPECTRE_HOME")
         val logger = LoggerFactory.getLogger(SpectreEnvironment::class.java)
@@ -31,6 +41,8 @@ object SpectreEnvironment {
             logger.warn("SPECTRE_HOME is not specific, will use the default path: {}", home)
         }
         SPECTRE_HOME = home
+        ENCRYPTOR_KEY = System.getenv("ENCRYPTOR_KEY")
+        ENCRYPTOR_SALT = System.getenv("ENCRYPTOR_SALT")
         GRAPHQL_AUTHORIZATION_TOKEN = System.getenv("GRAPHQL_AUTHORIZATION_TOKEN")
     }
 

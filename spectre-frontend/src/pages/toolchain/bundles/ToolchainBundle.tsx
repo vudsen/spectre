@@ -35,7 +35,6 @@ const ToolchainBundleQuery = graphql(`
           createdAt
           jattachTag
           arthasTag
-          httpClientTag
         }
       }
     }
@@ -110,7 +109,6 @@ const ToolchainBundle: React.FC = () => {
           <TableColumn>名称</TableColumn>
           <TableColumn>Arthas</TableColumn>
           <TableColumn>Jattach</TableColumn>
-          <TableColumn>HttpClient</TableColumn>
           <TableColumn>创建时间</TableColumn>
           <TableColumn align="end">操作</TableColumn>
         </TableHeader>
@@ -127,9 +125,6 @@ const ToolchainBundle: React.FC = () => {
               </TableCell>
               <TableCell>
                 <Code>{bundle.jattachTag}</Code>
-              </TableCell>
-              <TableCell>
-                <Code>{bundle.httpClientTag}</Code>
               </TableCell>
               <TableCell>
                 <Time time={bundle.createdAt} />

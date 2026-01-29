@@ -46,10 +46,6 @@ interface ArthasExecutionService {
     @Throws(ConsumerNotFountException::class)
     fun pullResults(channelId: String, consumerId: String): Any
 
-    /**
-     * 获取 channel 信息
-     */
-    fun getChannelInfo(channelId: String): ArthasChannelDTO?
 
     /**
      * 中断前台任务

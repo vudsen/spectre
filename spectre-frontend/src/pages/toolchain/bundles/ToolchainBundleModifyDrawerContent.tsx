@@ -21,7 +21,6 @@ type OldEntity = {
   id: string
   jattachTag: string
   arthasTag: string
-  httpClientTag: string
 }
 
 interface ToolchainBundleModifyDrawerContentProps {
@@ -34,7 +33,6 @@ type Values = {
   name: string
   arthasTag: string
   jattachTag: string
-  httpClientTag: string
 }
 
 const QueryToolchainVersions = graphql(`
@@ -50,15 +48,6 @@ const QueryToolchainVersions = graphql(`
     }
     jattach: toolchain {
       toolchainItems(type: "JATTACH", page: 0, size: 10) {
-        result {
-          id {
-            tag
-          }
-        }
-      }
-    }
-    httpClient: toolchain {
-      toolchainItems(type: "HTTP_CLIENT", page: 0, size: 10) {
         result {
           id {
             tag
@@ -92,7 +81,6 @@ const ToolchainBundleModifyDrawerContent: React.FC<
 
   const arthasVersions = result?.arthas.toolchainItems.result ?? []
   const jattachVersions = result?.jattach.toolchainItems.result ?? []
-  const httpClientVersions = result?.httpClient.toolchainItems.result ?? []
 
   const onSubmit = async () => {
     const b = await trigger()
@@ -168,21 +156,6 @@ const ToolchainBundleModifyDrawerContent: React.FC<
           }}
         >
           {jattachVersions.map((it) => (
-            <SelectItem key={it.id.tag}>{it.id.tag}</SelectItem>
-          ))}
-        </ControlledSelect>
-        <ControlledSelect
-          control={control}
-          name="httpClientTag"
-          rules={{ required: true }}
-          selectProps={{
-            isRequired: true,
-            label: 'HttpClient',
-            placeholder: '请选择标签',
-            isLoading: isVersionsLoading,
-          }}
-        >
-          {httpClientVersions.map((it) => (
             <SelectItem key={it.id.tag}>{it.id.tag}</SelectItem>
           ))}
         </ControlledSelect>

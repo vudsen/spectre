@@ -1,10 +1,17 @@
 package io.github.vudsen.spectre.core.configuration
 
+import io.github.vudsen.spectre.api.plugin.SecretEncryptor
+import io.github.vudsen.spectre.common.EmptySecretEncryptor
+import io.github.vudsen.spectre.common.SecureRandomFactory
+import io.github.vudsen.spectre.common.SpectreEnvironment
 import io.github.vudsen.spectre.core.filter.GraphqlSchemaAuthorizationFilter
+import io.github.vudsen.spectre.core.integrate.AesGcmSecretEncryptor
 import io.github.vudsen.spectre.core.integrate.GraphQLAuthenticationProvider
 import io.github.vudsen.spectre.core.integrate.SpectreAuthenticationEntryPoint
 import io.github.vudsen.spectre.core.integrate.SpectrePermissionEvaluator
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
@@ -25,6 +32,21 @@ import org.springframework.security.web.authentication.AnonymousAuthenticationFi
 @EnableMethodSecurity
 @EnableWebSecurity
 class SecurityConfiguration {
+
+    private val logger = LoggerFactory.getLogger(SecurityConfiguration::class.java)
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun secretEncryptor(): SecretEncryptor {
+        val key = SpectreEnvironment.ENCRYPTOR_KEY
+        val salt = SpectreEnvironment.ENCRYPTOR_SALT
+        if (key != null) {
+            val defaultSalt = "dU05W2pVNj9wUjUlakY1YA=="
+            return AesGcmSecretEncryptor(key, salt ?: defaultSalt)
+        }
+        logger.warn("No secret encryptor configured, please add environment variable `ENCRYPTOR_KEY` and `ENCRYPTOR_SALT`(optional) to enable this.")
+        return EmptySecretEncryptor()
+    }
 
     @Bean
     fun passwordEncoder(): PasswordEncoder {

@@ -21,6 +21,8 @@ spring:
       config: classpath:ehcache.xml
   liquibase:
     change-log: classpath:/db/changelog-master.xml
+  application:
+    version: @version@
 server:
   error:
     path: /spectre-api/error

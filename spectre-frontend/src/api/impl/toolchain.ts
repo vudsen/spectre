@@ -21,7 +21,6 @@ type ToolchainBundlePO = {
   name: string
   jattachTag: string
   arthasTag: string
-  httpClientTag: string
 }
 
 export const updateToolchainBundle = (po: ToolchainBundlePO) => {

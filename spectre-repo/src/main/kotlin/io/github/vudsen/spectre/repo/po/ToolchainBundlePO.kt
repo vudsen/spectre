@@ -22,6 +22,8 @@ data class ToolchainBundlePO(
     var createdAt: Timestamp? = null,
     var jattachTag: String? = null,
     var arthasTag: String? = null,
+    @Deprecated("Unused field. This tag is bundled in the server")
+    @Column(updatable = false, insertable = false)
     var httpClientTag: String? = null
 ) {
 

@@ -10,6 +10,7 @@ export default tseslint.config([
   globalIgnores(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
+    ignores: ['src/graphql/generated/*.ts'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
