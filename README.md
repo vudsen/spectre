@@ -47,13 +47,12 @@ Retransform 可以直接在 web 界面上传 class 文件替换字节码，文�
 - SQLite
 - Postgresql
 
-推荐使用 docker-compose 启动(不推荐以 root 用户启动，请使用 `sudo useradd spectre` 来创建一个专用账号):
+推荐使用 docker-compose 启动:
 
 ```yaml
 name: Spectre
 services:
   web:
-    user: spectre
     environment:
       SPECTRE_HOME: '/home/spectre/data'
     ports:
