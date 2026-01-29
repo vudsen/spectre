@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
+import io.github.vudsen.spectre.core.util.MultipartFileAdapter
 import io.github.vudsen.spectre.core.vo.CreateChannelRequestVO
 import io.github.vudsen.spectre.core.vo.ExecuteCommandRequestVO
 import jakarta.servlet.http.HttpServletRequest
@@ -137,7 +138,7 @@ class ArthasExecutionController(
     @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: '@retransform'  }")
     fun retransform(@PathVariable channelId: String, file: MultipartFile, request: HttpServletRequest): Any {
         resolveChannelSession(request, channelId)
-        return arthasExecutionService.retransform(channelId, file)
+        return arthasExecutionService.retransform(channelId, MultipartFileAdapter(file))
     }
 
 }

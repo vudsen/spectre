@@ -7,8 +7,14 @@ import java.io.OutputStream
 
 class K8sWebSocketOutputStream(private val ws: WebSocket) : OutputStream() {
 
+    private var isClosing = false
+
     override fun close() {
+        if (isClosing) {
+            return
+        }
         ws.send(ByteString.of(255.toByte(), 0))
+        isClosing = true
     }
 
     override fun write(b: ByteArray) {

@@ -3,9 +3,9 @@ package io.github.vudsen.spectre.test.plugin
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
+import io.github.vudsen.spectre.common.BoundedInputStreamSourceEntity
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeConfig
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeExtension
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
@@ -100,8 +100,9 @@ class AttachTester {
     }
 
     private fun testRetransform(channelId: String, consumerId: String) {
-        val result = ResourceUtils.getFile("classpath:MathGame.class").inputStream().use { input ->
-            arthasExecutionService.retransform(channelId) { input }
+        val file = ResourceUtils.getFile("classpath:MathGame.class")
+        val result = file.inputStream().use { input ->
+            arthasExecutionService.retransform(channelId, BoundedInputStreamSourceEntity(file.length(), input))
         } as ArrayNode
         val target = result.find { item -> item.get("type").textValue() == "retransform" }!!
 

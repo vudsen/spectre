@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.entity.OS
 import io.github.vudsen.spectre.api.entity.currentOS
@@ -8,13 +9,13 @@ import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import io.github.vudsen.spectre.common.plugin.rnode.AbstractShellRuntimeNode
 import okhttp3.WebSocket
-import okio.ByteString
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.Writer
 import kotlin.io.path.Path
+import kotlin.math.min
 
 /**
  * 具体到 Pod 的运行节点
@@ -25,42 +26,113 @@ class K8sPodRuntimeNode(
     extension: RuntimeNodeExtensionPoint
 ) : AbstractShellRuntimeNode(extension) {
 
-    override fun doUpload(input: InputStream, dest: String) {
+    companion object {
+        /**
+         * 12 MB
+         */
+        private const val MAX_SINGLE_UPDATE_SIZE = 1024 * 1024 * 12L
+    }
+
+    override fun upload(source: BoundedInputStreamSource, dest: String) {
+        return doUpload(source, dest)
+    }
+
+    override fun doUpload(source: BoundedInputStreamSource, dest: String) {
+        if (source.size() > MAX_SINGLE_UPDATE_SIZE) {
+            doUploadInChunks(source, dest)
+            return
+        }
+
         val destPath = Path(dest)
         // 1. 优化父路径处理逻辑
         val parentPath = destPath.parent?.let {
             if (currentOS == OS.WINDOWS) it.toString().replace('\\', '/') else it.toString()
         } ?: "."
 
+        var written: Long = 0
+
         createInteractiveShell(listOf("sh", "-c", "tar -xmf - -C $parentPath")).use { shell ->
             TarArchiveOutputStream(shell.getOutputStream()).use { archiveOutputStream ->
-                archiveOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_ERROR)
-                archiveOutputStream.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_ERROR)
-                archiveOutputStream.setAddPaxHeadersForNonAsciiNames(true)
-
-                // 2. 使用传入的 input 流
-                input.use { inputStream ->
-                    // 注意：filename 建议使用 destPath.fileName.toString() 保持逻辑一致
+                source.inputStream.use { inputStream ->
                     val entryName = destPath.fileName.toString()
                     val entry = TarArchiveEntry(entryName)
 
-                    // 3. 关键点：设置文件大小
-                    // 如果能预先知道大小，请传入；如果不知道，InputStream 需要先转为 ByteArray 或临时文件
-                    // 这里假设你可能需要处理未知大小的流，详见下方说明
-                    val bytes = inputStream.readAllBytes()
-                    entry.size = bytes.size.toLong()
+                    val size = source.size()
+                    entry.size = size
 
-                    entry.setModTime(System.currentTimeMillis())
                     archiveOutputStream.putArchiveEntry(entry)
 
-                    // 4. 写入数据
-                    archiveOutputStream.write(bytes)
+                    val buffer = ByteArray(64 * 1024) // 64KB
+                    var read: Int
 
+                    while (inputStream.read(buffer).also { read = it } != -1) {
+                        archiveOutputStream.write(buffer, 0, read)
+                        written += read
+                    }
+                    if (written != size) {
+                        throw IllegalStateException("Tar entry size mismatch: expected=$size, written=$written")
+                    }
                     archiveOutputStream.closeArchiveEntry()
                 }
             }
             shell.client.waitClose()
+                .ok()
         }
+
+    }
+
+    /**
+     * 文件超过 16MB 就会丢数据. 需要对文件进行分片
+     */
+    private fun doUploadInChunks(source: BoundedInputStreamSource, dest: String) {
+        val destPath = Path(dest)
+        // 1. 优化父路径处理逻辑
+        val parentPath = destPath.parent?.let {
+            if (currentOS == OS.WINDOWS) it.toString().replace('\\', '/') else it.toString()
+        } ?: "."
+
+        var remaining: Long = source.size()
+        var chunkCount = 0
+
+        source.inputStream.use { inputStream ->
+            while (remaining > 0) {
+                createInteractiveShell(listOf("sh", "-c", "tar -xmf - -C $parentPath")).use { shell ->
+                    TarArchiveOutputStream(shell.getOutputStream()).use { archiveOutputStream ->
+                            val entryName = destPath.fileName.toString()
+                            val entry = TarArchiveEntry("${entryName}_${chunkCount}.chunk")
+
+                            val currentSize = min(remaining, MAX_SINGLE_UPDATE_SIZE)
+                            val size = currentSize
+                            entry.size = size
+
+                            archiveOutputStream.putArchiveEntry(entry)
+
+                            val buffer = ByteArray(64 * 1024) // 64KB
+                            var currentRemaining = currentSize.toInt()
+
+                            while (true) {
+                                val len = inputStream.read(buffer, 0, min(buffer.size, currentRemaining))
+                                archiveOutputStream.write(buffer, 0, len)
+                                currentRemaining -= len
+                                remaining -= len
+                                if (currentRemaining <= 0) {
+                                    break
+                                }
+                            }
+                            archiveOutputStream.closeArchiveEntry()
+                        }
+                    shell.client.waitClose()
+                        .ok()
+                }
+                chunkCount++
+            }
+        }
+        execute(listOf("sh", "-c", "cat $parentPath/*.chunk > ${dest}")).ok()
+        execute(listOf("rm", "-f", "*.chunk")).ok()
+    }
+
+    override fun execute(vararg commands: String): CommandExecuteResult {
+        return execute(listOf(*commands))
     }
 
     fun execute(commands: List<String>): CommandExecuteResult {
@@ -104,9 +176,7 @@ class K8sPodRuntimeNode(
 
         override fun flush() {}
 
-        override fun close() {
-            ws.send(ByteString.of(255.toByte(), 0))
-        }
+        override fun close() {}
 
     }
 
@@ -136,6 +206,7 @@ class K8sPodRuntimeNode(
         }
 
         override fun close() {
+            outputStream.flush()
             outputStream.close()
             writer.close()
         }

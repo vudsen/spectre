@@ -152,8 +152,8 @@ class K8sExecClient(
         })
     }
 
-    fun waitClose() {
-        future.get()
+    fun waitClose(): CommandExecuteResult {
+        return future.get()
     }
 
     /**

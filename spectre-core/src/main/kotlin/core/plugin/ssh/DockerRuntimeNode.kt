@@ -1,11 +1,11 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.common.plugin.rnode.AbstractShellRuntimeNode
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.exception.BusinessException
-import java.io.InputStream
 
 class DockerRuntimeNode(
     private val delegate: SshRuntimeNode,
@@ -50,9 +50,9 @@ class DockerRuntimeNode(
         return delegate.getConfiguration()
     }
 
-    override fun doUpload(input: InputStream, dest: String) {
+    override fun doUpload(source: BoundedInputStreamSource, dest: String) {
         createInteractiveShell("cat > $dest").use { shell ->
-            input.use { inputStream ->
+            source.inputStream.use { inputStream ->
                 shell.getOutputStream().use { outputStream ->
                     inputStream.transferTo(outputStream)
                 }

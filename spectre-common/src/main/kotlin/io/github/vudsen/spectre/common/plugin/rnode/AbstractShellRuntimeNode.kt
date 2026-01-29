@@ -1,9 +1,10 @@
 package io.github.vudsen.spectre.common.plugin.rnode
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
+import io.github.vudsen.spectre.common.BoundedInputStreamSourceEntity
 import java.io.File
-import java.io.InputStream
 import kotlin.text.iterator
 
 abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
@@ -32,19 +33,19 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
             return
         }
         file.inputStream().use { inputStream ->
-            upload(inputStream, dest)
+            upload(BoundedInputStreamSourceEntity(file.length(), inputStream), dest)
         }
     }
 
-    override fun upload(input: InputStream, dest: String) {
-        if (input.available() == 0) {
+    override fun upload(source: BoundedInputStreamSource, dest: String) {
+        if (source.size() == 0L) {
             return
         }
         if (isFileExist(dest)) {
             return
         }
         val tmp = "$dest.tmp"
-        doUpload(input, tmp)
+        doUpload(source, tmp)
         execute("mv $tmp $dest").ok()
     }
 
@@ -52,7 +53,7 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
     /**
      * 上传文件. 子类不需要任何检查
      */
-    protected abstract fun doUpload(input: InputStream, dest: String)
+    protected abstract fun doUpload(source: BoundedInputStreamSource, dest: String)
 
     override fun unzipTarGzPkg(target: String, dest: String) {
         TODO("Not yet implemented")
