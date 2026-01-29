@@ -31,7 +31,6 @@ sudo cat << EOF > /opt/spectre/docker-compose.yaml
 name: Spectre
 services:
   web:
-    user: spectre
     environment:
       SPECTRE_HOME: '/home/spectre/data'
     ports:

@@ -1,7 +1,6 @@
 name: Spectre
 services:
   web:
-    user: spectre
     environment:
       SPECTRE_HOME: '/home/spectre/data'
     ports:
