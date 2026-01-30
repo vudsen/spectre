@@ -1,5 +1,4 @@
 import type { ViewComponent } from '@/ext/type.ts'
-import { useMemo } from 'react'
 import type { RuntimeNodeDTO } from '@/api/impl/runtime-node.ts'
 import { Card, CardBody } from '@heroui/react'
 import { formatTime } from '@/common/util.ts'
@@ -14,10 +13,7 @@ type K8sRuntimeNodeConfig = {
 
 const K8sView: ViewComponent = (props) => {
   const data = props.data as RuntimeNodeDTO
-  const configuration = useMemo(
-    () => JSON.parse(data.configuration) as K8sRuntimeNodeConfig,
-    [data.configuration],
-  )
+  const configuration = data.configuration as K8sRuntimeNodeConfig
   return (
     <div className="space-y-6 px-6 pb-24">
       <div className="header-1">{data.name}</div>

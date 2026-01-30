@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider
 import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
 import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
+import io.github.vudsen.spectre.core.plugin.test.TestRuntimeNodeConfig
 import org.springframework.stereotype.Component
 import java.sql.Timestamp
 
@@ -30,7 +31,7 @@ class RuntimeNodePolicyAuthProvider : PolicyAuthenticationProvider {
             add(PolicyPermissionContextExample(
                 "展开树节点时",
                 toContextMap(RuntimeNodePolicyPermissionContext(
-                    RuntimeNodeDTO(-1, "Test", "Test", "{}", Timestamp(System.currentTimeMillis()), mapOf(Pair("foo", "bar")), false),
+                    RuntimeNodeDTO(-1, "Test", "Test", TestRuntimeNodeConfig(), Timestamp(System.currentTimeMillis()), mapOf(Pair("foo", "bar")), false),
                     PolicyPermissions.RUNTIME_NODE_TREE_EXPAND
                 ))
             ))

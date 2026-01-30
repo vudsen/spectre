@@ -1,5 +1,5 @@
 import { type FormComponentProps } from '@/ext/type.ts'
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import SteppedPanel from '@/components/SteppedPanel/SteppedPanel.tsx'
 import SteppedPanelItem from '@/components/SteppedPanel/SteppedPanelItem.tsx'
@@ -331,10 +331,9 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
   const [page, setPage] = useState(0)
 
   const oldState = props.oldState as RuntimeNodeDTO | undefined
-  const configuration: SshRuntimeNodeConfig | undefined = useMemo(
-    () => (oldState ? JSON.parse(oldState.configuration) : undefined),
-    [oldState],
-  )
+  const configuration = oldState?.configuration as
+    | SshRuntimeNodeConfig
+    | undefined
   const formControl = useForm<Values>({
     defaultValues: oldState
       ? {

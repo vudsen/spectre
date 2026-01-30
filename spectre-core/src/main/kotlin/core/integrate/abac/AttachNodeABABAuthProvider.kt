@@ -8,6 +8,7 @@ import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
 import io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
+import io.github.vudsen.spectre.core.plugin.test.TestRuntimeNodeConfig
 import org.springframework.stereotype.Component
 import java.sql.Timestamp
 
@@ -33,7 +34,7 @@ class AttachNodeABABAuthProvider : PolicyAuthenticationProvider {
                 "连接节点时",
                 toContextMap(AttachNodePolicyPermissionContext(
                     PolicyPermissions.RUNTIME_NODE_ATTACH,
-                    RuntimeNodeDTO(-1, "Test", "Test", "{}", Timestamp(System.currentTimeMillis()), mapOf(Pair("foo", "bar")), false),
+                    RuntimeNodeDTO(-1, "Test", "Test", TestRuntimeNodeConfig(), Timestamp(System.currentTimeMillis()), mapOf(Pair("foo", "bar")), false),
                     JvmSearchNode("Hello", false, null)
                 ))
             ))

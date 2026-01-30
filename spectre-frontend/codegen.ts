@@ -26,7 +26,7 @@ const config: CodegenConfig = {
       config: {
         documentMode: 'string',
         scalars: {
-          JSON: 'string',
+          JSON: 'unknown',
           Attributes: 'Record<string, string>',
           Long: 'string',
         },

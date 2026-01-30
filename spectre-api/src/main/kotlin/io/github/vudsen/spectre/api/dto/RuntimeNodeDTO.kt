@@ -1,5 +1,7 @@
 package io.github.vudsen.spectre.api.dto
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import java.sql.Timestamp
 
@@ -10,7 +12,7 @@ class RuntimeNodeDTO(
 
     var pluginId: String,
 
-    var configuration: String,
+    var configuration: RuntimeNodeConfig,
 
     var createdAt: Timestamp,
 
@@ -19,19 +21,5 @@ class RuntimeNodeDTO(
     var restrictedMode: Boolean
 ) {
 
-    companion object {
 
-        fun RuntimeNodePO.toDTO(): RuntimeNodeDTO {
-            return RuntimeNodeDTO(
-                id!!,
-                name!!,
-                pluginId!!,
-                configuration!!,
-                createdAt!!,
-                labels ?: emptyMap(),
-                restrictedMode!!
-            )
-        }
-
-    }
 }

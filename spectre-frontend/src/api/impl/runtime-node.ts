@@ -5,7 +5,7 @@ export type RuntimeNodeDTO = {
   id: string
   name: string
   pluginId: string
-  configuration: string
+  configuration: unknown
   labels: Record<string, string>
   createdAt: number
   restrictedMode: boolean

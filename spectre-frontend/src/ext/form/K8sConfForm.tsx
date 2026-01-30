@@ -32,10 +32,7 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
   const { control, getValues, trigger } = useForm<Values>({
     defaultValues: async () => {
       const oldState = props.oldState as RuntimeNodeDTO
-      const conf = JSON.parse(oldState.configuration) as Omit<
-        K8sRuntimeNodeConfig,
-        'name'
-      >
+      const conf = oldState.configuration as Omit<K8sRuntimeNodeConfig, 'name'>
       return {
         name: oldState.name,
         labels: oldState.labels,

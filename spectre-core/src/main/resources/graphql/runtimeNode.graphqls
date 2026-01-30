@@ -5,10 +5,6 @@ type RuntimeNodeQueries {
     plugins: [RuntimeNodePluginVO!]!
 }
 
-input RuntimeNodeModifyRequestVO {
-    pluginId: String
-    configuration: String
-}
 
 type RuntimeNodePluginVO {
     id: String!
@@ -26,7 +22,7 @@ type RuntimeNodeDTO {
     id: Long!
     name: String!
     pluginId: String!
-    configuration: String
+    configuration: JSON
     createdAt: Timestamp!
     labels: Labels!
     restrictedMode: Boolean!
