@@ -7,7 +7,6 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
 import io.github.vudsen.spectre.repo.RuntimeNodeRepository
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
-import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
@@ -34,7 +33,7 @@ class DefaultRuntimeNodeService(
 
     private val objectMapper = ObjectMapper()
 
-    private val cache = cacheManager.getCache(CacheConstant.QUICK_EXPIRE_CACHE_KEY)!!
+    private val cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
 
     override fun insert(runtimeNodePO: RuntimeNodePO): Long {
         val saved = repository.save(runtimeNodePO)
@@ -51,8 +50,7 @@ class DefaultRuntimeNodeService(
 
     override fun listRuntimeNodes(page: Int, size: Int): Page<RuntimeNodeDTO> {
         return repository.findAll(PageRequest.of(page, size)).map { po ->
-            val dto = po.toDTO()
-            filterSensitiveConfiguration(dto)
+            val dto = po.toDTO(true)
             dto
         }
     }
@@ -95,12 +93,11 @@ class DefaultRuntimeNodeService(
         if (runtimeNodeId == null) {
             plugin.test(conf)
         } else {
-            val node =
-                repository.findById(runtimeNodeId.toLong()).getOrNull() ?: throw BusinessException("运行节点不存在")
+            val runtimeNodeDTO = findPureRuntimeNodeById(runtimeNodeId.toLong()) ?: throw BusinessException("运行节点不存在")
             plugin.test(
                 plugin.fillSensitiveConfiguration(
                     conf,
-                    objectMapper.readValue(node.configuration, plugin.getConfigurationClass())
+                    runtimeNodeDTO.configuration
                 )
             )
         }
@@ -116,7 +113,7 @@ class DefaultRuntimeNodeService(
      * 每个节点都会生成一个唯一 id，同时该节点将会在一定时间内被缓存，如果长时间没有使用，将会被删除，此时需要重新从根节点展开。
      */
     override fun expandRuntimeNodeTree(runtimeNodeId: Long, parentNodeId: String?): List<JvmTreeNodeDTO> {
-        val runtimeNode = repository.findById(runtimeNodeId).get().toDTO()
+        val runtimeNode = findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("节点不存在")
         val ext =
             findPluginById(runtimeNode.pluginId)
         val searcher = ext.createSearcher()
@@ -128,7 +125,7 @@ class DefaultRuntimeNodeService(
         }
 
         val nodes = searcher.expandTree(
-            ext.connect(objectMapper.readValue(runtimeNode.configuration, ext.getConfigurationClass())),
+            ext.connect(runtimeNode.configuration),
             parentNode
         )
         return buildList {
@@ -141,17 +138,9 @@ class DefaultRuntimeNodeService(
         }
     }
 
-    private fun filterSensitiveConfiguration(dto: RuntimeNodeDTO) {
-        val extPoint = findPluginById(dto.pluginId)
-        val nodeConfig = objectMapper.readValue(dto.configuration, extPoint.getConfigurationClass())
-        extPoint.filterSensitiveConfiguration(nodeConfig)
-
-        dto.configuration = objectMapper.writeValueAsString(nodeConfig)
-    }
 
     override fun getRuntimeNode(runtimeNodeId: Long): RuntimeNodeDTO? {
-        val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: return null
-        filterSensitiveConfiguration(dto)
+        val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: return null
         return dto
     }
 
@@ -167,21 +156,35 @@ class DefaultRuntimeNodeService(
         return findPluginById(pluginId).createSearcher().deserializeJvm(node)
     }
 
+    fun RuntimeNodePO.toDTO(filterSensitiveProps: Boolean = false): RuntimeNodeDTO {
+        val myPluginId = pluginId!!
+        val extensionPoint = findPluginById(myPluginId)
+        val nodeConfig = objectMapper.readValue(configuration!!, extensionPoint.getConfigurationClass())
+        if (filterSensitiveProps) {
+            extensionPoint.filterSensitiveConfiguration(nodeConfig)
+        }
+        return RuntimeNodeDTO(
+            id!!,
+            name!!,
+            myPluginId,
+            nodeConfig,
+            createdAt!!,
+            labels ?: emptyMap(),
+            restrictedMode!!
+        )
+    }
+
     override fun connect(runtimeNodeId: Long): RuntimeNode {
         val runtimeNodeDTO = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
-
         val extPoint = findPluginById(runtimeNodeDTO.pluginId)
-
-        return extPoint.connect(objectMapper.readValue(runtimeNodeDTO.configuration, extPoint.getConfigurationClass()))
+        return extPoint.connect(runtimeNodeDTO.configuration)
     }
 
 
-
     override fun resolveViewPage(runtimeNodeId: Long): PageDescriptor {
-        val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
+        val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: throw BusinessException("节点不存在")
         val ext = extManager.findById(dto.pluginId)
-        filterSensitiveConfiguration(dto)
-        return ext.getViewPage(dto, objectMapper.readValue(dto.configuration, ext.getConfigurationClass()))
+        return ext.getViewPage(dto, dto.configuration)
     }
 
 

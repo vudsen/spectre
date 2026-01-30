@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre.api.plugin.rnode
 
 /**
- * 宿主机
+ * 运行节点配置
  */
 interface RuntimeNodeConfig {
 

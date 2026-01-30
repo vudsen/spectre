@@ -47,6 +47,17 @@ Retransform 可以直接在 web 界面上传 class 文件替换字节码，文�
 - SQLite
 - Postgresql
 
+初始的用户名密码为：`admin`/`P@ssw0rd`
+
+### 使用 docker 直接启动
+
+```shell
+# prod 环境下不会往 stdout 输出日志
+docker run -t vudsen/spectre:latest java -Dspring.profiles.active=dev -jar spectre.jar
+```
+
+### docker-compose
+
 推荐使用 docker-compose 启动:
 
 ```yaml
@@ -70,6 +81,11 @@ services:
       - spectre.jar
 ```
 
+**对于被挂载的文件/文件夹，需要手动进行授权**：
+```shell
+chown -R 10001:10001 application.yaml ./data ./logs
+```
+
 配置文件:
 
 ```yaml
@@ -78,7 +94,7 @@ spring:
   profiles:
     active: prod
   datasource:
-    # 使用 sqlite，也可以使用 Postgresql，已经内置了对应驱动
+    # 也可以使用 Postgresql，已经内置了对应驱动
     url: jdbc:sqlite:data/identifier.sqlite
   jpa:
     properties:
@@ -86,7 +102,6 @@ spring:
         dialect: org.hibernate.community.dialect.SQLiteDialect
 ```
 
-初始的用户名密码为：`admin`/`P@ssw0rd`
 
 ## 使用指南
 

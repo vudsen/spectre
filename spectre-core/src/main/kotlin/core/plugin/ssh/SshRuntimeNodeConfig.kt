@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
 
 data class SshRuntimeNodeConfig(

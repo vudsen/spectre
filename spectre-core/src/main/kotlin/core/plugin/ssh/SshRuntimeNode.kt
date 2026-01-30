@@ -133,6 +133,9 @@ open class SshRuntimeNode : CloseableRuntimeNode, AbstractShellRuntimeNode() {
                     )
                 )
             } else if (it.loginType == SshRuntimeNodeConfig.LoginType.PASSWORD) {
+                if (it.password.isNullOrEmpty()) {
+                    throw BusinessException("Password is empty.")
+                }
                 session.addPasswordIdentity(it.password)
             }
         }

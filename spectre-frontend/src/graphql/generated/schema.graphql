@@ -124,18 +124,13 @@ type RoleQueries {
 }
 
 type RuntimeNodeDTO {
-  configuration: String
+  configuration: JSON
   createdAt: Timestamp!
   id: Long!
   labels: Labels!
   name: String!
   pluginId: String!
   restrictedMode: Boolean!
-}
-
-input RuntimeNodeModifyRequestVO {
-  configuration: String
-  pluginId: String
 }
 
 type RuntimeNodePage {

@@ -101,10 +101,7 @@ const AdvanceInfo: React.FC<{ conf: SshRuntimeNodeConfig }> = ({ conf }) => {
 
 const SshView: ViewComponent = (props) => {
   const data = props.data as MyData
-  const configuration = useMemo(
-    () => JSON.parse(data.configuration) as SshRuntimeNodeConfig,
-    [data.configuration],
-  )
+  const configuration = data.configuration as SshRuntimeNodeConfig
 
   const connectInfo: Detail[] = useMemo(() => {
     const p = configuration.principal

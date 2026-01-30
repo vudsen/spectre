@@ -39,16 +39,14 @@ class GraphQLConfiguration {
         return GraphQLScalarType.newScalar()
             .name("JSON")
             .description("Dynamic JSON Type")
-            .coercing(object : Coercing<Any, String> {
-
-                val objectMapper = ObjectMapper()
+            .coercing(object : Coercing<Any, Any> {
 
                 override fun serialize(
                     dataFetcherResult: Any,
                     graphQLContext: GraphQLContext,
                     locale: Locale
-                ): String? {
-                    return objectMapper.writeValueAsString(dataFetcherResult)
+                ): Any? {
+                    return dataFetcherResult
                 }
 
                 override fun parseValue(input: Any): Any? {

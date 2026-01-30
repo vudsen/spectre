@@ -15,7 +15,7 @@ export type Scalars = {
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
   /** Dynamic JSON Type */
-  JSON: { input: string; output: string; }
+  JSON: { input: unknown; output: unknown; }
   /** Labels */
   Labels: { input: any; output: any; }
   /** Long */
@@ -192,18 +192,13 @@ export type RoleQueriesUserRolesArgs = {
 
 export type RuntimeNodeDto = {
   __typename?: 'RuntimeNodeDTO';
-  configuration?: Maybe<Scalars['String']['output']>;
+  configuration?: Maybe<Scalars['JSON']['output']>;
   createdAt: Scalars['Timestamp']['output'];
   id: Scalars['Long']['output'];
   labels: Scalars['Labels']['output'];
   name: Scalars['String']['output'];
   pluginId: Scalars['String']['output'];
   restrictedMode: Scalars['Boolean']['output'];
-};
-
-export type RuntimeNodeModifyRequestVo = {
-  configuration?: InputMaybe<Scalars['String']['input']>;
-  pluginId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RuntimeNodePage = {
@@ -614,7 +609,7 @@ export type RuntimeNodeCreatePluginQueryQueryVariables = Exact<{
 }>;
 
 
-export type RuntimeNodeCreatePluginQueryQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', plugin?: { __typename?: 'RuntimeNodePluginVO', id: string, page: { __typename?: 'PageDescriptor', pageName: string } } | null, runtimeNode?: { __typename?: 'RuntimeNodeDTO', id: string, configuration?: string | null, name: string } | null } };
+export type RuntimeNodeCreatePluginQueryQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', plugin?: { __typename?: 'RuntimeNodePluginVO', id: string, page: { __typename?: 'PageDescriptor', pageName: string } } | null, runtimeNode?: { __typename?: 'RuntimeNodeDTO', id: string, configuration?: unknown | null, name: string } | null } };
 
 export type RuntimeNodePluginQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
