@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
+import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.InputStreamSource
@@ -51,6 +52,8 @@ open class ShellBasedArthasHttpClient(
             val msg = msgNode.asText()
             if (msg.startsWith("consumer not found")) {
                 throw ConsumerNotFountException(msg)
+            } else if (msg.startsWith("session not found")) {
+                throw SessionNotFoundException()
             }
             throw BusinessException(msg)
         }
