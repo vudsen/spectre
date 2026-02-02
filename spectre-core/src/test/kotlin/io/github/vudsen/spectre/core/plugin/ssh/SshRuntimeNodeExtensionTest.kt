@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.common.plugin.rnode.ShellBasedArthasHttpClient
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.Disposer
+import io.github.vudsen.spectre.test.GlobalDisposer
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.plugin.AttachTester
 import org.junit.jupiter.api.Assertions
@@ -28,8 +29,6 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     @set:Autowired
     lateinit var arthasInstanceService: ArthasInstanceService
 
-    @RegisterExtension
-    val disposer = Disposer()
 
     companion object {
         const val MATH_GAME = "math-game"
@@ -63,7 +62,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
         if (result.exitCode != 0) {
             Assertions.fail<Unit>("Failed to start docker run command: $result")
         }
-        disposer.registerDispose {
+        GlobalDisposer.registerDispose {
             container.execInContainer("/usr/bin/docker", "stop", MATH_GAME)
             container.close()
         }
@@ -150,7 +149,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
             withExposedPorts(22)
         }
         container.start();
-        disposer.registerDispose {
+        GlobalDisposer.registerDispose {
             container.close()
         }
 

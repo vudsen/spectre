@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
+import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.common.BoundedInputStreamSourceEntity
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeConfig
@@ -32,11 +33,11 @@ class AttachTester {
     @set:Autowired
     lateinit var runtimeNodeService: RuntimeNodeService
 
-
     @set:Autowired
     lateinit var arthasExecutionService: ArthasExecutionService
 
-
+    @set:Autowired
+    lateinit var arthasInstanceService: ArthasInstanceService
 
     fun testAttach(runtimeNodeId: Long, jvmNode: JvmTreeNodeDTO) {
         val channelId = attachSync(runtimeNodeId, jvmNode)
@@ -45,6 +46,16 @@ class AttachTester {
 
         checkScResult(pullResultSync(channelId, sessionDTO.consumerId))
         testRetransform(channelId, sessionDTO.consumerId)
+        testRestart(channelId, runtimeNodeId, jvmNode)
+    }
+
+    /**
+     * 测试服务重启，缓存清空
+     */
+    private fun testRestart(prevChannelId: String, runtimeNodeId: Long, jvmNode: JvmTreeNodeDTO) {
+        arthasInstanceService.clearCachedClient()
+        val channelId = attachSync(runtimeNodeId, jvmNode)
+        assertEquals(prevChannelId, channelId)
     }
 
     fun pullResultSync(channelId: String, consumerId: String): ArrayNode {

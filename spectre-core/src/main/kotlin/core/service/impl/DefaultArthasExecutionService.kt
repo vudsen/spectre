@@ -334,8 +334,8 @@ class DefaultArthasExecutionService(
             ProgressReportHolder.startProgress(holder.progressManager)
             logger.info("Start creating new http client for jvm(id = {}), name = {}", jvm.id, jvm.name)
             try {
-                val channelData = arthasInstanceService.findInstanceByChannelId(holder.channelId)
-                if (channelData != null) {
+                val channelData = arthasInstanceService.resolveCachedClient(treeNodeId)
+                if (channelData != null && channelData.first != null) {
                     return@execute
                 }
 
@@ -375,6 +375,8 @@ class DefaultArthasExecutionService(
                     )
                 } else if (client.getPort() != arthasInstance.boundPort) {
                     arthasInstanceService.updateBoundPortAndClient(arthasInstance, client.getPort(), client)
+                } else {
+                    arthasInstanceService.saveClient(arthasInstance, client)
                 }
             } catch (e: Exception) {
                 val ex = if (e is InvocationTargetException) {

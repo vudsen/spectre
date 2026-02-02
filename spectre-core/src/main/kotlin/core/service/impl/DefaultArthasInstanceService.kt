@@ -6,20 +6,17 @@ import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.repo.ArthasInstanceRepository
-import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
-import org.springframework.data.domain.PageRequest
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.jvm.optionals.getOrNull
-import kotlin.math.ceil
 
 @Service
-class DefaultArthasInstanceService(
+open class DefaultArthasInstanceService(
     private val arthasInstanceRepository: ArthasInstanceRepository
 ) : ArthasInstanceService {
 
@@ -113,6 +110,13 @@ class DefaultArthasInstanceService(
         arthasInstanceRepository.save(po)
     }
 
+    override fun saveClient(
+        instance: ArthasInstanceDTO,
+        client: ArthasHttpClient
+    ) {
+        clientMap[buildId(instance.runtimeNodeId, instance.jvm)] = ClientHolder(client, System.currentTimeMillis())
+    }
+
 
     override fun findInstanceById(id: String): ArthasInstanceDTO? {
         arthasInstanceRepository.findById(id).getOrNull()?.toDTO() ?.let {
@@ -142,6 +146,10 @@ class DefaultArthasInstanceService(
             clientMap[buildId(arthasInstanceDTO.runtimeNodeId, arthasInstanceDTO.jvm)]?.wrapper,
             arthasInstanceDTO
         )
+    }
+
+    override fun clearCachedClient() {
+        clientMap.clear()
     }
 
 
