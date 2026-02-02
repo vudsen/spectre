@@ -2,8 +2,10 @@ package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.dto.*
+import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
+import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
@@ -19,6 +21,7 @@ import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
 import io.github.vudsen.spectre.core.integrate.abac.AttachNodePolicyPermissionContext
 import io.github.vudsen.spectre.core.lock.InMemoryDistributedLock
+import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.CacheManager
@@ -104,7 +107,7 @@ class DefaultArthasExecutionService(
 
     private val joinLock = InMemoryDistributedLock()
 
-    private val cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
+    private val cache = cacheManager.getCache(CacheConstant.QUICK_EXPIRE_CACHE_KEY)!!
 
     private val clientInitMap = HashMap<String, ArthasClientInitStatus>()
 
@@ -270,25 +273,34 @@ class DefaultArthasExecutionService(
                 return it as ArthasConsumerDTO
             }
 
-            var client =
-                arthasInstanceService.resolveCachedClientByChannelId(channelId)?.first
+            val pair = arthasInstanceService.resolveCachedClientByChannelId(arthasInstanceDTO.channelId)
+            var client = pair?.first
             if (client == null) {
-                modifyLock.lock()
-                try {
-                    val newClient = createClient(arthasInstanceDTO)
-                    clientInitMap.remove(resolveJvmId(arthasInstanceDTO.runtimeNodeId, arthasInstanceDTO.jvm))
-                    client = newClient
-                } finally {
-                    modifyLock.unlock()
-                }
+                val newClient = createClient(arthasInstanceDTO)
+                clientInitMap.remove(resolveJvmId(arthasInstanceDTO.runtimeNodeId, arthasInstanceDTO.jvm))
+                client = newClient
             }
-            val session = ArthasConsumerDTO(
-                client.joinSession(arthasInstanceDTO.sessionId).consumerId,
-                arthasInstanceDTO.jvm.name
-            )
+            var consumer: ArthasConsumerDTO
+            try {
+                consumer = ArthasConsumerDTO(
+                    client.joinSession(arthasInstanceDTO.sessionId).consumerId,
+                    arthasInstanceDTO.jvm.name
+                )
+            } catch (_: SessionNotFoundException) {
+                // arthas 自己关了会话
+                val initSession = client.initSession()
+                arthasInstanceService.updateArthasInstance(ArthasInstancePO().apply {
+                    id = arthasInstanceDTO.id
+                    sessionId = initSession.sessionId
+                })
+                consumer = ArthasConsumerDTO(
+                    initSession.consumerId,
+                    arthasInstanceDTO.jvm.name
+                )
+            }
             // 用于解决创建期间的并发，该方法返回后，相关数据会保存到用户自己的 session 中，这里的数据就没必要了
-            cache.put(consumerCacheKey, session)
-            return session
+            cache.put(consumerCacheKey, consumer)
+            return consumer
         } finally {
             joinLock.unlock(distributedLockKey)
         }
@@ -304,7 +316,10 @@ class DefaultArthasExecutionService(
         val handler = extPoint.createAttachHandler(runtimeNode, arthasInstanceDTO.jvm, bundle)
         val httpClient = handler.attach(arthasInstanceDTO.boundPort, arthasInstanceDTO.endpointPassword)
         if (httpClient.getPort() != arthasInstanceDTO.boundPort) {
-            arthasInstanceService.updateBoundPortAndClient(arthasInstanceDTO, httpClient.getPort(), httpClient)
+            arthasInstanceService.updateArthasInstance(ArthasInstancePO().apply {
+                id = arthasInstanceDTO.id
+                boundPort = httpClient.getPort()
+            })
         }
         return httpClient
     }
@@ -334,8 +349,8 @@ class DefaultArthasExecutionService(
             ProgressReportHolder.startProgress(holder.progressManager)
             logger.info("Start creating new http client for jvm(id = {}), name = {}", jvm.id, jvm.name)
             try {
-                val channelData = arthasInstanceService.findInstanceByChannelId(holder.channelId)
-                if (channelData != null) {
+                val channelData = arthasInstanceService.resolveCachedClient(treeNodeId)
+                if (channelData != null && channelData.first != null) {
                     return@execute
                 }
 
@@ -374,7 +389,13 @@ class DefaultArthasExecutionService(
                         ), client
                     )
                 } else if (client.getPort() != arthasInstance.boundPort) {
-                    arthasInstanceService.updateBoundPortAndClient(arthasInstance, client.getPort(), client)
+                    arthasInstanceService.updateArthasInstance(ArthasInstancePO().apply {
+                        id = arthasInstance.id
+                        boundPort = client.getPort()
+                    })
+                    arthasInstanceService.saveClient(arthasInstance, client)
+                } else {
+                    arthasInstanceService.saveClient(arthasInstance, client)
                 }
             } catch (e: Exception) {
                 val ex = if (e is InvocationTargetException) {

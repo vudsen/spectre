@@ -2,7 +2,7 @@ package io.github.vudsen.spectre.api.service
 
 import io.github.vudsen.spectre.api.dto.ArthasInstanceDTO
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
+import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 
 /**
  * 缓存 arthas 客户端，避免重复创建
@@ -14,7 +14,15 @@ interface ArthasInstanceService {
      */
     fun save(instance: ArthasInstanceDTO, client: ArthasHttpClient)
 
-    fun updateBoundPortAndClient(base: ArthasInstanceDTO, newPort: Int, client: ArthasHttpClient)
+    /**
+     * 更新端口和客户端
+     */
+    fun updateArthasInstance(update: ArthasInstancePO)
+
+    /**
+     * 保存客户端
+     */
+    fun saveClient(tree: ArthasInstanceDTO, client: ArthasHttpClient)
 
     /**
      * 查询或者创建 ArthasInstance
@@ -32,6 +40,9 @@ interface ArthasInstanceService {
      */
     fun resolveCachedClient(treeNodeId: String): Pair<ArthasHttpClient?, ArthasInstanceDTO>?
 
-
+    /**
+     * 测试使用，清除所有客户端缓存
+     */
+    fun clearCachedClient()
 
 }

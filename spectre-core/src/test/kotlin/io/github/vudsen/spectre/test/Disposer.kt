@@ -18,10 +18,6 @@ class Disposer : Closeable, Extension {
         resources.add(runnable)
     }
 
-    fun after() {
-        close()
-    }
-
     override fun close() {
         for (runnable in resources) {
             try {

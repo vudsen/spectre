@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.api.plugin.rnode
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
+import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import org.springframework.boot.web.server.PortInUseException
 import org.springframework.core.io.InputStreamSource
 
@@ -42,6 +43,7 @@ interface ArthasHttpClient {
     /**
      * 加入会话
      */
+    @Throws(SessionNotFoundException::class)
     fun joinSession(sessionId: String): ArthasSession
 
     /**

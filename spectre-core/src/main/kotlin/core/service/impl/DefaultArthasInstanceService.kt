@@ -2,6 +2,8 @@ package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.dto.ArthasInstanceDTO
 import io.github.vudsen.spectre.api.dto.ArthasInstanceDTO.Companion.toDTO
+import io.github.vudsen.spectre.api.exception.AppException
+import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
@@ -9,17 +11,15 @@ import io.github.vudsen.spectre.repo.ArthasInstanceRepository
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
-import org.springframework.data.domain.PageRequest
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.jvm.optionals.getOrNull
-import kotlin.math.ceil
 
 @Service
-class DefaultArthasInstanceService(
+open class DefaultArthasInstanceService(
     private val arthasInstanceRepository: ArthasInstanceRepository
 ) : ArthasInstanceService {
 
@@ -88,10 +88,7 @@ class DefaultArthasInstanceService(
 
 
     @Transactional(rollbackOn = [Exception::class])
-    override fun save(
-        instance: ArthasInstanceDTO,
-        client: ArthasHttpClient
-    ) {
+    override fun save(instance: ArthasInstanceDTO, client: ArthasHttpClient) {
         val id = buildId(instance.runtimeNodeId, instance.jvm)
         clientMap[id] = ClientHolder(client, System.currentTimeMillis())
 
@@ -99,18 +96,45 @@ class DefaultArthasInstanceService(
     }
 
     @Transactional(rollbackOn = [Exception::class])
-    override fun updateBoundPortAndClient(
-        base: ArthasInstanceDTO,
-        newPort: Int,
+    override fun updateArthasInstance(update: ArthasInstancePO) {
+        val id = update.id ?: throw AppException("Id is null")
+        val arthasInstance = arthasInstanceRepository.findById(id).getOrNull() ?: throw BusinessException("Arthas instance is not found")
+
+        var updated = false
+        update.boundPort?.let {
+            arthasInstance.boundPort = it
+            updated = true
+        }
+        update.sessionId?.let {
+            arthasInstance.sessionId = it
+            updated = true
+        }
+        if (updated) {
+            arthasInstanceRepository.save(arthasInstance)
+        }
+    }
+
+//    @Transactional(rollbackOn = [Exception::class])
+//    override fun updateArthasInstance(
+//        base: ArthasInstanceDTO,
+//        newPort: Int,
+//        client: ArthasHttpClient
+//    ) {
+//        val id = buildId(base.runtimeNodeId, base.jvm)
+//        clientMap[id] = ClientHolder(client, System.currentTimeMillis())
+//
+//        val po = base.toPO()
+//        po.boundPort = newPort
+//
+//        arthasInstanceRepository.save(po)
+//    }
+
+
+    override fun saveClient(
+        instance: ArthasInstanceDTO,
         client: ArthasHttpClient
     ) {
-        val id = buildId(base.runtimeNodeId, base.jvm)
-        clientMap[id] = ClientHolder(client, System.currentTimeMillis())
-
-        val po = base.toPO()
-        po.boundPort = newPort
-
-        arthasInstanceRepository.save(po)
+        clientMap[buildId(instance.runtimeNodeId, instance.jvm)] = ClientHolder(client, System.currentTimeMillis())
     }
 
 
@@ -142,6 +166,10 @@ class DefaultArthasInstanceService(
             clientMap[buildId(arthasInstanceDTO.runtimeNodeId, arthasInstanceDTO.jvm)]?.wrapper,
             arthasInstanceDTO
         )
+    }
+
+    override fun clearCachedClient() {
+        clientMap.clear()
     }
 
 

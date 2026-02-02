@@ -52,6 +52,7 @@ abstract class AbstractSpectreTest {
     @AfterEach
     fun _cleanSecurityContext() {
         SecurityContextHolder.clearContext()
+        GlobalDisposer.destroy()
     }
 
 
