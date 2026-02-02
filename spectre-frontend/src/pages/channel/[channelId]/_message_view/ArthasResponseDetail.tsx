@@ -2,6 +2,7 @@ import type { PureArthasResponse } from '@/api/impl/arthas.ts'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { type DetailComponentProps, getArthasMessageView } from './factory.ts'
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
+import { ErrorBoundary } from 'react-error-boundary'
 
 interface ArthasResponseDetailProps {
   message: ArthasMessage
@@ -87,7 +88,13 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
       {/* 处理尚未变脏且未进入缓存的新组件 */}
       {!componentCache.current.has(currentId) && (
         <div className="mt-2 px-2 pb-6" key={currentId}>
-          {renderDetail(currentId, Component)}
+          <ErrorBoundary
+            fallback={
+              <div className="text-danger">显示视图失败，详见 F12 控制台</div>
+            }
+          >
+            {renderDetail(currentId, Component)}
+          </ErrorBoundary>
         </div>
       )}
     </>
