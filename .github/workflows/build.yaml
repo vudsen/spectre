@@ -39,7 +39,8 @@ jobs:
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
 
-          git checkout -b $BRANCH
+          git fetch origin $BRANCH
+          git checkout $BRANCH
           git commit -am "Update http client"
           git push origin $BRANCH
 
