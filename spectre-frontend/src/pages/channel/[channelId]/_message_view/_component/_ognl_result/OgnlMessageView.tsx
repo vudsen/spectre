@@ -11,6 +11,7 @@ import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
 import { Code, Link, Tooltip } from '@heroui/react'
 import Icon from '@/components/icon/icon.ts'
+import { ErrorBoundary } from 'react-error-boundary'
 
 const MARGIN_RATE = 24
 
@@ -145,7 +146,7 @@ interface OgnlMessageViewProps {
   raw: string
 }
 
-const OgnlMessageView: React.FC<OgnlMessageViewProps> = ({ raw }) => {
+const OgnlMessageView0: React.FC<OgnlMessageViewProps> = ({ raw }) => {
   const node = useMemo(() => parseOgnlResult(raw), [raw])
   const [useOriginal, setOriginal] = useState(false)
 
@@ -174,6 +175,23 @@ const OgnlMessageView: React.FC<OgnlMessageViewProps> = ({ raw }) => {
         </Tooltip>
       </Link>
     </>
+  )
+}
+
+const OgnlMessageView: React.FC<OgnlMessageViewProps> = ({ raw }) => {
+  return (
+    <ErrorBoundary
+      fallback={
+        <div>
+          <div className="text-danger mb-2">
+            Ognl 表达式解析失败，详见 F12 控制台，已显示回退视图
+          </div>
+          <Code className="w-full whitespace-pre-wrap">{raw}</Code>
+        </div>
+      }
+    >
+      <OgnlMessageView0 raw={raw} />
+    </ErrorBoundary>
   )
 }
 
