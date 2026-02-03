@@ -6,6 +6,7 @@ import io.github.vudsen.spectre.repo.entity.ToolchainType
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.InputStreamSource
+import org.springframework.util.ResourceUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -47,6 +48,10 @@ object LocalPackageManager {
         }
     }
 
+    private fun resolveBundledHttpClient(): File {
+        return ResourceUtils.getFile("classpath:http-client.jar")
+    }
+
     /**
      * 获取对应软件包的路径.
      *
@@ -55,6 +60,9 @@ object LocalPackageManager {
      * @return 软件包路径
      */
     fun resolvePackage(type: ToolchainType, tag: String, isArm: Boolean, url: String): File {
+        if (type == ToolchainType.HTTP_CLIENT) {
+            return resolveBundledHttpClient()
+        }
         val destPath = resolvePackagePath(type, tag, isArm)
         val destFile = File(destPath)
         if (destFile.exists()) {
