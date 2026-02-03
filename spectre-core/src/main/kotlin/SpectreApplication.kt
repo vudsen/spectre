@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre
 
+import io.github.vudsen.spectre.common.ApplicationContextHolder
 import io.github.vudsen.spectre.common.SpectreEnvironment
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -17,5 +18,6 @@ class SpectreApplication
 
 fun main(vararg args: String) {
     System.setProperty("spectre.home", SpectreEnvironment.SPECTRE_HOME)
-    SpringApplication.run(SpectreApplication::class.java, *args)
+    val applicationContext = SpringApplication.run(SpectreApplication::class.java, *args)
+    ApplicationContextHolder.applicationContext = applicationContext
 }

@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.test
 
 import io.github.vudsen.spectre.SpectreApplication
+import io.github.vudsen.spectre.common.ApplicationContextHolder
 import io.github.vudsen.spectre.common.SpectreEnvironment
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.ApplicationContext
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -24,6 +26,9 @@ abstract class AbstractSpectreTest {
 
     @set:Autowired
     lateinit var authenticationManager: AuthenticationManager
+
+    @set:Autowired
+    lateinit var applicationContext: ApplicationContext
 
     companion object {
         @DynamicPropertySource
@@ -46,6 +51,7 @@ abstract class AbstractSpectreTest {
 
     @BeforeEach
     fun _setupSecurityContext() {
+        ApplicationContextHolder.applicationContext = applicationContext
         setupSecurityContext(TestConstant.ROOT_USER_USERNAME, TestConstant.ROOT_USER_PASSWORD)
     }
 

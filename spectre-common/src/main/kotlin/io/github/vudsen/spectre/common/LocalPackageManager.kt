@@ -1,13 +1,16 @@
 package io.github.vudsen.spectre.common
 
+import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.common.progress.checkCanceled
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.InputStreamSource
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -45,6 +48,30 @@ object LocalPackageManager {
                 inputStream.transferTo(fileOutputStream)
             }
         }
+    }
+
+    private class ConstantBoundedInputStreamSource(private val data: ByteArray) : BoundedInputStreamSource {
+        override fun size(): Long {
+            return data.size.toLong()
+        }
+
+        override fun getInputStream(): InputStream {
+            return ByteArrayInputStream(data)
+        }
+
+    }
+
+    private val httpClient: ConstantBoundedInputStreamSource
+
+    init {
+        LocalPackageManager::class.java.classLoader.getResourceAsStream("http-client.jar")!!.use { inputStream ->
+            val bytes = inputStream.readAllBytes()
+            httpClient = ConstantBoundedInputStreamSource(bytes)
+        }
+    }
+
+    fun resolveBundledHttpClient(): BoundedInputStreamSource {
+        return httpClient
     }
 
     /**

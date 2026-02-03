@@ -7,7 +7,9 @@ import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
+import io.github.vudsen.spectre.common.ApplicationContextHolder
 import org.slf4j.LoggerFactory
+import org.springframework.cglib.core.Local
 
 abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode>(
     protected val runtimeNode: T,
@@ -90,10 +92,20 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         downloadDirectory: String,
         spectreHome: String
     ): String {
-        val httpClientJar = prepareBundle(downloadDirectory, bundles.httpClient)
-        val finalPath = "$spectreHome/packages/http-client/http-client-${bundles.httpClient.tag}.jar"
+        val httpClient = LocalPackageManager.resolveBundledHttpClient()
+
+        ProgressReportHolder.currentProgressManager()?.pushState("上传 http-client 到目标节点")
+        val appVersion = ApplicationContextHolder.getAppVersion()
+        val dest = "$downloadDirectory/http-client-$appVersion.jar"
+        try {
+            runtimeNode.upload(httpClient, dest)
+        } finally {
+            ProgressReportHolder.currentProgressManager()?.popState()
+        }
+
+        val finalPath = "$spectreHome/packages/http-client/http-client-$appVersion.jar"
         runtimeNode.mkdirs("$spectreHome/packages/http-client/")
-        runtimeNode.execute("cp $httpClientJar $finalPath").ok()
+        runtimeNode.execute("cp $dest $finalPath").ok()
         return finalPath
     }
 

@@ -63,7 +63,6 @@ jobs:
       - name: Upload Release Assets
         run: |
           gh release upload "${GITHUB_REF_NAME}" spectre-core/build/libs/spectre-core-${{ steps.env.outputs.APP_VERSION }}.jar
-          gh release upload "${GITHUB_REF_NAME}" cli/http-client/build/libs/http-client-${{ steps.env.outputs.APP_VERSION }}.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

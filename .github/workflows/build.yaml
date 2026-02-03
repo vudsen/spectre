@@ -12,8 +12,41 @@ permissions:
   issues: write
 
 jobs:
+  update_http_client:
+    name: Update Http Client
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            isHttpClientChange:
+              - 'cli/http-client/**'
+      - name: Update Http Client
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sh ./gradlew :cli:http-client:build -x test
+          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
+          mv -f cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
+          BRANCH="${{ github.head_ref }}"
+
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
+          git fetch origin $BRANCH
+          git checkout $BRANCH
+          git commit -am "Update http client"
+          git push origin $BRANCH
+
   test:
     runs-on: ubuntu-latest
+    needs: update_http_client
     name: Run Tests
     steps:
       - name: Fetch Sources
@@ -46,15 +79,6 @@ jobs:
           
           APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
           echo "APP_VERSION=$APP_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Build Backend
-        run: >
-          sh ./gradlew build -x test
-
-      - name: Copy Http Client
-        run: |
-          mkdir -p /opt/spectre/downloads
-          cp cli/http-client/build/libs/http-client-${{ steps.env.outputs.APP_VERSION }}.jar /opt/spectre/downloads/http-client-v${{ steps.env.outputs.APP_VERSION }}.jar
 
       - name: Tests
         id: test
