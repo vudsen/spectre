@@ -12,35 +12,17 @@ import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
 import io.github.vudsen.spectre.repo.po.ToolchainItemPO
-import jakarta.annotation.PostConstruct
-import org.springframework.beans.factory.InitializingBean
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.ApplicationContext
-import org.springframework.context.ApplicationContextAware
 import org.springframework.core.io.InputStreamSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
-import java.sql.Timestamp
 import kotlin.jvm.optionals.getOrNull
 
 @Service
 class DefaultToolchainService(
     private val toolchainItemRepository: ToolchainItemRepository,
     private val toolchainBundleRepository: ToolchainBundleRepository,
-    @Value("\${spring.application.version}") ver: String
 ) : ToolchainService {
-
-
-    private val httpClientBundleItem: ToolchainItemDTO = ToolchainItemDTO(
-        ToolchainType.HTTP_CLIENT,
-        "v$ver",
-        // TODO 提供配置项修改
-        "https://github.com/vudsen/spectre/releases/download/v${ver}/http-client-${ver}.jar",
-        null,
-        Timestamp(System.currentTimeMillis())
-    )
 
 
     override fun listToolchainItems(
@@ -68,7 +50,6 @@ class DefaultToolchainService(
         return ToolchainBundleDTO(
             findToolchainItemAndRequireNonnull(ToolchainItemId(ToolchainType.JATTACH, bundle.jattachTag)),
             findToolchainItemAndRequireNonnull(ToolchainItemId(ToolchainType.ARTHAS, bundle.arthasTag)),
-            httpClientBundleItem,
         )
     }
 
@@ -111,7 +92,6 @@ class DefaultToolchainService(
 
     override fun deleteToolchainItemById(id: ToolchainItemId) {
         val bundle = when(id.type!!) {
-            ToolchainType.HTTP_CLIENT -> toolchainBundleRepository.findFirstByHttpClientTag(id.tag!!)
             ToolchainType.ARTHAS -> toolchainBundleRepository.findFirstByArthasTag(id.tag!!)
             ToolchainType.JATTACH -> toolchainBundleRepository.findFirstByJattachTag(id.tag!!)
         }

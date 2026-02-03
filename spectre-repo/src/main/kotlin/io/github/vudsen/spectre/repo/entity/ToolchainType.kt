@@ -6,5 +6,4 @@ enum class ToolchainType(
 ) {
     ARTHAS("arthas", "zip"),
     JATTACH("jattach", "tgz"),
-    HTTP_CLIENT("http-client", "jar");
 }
