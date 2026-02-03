@@ -41,7 +41,7 @@ jobs:
 
           git checkout -b $BRANCH
           git commit -am "Update http client"
-          git push --set-upstream origin $BRANCH
+          git push origin $BRANCH
 
   test:
     runs-on: ubuntu-latest
