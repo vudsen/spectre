@@ -47,8 +47,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: update_http_client
-    if: always() && (needs.update_http_client.result == 'success' || needs.update_http_client.result == 'skipped')
     name: Run Tests
     steps:
       - name: Fetch Sources
@@ -63,9 +61,23 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            isHttpClientChange:
+              - 'cli/http-client/**'
+
       - name: Setup k3s
         id: k3s
         uses: fenio/setup-k3s@v1
+
+      - name: Update Http Client
+        if: ${{ steps.filter.outputs.isHttpClientChange && github.event_name == 'pull_request' }}
+        run: |
+          sh ./gradlew :cli:http-client:build -x test
+          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
+          mv -f cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
 
       - name: Setup Test Environment
         id: env
