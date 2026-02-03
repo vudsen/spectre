@@ -48,6 +48,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: update_http_client
+    if: always() && (needs.update_http_client.result == 'success' || needs.update_http_client.result == 'skipped')
     name: Run Tests
     steps:
       - name: Fetch Sources
