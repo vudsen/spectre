@@ -1,11 +1,10 @@
 package io.github.vudsen.spectre.api.service
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
-import io.github.vudsen.spectre.api.dto.ArthasChannelDTO
 import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
+import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
-import org.springframework.core.io.InputStreamSource
 
 /**
  * Arthas 执行服务
@@ -56,5 +55,15 @@ interface ArthasExecutionService {
      * 替换字节码. 该命令为同步命令
      */
     fun retransform(channelId: String, source: BoundedInputStreamSource): Any
+
+    /**
+     * 列出 profiler 文件
+     */
+    fun listProfilerFiles(channelId: String): List<ProfilerFile>
+
+    /**
+     * 读取 profiler 文件
+     */
+    fun readProfilerFile(file: ProfilerFile): BoundedInputStreamSource?
 
 }

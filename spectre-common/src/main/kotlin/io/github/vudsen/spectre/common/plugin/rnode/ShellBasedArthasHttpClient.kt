@@ -9,6 +9,7 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
+import io.github.vudsen.spectre.common.util.SecureUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.InputStreamSource
 import java.net.URL
@@ -29,6 +30,7 @@ open class ShellBasedArthasHttpClient(
     companion object {
         @JvmStatic
         private val logger = LoggerFactory.getLogger(ShellBasedArthasHttpClient::class.java)
+        private val supportedFormats = setOf("html", "flat", "traces", "collapsed", "flamegraph", "tee", "jfr")
     }
 
     private val objectMapper = ObjectMapper()
@@ -60,7 +62,7 @@ open class ShellBasedArthasHttpClient(
         return node
     }
 
-    override fun exec(command: String): Any {
+    override fun exec(command: String): JsonNode {
         val response = sendRequest(buildMap {
             put("action", "exec")
             put("command", command)
@@ -68,13 +70,79 @@ open class ShellBasedArthasHttpClient(
         return response.get("body").get("results")
     }
 
-    override fun asyncExec(sessionId: String, command: String): Int {
+    override fun execAsync(sessionId: String, command: String): Int {
         val response = sendRequest(buildMap {
             put("action", "async_exec")
             put("command", command)
             put("sessionId", sessionId)
         }, false)
         return response.get("body").get("jobId").asInt()
+    }
+
+    private fun findArgValue(commands: List<String>, key: String): Pair<String, Int>? {
+        val i = commands.indexOf(key)
+        if (i < 0) {
+            return null
+        }
+        if (i + 1 >= commands.size) {
+            return null
+        }
+        return Pair(commands[i + 1], i + 1)
+    }
+
+
+    override fun execProfilerCommand(
+        filename: String,
+        commands: MutableList<String>,
+        sessionId: String?
+    ): Any? {
+        val pair = findArgValue(commands, "--file") ?: findArgValue(commands, "-f")
+        if (pair == null) {
+            val formatPair = findArgValue(commands, "--format") ?: findArgValue(commands, "-o")
+            commands.add("--file")
+            if (formatPair == null) {
+                commands.add("${runtimeNode.getHomePath()}/profiler/${filename}.html")
+            } else {
+                if (!supportedFormats.contains(formatPair.first)) {
+                    throw BusinessException("不支持的输出类型: ${formatPair.first}")
+                }
+                commands.add("${runtimeNode.getHomePath()}/profiler/${filename}.${formatPair.first}")
+            }
+        } else {
+            val pos = pair.first.lastIndexOf('.')
+            val ext = pair.first.substring(pos + 1, pair.first.length)
+
+            if (SecureUtils.isNotPureFilename(ext)) {
+                throw BusinessException("Invalid file extension: $ext")
+            }
+            commands[pair.second] = "${getProfilerDirectory()}/${filename}.${ext}"
+        }
+        if (sessionId == null) {
+            return exec(commands.joinToString(" "))
+        } else {
+            execAsync(sessionId, commands.joinToString(" "))
+            return null
+        }
+    }
+
+    private fun getProfilerDirectory(): String {
+        val directory = "${runtimeNode.getHomePath()}/profiler"
+        if (!runtimeNode.isDirectoryExist(directory)) {
+            runtimeNode.mkdirs(directory)
+        }
+        return directory
+    }
+
+    override fun listProfilerFiles(): List<String> {
+        return runtimeNode.listFiles(getProfilerDirectory())
+    }
+
+    override fun deleteProfilerFile(filename: String) {
+        return runtimeNode.deleteFile("${getProfilerDirectory()}/${filename}")
+    }
+
+    override fun readProfilerFile(filename: String): BoundedInputStreamSource? {
+        return runtimeNode.readFile("${getProfilerDirectory()}/${filename}")
     }
 
     override fun interruptJob(sessionId: String) {
@@ -119,14 +187,17 @@ open class ShellBasedArthasHttpClient(
     }
 
     override fun test() {
-        val response = sendRequest("", true)
-        val msg = response.get("message")
-        if (msg == null) {
-            throw AppException("Message is empty!")
+        val response = exec("version")
+        if (!response.isArray) {
+            throw BusinessException("Not an array")
         }
-        if (msg.asText() != "Process request error: Cannot invoke \"com.taobao.arthas.core.shell.term.impl.http.api.ApiRequest.getRequestId()\" because \"apiRequest\" is null") {
-            throw AppException("Port ${getPort()} is in use.")
+        for (node in response) {
+            val ver = node.get("version")
+            if (ver.isTextual) {
+                return
+            }
         }
+        throw BusinessException("Attach failed.")
     }
 
     override fun getPort(): Int {

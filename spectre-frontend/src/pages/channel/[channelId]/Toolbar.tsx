@@ -28,6 +28,11 @@ const menuItems: MenuItem[] = [
     type: 'retransform',
   },
   {
+    name: 'Profiler',
+    icon: ChannelIcon.GAUGE,
+    type: 'profiler',
+  },
+  {
     name: 'Dashboard',
     icon: ChannelIcon.DASHBOARD,
     type: 'dashboard',
@@ -71,6 +76,11 @@ const Toolbar: React.FC<MenuListProps> = () => {
         case 'dashboard': {
           context.messageBus.execute('dashboard', true)
           context.getTabsController().openTab('DASHBOARD', {})
+          break
+        }
+        case 'profiler': {
+          context.getTabsController().openTab('PROFILER', {})
+          break
         }
       }
     },

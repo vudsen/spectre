@@ -7,6 +7,7 @@ const ChannelIcon = {
   FIELD: 'jb-field',
   ARRAY: 'jb-db-array',
   ALIGN_LEFT: 'fc-align-left',
+  GAUGE: 'fc-gauge',
 }
 
 export default ChannelIcon
