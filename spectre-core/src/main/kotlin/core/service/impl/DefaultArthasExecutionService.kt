@@ -43,7 +43,7 @@ import java.util.concurrent.locks.ReentrantLock
  * 管理 Arthas 连接的服务。
  *
  *
- * 为了确保未来集群能够正常使用，当成功 attach 到一个 JVM 后，会往 Redis 中写 [ArthasChannelDTO] 数据，对于后续的 attach 请求
+ * 为了确保未来集群能够正常使用，当成功 attach 到一个 JVM 后，会往 Redis 中写 [ArthasInstanceDTO] 数据，对于后续的 attach 请求
  * 将会直接复用对应的端口以及其它数据。
  *
  * ## 资源类型：
@@ -53,7 +53,7 @@ import java.util.concurrent.locks.ReentrantLock
  * 频道，在代码上代表一个 [ArthasHttpClient] 实例，表示一个到 arthas 的连接。
  *
  * 可用上下文：
- * - [ArthasChannelDTO]
+ * - [ArthasInstanceDTO]
  *
  * ### Consumer
  *
@@ -333,7 +333,7 @@ class DefaultArthasExecutionService(
     /**
      * 异步 attach 到 jvm
      *
-     * 该方法会设置 [ArthasChannelDTO]，主要用于保存最终连接的端口
+     * 该方法会设置 [ArthasInstanceDTO]，主要用于保存最终连接的端口
      */
     private fun attachJvmAsync(
         runtimeNodeDto: RuntimeNodeDTO,
@@ -471,7 +471,7 @@ class DefaultArthasExecutionService(
 
     }
 
-    private fun beforeExec(channelId: String, client: ArthasHttpClient, commands: MutableList<String>, sessionId: String?): Any? {
+    private fun beforeExec(instance: ArthasInstanceDTO, client: ArthasHttpClient, commands: MutableList<String>, sessionId: String?): Any? {
         // 考虑抽离为一个接口?
         if (commands.isEmpty()) {
             return null
@@ -479,15 +479,21 @@ class DefaultArthasExecutionService(
         val cmd = commands[0]
         if ("profiler" == cmd && commands.size >= 2) {
             if ("stop" == commands[1]) {
-                deleteOldProfilerFiles(channelId, client)
+                deleteOldProfilerFiles(instance.channelId, client)
             }
              when (commands[1]) {
                  "start", "collect", "dump", "stop" -> {
-                     val execProfilerCommand = client.execProfilerCommand("${channelId}-${System.currentTimeMillis()}", commands, sessionId)
+                     val execProfilerCommand = client.execProfilerCommand("${instance.channelId}-${System.currentTimeMillis()}", commands, sessionId)
                      if (sessionId != null) {
                          return true
                      }
                      return execProfilerCommand
+                 }
+                 "execute" -> {
+                     // TODO 替换输出文件路径
+                     if (instance.restrictedMode) {
+                         throw BusinessException("限制模式下不允许执行 profiler execute 命令")
+                     }
                  }
              }
         }
@@ -497,7 +503,7 @@ class DefaultArthasExecutionService(
     override fun execAsync(channelId: String, command: String) {
         val commands = splitCommand(command)
         val pair = checkAndGetNode(channelId, commands)
-        beforeExec(channelId, pair.first, commands, pair.second.sessionId)?.let {
+        beforeExec(pair.second, pair.first, commands, pair.second.sessionId)?.let {
             return
         }
         pair.first.execAsync(pair.second.sessionId, command)
@@ -507,7 +513,7 @@ class DefaultArthasExecutionService(
     override fun execSync(channelId: String, command: String): Any {
         val commands = splitCommand(command)
         val pair = checkAndGetNode(channelId, commands)
-        beforeExec(channelId, pair.first, commands, null)?.let {
+        beforeExec(pair.second, pair.first, commands, null)?.let {
             return it
         }
         return pair.first.exec(command)
