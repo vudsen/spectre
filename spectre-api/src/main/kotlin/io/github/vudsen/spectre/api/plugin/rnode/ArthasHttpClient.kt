@@ -5,7 +5,6 @@ import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import org.springframework.boot.web.server.PortInUseException
-import org.springframework.core.io.InputStreamSource
 
 interface ArthasHttpClient {
 
@@ -21,7 +20,32 @@ interface ArthasHttpClient {
      * @param command 命令
      * @return 任务 id
      */
-    fun asyncExec(sessionId: String, command: String): Int
+    fun execAsync(sessionId: String, command: String): Int
+
+    /**
+     * 同步执行 profiler 命令，对于这些命令，需要覆盖其中的 --file 参数
+     * @param filename 文件名称，不包含后缀
+     * @param commands 要执行的命令
+     * @param sessionId 会话id，如果该值非空，表示异步执行，否则同步
+     * @return 如果为同步执行，返回执行结果，如果为异步执行，返回空
+     */
+    fun execProfilerCommand(filename: String, commands: MutableList<String>, sessionId: String?): Any?
+
+    /**
+     * 列出 profiler 的结果
+     * @return 文件名称
+     */
+    fun listProfilerFiles(): List<String>
+
+    /**
+     * 删除 profiler 文件
+     */
+    fun deleteProfilerFile(filename: String)
+
+    /**
+     * 读取 profiler 文件
+     */
+    fun readProfilerFile(filename: String): BoundedInputStreamSource?
 
     /**
      * 中断任务

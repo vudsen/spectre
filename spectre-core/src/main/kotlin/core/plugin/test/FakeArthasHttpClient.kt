@@ -19,8 +19,28 @@ class FakeArthasHttpClient : ArthasHttpClient {
         TODO("Not yet implemented")
     }
 
-    override fun asyncExec(sessionId: String, command: String): Int {
+    override fun execAsync(sessionId: String, command: String): Int {
         return 1
+    }
+
+    override fun execProfilerCommand(
+        filename: String,
+        commands: MutableList<String>,
+        sessionId: String?
+    ): Any? {
+        TODO("Not yet implemented")
+    }
+
+    override fun listProfilerFiles(): List<String> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteProfilerFile(filename: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun readProfilerFile(filename: String): BoundedInputStreamSource? {
+        TODO("Not yet implemented")
     }
 
     override fun interruptJob(sessionId: String) {

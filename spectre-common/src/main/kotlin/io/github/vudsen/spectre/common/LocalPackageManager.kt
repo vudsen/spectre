@@ -59,6 +59,8 @@ object LocalPackageManager {
             return ByteArrayInputStream(data)
         }
 
+        override fun close() {}
+
     }
 
     private val httpClient: ConstantBoundedInputStreamSource

@@ -1,18 +1,19 @@
 package io.github.vudsen.spectre.common
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
+import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import java.io.InputStream
 
-class BoundedInputStreamSourceEntity(private val size: Long, private val inputStream: InputStream) : BoundedInputStreamSource {
+class InteractiveShellInputStreamSource(private val shell: InteractiveShell, private val size: Long) : BoundedInputStreamSource {
     override fun size(): Long {
         return size
     }
 
     override fun getInputStream(): InputStream {
-        return inputStream
+        return shell.getInputStream()
     }
 
     override fun close() {
-        return inputStream.close()
+        shell.close()
     }
 }

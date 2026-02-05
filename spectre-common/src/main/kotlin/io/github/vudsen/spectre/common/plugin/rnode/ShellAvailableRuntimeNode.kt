@@ -4,6 +4,7 @@ import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
+import org.springframework.core.io.InputStreamSource
 
 /**
  * 表示当前节点可以上传文件
@@ -29,6 +30,16 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
     fun createInteractiveShell(command: String): InteractiveShell
 
     /**
+     * 读取文件
+     */
+    fun readFile(path: String): BoundedInputStreamSource?
+
+    /**
+     * 删除文件
+     */
+    fun deleteFile(path: String)
+
+    /**
      * 列出指定目录下所有文件
      */
     fun listFiles(directory: String): List<String>
@@ -45,10 +56,6 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
      */
     fun mkdirs(path: String)
 
-    /**
-     * 解压 tar.gz 包
-     */
-    fun unzipTarGzPkg(target: String, dest: String)
 
     /**
      * 将本地的文件发送到宿主机上面

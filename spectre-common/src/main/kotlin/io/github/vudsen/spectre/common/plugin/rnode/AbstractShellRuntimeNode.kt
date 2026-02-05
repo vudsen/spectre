@@ -4,10 +4,18 @@ import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.common.BoundedInputStreamSourceEntity
+import io.github.vudsen.spectre.common.InteractiveShellInputStreamSource
+import org.slf4j.LoggerFactory
+import org.springframework.core.io.InputStreamSource
 import java.io.File
 import kotlin.text.iterator
 
 abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
+
+    companion object {
+        @JvmStatic
+        private val logger = LoggerFactory.getLogger(AbstractShellRuntimeNode::class.java)
+    }
 
     private lateinit var extensionPoint: RuntimeNodeExtensionPoint
 
@@ -55,9 +63,6 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
      */
     protected abstract fun doUpload(source: BoundedInputStreamSource, dest: String)
 
-    override fun unzipTarGzPkg(target: String, dest: String) {
-        TODO("Not yet implemented")
-    }
 
     override fun mkdirs(path: String) {
         execute("mkdir -p $path").let {
@@ -65,6 +70,20 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
                 throw BusinessException("error.permission.denied", arrayOf(path))
             }
         }
+    }
+
+    override fun readFile(path: String): BoundedInputStreamSource? {
+        val execute = execute("stat -c %s $path")
+        if (execute.isFailed()) {
+            logger.debug("Failed to stat file: {}", execute.stdout)
+            return null
+        }
+        val shell = createInteractiveShell("cat $path")
+        return InteractiveShellInputStreamSource(shell, execute.stdout.trim().toLong())
+    }
+
+    override fun deleteFile(path: String) {
+        execute("rm -f $path").ok()
     }
 
     override fun isDirectoryExist(path: String): Boolean {

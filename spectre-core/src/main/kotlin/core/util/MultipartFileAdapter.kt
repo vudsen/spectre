@@ -13,4 +13,8 @@ class MultipartFileAdapter(private val delegate: MultipartFile) : BoundedInputSt
         return delegate.inputStream
     }
 
+    override fun close() {
+        delegate.inputStream.close()
+    }
+
 }

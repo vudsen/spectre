@@ -151,10 +151,8 @@ open class SshRuntimeNode : CloseableRuntimeNode, AbstractShellRuntimeNode() {
             exec.isRedirectErrorStream = true
             exec.out = outputStream
             val future = exec.open()
-            while (!future.await(2, TimeUnit.SECONDS)) {
-                if (Thread.currentThread().isInterrupted) {
-                    throw InterruptedException()
-                }
+            while (!future.await(10, TimeUnit.SECONDS)) {
+                throw BusinessException("Timeout")
             }
             while (true) {
                 val events = exec.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), Duration.ofSeconds(1))

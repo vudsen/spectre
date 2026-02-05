@@ -2,7 +2,7 @@ package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.dto.*
-import io.github.vudsen.spectre.api.entity.ArthasSession
+import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
@@ -15,12 +15,13 @@ import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.service.ToolchainService
 import io.github.vudsen.spectre.common.SecureRandomFactory
+import io.github.vudsen.spectre.common.util.SecureUtils
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
 import io.github.vudsen.spectre.core.integrate.abac.AttachNodePolicyPermissionContext
-import io.github.vudsen.spectre.core.lock.InMemoryDistributedLock
+import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -81,6 +82,7 @@ class DefaultArthasExecutionService(
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
         private const val MAX_IDLE_MILLISECONDS = 1000 * 60 * 5
+        private const val MAX_PROFILER_FILE_COUNT= 10
         private val ALLOWED_EXPRESSION: Set<Class<*>> = setOf(
             Literal::class.java,
             PropertyOrFieldReference::class.java,
@@ -105,7 +107,7 @@ class DefaultArthasExecutionService(
 
     private val modifyLock = ReentrantLock()
 
-    private val joinLock = InMemoryDistributedLock()
+    private val joinLock = KeyBasedLock(executor)
 
     private val cache = cacheManager.getCache(CacheConstant.QUICK_EXPIRE_CACHE_KEY)!!
 
@@ -370,9 +372,9 @@ class DefaultArthasExecutionService(
 
                 logger.info("Successfully created client for jvm(id = {}), name = {}", jvm.id, jvm.name)
 
-                val session = client.initSession()
 
                 if (arthasInstance == null) {
+                    val session = client.initSession()
                     arthasInstanceService.save(
                         ArthasInstanceDTO(
                             treeNodeId,
@@ -428,9 +430,8 @@ class DefaultArthasExecutionService(
         return Pair(client, pair.second)
     }
 
-    private fun checkAndGetNode(channelId: String, command: String): Pair<ArthasHttpClient, ArthasInstanceDTO> {
+    private fun checkAndGetNode(channelId: String, commands: List<String>): Pair<ArthasHttpClient, ArthasInstanceDTO> {
         checkTreeNodePermission(channelId)
-        val commands = splitCommand(command)
         checkCommandExecPermission(channelId, commands)
         val pair = tryResolveClient(channelId)
         if (pair.second.restrictedMode) {
@@ -439,14 +440,76 @@ class DefaultArthasExecutionService(
         return pair
     }
 
+    private fun deleteOldProfilerFiles(channelId: String, client: ArthasHttpClient) {
+        val profilerFiles = listProfilerFiles(channelId)
+        if (profilerFiles.size <= MAX_PROFILER_FILE_COUNT) {
+            return
+        }
+        executor.execute {
+            val lockKey = "profiler-cleaner:${channelId}"
+            if (!joinLock.tryLock(lockKey)) {
+                return@execute
+            }
+            try {
+                val profilerFiles = listProfilerFiles0(channelId)
+                if (profilerFiles.size <= MAX_PROFILER_FILE_COUNT) {
+                    return@execute
+                }
+                val sortedBy = profilerFiles.sortedByDescending { f -> f.timestamp }
+                var end = profilerFiles.size - MAX_PROFILER_FILE_COUNT
+                for (i in 0 until end) {
+                    val filename = "${channelId}-${sortedBy[i].timestamp}.${sortedBy[i].extension}"
+                    if (SecureUtils.isNotPureFilename(filename)) {
+                        throw BusinessException("无效的文件名称")
+                    }
+                    client.deleteProfilerFile(filename)
+                }
+            } finally {
+                joinLock.unlock(lockKey)
+            }
+        }
+
+    }
+
+    private fun beforeExec(channelId: String, client: ArthasHttpClient, commands: MutableList<String>, sessionId: String?): Any? {
+        // 考虑抽离为一个接口?
+        if (commands.isEmpty()) {
+            return null
+        }
+        val cmd = commands[0]
+        if ("profiler" == cmd && commands.size >= 2) {
+            if ("stop" == commands[1]) {
+                deleteOldProfilerFiles(channelId, client)
+            }
+             when (commands[1]) {
+                 "start", "collect", "dump", "stop" -> {
+                     val execProfilerCommand = client.execProfilerCommand("${channelId}-${System.currentTimeMillis()}", commands, sessionId)
+                     if (sessionId != null) {
+                         return true
+                     }
+                     return execProfilerCommand
+                 }
+             }
+        }
+        return null
+    }
+
     override fun execAsync(channelId: String, command: String) {
-        val pair = checkAndGetNode(channelId, command)
-        pair.first.asyncExec(pair.second.sessionId, command)
+        val commands = splitCommand(command)
+        val pair = checkAndGetNode(channelId, commands)
+        beforeExec(channelId, pair.first, commands, pair.second.sessionId)?.let {
+            return
+        }
+        pair.first.execAsync(pair.second.sessionId, command)
     }
 
 
     override fun execSync(channelId: String, command: String): Any {
-        val pair = checkAndGetNode(channelId, command)
+        val commands = splitCommand(command)
+        val pair = checkAndGetNode(channelId, commands)
+        beforeExec(channelId, pair.first, commands, null)?.let {
+            return it
+        }
         return pair.first.exec(command)
     }
 
@@ -527,7 +590,7 @@ class DefaultArthasExecutionService(
      * @param input 需要解析的命令
      * @return 解析后的子串
      */
-    fun splitCommand(input: String): List<String> {
+    fun splitCommand(input: String): MutableList<String> {
         val result = mutableListOf<String>()
         val current = StringBuilder()
         var quoteChar: Char? = null // 记录当前是否在引号内，以及是哪种引号 (' 或 ")
@@ -608,6 +671,46 @@ class DefaultArthasExecutionService(
         val pair = tryResolveClient(channelId)
 
         return pair.first.retransform(source)
+    }
+
+    /**
+     * 列出文件，移除了权限校验
+     */
+    fun listProfilerFiles0(channelId: String): List<ProfilerFile> {
+        val pair = tryResolveClient(channelId)
+        val files = pair.first.listProfilerFiles()
+
+        return buildList {
+            for (filename in files) {
+                val i = filename.lastIndexOf('.')
+                if (i < 0) {
+                    continue
+                }
+                val ext = filename.substring(i + 1, filename.length)
+                val tsPost = filename.lastIndexOf('-')
+                if (tsPost < 0) {
+                    continue
+                }
+                val timestamp = filename.substring(tsPost + 1, i)
+                add(ProfilerFile(timestamp.toLong(), filename.substring(0, tsPost), ext))
+            }
+        }
+    }
+
+    override fun listProfilerFiles(channelId: String): List<ProfilerFile> {
+        checkCommandExecPermission(channelId, listOf("profiler"))
+        return listProfilerFiles0(channelId)
+    }
+
+    override fun readProfilerFile(file: ProfilerFile): BoundedInputStreamSource? {
+        checkCommandExecPermission(file.channelId, listOf("retransform"))
+        val pair = tryResolveClient(file.channelId)
+
+        val filename = "${file.channelId}-${file.timestamp}.${file.extension}"
+        if (SecureUtils.isNotPureFilename(filename)) {
+            throw BusinessException("无效的文件名称")
+        }
+        return pair.first.readProfilerFile(filename)
     }
 
 

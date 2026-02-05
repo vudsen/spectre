@@ -8,11 +8,13 @@ import DashBoardTab from '@/pages/channel/[channelId]/_tabs/_dashboard'
 import MessageDetailPage, {
   type MessageDetailPageProps,
 } from '@/pages/channel/[channelId]/_tabs/_message_detail'
+import ProfilerTab from '@/pages/channel/[channelId]/_tabs/_profiler'
 
 export interface TabArgs {
   JAD: JadPageProps
   DASHBOARD: undefined
   MESSAGE_DETAIL: MessageDetailPageProps
+  PROFILER: undefined
 }
 
 type ComponentHolder<T> = {
@@ -49,9 +51,19 @@ const MESSAGE_DETAIL: ComponentHolder<MessageDetailPageProps> = {
   }),
 }
 
+const PROFILER: ComponentHolder<object> = {
+  Component: ProfilerTab,
+  icon: ChannelIcon.GAUGE,
+  defaultPropsFactory: () => ({
+    uniqueId: 'profiler',
+    name: 'Profiler',
+  }),
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const TabComponents: Record<string, ComponentHolder<any>> = {
   JAD,
   DASHBOARD,
   MESSAGE_DETAIL,
+  PROFILER,
 }

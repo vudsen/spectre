@@ -79,3 +79,15 @@ export const disconnectSession = (channelId: string) => {
 export const interruptCommand = (channelId: string) => {
   return axios.post(`arthas/channel/${channelId}/interrupt`)
 }
+
+export type ProfilerFile = {
+  timestamp: string
+  channelId: string
+  extension: string
+}
+
+export const listProfilerFiles = (
+  channelId: string,
+): Promise<ProfilerFile[]> => {
+  return axios.get(`arthas/channel/${channelId}/profiler-files`)
+}

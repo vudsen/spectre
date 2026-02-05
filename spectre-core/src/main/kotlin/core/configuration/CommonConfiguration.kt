@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
-import io.github.vudsen.spectre.core.lock.DistributedLock
-import io.github.vudsen.spectre.core.lock.InMemoryDistributedLock
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.support.ResourceBundleMessageSource
@@ -42,10 +40,6 @@ class CommonConfiguration {
     }
 
 
-    @Bean
-    fun lock(): DistributedLock {
-        return InMemoryDistributedLock()
-    }
 
     //这里的配置文件 也可以写在 application.yml 中
     @Bean
