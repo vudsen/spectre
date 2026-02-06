@@ -709,7 +709,7 @@ class DefaultArthasExecutionService(
     }
 
     override fun readProfilerFile(file: ProfilerFile): BoundedInputStreamSource? {
-        checkCommandExecPermission(file.channelId, listOf("retransform"))
+        checkCommandExecPermission(file.channelId, listOf("profiler"))
         val pair = tryResolveClient(file.channelId)
 
         val filename = "${file.channelId}-${file.timestamp}.${file.extension}"
