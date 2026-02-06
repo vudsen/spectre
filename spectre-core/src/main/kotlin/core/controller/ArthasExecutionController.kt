@@ -171,7 +171,7 @@ class ArthasExecutionController(
     }
 
 
-    @GetMapping("/channel/{channelId}/profiler/download", headers = ["Cache-Control=max-age=10800"])
+    @GetMapping("/channel/{channelId}/profiler/download")
     fun downloadProfilerFile(file: ProfilerFile, @PathVariable channelId: String, request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Resource> {
         resolveChannelSession(request, channelId)
         val source = arthasExecutionService.readProfilerFile(file) ?: throw BusinessException("文件不存在")
