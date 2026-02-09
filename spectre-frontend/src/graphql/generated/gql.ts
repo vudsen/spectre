@@ -16,7 +16,7 @@ import * as types from './graphql';
  */
 type Documents = {
     "\n  query QueryPolicyPermissionPlugins($id: Long!) {\n    permission {\n      permission(id: $id) {\n        enhancePlugins {\n          configuration\n          pluginId\n        }\n      }\n    }\n  }\n": typeof types.QueryPolicyPermissionPluginsDocument,
-    "\n  query PermissionsBindQuery(\n    $resource: String\n  ) {\n    permission {\n      listPermissionsByResource(resource: $resource) {\n        action\n        name\n      }\n    }\n  }\n": typeof types.PermissionsBindQueryDocument,
+    "\n  query PermissionsBindQuery($resource: String) {\n    permission {\n      listPermissionsByResource(resource: $resource) {\n        action\n        name\n      }\n    }\n  }\n": typeof types.PermissionsBindQueryDocument,
     "\n  query SubjectPermissionsQuery(\n    $subjectId: Long!\n    $subjectType: String!\n    $page: Int\n    $size: Int\n    $isUser: Boolean!\n    $isRole: Boolean!\n  ) {\n    permission {\n      permissions(\n        subjectId: $subjectId\n        subjectType: $subjectType\n        page: $page\n        size: $size\n      ) {\n        totalPages\n        result {\n          id\n          name\n          action\n          resource\n          conditionExpression\n          createdAt\n          description\n        }\n      }\n    }\n    user @include(if: $isUser) {\n      user(id: $subjectId) {\n        username\n        displayName\n      }\n    }\n    role @include(if: $isRole) {\n      role(id: $subjectId) {\n        name\n      }\n    }\n  }\n": typeof types.SubjectPermissionsQueryDocument,
     "\n  query LogDetailQuery($id: Long!) {\n    log {\n      log(id: $id) {\n        userAgent\n        message\n        context\n      }\n    }\n  }\n": typeof types.LogDetailQueryDocument,
     "\n  query LogEntityQuery($page: Int!, $size: Int!) {\n    log {\n      logs(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          ip\n          isSuccess\n          operation\n          time\n          username\n        }\n      }\n    }\n  }\n": typeof types.LogEntityQueryDocument,
@@ -44,7 +44,7 @@ type Documents = {
 };
 const documents: Documents = {
     "\n  query QueryPolicyPermissionPlugins($id: Long!) {\n    permission {\n      permission(id: $id) {\n        enhancePlugins {\n          configuration\n          pluginId\n        }\n      }\n    }\n  }\n": types.QueryPolicyPermissionPluginsDocument,
-    "\n  query PermissionsBindQuery(\n    $resource: String\n  ) {\n    permission {\n      listPermissionsByResource(resource: $resource) {\n        action\n        name\n      }\n    }\n  }\n": types.PermissionsBindQueryDocument,
+    "\n  query PermissionsBindQuery($resource: String) {\n    permission {\n      listPermissionsByResource(resource: $resource) {\n        action\n        name\n      }\n    }\n  }\n": types.PermissionsBindQueryDocument,
     "\n  query SubjectPermissionsQuery(\n    $subjectId: Long!\n    $subjectType: String!\n    $page: Int\n    $size: Int\n    $isUser: Boolean!\n    $isRole: Boolean!\n  ) {\n    permission {\n      permissions(\n        subjectId: $subjectId\n        subjectType: $subjectType\n        page: $page\n        size: $size\n      ) {\n        totalPages\n        result {\n          id\n          name\n          action\n          resource\n          conditionExpression\n          createdAt\n          description\n        }\n      }\n    }\n    user @include(if: $isUser) {\n      user(id: $subjectId) {\n        username\n        displayName\n      }\n    }\n    role @include(if: $isRole) {\n      role(id: $subjectId) {\n        name\n      }\n    }\n  }\n": types.SubjectPermissionsQueryDocument,
     "\n  query LogDetailQuery($id: Long!) {\n    log {\n      log(id: $id) {\n        userAgent\n        message\n        context\n      }\n    }\n  }\n": types.LogDetailQueryDocument,
     "\n  query LogEntityQuery($page: Int!, $size: Int!) {\n    log {\n      logs(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          ip\n          isSuccess\n          operation\n          time\n          username\n        }\n      }\n    }\n  }\n": types.LogEntityQueryDocument,
@@ -78,7 +78,7 @@ export function graphql(source: "\n  query QueryPolicyPermissionPlugins($id: Lon
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query PermissionsBindQuery(\n    $resource: String\n  ) {\n    permission {\n      listPermissionsByResource(resource: $resource) {\n        action\n        name\n      }\n    }\n  }\n"): typeof import('./graphql').PermissionsBindQueryDocument;
+export function graphql(source: "\n  query PermissionsBindQuery($resource: String) {\n    permission {\n      listPermissionsByResource(resource: $resource) {\n        action\n        name\n      }\n    }\n  }\n"): typeof import('./graphql').PermissionsBindQueryDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
