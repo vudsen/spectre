@@ -8,4 +8,14 @@
     <changeSet id="202602091101" author="vudsen">
         <dropTable tableName="static_permission"/>
     </changeSet>
+
+    <changeSet id="202602091445" author="vudsen">
+        <update tableName="policy_permission" >
+            <column name="resource" value="runtime-node"/>
+            <where>resource = :value</where>
+            <whereParams>
+                <param value="runtime_node"/>
+            </whereParams>
+        </update>
+    </changeSet>
 </databaseChangeLog>
