@@ -16,7 +16,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 @SchemaMapping(typeName = "ToolchainItemQueries")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_READ)")
+@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_READ)")
 class ToolchainQueriesController(
     private val toolchainService: ToolchainService
 ) {

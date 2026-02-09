@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.api.service
 
+import io.github.vudsen.spectre.api.dto.PermissionResourceDTO
 import io.github.vudsen.spectre.api.dto.PolicyPermissionDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.perm.PermissionEntity
@@ -24,12 +25,15 @@ interface PolicyPermissionService {
     fun findById(id: Long): PolicyPermissionDTO?
 
 
-
     /**
      * 根据权限名称获取权限
      */
-    fun listAllPermissions(): Set<PermissionEntity>
+    fun findPermissionsByResourceName(resourceName: String): Set<PermissionEntity>
 
+    /**
+     * 列出权限类型名称
+     */
+    fun listPermissionResources(): List<PermissionResourceDTO>
     /**
      * 删除权限
      */

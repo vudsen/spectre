@@ -14,8 +14,7 @@ type Query {
     toolchain: ToolchainItemQueries!
     user: UserQueries!
     role: RoleQueries!
-    staticPermission: StaticPermissionQueries!
-    policyPermission: PolicyPermissionQueries!
+    permission: PolicyPermissionQueries!
     log: LogEntityQueries!
 }
 

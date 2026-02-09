@@ -2,10 +2,10 @@ package io.github.vudsen.spectre.core.integrate.abac
 
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
+import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider
 import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
-import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
 import io.github.vudsen.spectre.core.plugin.test.TestRuntimeNodeConfig
 import org.springframework.stereotype.Component
@@ -22,7 +22,7 @@ class RuntimeNodePolicyAuthProvider : PolicyAuthenticationProvider {
     }
 
     override fun getPermissionEntity(): PermissionEntity {
-        return PolicyPermissions.RUNTIME_NODE_TREE_EXPAND
+        return AppPermissions.RUNTIME_NODE_TREE_EXPAND
     }
 
 
@@ -32,7 +32,7 @@ class RuntimeNodePolicyAuthProvider : PolicyAuthenticationProvider {
                 "展开树节点时",
                 toContextMap(RuntimeNodePolicyPermissionContext(
                     RuntimeNodeDTO(-1, "Test", "Test", TestRuntimeNodeConfig(), Timestamp(System.currentTimeMillis()), mapOf(Pair("foo", "bar")), false),
-                    PolicyPermissions.RUNTIME_NODE_TREE_EXPAND
+                    AppPermissions.RUNTIME_NODE_TREE_EXPAND
                 ))
             ))
         }

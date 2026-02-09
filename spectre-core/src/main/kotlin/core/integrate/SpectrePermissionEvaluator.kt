@@ -13,7 +13,7 @@ import java.io.Serializable
  * 自定义鉴权.
  *
  * ## 使用 ACL 鉴权
- * 对于 ACL，可以直接使用下面的方法进行鉴权 (See [io.github.vudsen.spectre.api.perm.ACLPermissions])：
+ * 对于 ACL，可以直接使用下面的方法进行鉴权 (See [io.github.vudsen.spectre.api.perm.AppPermissions])：
  * ```
  * @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).ROLE_BIND_USER)")
  * ```
@@ -41,7 +41,7 @@ class SpectrePermissionEvaluator: PermissionEvaluator {
     ): Boolean {
         val user = authentication.principal as UserWithID
         if (permission is PermissionEntity) {
-            return appAccessControlService.isAccessibleByAcl(user.id, permission)
+            return appAccessControlService.hasPermission(user.id, permission)
         }
         TODO("Not yet implemented")
     }

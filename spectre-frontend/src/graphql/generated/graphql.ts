@@ -26,8 +26,8 @@ export type Scalars = {
   ToolchainType: { input: any; output: any; }
 };
 
-export type AclPermissionEntity = {
-  __typename?: 'ACLPermissionEntity';
+export type BasePermissionEntity = {
+  __typename?: 'BasePermissionEntity';
   action: Scalars['String']['output'];
   name: Scalars['String']['output'];
   resource: Scalars['String']['output'];
@@ -110,8 +110,14 @@ export type PolicyPermissionEnhancePlugin = {
 
 export type PolicyPermissionQueries = {
   __typename?: 'PolicyPermissionQueries';
+  listPermissionsByResource: Array<BasePermissionEntity>;
   permission?: Maybe<PolicyPermissionDto>;
   permissions: PolicyPermissionDtoPageResult;
+};
+
+
+export type PolicyPermissionQueriesListPermissionsByResourceArgs = {
+  resource?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -130,10 +136,9 @@ export type PolicyPermissionQueriesPermissionsArgs = {
 export type Query = {
   __typename?: 'Query';
   log: LogEntityQueries;
-  policyPermission: PolicyPermissionQueries;
+  permission: PolicyPermissionQueries;
   role: RoleQueries;
   runtimeNode: RuntimeNodeQueries;
-  staticPermission: StaticPermissionQueries;
   toolchain: ToolchainItemQueries;
   user: UserQueries;
 };
@@ -237,50 +242,6 @@ export type RuntimeNodeQueriesRuntimeNodeArgs = {
 export type RuntimeNodeQueriesRuntimeNodesArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   size?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type StaticPermissionDto = {
-  __typename?: 'StaticPermissionDTO';
-  action: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-  resource: Scalars['String']['output'];
-  subjectId: Scalars['Long']['output'];
-  subjectType: Scalars['String']['output'];
-};
-
-export type StaticPermissionDtoPageResult = {
-  __typename?: 'StaticPermissionDTOPageResult';
-  result: Array<StaticPermissionDto>;
-  totalPages: Scalars['Int']['output'];
-};
-
-export type StaticPermissionQueries = {
-  __typename?: 'StaticPermissionQueries';
-  /**  列出主体下对应资源的所有权限 */
-  allBoundPermissions: Array<StaticPermissionDto>;
-  listPermissionsByResource: Array<AclPermissionEntity>;
-  /**  列出对应主体下的所有权限，带分页 */
-  permissions: StaticPermissionDtoPageResult;
-};
-
-
-export type StaticPermissionQueriesAllBoundPermissionsArgs = {
-  resource?: InputMaybe<Scalars['String']['input']>;
-  subjectId?: InputMaybe<Scalars['Long']['input']>;
-  subjectType?: InputMaybe<Scalars['String']['input']>;
-};
-
-
-export type StaticPermissionQueriesListPermissionsByResourceArgs = {
-  resource?: InputMaybe<Scalars['String']['input']>;
-};
-
-
-export type StaticPermissionQueriesPermissionsArgs = {
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
-  subjectId: Scalars['Long']['input'];
-  subjectType?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ToolchainBundleDto = {
@@ -458,28 +419,14 @@ export type QueryPolicyPermissionPluginsQueryVariables = Exact<{
 }>;
 
 
-export type QueryPolicyPermissionPluginsQuery = { __typename?: 'Query', policyPermission: { __typename?: 'PolicyPermissionQueries', permission?: { __typename?: 'PolicyPermissionDTO', enhancePlugins: Array<{ __typename?: 'PolicyPermissionEnhancePlugin', configuration: string, pluginId: string }> } | null } };
-
-export type PolicyPermissionsQueryQueryVariables = Exact<{
-  subjectType?: InputMaybe<Scalars['String']['input']>;
-  subjectId: Scalars['Long']['input'];
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
-  isUser: Scalars['Boolean']['input'];
-  isRole: Scalars['Boolean']['input'];
-}>;
-
-
-export type PolicyPermissionsQueryQuery = { __typename?: 'Query', policyPermission: { __typename?: 'PolicyPermissionQueries', permissions: { __typename?: 'PolicyPermissionDTOPageResult', totalPages: number, result: Array<{ __typename?: 'PolicyPermissionDTO', id: string, name: string, action: string, resource: string, conditionExpression: string, createdAt: any, description?: string | null }> } }, user?: { __typename?: 'UserQueries', user?: { __typename?: 'User', username: string, displayName?: string | null } | null }, role?: { __typename?: 'RoleQueries', role?: { __typename?: 'RolePO', name: string } | null } };
+export type QueryPolicyPermissionPluginsQuery = { __typename?: 'Query', permission: { __typename?: 'PolicyPermissionQueries', permission?: { __typename?: 'PolicyPermissionDTO', enhancePlugins: Array<{ __typename?: 'PolicyPermissionEnhancePlugin', configuration: string, pluginId: string }> } | null } };
 
 export type PermissionsBindQueryQueryVariables = Exact<{
-  subjectId?: InputMaybe<Scalars['Long']['input']>;
-  subjectType?: InputMaybe<Scalars['String']['input']>;
   resource?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type PermissionsBindQueryQuery = { __typename?: 'Query', staticPermission: { __typename?: 'StaticPermissionQueries', allBoundPermissions: Array<{ __typename?: 'StaticPermissionDTO', action: string }>, listPermissionsByResource: Array<{ __typename?: 'ACLPermissionEntity', action: string, name: string }> } };
+export type PermissionsBindQueryQuery = { __typename?: 'Query', permission: { __typename?: 'PolicyPermissionQueries', listPermissionsByResource: Array<{ __typename?: 'BasePermissionEntity', action: string, name: string }> } };
 
 export type SubjectPermissionsQueryQueryVariables = Exact<{
   subjectId: Scalars['Long']['input'];
@@ -491,7 +438,7 @@ export type SubjectPermissionsQueryQueryVariables = Exact<{
 }>;
 
 
-export type SubjectPermissionsQueryQuery = { __typename?: 'Query', staticPermission: { __typename?: 'StaticPermissionQueries', permissions: { __typename?: 'StaticPermissionDTOPageResult', totalPages: number, result: Array<{ __typename?: 'StaticPermissionDTO', name: string, action: string, resource: string }> } }, user?: { __typename?: 'UserQueries', user?: { __typename?: 'User', username: string, displayName?: string | null } | null }, role?: { __typename?: 'RoleQueries', role?: { __typename?: 'RolePO', name: string } | null } };
+export type SubjectPermissionsQueryQuery = { __typename?: 'Query', permission: { __typename?: 'PolicyPermissionQueries', permissions: { __typename?: 'PolicyPermissionDTOPageResult', totalPages: number, result: Array<{ __typename?: 'PolicyPermissionDTO', id: string, name: string, action: string, resource: string, conditionExpression: string, createdAt: any, description?: string | null }> } }, user?: { __typename?: 'UserQueries', user?: { __typename?: 'User', username: string, displayName?: string | null } | null }, role?: { __typename?: 'RoleQueries', role?: { __typename?: 'RolePO', name: string } | null } };
 
 export type LogDetailQueryQueryVariables = Exact<{
   id: Scalars['Long']['input'];
@@ -680,7 +627,7 @@ export class TypedDocumentString<TResult, TVariables>
 
 export const QueryPolicyPermissionPluginsDocument = new TypedDocumentString(`
     query QueryPolicyPermissionPlugins($id: Long!) {
-  policyPermission {
+  permission {
     permission(id: $id) {
       enhancePlugins {
         configuration
@@ -690,12 +637,22 @@ export const QueryPolicyPermissionPluginsDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<QueryPolicyPermissionPluginsQuery, QueryPolicyPermissionPluginsQueryVariables>;
-export const PolicyPermissionsQueryDocument = new TypedDocumentString(`
-    query PolicyPermissionsQuery($subjectType: String, $subjectId: Long!, $page: Int, $size: Int, $isUser: Boolean!, $isRole: Boolean!) {
-  policyPermission {
+export const PermissionsBindQueryDocument = new TypedDocumentString(`
+    query PermissionsBindQuery($resource: String) {
+  permission {
+    listPermissionsByResource(resource: $resource) {
+      action
+      name
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<PermissionsBindQueryQuery, PermissionsBindQueryQueryVariables>;
+export const SubjectPermissionsQueryDocument = new TypedDocumentString(`
+    query SubjectPermissionsQuery($subjectId: Long!, $subjectType: String!, $page: Int, $size: Int, $isUser: Boolean!, $isRole: Boolean!) {
+  permission {
     permissions(
-      subjectType: $subjectType
       subjectId: $subjectId
+      subjectType: $subjectType
       page: $page
       size: $size
     ) {
@@ -708,53 +665,6 @@ export const PolicyPermissionsQueryDocument = new TypedDocumentString(`
         conditionExpression
         createdAt
         description
-      }
-    }
-  }
-  user @include(if: $isUser) {
-    user(id: $subjectId) {
-      username
-      displayName
-    }
-  }
-  role @include(if: $isRole) {
-    role(id: $subjectId) {
-      name
-    }
-  }
-}
-    `) as unknown as TypedDocumentString<PolicyPermissionsQueryQuery, PolicyPermissionsQueryQueryVariables>;
-export const PermissionsBindQueryDocument = new TypedDocumentString(`
-    query PermissionsBindQuery($subjectId: Long, $subjectType: String, $resource: String) {
-  staticPermission {
-    allBoundPermissions(
-      subjectId: $subjectId
-      subjectType: $subjectType
-      resource: $resource
-    ) {
-      action
-    }
-    listPermissionsByResource(resource: $resource) {
-      action
-      name
-    }
-  }
-}
-    `) as unknown as TypedDocumentString<PermissionsBindQueryQuery, PermissionsBindQueryQueryVariables>;
-export const SubjectPermissionsQueryDocument = new TypedDocumentString(`
-    query SubjectPermissionsQuery($subjectId: Long!, $subjectType: String!, $page: Int, $size: Int, $isUser: Boolean!, $isRole: Boolean!) {
-  staticPermission {
-    permissions(
-      subjectId: $subjectId
-      subjectType: $subjectType
-      page: $page
-      size: $size
-    ) {
-      totalPages
-      result {
-        name
-        action
-        resource
       }
     }
   }

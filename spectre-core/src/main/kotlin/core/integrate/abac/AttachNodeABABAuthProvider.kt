@@ -2,8 +2,8 @@ package io.github.vudsen.spectre.core.integrate.abac
 
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
+import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
-import io.github.vudsen.spectre.api.perm.PolicyPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
 import io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider
@@ -24,7 +24,7 @@ class AttachNodeABABAuthProvider : PolicyAuthenticationProvider {
 
 
     override fun getPermissionEntity(): PermissionEntity {
-        return PolicyPermissions.RUNTIME_NODE_ATTACH
+        return AppPermissions.RUNTIME_NODE_ATTACH
     }
 
 
@@ -33,7 +33,7 @@ class AttachNodeABABAuthProvider : PolicyAuthenticationProvider {
             add(PolicyPermissionContextExample(
                 "连接节点时",
                 toContextMap(AttachNodePolicyPermissionContext(
-                    PolicyPermissions.RUNTIME_NODE_ATTACH,
+                    AppPermissions.RUNTIME_NODE_ATTACH,
                     RuntimeNodeDTO(-1, "Test", "Test", TestRuntimeNodeConfig(), Timestamp(System.currentTimeMillis()), mapOf(Pair("foo", "bar")), false),
                     JvmSearchNode("Hello", false, null)
                 ))

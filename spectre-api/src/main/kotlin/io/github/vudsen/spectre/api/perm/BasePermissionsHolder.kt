@@ -49,11 +49,9 @@ open class BasePermissionsHolder {
         return permissionMap[resource] ?: emptySet()
     }
 
-    fun findByResourceAndActions(resource: String, action: String): PermissionEntity {
-        val res = permissionMap[resource] ?: throw BusinessException("Unknown permission '${resource}:${action}'")
-        return res.find { permissionEntity -> permissionEntity.resource == resource && permissionEntity.action == action} ?: throw BusinessException(
-            "Unknown permission '${resource}:${action}'"
-        )
+    fun findByResourceAndActions(resource: String, action: String): PermissionEntity? {
+        val res = permissionMap[resource] ?: return null
+        return res.find { permissionEntity -> permissionEntity.resource == resource && permissionEntity.action == action}
     }
 
 }

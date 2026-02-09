@@ -57,6 +57,9 @@ class PolicyPermissionPO {
     @Column(name = "created_at", insertable = false, updatable = false)
     var createdAt: Timestamp? = null
 
+    /**
+     * @see io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint
+     */
     @Convert(converter = PolicyPermissionEnhancePluginConverter::class)
     var enhancePlugins: List<PolicyPermissionEnhancePlugin> = emptyList()
 

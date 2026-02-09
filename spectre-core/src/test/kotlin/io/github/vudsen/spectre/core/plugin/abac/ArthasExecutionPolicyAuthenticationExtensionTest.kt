@@ -3,7 +3,7 @@ package io.github.vudsen.spectre.core.plugin.abac
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.api.perm.PolicyPermissions
+import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.PolicyPermissionService
@@ -51,8 +51,8 @@ class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
         val id = policyPermissionService.save(PolicyPermissionPO().apply {
             subjectType = SubjectType.ROLE
             subjectId = TestConstant.ROLE_TEST_ID
-            resource = PolicyPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.resource
-            action = PolicyPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.action
+            resource = AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.resource
+            action = AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.action
             conditionExpression = "'true'"
             enhancePlugins = listOf(PolicyPermissionEnhancePlugin().apply {
                 pluginId = ArthasExecutionEnhancePolicyAuthenticationExtension.ID

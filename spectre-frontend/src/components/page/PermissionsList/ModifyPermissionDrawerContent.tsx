@@ -7,7 +7,7 @@ import {
   type PolicyPermissionContextExample,
   type PolicyPermissionEnhancePlugin,
   updatePolicyPermission,
-} from '@/api/impl/policy-permission.ts'
+} from '@/api/impl/permission.ts'
 import {
   addToast,
   Alert,
@@ -73,7 +73,7 @@ type EnhancePageParameters = {
 
 const QueryPolicyPermissionPlugins = graphql(`
   query QueryPolicyPermissionPlugins($id: Long!) {
-    policyPermission {
+    permission {
       permission(id: $id) {
         enhancePlugins {
           configuration
@@ -90,7 +90,7 @@ const ModifyPermissionDrawerContent: React.FC<
   const formControl = useForm<FormState>({
     defaultValues: {
       description: props.oldPermission?.description,
-      expression: props.oldPermission?.conditionExpression,
+      expression: props.oldPermission?.conditionExpression ?? 'true',
     },
   })
   const { control, trigger, getValues } = formControl
@@ -121,7 +121,7 @@ const ModifyPermissionDrawerContent: React.FC<
         const result = await execute(QueryPolicyPermissionPlugins, {
           id: props.oldPermission.id,
         })
-        const plugins = result.policyPermission.permission?.enhancePlugins
+        const plugins = result.permission.permission?.enhancePlugins
         if (plugins) {
           for (const plugin of plugins) {
             const target = forms.find((v) => v.pluginId === plugin.pluginId)

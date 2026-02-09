@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.api.perm
 
-object ACLPermissions : BasePermissionsHolder() {
+
+object AppPermissions : BasePermissionsHolder() {
 
     @JvmStatic
     val ALL = PermissionEntity("all", "all", "所有权限")
@@ -16,6 +17,15 @@ object ACLPermissions : BasePermissionsHolder() {
 
     @JvmStatic
     val RUNTIME_NODE_DELETE = PermissionEntity("runtime-node", "delete", "删除运行节点")
+
+    @JvmStatic
+    val RUNTIME_NODE_TREE_EXPAND = PermissionEntity("runtime-node", "tree", "展开节点树")
+
+    @JvmStatic
+    val RUNTIME_NODE_ATTACH = PermissionEntity("runtime-node", "attach", "连接节点")
+
+    @JvmStatic
+    val RUNTIME_NODE_ARTHAS_EXECUTE = PermissionEntity("runtime-node", "execute", "执行 Arthas 命令")
 
     @JvmStatic
     val TOOL_CHAIN_READ = PermissionEntity("tool-chain", "read", "查询工具链")
@@ -111,6 +121,10 @@ object ACLPermissions : BasePermissionsHolder() {
         registerPermission(PERMISSION_BIND)
         registerPermission(PERMISSION_READ)
         registerPermission(LOG_READ)
+        registerPermission(RUNTIME_NODE_TREE_EXPAND)
+        registerPermission(RUNTIME_NODE_ATTACH)
+        registerPermission(RUNTIME_NODE_ARTHAS_EXECUTE)
+
 
         registerName("all", "所有权限")
         registerName("runtime-node", "运行节点")
@@ -121,5 +135,6 @@ object ACLPermissions : BasePermissionsHolder() {
         registerName("audit", "审计")
         registerName("permission", "权限")
     }
+
 
 }

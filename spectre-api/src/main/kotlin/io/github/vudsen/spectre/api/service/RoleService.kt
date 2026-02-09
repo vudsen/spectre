@@ -46,4 +46,9 @@ interface RoleService {
      */
     fun searchByName(name: String, page: Int, size: Int): Page<RolePO>
 
+    /**
+     * 删除角色
+     */
+    fun deleteRole(id: Long)
+
 }

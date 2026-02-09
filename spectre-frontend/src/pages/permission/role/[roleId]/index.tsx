@@ -13,8 +13,7 @@ import { formatTime } from '@/common/util.ts'
 import useCrumb, { type Crumb } from '@/hook/useCrumb.ts'
 import SpectreTabs, { type TabContent } from '@/components/SpectreTabs'
 import RoleUserList from './RoleUserList.tsx'
-import StaticPermissionList from '@/components/page/StaticPermissionList'
-import PolicyPermissionList from '@/components/page/PolicyPermissionList'
+import PermissionsList from '../../../../components/page/PermissionsList'
 import RoleModifyDrawerContent from '@/pages/permission/role/RoleModifyDrawerContent.tsx'
 import { type DocumentResult, execute } from '@/graphql/execute.ts'
 import type { RoleModifyVO } from '@/api/impl/role.ts'
@@ -80,17 +79,10 @@ const RolePermissionDetailPage: React.FC = () => {
         content: <RoleUserList roleId={params.roleId} />,
       },
       {
-        name: '静态权限',
+        name: '权限',
         key: 'StaticPermission',
         content: (
-          <StaticPermissionList subjectId={params.roleId} subjectType="ROLE" />
-        ),
-      },
-      {
-        name: '策略权限',
-        key: 'PolicyPermission',
-        content: (
-          <PolicyPermissionList subjectId={params.roleId} subjectType="ROLE" />
+          <PermissionsList subjectId={params.roleId} subjectType="ROLE" />
         ),
       },
     ]

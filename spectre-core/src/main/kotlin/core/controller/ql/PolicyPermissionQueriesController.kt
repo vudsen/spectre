@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.core.controller.ql
 import io.github.vudsen.spectre.core.bean.PageResult
 import io.github.vudsen.spectre.core.bean.toPageResult
 import io.github.vudsen.spectre.api.dto.PolicyPermissionDTO
+import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.service.PolicyPermissionService
 import io.github.vudsen.spectre.repo.entity.SubjectType
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 @SchemaMapping(typeName = "PolicyPermissionQueries")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).PERMISSION_READ)")
+@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_READ)")
 class PolicyPermissionQueriesController(
     private val policyPermissionService: PolicyPermissionService
 ) {
@@ -22,8 +23,17 @@ class PolicyPermissionQueriesController(
     object PolicyPermissionQueries
 
     @QueryMapping
-    fun policyPermission(): PolicyPermissionQueries {
+    fun permission(): PolicyPermissionQueries {
         return PolicyPermissionQueries
+    }
+
+
+    /**
+     * 列出资源下所有的权限
+     */
+    @SchemaMapping
+    fun listPermissionsByResource(@Argument resource: String): Set<PermissionEntity> {
+        return policyPermissionService.findPermissionsByResourceName(resource)
     }
 
     /**

@@ -28,7 +28,7 @@ class ToolchainMutationsController(
     }
 
     @SchemaMapping
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_UPDATE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_UPDATE)")
     fun updateOrCreateToolchain(@Argument @Validated po: ToolchainItemModifyVO): ToolchainItemPO? {
         val r = toolchainService.updateOrCreateToolchainItem(
             ToolchainItemPO(ToolchainItemId(po.type, po.tag), po.url, po.armUrl)
@@ -37,7 +37,7 @@ class ToolchainMutationsController(
     }
 
     @SchemaMapping
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_BUNDLE_CREATE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_BUNDLE_CREATE)")
     fun createToolchainBundle(
         @Argument @Validated(CreateGroup::class) vo: ToolchainBundleModifyVO
     ): ToolchainBundlePO {

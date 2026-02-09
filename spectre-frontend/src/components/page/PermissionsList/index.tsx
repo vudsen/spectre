@@ -1,7 +1,5 @@
-import React, { useCallback } from 'react'
-import { useState } from 'react'
 import { graphql } from '@/graphql/generated'
-import type { DocumentResult } from '@/graphql/execute.ts'
+import React, { useRef, useState } from 'react'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import {
   addToast,
@@ -9,8 +7,6 @@ import {
   Card,
   CardBody,
   Code,
-  Drawer,
-  DrawerContent,
   Input,
   Pagination,
   Table,
@@ -19,35 +15,36 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-  useDisclosure,
 } from '@heroui/react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
-import BindPolicyPermissionDrawer from '@/components/page/PolicyPermissionList/BindPolicyPermissionDrawer.tsx'
-import ModifyPermissionDrawerContent from '@/components/page/PolicyPermissionList/ModifyPermissionDrawerContent.tsx'
-import Time from '@/components/Time.tsx'
-import { deletePermissionPolicy } from '@/api/impl/policy-permission.ts'
 import { showDialog } from '@/common/util.ts'
+import PermissionModifyControl, {
+  type PermissionModifyControlRef,
+} from '@/components/page/PermissionsList/PermissionModifyControl.tsx'
+import Time from '@/components/Time.tsx'
+import type { DocumentResult } from '@/graphql/execute.ts'
+import { deletePermissionPolicy } from '@/api/impl/permission.ts'
 
-interface PolicyPermissionListProps {
+interface StaticPermissionListProps {
   subjectId: string
   subjectType: string
 }
 
-const PolicyPermissionsQuery = graphql(`
-  query PolicyPermissionsQuery(
-    $subjectType: String
+const SubjectPermissionsQuery = graphql(`
+  query SubjectPermissionsQuery(
     $subjectId: Long!
+    $subjectType: String!
     $page: Int
     $size: Int
     $isUser: Boolean!
     $isRole: Boolean!
   ) {
-    policyPermission {
+    permission {
       permissions(
-        subjectType: $subjectType
         subjectId: $subjectId
+        subjectType: $subjectType
         page: $page
         size: $size
       ) {
@@ -77,72 +74,57 @@ const PolicyPermissionsQuery = graphql(`
   }
 `)
 
-type Permission = DocumentResult<
-  typeof PolicyPermissionsQuery
->['policyPermission']['permissions']['result'][number]
+type PermissionQlResult = DocumentResult<
+  typeof SubjectPermissionsQuery
+>['permission']['permissions']['result'][number]
 
-const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
+const PermissionsList: React.FC<StaticPermissionListProps> = (props) => {
   const [qlArgs, setQlArgs] = useState({
-    subjectId: props.subjectId!,
-    subjectType: props.subjectType!,
+    subjectId: props.subjectId,
+    subjectType: props.subjectType,
     page: 0,
     size: 10,
     isUser: props.subjectType === 'USER',
     isRole: props.subjectType === 'ROLE',
   })
-  const { result, isLoading } = useGraphQL(PolicyPermissionsQuery, qlArgs)
-  const { onOpen, isOpen, onOpenChange } = useDisclosure()
-  const updatePermissionDisclosure = useDisclosure()
-  const [selectedPermission, setSelectedPermission] = useState<Permission>()
+  const { isLoading, result } = useGraphQL(SubjectPermissionsQuery, qlArgs)
+  const permissionModifyRef = useRef<PermissionModifyControlRef>(null)
 
-  const totalPage = result?.policyPermission.permissions.totalPages ?? 0
-  const onModify = (permission: Permission) => {
-    setSelectedPermission(permission)
-    updatePermissionDisclosure.onOpen()
-  }
-
-  const refreshTable = useCallback(() => {
-    setQlArgs((prev) => ({
-      ...prev,
-    }))
-  }, [])
-
-  const deletePermission = useCallback((permission: Permission) => {
+  const deletePermissionInner = (permission: PermissionQlResult) => {
     showDialog({
-      title: '删除策略权限',
-      message: `确定删除 '${permission.name}' 吗?`,
+      title: '删除权限',
+      message: `确定删除权限 '${permission.name}' 吗?`,
       color: 'danger',
-      async onConfirm() {
-        try {
-          return await deletePermissionPolicy(permission.id)
-        } finally {
-          setQlArgs((prevState) => ({ ...prevState }))
-          addToast({
-            title: '删除成功',
-            color: 'success',
-          })
-        }
+      onConfirm: async () => {
+        await deletePermissionPolicy(permission.id)
+        addToast({
+          title: '删除成功',
+          color: 'success',
+        })
+        setQlArgs({ ...qlArgs })
       },
     })
-  }, [])
+  }
 
+  const onModify = (permission: PermissionQlResult) => {
+    permissionModifyRef.current!.onModify(permission)
+  }
+
+  const totalPage = result?.permission.permissions.totalPages ?? 0
   return (
     <>
       <Card>
         <CardBody className="overflow-hidden">
           <div className="flex items-center justify-between">
-            <div className="spectre-heading">策略权限</div>
-            <Button
-              color="primary"
-              variant="bordered"
-              size="sm"
-              onPress={onOpen}
-            >
-              新增
-            </Button>
+            <div className="spectre-heading">权限</div>
+            <PermissionModifyControl
+              {...props}
+              ref={permissionModifyRef}
+              onModified={() => setQlArgs({ ...qlArgs })}
+            />
           </div>
           <div className="my-2 text-sm">
-            策略权限，支持通过 SpEL 进行更精细的权限控制。
+            赋予主体权限，支持通过 SpEL 表达式进行更加精确的判断
           </div>
           <Input
             size="sm"
@@ -173,32 +155,36 @@ const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
           >
             <TableHeader>
               <TableColumn>名称</TableColumn>
+              <TableColumn>代码</TableColumn>
               <TableColumn>表达式</TableColumn>
               <TableColumn>创建时间</TableColumn>
-              <TableColumn>描述</TableColumn>
               <TableColumn align="end">操作</TableColumn>
             </TableHeader>
             <TableBody
-              emptyContent={'没有任何权限'}
-              items={result?.policyPermission.permissions.result ?? []}
               isLoading={isLoading}
               loadingContent={<TableLoadingMask />}
+              items={result?.permission.permissions.result ?? []}
+              emptyContent={<div>没有任何权限</div>}
             >
               {(permission) => (
-                <TableRow key={permission.id}>
+                <TableRow key={`${permission.resource}:${permission.action}`}>
                   <TableCell>{permission.name}</TableCell>
+                  <TableCell>
+                    <Code>
+                      {permission.resource}:{permission.action}
+                    </Code>
+                  </TableCell>
                   <TableCell>
                     <Code>{permission.conditionExpression}</Code>
                   </TableCell>
                   <TableCell>
                     <Time time={permission.createdAt} />
                   </TableCell>
-                  <TableCell>{permission.description ?? '-'}</TableCell>
                   <TableCell>
                     <Button
                       isIconOnly
-                      variant="light"
                       color="primary"
+                      variant="light"
                       size="sm"
                       onPress={() => onModify(permission)}
                     >
@@ -206,10 +192,10 @@ const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
                     </Button>
                     <Button
                       isIconOnly
-                      variant="light"
                       color="danger"
                       size="sm"
-                      onPress={() => deletePermission(permission)}
+                      variant="light"
+                      onPress={() => deletePermissionInner(permission)}
                     >
                       <SvgIcon icon={Icon.TRASH} />
                     </Button>
@@ -220,34 +206,8 @@ const PolicyPermissionList: React.FC<PolicyPermissionListProps> = (props) => {
           </Table>
         </CardBody>
       </Card>
-      <BindPolicyPermissionDrawer
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        onModified={refreshTable}
-        subjectId={props.subjectId!}
-      />
-      <Drawer
-        size="xl"
-        isOpen={updatePermissionDisclosure.isOpen}
-        onOpenChange={updatePermissionDisclosure.onOpenChange}
-      >
-        <DrawerContent>
-          {(onClose) => (
-            <>
-              <ModifyPermissionDrawerContent
-                onModified={refreshTable}
-                permissionName={selectedPermission!.name}
-                subjectId={props.subjectId!}
-                onClose={onClose}
-                permission={selectedPermission!}
-                oldPermission={selectedPermission!}
-              />
-            </>
-          )}
-        </DrawerContent>
-      </Drawer>
     </>
   )
 }
 
-export default PolicyPermissionList
+export default PermissionsList

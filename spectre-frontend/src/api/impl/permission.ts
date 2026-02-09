@@ -8,7 +8,7 @@ type PermissionEntity = {
 }
 
 export const listAllPolicyPermissions = (): Promise<PermissionEntity[]> => {
-  return axios.get('permission/policy/permissions')
+  return axios.get('permission/permissions')
 }
 export type PolicyPermissionEnhancePlugin = {
   pluginId: string
@@ -26,7 +26,7 @@ type SavePolicyPermission = {
 }
 
 export const createPolicyPermission = (policy: SavePolicyPermission) => {
-  return axios.post('permission/policy/create', policy)
+  return axios.post('permission/create', policy)
 }
 
 type UpdateArgs = {
@@ -37,7 +37,7 @@ type UpdateArgs = {
 }
 
 export const updatePolicyPermission = (policy: UpdateArgs) => {
-  return axios.post('permission/policy/update', policy)
+  return axios.post('permission/update', policy)
 }
 
 export const getEnhanceAuthenticationPages = (
@@ -45,12 +45,12 @@ export const getEnhanceAuthenticationPages = (
   action: string,
 ): Promise<PageDescriptor[]> => {
   return axios.get(
-    `permission/policy/enhance-pages?resource=${resource}&action=${action}`,
+    `permission/enhance-pages?resource=${resource}&action=${action}`,
   )
 }
 
 export const deletePermissionPolicy = (id: string) => {
-  return axios.post(`permission/policy/delete/${id}`)
+  return axios.post(`permission/delete/${id}`)
 }
 
 export type PolicyPermissionContextExample = {
@@ -62,4 +62,15 @@ export const getPolicyPermissionContextExample = (
   resource: string,
   action: string,
 ): Promise<PolicyPermissionContextExample[]> =>
-  axios.get(`permission/policy/example?resource=${resource}&action=${action}`)
+  axios.get(`permission/example?resource=${resource}&action=${action}`)
+
+export type PermissionResourceDTO = {
+  name: string
+  resource: string
+}
+
+export const listStaticPermissionNames = (): Promise<
+  PermissionResourceDTO[]
+> => {
+  return axios.get('permission/resources')
+}

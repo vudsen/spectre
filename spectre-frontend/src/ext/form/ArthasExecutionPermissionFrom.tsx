@@ -3,7 +3,7 @@ import type { FormComponentProps } from '@/ext/type.ts'
 import { Button } from '@heroui/react'
 import ControlledCheckbox from '@/components/validation/ControlledCheckbox.tsx'
 import { useForm } from 'react-hook-form'
-import type { PolicyPermissionEnhancePlugin } from '@/api/impl/policy-permission.ts'
+import type { PolicyPermissionEnhancePlugin } from '@/api/impl/permission.ts'
 
 const commands = [
   'auth',
