@@ -41,11 +41,13 @@ class ToolchainController(
         toolchainService.cachePackageToLocal(type, tag, isArm, file)
     }
 
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_DELETE)")
     @PostMapping("item/delete")
     fun deleteToolchainItem(@Validated @RequestBody id: ToolchainItemId) {
         toolchainService.deleteToolchainItemById(id)
     }
 
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_BUNDLE_DELETE)")
     @PostMapping("bundle/delete")
     fun deleteToolchainBundle(id: String) {
         toolchainService.deleteToolchainBundleById(id.toLong())
