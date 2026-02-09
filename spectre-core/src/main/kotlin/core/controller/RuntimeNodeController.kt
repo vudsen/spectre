@@ -11,7 +11,7 @@ import io.github.vudsen.spectre.repo.util.CreateGroup
 import io.github.vudsen.spectre.repo.util.UpdateGroup
 import io.github.vudsen.spectre.core.vo.RuntimeNodeExpandRequestVO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
-import io.github.vudsen.spectre.api.perm.PolicyPermissions
+import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
@@ -25,14 +25,14 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("runtime-node")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_READ)")
+@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_READ)")
 class RuntimeNodeController(
     private val service: RuntimeNodeService,
     private val appAccessControlService: AppAccessControlService
 ) {
 
 
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_UPDATE) or hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_CREATE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE) or hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
     @GetMapping("configuration-page")
     fun configurationPage(pluginId: String): PageDescriptor? {
         return service.findPluginById(pluginId)?.getConfigurationForm(null)
@@ -40,19 +40,19 @@ class RuntimeNodeController(
 
     @PostMapping("create")
     @Log("log.runtime_node.create", contextResolveExp = "{ id: #args[0].id }")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_CREATE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
     fun createRuntimeNode(@RequestBody @Validated(CreateGroup::class) po: RuntimeNodePO) {
         service.saveRuntimeNode(po)
     }
 
     @Log("log.runtime_node.update", contextResolveExp = "{ id: #args[0].id }")
     @PostMapping("update")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_UPDATE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE)")
     fun updateRuntimeNode(@RequestBody @Validated(UpdateGroup::class) po: RuntimeNodePO) {
         service.saveRuntimeNode(po)
     }
 
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_UPDATE) or hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_CREATE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE) or hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
     @PostMapping("test")
     fun testConnection(@RequestBody @Validated testObj: RuntimeNodeTestDTO) {
         service.test(testObj)
@@ -61,7 +61,7 @@ class RuntimeNodeController(
     @PostMapping("expand-tree")
     fun expandRuntimeNodeTree(@RequestBody vo: RuntimeNodeExpandRequestVO): List<JvmTreeNodeDTO> {
         val node = service.getRuntimeNode(vo.runtimeNodeId) ?: throw BusinessException("节点不存在")
-        val ctx = RuntimeNodePolicyPermissionContext(node, PolicyPermissions.RUNTIME_NODE_TREE_EXPAND)
+        val ctx = RuntimeNodePolicyPermissionContext(node, AppPermissions.RUNTIME_NODE_TREE_EXPAND)
         appAccessControlService.checkPolicyPermission(ctx)
 
         return service.expandRuntimeNodeTree(vo.runtimeNodeId, vo.parentNodeId)
@@ -69,7 +69,7 @@ class RuntimeNodeController(
 
     @PostMapping("delete/{id}")
     @Log("log.runtime_node.delete", contextResolveExp = "{ id: #args[0] }")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_DELETE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_DELETE)")
     fun delete(@PathVariable id: Long) {
         service.deleteById(id)
     }

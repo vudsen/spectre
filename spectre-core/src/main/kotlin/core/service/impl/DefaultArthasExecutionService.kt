@@ -6,7 +6,7 @@ import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
-import io.github.vudsen.spectre.api.perm.PolicyPermissions
+import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.AppAccessControlService
@@ -129,7 +129,7 @@ class DefaultArthasExecutionService(
             ?: throw BusinessException("节点不存在")
         val node =
             runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
-        val ctx = AttachNodePolicyPermissionContext(PolicyPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
+        val ctx = AttachNodePolicyPermissionContext(AppPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
         appAccessControlService.checkPolicyPermission(ctx)
     }
 

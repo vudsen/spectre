@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.api.plugin
 
 import io.github.vudsen.spectre.api.entity.TypedPageDescriptor
+import io.github.vudsen.spectre.api.exception.PermissionDenyException
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 
 /**
@@ -28,8 +29,9 @@ abstract class EnhancePolicyAuthenticationExtensionPoint : ExtensionPoint {
      * 检查是否拥有权限
      * @param context 上下文
      * @param conf [getConfigurationClass] 对应的配置
-     * @return 是否拥有对应权限。实现类也可以自己直接抛出异常来覆盖默认的错误信息
+     * @return 是否拥有对应权限
      */
+    @Throws(PermissionDenyException::class)
     abstract fun hasPermission(context: Map<String, Any>, conf: Any): Boolean
 
     /**

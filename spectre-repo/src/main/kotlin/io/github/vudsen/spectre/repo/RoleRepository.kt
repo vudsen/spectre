@@ -34,6 +34,10 @@ interface RoleRepository : JpaRepository<RolePO, Long>, QueryByExampleExecutor<R
     @Query("DELETE FROM UserRolePO WHERE id.userId = :userId AND id.roleId = :roleId")
     fun unbindUser(@Param("roleId") roleId: Long, @Param("userId") userId: Long)
 
+    @Modifying
+    @Query("DELETE FROM UserRolePO WHERE id.roleId = :roleId")
+    fun deleteUserRoleByRoleId(@Param("roleId") roleId: Long)
+
     fun searchByNameStartsWith(namePrefix: String, page: Pageable): Page<RolePO>
 
 }

@@ -17,14 +17,14 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController()
 @RequestMapping("toolchain")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_READ)")
+@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_READ)")
 class ToolchainController(
     private val toolchainService: ToolchainService
 ) {
 
 
     @PostMapping("upload")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_UPDATE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_UPDATE)")
     fun upload(
         file: MultipartFile,
         @RequestParam type: ToolchainType,
@@ -52,7 +52,7 @@ class ToolchainController(
     }
 
     @PostMapping("bundle/update")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).TOOL_CHAIN_BUNDLE_UPDATE)")
+    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_BUNDLE_UPDATE)")
     fun updateToolchainBundle(@Validated @RequestBody po: ToolchainBundlePO) {
         toolchainService.saveToolchainBundle(po)
     }

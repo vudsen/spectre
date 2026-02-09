@@ -98,4 +98,8 @@ class DefaultUserService(
         modifyPassword(userId, newPassword)
     }
 
+    override fun deleteUserById(userId: Long) {
+        userRepository.deleteById(userId)
+    }
+
 }

@@ -16,7 +16,7 @@ This directive disables error propagation when a non nullable field returns null
 """
 directive @experimental_disableErrorPropagation on MUTATION | QUERY | SUBSCRIPTION
 
-type ACLPermissionEntity {
+type BasePermissionEntity {
   action: String!
   name: String!
   resource: String!
@@ -88,16 +88,16 @@ type PolicyPermissionEnhancePlugin {
 }
 
 type PolicyPermissionQueries {
+  listPermissionsByResource(resource: String): [BasePermissionEntity!]!
   permission(id: Long!): PolicyPermissionDTO
   permissions(page: Int, size: Int, subjectId: Long!, subjectType: String): PolicyPermissionDTOPageResult!
 }
 
 type Query {
   log: LogEntityQueries!
-  policyPermission: PolicyPermissionQueries!
+  permission: PolicyPermissionQueries!
   role: RoleQueries!
   runtimeNode: RuntimeNodeQueries!
-  staticPermission: StaticPermissionQueries!
   toolchain: ToolchainItemQueries!
   user: UserQueries!
 }
@@ -150,27 +150,6 @@ type RuntimeNodeQueries {
   plugins: [RuntimeNodePluginVO!]!
   runtimeNode(id: String): RuntimeNodeDTO
   runtimeNodes(page: Int = 0, size: Int = 10): RuntimeNodePage!
-}
-
-type StaticPermissionDTO {
-  action: String!
-  name: String!
-  resource: String!
-  subjectId: Long!
-  subjectType: String!
-}
-
-type StaticPermissionDTOPageResult {
-  result: [StaticPermissionDTO!]!
-  totalPages: Int!
-}
-
-type StaticPermissionQueries {
-  """ 列出主体下对应资源的所有权限"""
-  allBoundPermissions(resource: String, subjectId: Long, subjectType: String): [StaticPermissionDTO!]!
-  listPermissionsByResource(resource: String): [ACLPermissionEntity!]!
-  """ 列出对应主体下的所有权限，带分页"""
-  permissions(page: Int, size: Int, subjectId: Long!, subjectType: String): StaticPermissionDTOPageResult!
 }
 
 """Epoch milliseconds timestamp"""

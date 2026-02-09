@@ -41,4 +41,6 @@ interface UserService {
      * 修改用户密码
      */
     fun modifyPassword(userId: Long, oldPassword: String, newPassword: String)
+
+    fun deleteUserById(userId: Long)
 }

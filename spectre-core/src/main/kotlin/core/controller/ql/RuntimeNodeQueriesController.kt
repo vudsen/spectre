@@ -14,7 +14,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 @SchemaMapping(typeName = "RuntimeNodeQueries")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).RUNTIME_NODE_READ)")
+@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_READ)")
 class RuntimeNodeQueriesController(
     private val service: RuntimeNodeService
 ) {

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 @SchemaMapping(typeName = "RoleQueries")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).ROLE_READ)")
+@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_READ)")
 class RoleQueriesController(
     private val roleService: RoleService
 ) {

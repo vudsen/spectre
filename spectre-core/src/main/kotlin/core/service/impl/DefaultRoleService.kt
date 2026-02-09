@@ -77,5 +77,11 @@ class DefaultRoleService(
         return roleRepository.searchByNameStartsWith(name, PageRequest.of(page, size))
     }
 
+    @Transactional(rollbackFor = [Exception::class])
+    override fun deleteRole(id: Long) {
+        roleRepository.deleteById(id)
+        roleRepository.deleteUserRoleByRoleId(id)
+    }
+
 
 }

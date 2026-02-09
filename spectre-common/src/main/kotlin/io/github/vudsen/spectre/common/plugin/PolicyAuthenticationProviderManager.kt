@@ -24,8 +24,8 @@ class PolicyAuthenticationProviderManager(
         return providerMap[context.resource] ?: throw BusinessException("Permission not found")
     }
 
-    fun findByPermissionEntity(entity: PermissionEntity): PolicyAuthenticationProvider {
-        return providerMap[entity] ?: throw BusinessException("Permission not found")
+    fun findByPermissionEntity(entity: PermissionEntity): PolicyAuthenticationProvider? {
+        return providerMap[entity]
     }
 
 }

@@ -2,7 +2,7 @@ package io.github.vudsen.spectre.core.integrate.abac
 
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.api.perm.PolicyPermissions
+import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider
 import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
@@ -29,7 +29,7 @@ class ArthasExecPolicyAuthProvider : PolicyAuthenticationProvider {
 
 
     override fun getPermissionEntity(): PermissionEntity {
-        return PolicyPermissions.RUNTIME_NODE_ARTHAS_EXECUTE
+        return AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE
     }
 
 

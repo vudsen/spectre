@@ -26,4 +26,6 @@ object TestConstant {
 
     const val USER_TESTER_PASSWORD = "P@ssw0rd"
 
+    const val USER_TESTER_ENCRYPTED_PASSWORD = "\$2a\$10\$HYWbzz/kgOxgklyf5pF0Vu2Hyfpir1xCeVua.NqpHynWurqRa2QI."
+
 }

@@ -14,10 +14,11 @@ import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
  */
 interface AppAccessControlService {
 
+
     /**
-     * 通过 acl 校验当前用户是否可以访问该资源
+     * 是否拥有权限. 该方法会创建一个 [io.github.vudsen.spectre.api.perm.EmptyContext] 用于校验策略权限
      */
-    fun isAccessibleByAcl(userId: Long, permissionEntity: PermissionEntity): Boolean
+    fun hasPermission(userId: Long, permissionEntity: PermissionEntity): Boolean
 
     /**
      * 获取用于帮助编写 ognl 表达式的样例

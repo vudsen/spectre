@@ -7,7 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.node.ArrayNode
 import io.github.vudsen.spectre.api.entity.TypedPageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.api.perm.PolicyPermissions
+import io.github.vudsen.spectre.api.exception.PermissionDenyException
+import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint
 import org.springframework.http.HttpStatus
@@ -95,7 +96,7 @@ class ArthasExecutionEnhancePolicyAuthenticationExtension : EnhancePolicyAuthent
     }
 
     override fun getEnhanceTarget(): PermissionEntity {
-        return PolicyPermissions.RUNTIME_NODE_ARTHAS_EXECUTE
+        return AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE
     }
 
     override fun getConfigurationPage(): TypedPageDescriptor<EnhancePageParameterVO> {
@@ -115,18 +116,18 @@ class ArthasExecutionEnhancePolicyAuthenticationExtension : EnhancePolicyAuthent
         if (!arthasCommands.contains(command)) {
             // unknown command.
             if (!conf.allowUnknownCommand) {
-                throw BusinessException("您没有执行未知命令的权限", emptyArray()).apply {
+                throw PermissionDenyException("您没有执行未知命令的权限", emptyArray()).apply {
                     httpStatus = HttpStatus.FORBIDDEN.value()
                 }
             }
         } else if (!conf.allowedCommands.contains(command)) {
-            throw BusinessException("您没有执行${command}的权限", emptyArray()).apply {
+            throw PermissionDenyException("您没有执行${command}的权限", emptyArray()).apply {
                 httpStatus = HttpStatus.FORBIDDEN.value()
             }
         }
         if (commands.indexOf(">") >= 0 || commands.indexOf("<") >= 0) {
             if (!conf.allowRedirect) {
-                throw BusinessException("您没有执行使用重定向符的权限", emptyArray()).apply {
+                throw PermissionDenyException("您没有执行使用重定向符的权限", emptyArray()).apply {
                     httpStatus = HttpStatus.FORBIDDEN.value()
                 }
             }
