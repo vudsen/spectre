@@ -6,7 +6,7 @@
 version: 2
 updates:
   - package-ecosystem: "gradle"
-    directory: "/spectre-core"
+    directory: "."
     schedule:
       interval: "weekly"
 
