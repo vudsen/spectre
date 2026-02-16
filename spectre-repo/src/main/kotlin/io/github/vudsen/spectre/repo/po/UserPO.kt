@@ -20,17 +20,17 @@ class UserPO {
     @Id
     @Null(groups = [CreateGroup::class])
     @NotNull(groups = [UpdateGroup::class])
-    var id: Long? = null
+    var id: Long = 0
 
     @Column(unique = true, updatable = false)
     @NotNull(groups = [CreateGroup::class])
     @Null(groups = [UpdateGroup::class])
-    var username: String? = null
+    var username: String = ""
 
     @NotNull(groups = [CreateGroup::class])
     @Null(groups = [UpdateGroup::class])
     @Column(updatable = false)
-    var password: String? = null
+    var password: String = ""
 
     @Column(name = "display_name")
     var displayName: String? = null
@@ -40,7 +40,7 @@ class UserPO {
 
     @Column(name = "created_at", updatable = false, insertable = false)
     @Null
-    var createdAt: Timestamp? = null
+    var createdAt: Timestamp = Timestamp(System.currentTimeMillis())
 
     @ManyToMany
     @JsonIgnore
@@ -54,7 +54,7 @@ class UserPO {
 
     @PrePersist
     fun prePersist() {
-        if (id == null) {
+        if (id == 0L) {
             id = SnowFlake.nextId()
         }
     }

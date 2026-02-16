@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("role")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_READ)")
+@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_READ)")
 class RoleController(
     private val roleService: RoleService
 ) {
@@ -26,27 +26,27 @@ class RoleController(
 
     @PostMapping("bind-user")
     @Log(messageKey = "log.role.bind", contextResolveExp = "#args[0]")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_BIND_USER)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_BIND_USER)")
     fun bindUser(@Validated @RequestBody vo: RoleBindUserRequestVO) {
         roleService.bindUser(toLongList(vo.roleIds), toLongList(vo.userIds))
     }
 
     @Log(messageKey = "log.role.create", contextResolveExp = "{ id: #args[0].id, name: #args[0].name }")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_CREATE)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_CREATE)")
     @PostMapping("create")
     fun createRole(@Validated(CreateGroup::class) @RequestBody role: RolePO) {
         roleService.saveRole(role)
     }
 
     @Log(messageKey = "log.role.update", contextResolveExp = "{ id: #args[0].id, name: #args[0].name }")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_UPDATE)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_UPDATE)")
     @PostMapping("update")
     fun updateRole(@Validated(UpdateGroup::class) @RequestBody role: RolePO) {
         roleService.saveRole(role)
     }
 
     @Log(messageKey = "log.role.unbind", contextResolveExp = "{ userId: #args[0].userId, roleId: #args[0].roleId }")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_BIND_USER)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ROLE_BIND_USER)")
     @PostMapping("unbind-user")
     fun unbindUser(@Validated @RequestBody vo: RoleBindVO) {
         roleService.unbindUser(vo.roleId.toLong(), vo.userId.toLong())

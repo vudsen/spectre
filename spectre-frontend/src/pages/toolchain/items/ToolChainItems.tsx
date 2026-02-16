@@ -37,7 +37,7 @@ import Time from '@/components/Time.tsx'
 import { ToolchainItemsContext } from '@/pages/toolchain/items/context.ts'
 
 const ToolchainItemsQuery = graphql(`
-  query ToolchainItemsQuery($type: ToolchainType!, $page: Int, $size: Int) {
+  query ToolchainItemsQuery($type: ToolchainType!, $page: Int!, $size: Int!) {
     toolchain {
       toolchainItemsV2(type: $type, page: $page, size: $size) {
         totalPages

@@ -1,6 +1,5 @@
 schema {
   query: Query
-  mutation: Mutation
 }
 
 """This directive allows results to be deferred during execution"""
@@ -54,10 +53,6 @@ type LogEntityQueries {
 """Long"""
 scalar Long
 
-type Mutation {
-  toolchain: ToolchainMutations!
-}
-
 type PageDescriptor {
   pageName: String!
   parameters: JSON
@@ -88,9 +83,9 @@ type PolicyPermissionEnhancePlugin {
 }
 
 type PolicyPermissionQueries {
-  listPermissionsByResource(resource: String): [BasePermissionEntity!]!
+  listPermissionsByResource(resource: String!): [BasePermissionEntity!]!
   permission(id: Long!): PolicyPermissionDTO
-  permissions(page: Int, size: Int, subjectId: Long!, subjectType: String): PolicyPermissionDTOPageResult!
+  permissions(page: Int!, size: Int!, subjectId: Long!, subjectType: String!): PolicyPermissionDTOPageResult!
 }
 
 type Query {
@@ -116,10 +111,10 @@ type RolePageResult {
 
 type RoleQueries {
   """ 返回已经绑定的用户"""
-  boundUsers(page: Int, roleId: Long!, size: Int): UserPage!
+  boundUsers(page: Int!, roleId: Long!, size: Int!): UserPage!
   role(id: Long!): RolePO
-  roles(page: Int, size: Int): RolePageResult!
-  searchRoleByName(name: String): RolePageResult!
+  roles(page: Int!, size: Int!): RolePageResult!
+  searchRoleByName(name: String!): RolePageResult!
   userRoles(userId: Long!): [RolePO!]!
 }
 
@@ -146,10 +141,10 @@ type RuntimeNodePluginVO {
 }
 
 type RuntimeNodeQueries {
-  plugin(pluginId: String): RuntimeNodePluginVO
+  plugin(pluginId: String!): RuntimeNodePluginVO
   plugins: [RuntimeNodePluginVO!]!
-  runtimeNode(id: String): RuntimeNodeDTO
-  runtimeNodes(page: Int = 0, size: Int = 10): RuntimeNodePage!
+  runtimeNode(id: String!): RuntimeNodeDTO
+  runtimeNodes(page: Int!, size: Int!): RuntimeNodePage!
 }
 
 """Epoch milliseconds timestamp"""
@@ -210,9 +205,9 @@ type ToolchainItemPO {
 
 type ToolchainItemQueries {
   toolchainBundle(id: Long!): ToolchainBundleDTO
-  toolchainBundles(page: Int = 0, size: Int = 10): ToolchainBundlePage!
-  toolchainItems(page: Int = 0, size: Int = 10, type: ToolchainType!): ToolchainItemsPage!
-  toolchainItemsV2(page: Int = 0, size: Int = 10, type: ToolchainType!): ToolchainItemResponseVOPageResult!
+  toolchainBundles(page: Int!, size: Int!): ToolchainBundlePage!
+  toolchainItems(page: Int!, size: Int!, type: ToolchainType!): ToolchainItemsPage!
+  toolchainItemsV2(page: Int!, size: Int!, type: ToolchainType!): ToolchainItemResponseVOPageResult!
 }
 
 type ToolchainItemResponseVO {
@@ -235,11 +230,6 @@ type ToolchainItemsPage {
   totalPages: Int!
 }
 
-type ToolchainMutations {
-  createToolchainBundle(vo: ToolchainBundleModifyVO): ToolchainBundlePO
-  updateOrCreateToolchain(po: ToolchainItemModify): ToolchainItemPO
-}
-
 """ToolchainTypes"""
 scalar ToolchainType
 
@@ -260,5 +250,5 @@ type UserPage {
 type UserQueries {
   searchByUsername(username: String!): UserPage!
   user(id: Long!): User
-  users(page: Int = 0, size: Int = 10): UserPage!
+  users(page: Int!, size: Int!): UserPage!
 }

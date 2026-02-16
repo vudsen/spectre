@@ -15,7 +15,7 @@ import java.io.Serializable
  * ## 使用 ACL 鉴权
  * 对于 ACL，可以直接使用下面的方法进行鉴权 (See [io.github.vudsen.spectre.api.perm.AppPermissions])：
  * ```
- * @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.ACLPermissions).ROLE_BIND_USER)")
+ * @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.ACLPermissions).ROLE_BIND_USER)")
  * ```
  *
  * 在绑定上下文后，这里就会就会执行 SpEL 表达式来判断操作是否拥有权限。

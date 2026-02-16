@@ -21,11 +21,11 @@ class ToolchainItemDTO(
     companion object {
         fun ToolchainItemPO.toDTO(): ToolchainItemDTO {
             return ToolchainItemDTO(
-                id!!.type!!,
-                id!!.tag!!,
-                url!!,
+                id.type,
+                id.tag,
+                url,
                 armUrl,
-                createdAt!!
+                createdAt
             )
         }
     }

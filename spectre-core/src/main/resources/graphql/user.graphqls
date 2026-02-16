@@ -1,7 +1,7 @@
 
 
 type UserQueries {
-    users(page: Int = 0, size: Int = 10): UserPage!
+    users(page: Int!, size: Int!): UserPage!
     searchByUsername(username: String!): UserPage!
     user(id: Long!): User
 }
