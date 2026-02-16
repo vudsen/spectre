@@ -22,7 +22,7 @@ import useGraphQL from '@/hook/useGraphQL.ts'
 import { bindRoleToUser } from '@/api/impl/role.ts'
 
 const ListRoleWithNameQuery = graphql(`
-  query ListRoleWithNameQuery($name: String) {
+  query ListRoleWithNameQuery($name: String!) {
     role {
       searchRoleByName(name: $name) {
         result {

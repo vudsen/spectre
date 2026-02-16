@@ -12,10 +12,9 @@ import { useForm } from 'react-hook-form'
 import ControlledSelect from '@/components/validation/ControlledSelect.tsx'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import type { SharedSelection } from '@heroui/system'
-import { graphql } from '@/graphql/generated'
-import { execute } from '@/graphql/execute.ts'
 import { handleError } from '@/common/util.ts'
 import toolchainTypes, { type ToolchainItemType } from './ToolchainItemType.ts'
+import { saveToolchainItem } from '@/api/impl/toolchain.ts'
 
 interface ToolchainItemModifyDrawerContentProps {
   onClose: () => void
@@ -30,18 +29,6 @@ export type ToolchainItemValues = {
   url: string
   armUrl?: string
 }
-
-const UpdateOrCreateToolchainItem = graphql(`
-  mutation UpdateOrCreateToolchainItem($po: ToolchainItemModify) {
-    toolchain {
-      updateOrCreateToolchain(po: $po) {
-        id {
-          type
-        }
-      }
-    }
-  }
-`)
 
 const ToolchainItemModifyDrawerContent: React.FC<
   ToolchainItemModifyDrawerContentProps
@@ -65,13 +52,9 @@ const ToolchainItemModifyDrawerContent: React.FC<
     setLoading(true)
     try {
       const values = getValues()
-      await execute(UpdateOrCreateToolchainItem, {
-        po: {
-          ...values,
-        },
-      })
+      saveToolchainItem(values)
       addToast({
-        title: '添加成功',
+        title: '保存成功',
         color: 'success',
       })
       props.onClose()

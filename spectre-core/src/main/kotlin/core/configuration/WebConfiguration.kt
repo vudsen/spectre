@@ -38,10 +38,10 @@ class WebConfiguration : WebMvcConfigurer {
 
                 override fun resolveUrlPath(
                     resourcePath: String,
-                    locations: List<Resource?>,
+                    locations: List<Resource>,
                     chain: ResourceResolverChain
                 ): String? {
-                    TODO()
+                    TODO("Not yet implemented")
                 }
 
             })

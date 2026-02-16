@@ -18,6 +18,3 @@ type Query {
     log: LogEntityQueries!
 }
 
-type Mutation {
-    toolchain: ToolchainMutations!
-}

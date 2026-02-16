@@ -13,9 +13,11 @@ import { useForm } from 'react-hook-form'
 import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
-import { execute } from '@/graphql/execute.ts'
 import { handleError } from '@/common/util.ts'
-import { updateToolchainBundle } from '@/api/impl/toolchain.ts'
+import {
+  createToolchainBundle,
+  updateToolchainBundle,
+} from '@/api/impl/toolchain.ts'
 
 type OldEntity = {
   id: string
@@ -58,16 +60,6 @@ const QueryToolchainVersions = graphql(`
   }
 `)
 
-const CreateToolchainBundle = graphql(`
-  mutation CreateToolchainBundle($vo: ToolchainBundleModifyVO) {
-    toolchain {
-      createToolchainBundle(vo: $vo) {
-        id
-      }
-    }
-  }
-`)
-
 const ToolchainBundleModifyDrawerContent: React.FC<
   ToolchainBundleModifyDrawerContentProps
 > = (props) => {
@@ -100,9 +92,7 @@ const ToolchainBundleModifyDrawerContent: React.FC<
           color: 'success',
         })
       } else {
-        await execute(CreateToolchainBundle, {
-          vo: values,
-        })
+        await createToolchainBundle(values)
         addToast({
           title: '添加成功',
           color: 'success',

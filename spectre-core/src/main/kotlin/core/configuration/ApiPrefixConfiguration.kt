@@ -1,10 +1,9 @@
 package io.github.vudsen.spectre.core.configuration
 
 import io.github.vudsen.spectre.core.integrate.NoApiPrefix
-import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations
-import org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController
+import org.springframework.boot.webmvc.autoconfigure.WebMvcRegistrations
+import org.springframework.boot.webmvc.autoconfigure.error.BasicErrorController
 import org.springframework.context.annotation.Configuration
-import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
 import java.lang.reflect.Method

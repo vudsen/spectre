@@ -35,8 +35,8 @@ class DefaultUserService(
     @Transactional(rollbackFor = [Exception::class])
     override fun saveUser(userPO: UserPO) {
         val id = userPO.id
-        if (id == null) {
-            userPO.password = passwordEncoder.encode(userPO.password!!)
+        if (id == 0L) {
+            userPO.password = passwordEncoder.encode(userPO.password)!!
             userRepository.save(userPO)
             return
         }
@@ -58,7 +58,7 @@ class DefaultUserService(
     override fun findByUsernameAndPassword(username: String, password: String): Long? {
         return userRepository.findByUsernameAndPassword(
             username,
-            passwordEncoder.encode(password)
+            passwordEncoder.encode(password)!!
         )?.id
     }
 

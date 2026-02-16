@@ -28,7 +28,7 @@ import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import Time from '@/components/Time.tsx'
 
 const ListRoleQuery = graphql(`
-  query ListRoleQuery($page: Int, $size: Int) {
+  query ListRoleQuery($page: Int!, $size: Int!) {
     role {
       roles(page: $page, size: $size) {
         totalPages

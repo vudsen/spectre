@@ -22,7 +22,7 @@ import { graphql } from '@/graphql/generated'
 import { execute } from '@/graphql/execute.ts'
 
 const PermissionsBindQuery = graphql(`
-  query PermissionsBindQuery($resource: String) {
+  query PermissionsBindQuery($resource: String!) {
     permission {
       listPermissionsByResource(resource: $resource) {
         action

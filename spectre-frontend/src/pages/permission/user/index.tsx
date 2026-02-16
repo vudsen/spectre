@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router'
 import Time from '@/components/Time.tsx'
 
 const UserListQuery = graphql(`
-  query UserListQuery($page: Int, $size: Int) {
+  query UserListQuery($page: Int!, $size: Int!) {
     user {
       users(page: $page, size: $size) {
         totalPages

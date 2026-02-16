@@ -24,15 +24,15 @@ open class RuntimeNodePO (
     @Id
     @field:NotNull(groups = [UpdateGroup::class])
     @field:Null(groups = [CreateGroup::class])
-    open var id: Long? = null,
+    open var id: Long = 0,
 
     @Column(nullable = false)
     @field:NotEmpty
-    open var name: String? = null,
+    open var name: String = "",
 
     @Column(nullable = false)
     @field:NotEmpty
-    open var pluginId: String? = null,
+    open var pluginId: String = "",
 
     @Convert(converter = LabelsConvert::class)
     open var labels: Map<String, String>? = null,
@@ -40,7 +40,7 @@ open class RuntimeNodePO (
     @Column(nullable = false)
     @JsonRawValue
     @field:NotEmpty()
-    open var configuration: String? = null,
+    open var configuration: String = "",
 
     @Column(updatable = false, insertable = false)
     @field:Null
@@ -52,7 +52,7 @@ open class RuntimeNodePO (
 
     @PrePersist
     fun prePersist() {
-        if (id == null) {
+        if (id == 0L) {
             id = SnowFlake.nextId()
         }
     }

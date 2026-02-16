@@ -13,28 +13,21 @@ import java.sql.Timestamp
 @Table(name = "toolchain_item")
 data class ToolchainItemPO(
     @EmbeddedId
-    var id: ToolchainItemId? = null,
+    var id: ToolchainItemId,
     /**
      * x86 url
      */
-    var url: String? = null,
+    var url: String,
     /**
      * arm url
      */
-    var armUrl: String? = null,
-    @Null
+    var armUrl: String,
+
+    @field:Null
     @Column(name = "created_at", updatable = false, insertable = false)
-    val createdAt: Timestamp? = null,
+    val createdAt: Timestamp,
 ) {
 
-//
-//    fun toDto(): ToolchainItemDTO {
-//        return ToolchainItemDTO(
-//            id!!.type!!,
-//            id!!.tag!!,
-//            url!!,
-//            armUrl,
-//            createdAt!!
-//        )
-//    }
+    constructor() : this(ToolchainItemId(), "", "", Timestamp(System.currentTimeMillis()))
+
 }

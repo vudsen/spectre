@@ -26,7 +26,7 @@ import { deleteToolchainBundle } from '@/api/impl/toolchain.ts'
 import Time from '@/components/Time.tsx'
 
 const ToolchainBundleQuery = graphql(`
-  query ToolchainBundleQuery($page: Int, $size: Int) {
+  query ToolchainBundleQuery($page: Int!, $size: Int!) {
     toolchain {
       toolchainBundles(page: $page, size: $size) {
         result {

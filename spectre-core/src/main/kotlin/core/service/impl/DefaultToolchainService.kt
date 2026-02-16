@@ -1,8 +1,10 @@
 package io.github.vudsen.spectre.core.service.impl
 
+import io.github.vudsen.spectre.api.dto.CreateToolchainBundleDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
 import io.github.vudsen.spectre.api.dto.ToolchainItemDTO.Companion.toDTO
+import io.github.vudsen.spectre.api.dto.UpdateToolchainBundleDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.repo.ToolchainBundleRepository
 import io.github.vudsen.spectre.repo.ToolchainItemRepository
@@ -16,6 +18,7 @@ import org.springframework.core.io.InputStreamSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -53,13 +56,43 @@ class DefaultToolchainService(
         )
     }
 
-
-    override fun updateOrCreateToolchainItem(po: ToolchainItemPO): ToolchainItemPO {
-        return toolchainItemRepository.save(po)
+    override fun updateOrCreateToolchainItem(dto: ToolchainItemDTO) {
+        toolchainItemRepository.save(
+            ToolchainItemPO(
+                ToolchainItemId(dto.type, dto.tag),
+                dto.url,
+                dto.armUrl ?: "",
+                Timestamp(System.currentTimeMillis())
+            )
+        )
     }
+
+
 
     override fun saveToolchainBundle(po: ToolchainBundlePO): ToolchainBundlePO {
         return toolchainBundleRepository.save(po)
+    }
+
+    override fun updateToolchainBundle(dto: UpdateToolchainBundleDTO) {
+        val po = toolchainBundleRepository.findById(dto.id).getOrNull() ?: throw BusinessException("bundle 不存在")
+        dto.name?.let {
+            po.name = it
+        }
+        dto.arthasTag?.let {
+            po.arthasTag = it
+        }
+        dto.jattachTag?.let {
+            po.jattachTag = it
+        }
+        toolchainBundleRepository.save(po)
+    }
+
+    override fun createToolchainBundle(dto: CreateToolchainBundleDTO) {
+        toolchainBundleRepository.save(ToolchainBundlePO(
+            name = dto.name,
+            jattachTag = dto.jattachTag,
+            arthasTag = dto.arthasTag
+        ))
     }
 
     override fun isPackageCached(

@@ -50,7 +50,7 @@ class DefaultAppAccessControlService(
     private val objectMapper = ObjectMapper()
 
     private fun fulfillContext(map: MutableMap<String, Any>): UserWithID {
-        val principal = SecurityContextHolder.getContext().authentication.principal
+        val principal = SecurityContextHolder.getContext().authentication!!.principal
         if (principal !is UserWithID) {
             throw NamedExceptions.FORBIDDEN.toException()
         }
@@ -187,7 +187,7 @@ class DefaultAppAccessControlService(
         } catch (e: Exception) {
             logger.error("", e)
             throw BusinessException("SpEL 脚本执行错误，请联系管理员")
-        }
+        } == true
     }
 
 

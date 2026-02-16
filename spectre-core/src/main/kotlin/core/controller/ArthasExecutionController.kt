@@ -33,7 +33,7 @@ import java.nio.charset.StandardCharsets
  */
 @RequestMapping("arthas")
 @RestController
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_READ)")
+@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_READ)")
 class ArthasExecutionController(
     private val arthasExecutionService: ArthasExecutionService
 ) {

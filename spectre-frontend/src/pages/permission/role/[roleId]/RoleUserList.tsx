@@ -26,7 +26,7 @@ import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import { useNavigate } from 'react-router'
 
 const RoleBoundUserQuery = graphql(`
-  query RoleBoundUserQuery($roleId: Long!, $page: Int, $size: Int) {
+  query RoleBoundUserQuery($roleId: Long!, $page: Int!, $size: Int!) {
     role {
       role(id: $roleId) {
         name

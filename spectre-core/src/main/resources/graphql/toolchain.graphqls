@@ -1,16 +1,12 @@
 scalar ToolchainType
 
 type ToolchainItemQueries {
-    toolchainItems(type: ToolchainType!, page: Int = 0, size: Int = 10): ToolchainItemsPage!
-    toolchainBundles(page: Int = 0, size: Int = 10): ToolchainBundlePage!
+    toolchainItems(type: ToolchainType!, page: Int!, size: Int!): ToolchainItemsPage!
+    toolchainBundles(page: Int!, size: Int!): ToolchainBundlePage!
     toolchainBundle(id: Long!): ToolchainBundleDTO
-    toolchainItemsV2(type: ToolchainType!, page: Int = 0, size: Int = 10): ToolchainItemResponseVOPageResult!
+    toolchainItemsV2(type: ToolchainType!, page: Int!, size: Int!): ToolchainItemResponseVOPageResult!
 }
 
-type ToolchainMutations {
-    updateOrCreateToolchain(po: ToolchainItemModify): ToolchainItemPO
-    createToolchainBundle(vo: ToolchainBundleModifyVO): ToolchainBundlePO
-}
 
 
 type ToolchainItemDTO {

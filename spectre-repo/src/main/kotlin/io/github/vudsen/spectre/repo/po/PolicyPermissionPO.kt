@@ -27,28 +27,28 @@ class PolicyPermissionPO {
     @Id
     @Null(groups = [CreateGroup::class])
     @NotNull(groups = [UpdateGroup::class])
-    var id: Long? = null
+    var id: Long = 0
 
     @Enumerated(EnumType.STRING)
     @NotNull(groups = [CreateGroup::class])
     @Null(groups = [UpdateGroup::class])
     @Column(updatable = false)
-    var subjectType: SubjectType? = null
+    var subjectType: SubjectType = SubjectType.ROLE
 
     @NotNull(groups = [CreateGroup::class])
     @Null(groups = [UpdateGroup::class])
     @Column(updatable = false)
-    var subjectId: Long? = null
+    var subjectId: Long = 0
 
     @NotNull(groups = [CreateGroup::class])
     @Null(groups = [UpdateGroup::class])
     @Column(updatable = false)
-    var resource: String? = null
+    var resource: String = ""
 
     @NotNull(groups = [CreateGroup::class])
     @Null(groups = [UpdateGroup::class])
     @Column(updatable = false)
-    var action: String? = null
+    var action: String = ""
 
     var conditionExpression: String? = null
 
@@ -65,7 +65,7 @@ class PolicyPermissionPO {
 
     @PrePersist
     fun prePersist() {
-        if (id == null) {
+        if (id == 0L) {
             id = SnowFlake.nextId()
         }
     }

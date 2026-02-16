@@ -15,7 +15,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 @SchemaMapping(typeName = "PolicyPermissionQueries")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_READ)")
+@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_READ)")
 class PolicyPermissionQueriesController(
     private val policyPermissionService: PolicyPermissionService
 ) {
@@ -32,7 +32,7 @@ class PolicyPermissionQueriesController(
      * 列出资源下所有的权限
      */
     @SchemaMapping
-    fun listPermissionsByResource(@Argument resource: String): Set<PermissionEntity> {
+    fun listPermissionsByResource(@Argument(name = "resource") resource: String): Set<PermissionEntity> {
         return policyPermissionService.findPermissionsByResourceName(resource)
     }
 

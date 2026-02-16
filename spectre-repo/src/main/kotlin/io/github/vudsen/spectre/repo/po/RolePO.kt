@@ -24,11 +24,11 @@ class RolePO {
     @Id
     @Null(groups = [CreateGroup::class])
     @NotNull(groups = [UpdateGroup::class])
-    var id: Long? = null
+    var id: Long = 0
 
     @Column(unique = true, nullable = false)
     @NotNull(groups = [CreateGroup::class])
-    var name: String? = null
+    var name: String = ""
 
     var description: String? = null
 
@@ -46,7 +46,7 @@ class RolePO {
 
     @PrePersist
     fun prePersist() {
-        if (id == null) {
+        if (id == 0L) {
             id = SnowFlake.nextId()
         }
     }

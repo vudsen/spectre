@@ -70,11 +70,6 @@ export type LogEntityQueriesLogsArgs = {
   size: Scalars['Int']['input'];
 };
 
-export type Mutation = {
-  __typename?: 'Mutation';
-  toolchain: ToolchainMutations;
-};
-
 export type PageDescriptor = {
   __typename?: 'PageDescriptor';
   pageName: Scalars['String']['output'];
@@ -117,7 +112,7 @@ export type PolicyPermissionQueries = {
 
 
 export type PolicyPermissionQueriesListPermissionsByResourceArgs = {
-  resource?: InputMaybe<Scalars['String']['input']>;
+  resource: Scalars['String']['input'];
 };
 
 
@@ -127,10 +122,10 @@ export type PolicyPermissionQueriesPermissionArgs = {
 
 
 export type PolicyPermissionQueriesPermissionsArgs = {
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
   subjectId: Scalars['Long']['input'];
-  subjectType?: InputMaybe<Scalars['String']['input']>;
+  subjectType: Scalars['String']['input'];
 };
 
 export type Query = {
@@ -169,9 +164,9 @@ export type RoleQueries = {
 
 
 export type RoleQueriesBoundUsersArgs = {
-  page?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
   roleId: Scalars['Long']['input'];
-  size?: InputMaybe<Scalars['Int']['input']>;
+  size: Scalars['Int']['input'];
 };
 
 
@@ -181,13 +176,13 @@ export type RoleQueriesRoleArgs = {
 
 
 export type RoleQueriesRolesArgs = {
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 };
 
 
 export type RoleQueriesSearchRoleByNameArgs = {
-  name?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
 };
 
 
@@ -230,18 +225,18 @@ export type RuntimeNodeQueries = {
 
 
 export type RuntimeNodeQueriesPluginArgs = {
-  pluginId?: InputMaybe<Scalars['String']['input']>;
+  pluginId: Scalars['String']['input'];
 };
 
 
 export type RuntimeNodeQueriesRuntimeNodeArgs = {
-  id?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
 };
 
 
 export type RuntimeNodeQueriesRuntimeNodesArgs = {
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 };
 
 export type ToolchainBundleDto = {
@@ -318,21 +313,21 @@ export type ToolchainItemQueriesToolchainBundleArgs = {
 
 
 export type ToolchainItemQueriesToolchainBundlesArgs = {
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 };
 
 
 export type ToolchainItemQueriesToolchainItemsArgs = {
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
   type: Scalars['ToolchainType']['input'];
 };
 
 
 export type ToolchainItemQueriesToolchainItemsV2Args = {
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
   type: Scalars['ToolchainType']['input'];
 };
 
@@ -357,22 +352,6 @@ export type ToolchainItemsPage = {
   __typename?: 'ToolchainItemsPage';
   result: Array<ToolchainItemPo>;
   totalPages: Scalars['Int']['output'];
-};
-
-export type ToolchainMutations = {
-  __typename?: 'ToolchainMutations';
-  createToolchainBundle?: Maybe<ToolchainBundlePo>;
-  updateOrCreateToolchain?: Maybe<ToolchainItemPo>;
-};
-
-
-export type ToolchainMutationsCreateToolchainBundleArgs = {
-  vo?: InputMaybe<ToolchainBundleModifyVo>;
-};
-
-
-export type ToolchainMutationsUpdateOrCreateToolchainArgs = {
-  po?: InputMaybe<ToolchainItemModify>;
 };
 
 export type User = {
@@ -410,8 +389,8 @@ export type UserQueriesUserArgs = {
 
 
 export type UserQueriesUsersArgs = {
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 };
 
 export type QueryPolicyPermissionPluginsQueryVariables = Exact<{
@@ -422,7 +401,7 @@ export type QueryPolicyPermissionPluginsQueryVariables = Exact<{
 export type QueryPolicyPermissionPluginsQuery = { __typename?: 'Query', permission: { __typename?: 'PolicyPermissionQueries', permission?: { __typename?: 'PolicyPermissionDTO', enhancePlugins: Array<{ __typename?: 'PolicyPermissionEnhancePlugin', configuration: string, pluginId: string }> } | null } };
 
 export type PermissionsBindQueryQueryVariables = Exact<{
-  resource?: InputMaybe<Scalars['String']['input']>;
+  resource: Scalars['String']['input'];
 }>;
 
 
@@ -431,8 +410,8 @@ export type PermissionsBindQueryQuery = { __typename?: 'Query', permission: { __
 export type SubjectPermissionsQueryQueryVariables = Exact<{
   subjectId: Scalars['Long']['input'];
   subjectType: Scalars['String']['input'];
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
   isUser: Scalars['Boolean']['input'];
   isRole: Scalars['Boolean']['input'];
 }>;
@@ -456,8 +435,8 @@ export type LogEntityQueryQueryVariables = Exact<{
 export type LogEntityQueryQuery = { __typename?: 'Query', log: { __typename?: 'LogEntityQueries', logs: { __typename?: 'LogEntityPageResult', totalPages: number, result: Array<{ __typename?: 'LogEntityDTO', id: string, ip: string, isSuccess: boolean, operation: string, time: any, username: string }> } } };
 
 export type ListRuntimeNodesSimpleQueryQueryVariables = Exact<{
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 }>;
 
 
@@ -465,8 +444,8 @@ export type ListRuntimeNodesSimpleQueryQuery = { __typename?: 'Query', runtimeNo
 
 export type RoleBoundUserQueryQueryVariables = Exact<{
   roleId: Scalars['Long']['input'];
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 }>;
 
 
@@ -487,15 +466,15 @@ export type RolePermissionDetailQueryQueryVariables = Exact<{
 export type RolePermissionDetailQueryQuery = { __typename?: 'Query', role: { __typename?: 'RoleQueries', role?: { __typename?: 'RolePO', id: string, name: string, createdAt?: any | null, description?: string | null } | null } };
 
 export type ListRoleQueryQueryVariables = Exact<{
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 }>;
 
 
 export type ListRoleQueryQuery = { __typename?: 'Query', role: { __typename?: 'RoleQueries', roles: { __typename?: 'RolePageResult', totalPages?: number | null, result: Array<{ __typename?: 'RolePO', id: string, name: string, description?: string | null, createdAt?: any | null }> } } };
 
 export type ListRoleWithNameQueryQueryVariables = Exact<{
-  name?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
 }>;
 
 
@@ -516,8 +495,8 @@ export type UserDetailQueryQueryVariables = Exact<{
 export type UserDetailQueryQuery = { __typename?: 'Query', user: { __typename?: 'UserQueries', user?: { __typename?: 'User', id: string, createdAt: any, displayName?: string | null, username: string, labels?: any | null } | null } };
 
 export type UserListQueryQueryVariables = Exact<{
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 }>;
 
 
@@ -543,16 +522,16 @@ export type NodeInfoQueryQueryVariables = Exact<{
 export type NodeInfoQueryQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', runtimeNode?: { __typename?: 'RuntimeNodeDTO', name: string, labels: any, createdAt: any } | null } };
 
 export type ListJvmSourceQueryVariables = Exact<{
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 }>;
 
 
 export type ListJvmSourceQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', runtimeNodes: { __typename?: 'RuntimeNodePage', totalPages?: number | null, result: Array<{ __typename?: 'RuntimeNodeDTO', id: string, name: string, createdAt: any, pluginId: string, labels: any, restrictedMode: boolean }> }, plugins: Array<{ __typename?: 'RuntimeNodePluginVO', id: string, name: string }> } };
 
 export type RuntimeNodeCreatePluginQueryQueryVariables = Exact<{
-  pluginId?: InputMaybe<Scalars['String']['input']>;
-  runtimeNodeId?: InputMaybe<Scalars['String']['input']>;
+  pluginId: Scalars['String']['input'];
+  runtimeNodeId: Scalars['String']['input'];
 }>;
 
 
@@ -564,15 +543,15 @@ export type RuntimeNodePluginQueryQueryVariables = Exact<{ [key: string]: never;
 export type RuntimeNodePluginQueryQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', plugins: Array<{ __typename?: 'RuntimeNodePluginVO', id: string, name: string, page: { __typename?: 'PageDescriptor', pageName: string } }> } };
 
 export type RuntimeNodePluginDetailQueryQueryVariables = Exact<{
-  pluginId?: InputMaybe<Scalars['String']['input']>;
+  pluginId: Scalars['String']['input'];
 }>;
 
 
 export type RuntimeNodePluginDetailQueryQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', plugin?: { __typename?: 'RuntimeNodePluginVO', description: string } | null } };
 
 export type ToolchainBundleQueryQueryVariables = Exact<{
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 }>;
 
 
@@ -583,28 +562,14 @@ export type QueryToolchainVersionsQueryVariables = Exact<{ [key: string]: never;
 
 export type QueryToolchainVersionsQuery = { __typename?: 'Query', arthas: { __typename?: 'ToolchainItemQueries', toolchainItems: { __typename?: 'ToolchainItemsPage', result: Array<{ __typename?: 'ToolchainItemPO', id: { __typename?: 'ToolchainItemId', tag: string } }> } }, jattach: { __typename?: 'ToolchainItemQueries', toolchainItems: { __typename?: 'ToolchainItemsPage', result: Array<{ __typename?: 'ToolchainItemPO', id: { __typename?: 'ToolchainItemId', tag: string } }> } } };
 
-export type CreateToolchainBundleMutationVariables = Exact<{
-  vo?: InputMaybe<ToolchainBundleModifyVo>;
-}>;
-
-
-export type CreateToolchainBundleMutation = { __typename?: 'Mutation', toolchain: { __typename?: 'ToolchainMutations', createToolchainBundle?: { __typename?: 'ToolchainBundlePO', id: string } | null } };
-
 export type ToolchainItemsQueryQueryVariables = Exact<{
   type: Scalars['ToolchainType']['input'];
-  page?: InputMaybe<Scalars['Int']['input']>;
-  size?: InputMaybe<Scalars['Int']['input']>;
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
 }>;
 
 
 export type ToolchainItemsQueryQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainItemsV2: { __typename?: 'ToolchainItemResponseVOPageResult', totalPages: number, result: Array<{ __typename?: 'ToolchainItemResponseVO', type: any, tag: string, createdAt: any, isArmCached: boolean, isX86Cached: boolean, url: string, armUrl?: string | null }> } } };
-
-export type UpdateOrCreateToolchainItemMutationVariables = Exact<{
-  po?: InputMaybe<ToolchainItemModify>;
-}>;
-
-
-export type UpdateOrCreateToolchainItemMutation = { __typename?: 'Mutation', toolchain: { __typename?: 'ToolchainMutations', updateOrCreateToolchain?: { __typename?: 'ToolchainItemPO', id: { __typename?: 'ToolchainItemId', type: any } } | null } };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -638,7 +603,7 @@ export const QueryPolicyPermissionPluginsDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<QueryPolicyPermissionPluginsQuery, QueryPolicyPermissionPluginsQueryVariables>;
 export const PermissionsBindQueryDocument = new TypedDocumentString(`
-    query PermissionsBindQuery($resource: String) {
+    query PermissionsBindQuery($resource: String!) {
   permission {
     listPermissionsByResource(resource: $resource) {
       action
@@ -648,7 +613,7 @@ export const PermissionsBindQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<PermissionsBindQueryQuery, PermissionsBindQueryQueryVariables>;
 export const SubjectPermissionsQueryDocument = new TypedDocumentString(`
-    query SubjectPermissionsQuery($subjectId: Long!, $subjectType: String!, $page: Int, $size: Int, $isUser: Boolean!, $isRole: Boolean!) {
+    query SubjectPermissionsQuery($subjectId: Long!, $subjectType: String!, $page: Int!, $size: Int!, $isUser: Boolean!, $isRole: Boolean!) {
   permission {
     permissions(
       subjectId: $subjectId
@@ -710,7 +675,7 @@ export const LogEntityQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<LogEntityQueryQuery, LogEntityQueryQueryVariables>;
 export const ListRuntimeNodesSimpleQueryDocument = new TypedDocumentString(`
-    query ListRuntimeNodesSimpleQuery($page: Int, $size: Int) {
+    query ListRuntimeNodesSimpleQuery($page: Int!, $size: Int!) {
   runtimeNode {
     runtimeNodes(page: $page, size: $size) {
       totalPages
@@ -724,7 +689,7 @@ export const ListRuntimeNodesSimpleQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<ListRuntimeNodesSimpleQueryQuery, ListRuntimeNodesSimpleQueryQueryVariables>;
 export const RoleBoundUserQueryDocument = new TypedDocumentString(`
-    query RoleBoundUserQuery($roleId: Long!, $page: Int, $size: Int) {
+    query RoleBoundUserQuery($roleId: Long!, $page: Int!, $size: Int!) {
   role {
     role(id: $roleId) {
       name
@@ -768,7 +733,7 @@ export const RolePermissionDetailQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<RolePermissionDetailQueryQuery, RolePermissionDetailQueryQueryVariables>;
 export const ListRoleQueryDocument = new TypedDocumentString(`
-    query ListRoleQuery($page: Int, $size: Int) {
+    query ListRoleQuery($page: Int!, $size: Int!) {
   role {
     roles(page: $page, size: $size) {
       totalPages
@@ -783,7 +748,7 @@ export const ListRoleQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<ListRoleQueryQuery, ListRoleQueryQueryVariables>;
 export const ListRoleWithNameQueryDocument = new TypedDocumentString(`
-    query ListRoleWithNameQuery($name: String) {
+    query ListRoleWithNameQuery($name: String!) {
   role {
     searchRoleByName(name: $name) {
       result {
@@ -820,7 +785,7 @@ export const UserDetailQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<UserDetailQueryQuery, UserDetailQueryQueryVariables>;
 export const UserListQueryDocument = new TypedDocumentString(`
-    query UserListQuery($page: Int, $size: Int) {
+    query UserListQuery($page: Int!, $size: Int!) {
   user {
     users(page: $page, size: $size) {
       totalPages
@@ -850,7 +815,7 @@ export const UserQueryDocument = new TypedDocumentString(`
 export const ToolchainBundleQueryForAttachDocument = new TypedDocumentString(`
     query ToolchainBundleQueryForAttach {
   toolchain {
-    toolchainBundles {
+    toolchainBundles(page: 0, size: 10) {
       result {
         id
         name
@@ -871,7 +836,7 @@ export const NodeInfoQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<NodeInfoQueryQuery, NodeInfoQueryQueryVariables>;
 export const ListJvmSourceDocument = new TypedDocumentString(`
-    query ListJvmSource($page: Int, $size: Int) {
+    query ListJvmSource($page: Int!, $size: Int!) {
   runtimeNode {
     runtimeNodes(page: $page, size: $size) {
       totalPages
@@ -892,7 +857,7 @@ export const ListJvmSourceDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<ListJvmSourceQuery, ListJvmSourceQueryVariables>;
 export const RuntimeNodeCreatePluginQueryDocument = new TypedDocumentString(`
-    query RuntimeNodeCreatePluginQuery($pluginId: String, $runtimeNodeId: String) {
+    query RuntimeNodeCreatePluginQuery($pluginId: String!, $runtimeNodeId: String!) {
   runtimeNode {
     plugin(pluginId: $pluginId) {
       id
@@ -922,7 +887,7 @@ export const RuntimeNodePluginQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<RuntimeNodePluginQueryQuery, RuntimeNodePluginQueryQueryVariables>;
 export const RuntimeNodePluginDetailQueryDocument = new TypedDocumentString(`
-    query RuntimeNodePluginDetailQuery($pluginId: String) {
+    query RuntimeNodePluginDetailQuery($pluginId: String!) {
   runtimeNode {
     plugin(pluginId: $pluginId) {
       description
@@ -931,7 +896,7 @@ export const RuntimeNodePluginDetailQueryDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<RuntimeNodePluginDetailQueryQuery, RuntimeNodePluginDetailQueryQueryVariables>;
 export const ToolchainBundleQueryDocument = new TypedDocumentString(`
-    query ToolchainBundleQuery($page: Int, $size: Int) {
+    query ToolchainBundleQuery($page: Int!, $size: Int!) {
   toolchain {
     toolchainBundles(page: $page, size: $size) {
       result {
@@ -967,17 +932,8 @@ export const QueryToolchainVersionsDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<QueryToolchainVersionsQuery, QueryToolchainVersionsQueryVariables>;
-export const CreateToolchainBundleDocument = new TypedDocumentString(`
-    mutation CreateToolchainBundle($vo: ToolchainBundleModifyVO) {
-  toolchain {
-    createToolchainBundle(vo: $vo) {
-      id
-    }
-  }
-}
-    `) as unknown as TypedDocumentString<CreateToolchainBundleMutation, CreateToolchainBundleMutationVariables>;
 export const ToolchainItemsQueryDocument = new TypedDocumentString(`
-    query ToolchainItemsQuery($type: ToolchainType!, $page: Int, $size: Int) {
+    query ToolchainItemsQuery($type: ToolchainType!, $page: Int!, $size: Int!) {
   toolchain {
     toolchainItemsV2(type: $type, page: $page, size: $size) {
       totalPages
@@ -994,14 +950,3 @@ export const ToolchainItemsQueryDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<ToolchainItemsQueryQuery, ToolchainItemsQueryQueryVariables>;
-export const UpdateOrCreateToolchainItemDocument = new TypedDocumentString(`
-    mutation UpdateOrCreateToolchainItem($po: ToolchainItemModify) {
-  toolchain {
-    updateOrCreateToolchain(po: $po) {
-      id {
-        type
-      }
-    }
-  }
-}
-    `) as unknown as TypedDocumentString<UpdateOrCreateToolchainItemMutation, UpdateOrCreateToolchainItemMutationVariables>;

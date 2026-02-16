@@ -22,7 +22,7 @@ import Icon from '@/components/icon/icon.ts'
 import Guide from '@/pages/home/Guide.tsx'
 
 const ListRuntimeNodesSimpleQuery = graphql(`
-  query ListRuntimeNodesSimpleQuery($page: Int, $size: Int) {
+  query ListRuntimeNodesSimpleQuery($page: Int!, $size: Int!) {
     runtimeNode {
       runtimeNodes(page: $page, size: $size) {
         totalPages

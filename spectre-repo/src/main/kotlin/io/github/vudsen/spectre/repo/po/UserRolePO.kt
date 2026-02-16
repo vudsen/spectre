@@ -12,12 +12,12 @@ import org.hibernate.annotations.DynamicUpdate
 class UserRolePO {
 
     @EmbeddedId
-    var id: UserRoleId? = null
+    var id: UserRoleId = UserRoleId()
 
     data class UserRoleId(
         @Column("user_id")
-        var userId: Long? = null,
+        var userId: Long = 0,
         @Column("role_id")
-        var roleId: Long? = null
+        var roleId: Long = 0
     )
 }

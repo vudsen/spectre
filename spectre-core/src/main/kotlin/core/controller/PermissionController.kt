@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("permission")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_READ)")
+@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_READ)")
 class PermissionController(
     private val policyPermissionService: PolicyPermissionService,
     private val appAccessControlService: AppAccessControlService
@@ -40,14 +40,14 @@ class PermissionController(
     }
 
     @PostMapping("create")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
     @Log("log.policy_perm.create", contextResolveExp = "pickAttributes(#args[0], 'id', 'subjectType', 'subjectId', 'resource', 'action', 'conditionExpression')")
     fun createPolicy(@RequestBody @Validated(CreateGroup::class) policy: PolicyPermissionPO) {
         policyPermissionService.save(policy)
     }
 
     @PostMapping("update")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
     @Log("log.policy_perm.update", contextResolveExp = "pickAttributes(#args[0], 'id', 'conditionExpression')")
     fun updatePolicy(@RequestBody @Validated(UpdateGroup ::class) policy: PolicyPermissionPO) {
         policyPermissionService.save(policy)
@@ -60,7 +60,7 @@ class PermissionController(
     }
 
     @PostMapping("delete/{id}")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
     @Log("log.policy_perm.delete", contextResolveExp = "{id: #args[0]}")
     fun deletePermission(@PathVariable id: Long) {
         policyPermissionService.deletePermission(id)

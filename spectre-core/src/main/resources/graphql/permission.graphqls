@@ -1,7 +1,7 @@
 type PolicyPermissionQueries {
-    permissions(subjectId: Long!, subjectType: String, page: Int, size: Int): PolicyPermissionDTOPageResult!
+    permissions(subjectId: Long!, subjectType: String!, page: Int!, size: Int!): PolicyPermissionDTOPageResult!
     permission(id: Long!): PolicyPermissionDTO
-    listPermissionsByResource(resource: String): [BasePermissionEntity!]!
+    listPermissionsByResource(resource: String!): [BasePermissionEntity!]!
 }
 
 type BasePermissionEntity {

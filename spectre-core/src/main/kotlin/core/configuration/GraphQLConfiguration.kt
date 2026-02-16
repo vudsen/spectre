@@ -118,10 +118,10 @@ class GraphQLConfiguration {
                     locale: Locale
                 ): ToolchainType? {
                     try {
-                        if (input is StringValue) {
-                            return ToolchainType.valueOf(input.value)
+                        return if (input is StringValue) {
+                            ToolchainType.valueOf(input.value.toString())
                         } else {
-                            return ToolchainType.valueOf(input.toString())
+                            ToolchainType.valueOf(input.toString())
                         }
                     } catch (_: IllegalStateException) {
                         throw CoercingParseValueException("Unknown type: $input")

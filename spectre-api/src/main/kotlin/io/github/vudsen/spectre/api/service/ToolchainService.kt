@@ -1,7 +1,9 @@
 package io.github.vudsen.spectre.api.service
 
+import io.github.vudsen.spectre.api.dto.CreateToolchainBundleDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
+import io.github.vudsen.spectre.api.dto.UpdateToolchainBundleDTO
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
@@ -31,12 +33,22 @@ interface ToolchainService {
      * 更新或者创建工具
      * @param p0 实体类
      */
-    fun updateOrCreateToolchainItem(po: ToolchainItemPO): ToolchainItemPO
+    fun updateOrCreateToolchainItem(dto: ToolchainItemDTO)
 
     /**
      * 更新或者创建工具包
      */
     fun saveToolchainBundle(po: ToolchainBundlePO): ToolchainBundlePO
+
+    /**
+     * 更新
+     */
+    fun updateToolchainBundle(dto: UpdateToolchainBundleDTO)
+
+    /**
+     * 创建
+     */
+    fun createToolchainBundle(dto: CreateToolchainBundleDTO)
 
     /**
      * 检查包是否缓存到本地.

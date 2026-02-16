@@ -9,7 +9,9 @@ import org.jetbrains.annotations.NotNull
 data class ToolchainItemId(
     @field:NotNull
     @Enumerated(EnumType.STRING)
-    var type: ToolchainType? = null,
+    var type: ToolchainType,
     @field:NotEmpty
-    var tag: String? = null,
-)
+    var tag: String
+) {
+    constructor() : this(ToolchainType.ARTHAS, "")
+}

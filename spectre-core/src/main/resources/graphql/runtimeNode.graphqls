@@ -1,7 +1,7 @@
 type RuntimeNodeQueries {
-    runtimeNodes(page: Int = 0, size: Int = 10): RuntimeNodePage!
-    runtimeNode(id: String): RuntimeNodeDTO
-    plugin(pluginId: String): RuntimeNodePluginVO
+    runtimeNodes(page: Int!, size: Int!): RuntimeNodePage!
+    runtimeNode(id: String!): RuntimeNodeDTO
+    plugin(pluginId: String!): RuntimeNodePluginVO
     plugins: [RuntimeNodePluginVO!]!
 }
 

@@ -4,7 +4,6 @@ import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
-import org.springframework.boot.web.server.PortInUseException
 
 interface ArthasHttpClient {
 
@@ -78,7 +77,6 @@ interface ArthasHttpClient {
     /**
      * 测试客户端是否正常
      */
-    @Throws(PortInUseException::class)
     fun test()
 
     /**
