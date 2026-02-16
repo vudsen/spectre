@@ -22,7 +22,8 @@ data class ToolchainItemPO(
      * arm url
      */
     var armUrl: String? = null,
-    @Null
+
+    @field:Null
     @Column(name = "created_at", updatable = false, insertable = false)
     val createdAt: Timestamp? = null,
 ) {

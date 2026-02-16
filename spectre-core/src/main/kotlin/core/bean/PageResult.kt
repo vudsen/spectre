@@ -6,7 +6,7 @@ class PageResult <T>(
     val totalPages: Int,
     val result: List<T>
 )
-fun <T> Page<T>.toPageResult(): PageResult<T> {
+fun <T : Any> Page<T>.toPageResult(): PageResult<T> {
     return PageResult(totalPages, toList())
 }
 

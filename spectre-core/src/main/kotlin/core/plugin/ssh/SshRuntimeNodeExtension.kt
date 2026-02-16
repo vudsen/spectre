@@ -33,7 +33,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         const val ID = "RuntimeNode:LocalRuntimeNodeExtensionPoint"
     }
 
-    private lateinit var objectMapper: ObjectMapper
+    private val objectMapper = ObjectMapper()
 
     private val executor = SshThreadPoolExecutor(1, 4, 1L, TimeUnit.MINUTES, ArrayBlockingQueue(16))
 
@@ -43,10 +43,6 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         }
     }
 
-    @Autowired
-    fun setObjectMapper(objectMapper: ObjectMapper) {
-        this.objectMapper = objectMapper
-    }
 
 
     private val searcher: JvmSearcher by lazy {

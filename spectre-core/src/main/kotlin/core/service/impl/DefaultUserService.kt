@@ -58,7 +58,7 @@ class DefaultUserService(
     override fun findByUsernameAndPassword(username: String, password: String): Long? {
         return userRepository.findByUsernameAndPassword(
             username,
-            passwordEncoder.encode(password)
+            passwordEncoder.encode(password)!!
         )?.id
     }
 

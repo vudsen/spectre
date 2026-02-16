@@ -9,7 +9,7 @@ object ApplicationContextHolder {
 
 
     fun getAppVersion(): String {
-        return applicationContext.environment.getProperty("spring.application.version")
+        return applicationContext.environment.getProperty("spring.application.version")!!
     }
 
 }

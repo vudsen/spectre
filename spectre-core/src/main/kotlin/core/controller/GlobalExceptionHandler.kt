@@ -66,7 +66,7 @@ class GlobalExceptionHandler(
                     .status(ex.httpStatus ?: 400)
                     .body(
                         ErrorResponseVO(
-                            messageSource.getMessage(ex.messageKey, ex.messageArgs, null)
+                            messageSource.getMessage(ex.messageKey, ex.messageArgs as Array<Any>?, null)
                         )
                     )
             }

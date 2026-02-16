@@ -49,7 +49,7 @@ class UserController(
     @Log(messageKey = "log.user.modify_password")
     @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).LOG_READ)")
     fun modifySelfPassword(@RequestBody @Validated vo: ModifyPasswordVO, request: HttpServletRequest) {
-        val user = SecurityContextHolder.getContext().authentication.principal as UserWithID
+        val user = SecurityContextHolder.getContext().authentication!!.principal as UserWithID
         userService.modifyPassword(user.id, vo.oldPassword, vo.newPassword)
         SecurityContextHolder.clearContext()
         request.getSession(false)?.invalidate()

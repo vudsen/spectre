@@ -19,7 +19,7 @@ class MyGraphqlExceptionResolver(
     override fun resolveToSingleError(ex: Throwable, env: DataFetchingEnvironment): GraphQLError? {
         if (ex is BusinessException) {
             return GraphqlErrorBuilder.newError(env)
-                .message(messageSource.getMessage(ex.messageKey, ex.messageArgs, null))
+                .message(messageSource.getMessage(ex.messageKey, ex.messageArgs as Array<Any>?, null))
                 .path(env.executionStepInfo.path)
                 .location(env.field.sourceLocation)
                 .build()
