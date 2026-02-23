@@ -6,6 +6,7 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.repo.UserRepository
 import io.github.vudsen.spectre.api.service.UserService
 import io.github.vudsen.spectre.repo.po.UserPO
+import io.github.vudsen.spectre.repo.util.RepoConstant
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
 import org.springframework.data.domain.Page
@@ -35,7 +36,7 @@ class DefaultUserService(
     @Transactional(rollbackFor = [Exception::class])
     override fun saveUser(userPO: UserPO) {
         val id = userPO.id
-        if (id == 0L) {
+        if (id == RepoConstant.EMPTY_ID) {
             userPO.password = passwordEncoder.encode(userPO.password)!!
             userRepository.save(userPO)
             return

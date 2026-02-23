@@ -3,6 +3,9 @@ spring:
     multipart:
       max-file-size: 20MB
       max-request-size: 20MB
+    encoding:
+      charset: UTF-8
+      force-response: true
   graphql:
     graphiql:
       enabled: true
@@ -11,9 +14,6 @@ spring:
         enabled: true
     http:
       path: /spectre-api/graphql
-  session:
-    jdbc:
-      initialize-schema: always
   cache:
     type: jcache
     jcache:
@@ -21,16 +21,12 @@ spring:
       config: classpath:ehcache.xml
   liquibase:
     change-log: classpath:/db/changelog-master.xml
+    enabled: true
   application:
     version: @version@
-server:
-  error:
-    path: /spectre-api/error
-  servlet:
-    encoding:
-      charset: UTF-8
-      force-response: true
-
+  web:
+    error:
+      path: /spectre-api/error
 #logging.level.org.hibernate.SQL: debug
 #logging.level.org.hibernate.type.descriptor.sql.BasicBinder: trace
 

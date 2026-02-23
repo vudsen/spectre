@@ -32,13 +32,13 @@ class K8sRuntimeNodeExtensionTest : AbstractSpectreTest() {
             "/opt/spectre",
             true
         )
-        val runtimeNodeId = runtimeNodeService.saveRuntimeNode(
+        val runtimeNodeId = runtimeNodeService.createRuntimeNode(
             RuntimeNodePO(
                 name = "K8s",
                 pluginId = K8sRuntimeNodeExtension.ID,
                 configuration = ObjectMapper().writeValueAsString(runtimeNodeConfig)
             )
-        ).id!!
+        ).id
 
         val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
         val k8sNode = root.find { node -> node.name == "spectre" }

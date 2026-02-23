@@ -173,14 +173,14 @@ class AttachTester {
             ),
             "/opt/spectre"
         )
-        runtimeNodeService.saveRuntimeNode(
+        runtimeNodeService.createRuntimeNode(
             RuntimeNodePO(
                 name = "Test Node",
                 pluginId = SshRuntimeNodeExtension.ID,
                 configuration = objectMapper.writeValueAsString(conf),
                 restrictedMode = true
             )
-        ).id!!
+        ).id
     }
 
     fun resolveDefaultJvm(): JvmTreeNodeDTO {

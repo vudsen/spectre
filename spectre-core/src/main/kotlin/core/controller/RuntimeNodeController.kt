@@ -42,14 +42,14 @@ class RuntimeNodeController(
     @Log("log.runtime_node.create", contextResolveExp = "{ id: #args[0].id }")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
     fun createRuntimeNode(@RequestBody @Validated(CreateGroup::class) po: RuntimeNodePO) {
-        service.saveRuntimeNode(po)
+        service.createRuntimeNode(po)
     }
 
     @Log("log.runtime_node.update", contextResolveExp = "{ id: #args[0].id }")
     @PostMapping("update")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE)")
     fun updateRuntimeNode(@RequestBody @Validated(UpdateGroup::class) po: RuntimeNodePO) {
-        service.saveRuntimeNode(po)
+        service.updateRuntimeNode(po)
     }
 
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE) or hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
