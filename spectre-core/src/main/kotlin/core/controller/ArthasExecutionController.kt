@@ -81,11 +81,11 @@ class ArthasExecutionController(
     }
 
 
-    @GetMapping("/channel/{channelId}/pull-result")
-    fun pullResults(@PathVariable channelId: String, request: HttpServletRequest): Any {
+    @GetMapping("/channel/{channelId}/pull-result", produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun pullResults(@PathVariable channelId: String, request: HttpServletRequest): String {
         val channelSession = resolveChannelSession(request, channelId)
         try {
-            return arthasExecutionService.pullResults(channelId, channelSession.consumerId)
+            return arthasExecutionService.pullResults(channelId, channelSession.consumerId).toString()
         } catch (_: ConsumerNotFountException) {
             val session = request.getSession(false)
             session?.removeAttribute(channelSessionDataKey(channelId))
@@ -117,11 +117,11 @@ class ArthasExecutionController(
         arthasExecutionService.execAsync(channelId, vo.command.trim())
     }
 
-    @PostMapping("/channel/{channelId}/execute-sync")
+    @PostMapping("/channel/{channelId}/execute-sync", produces = [MediaType.APPLICATION_JSON_VALUE])
     @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: #args[1].command  }")
-    fun executeSync(@PathVariable channelId: String, @Validated @RequestBody vo: ExecuteCommandRequestVO, request: HttpServletRequest): Any {
+    fun executeSync(@PathVariable channelId: String, @Validated @RequestBody vo: ExecuteCommandRequestVO, request: HttpServletRequest): String {
         resolveChannelSession(request, channelId)
-        return arthasExecutionService.execSync(channelId, vo.command.trim())
+        return arthasExecutionService.execSync(channelId, vo.command.trim()).toString()
     }
 
     @PostMapping("/channel/{channelId}/disconnect")
@@ -140,11 +140,11 @@ class ArthasExecutionController(
         arthasExecutionService.interruptCommand(channelId)
     }
 
-    @PostMapping("/channel/{channelId}/retransform")
+    @PostMapping("/channel/{channelId}/retransform", MediaType.APPLICATION_JSON_VALUE)
     @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: '@retransform'  }")
-    fun retransform(@PathVariable channelId: String, file: MultipartFile, request: HttpServletRequest): Any {
+    fun retransform(@PathVariable channelId: String, file: MultipartFile, request: HttpServletRequest): String {
         resolveChannelSession(request, channelId)
-        return arthasExecutionService.retransform(channelId, MultipartFileAdapter(file))
+        return arthasExecutionService.retransform(channelId, MultipartFileAdapter(file)).toString()
     }
 
     @GetMapping("/channel/{channelId}/profiler-files")

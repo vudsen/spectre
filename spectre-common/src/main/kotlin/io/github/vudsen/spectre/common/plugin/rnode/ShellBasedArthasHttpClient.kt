@@ -95,7 +95,7 @@ open class ShellBasedArthasHttpClient(
         filename: String,
         commands: MutableList<String>,
         sessionId: String?
-    ): Any? {
+    ): JsonNode? {
         val pair = findArgValue(commands, "--file") ?: findArgValue(commands, "-f")
         if (pair == null) {
             val formatPair = findArgValue(commands, "--format") ?: findArgValue(commands, "-o")
@@ -204,7 +204,7 @@ open class ShellBasedArthasHttpClient(
         return URL(arthasHttpEndpoint).port
     }
 
-    override fun retransform(source: BoundedInputStreamSource): Any {
+    override fun retransform(source: BoundedInputStreamSource): JsonNode {
         val dest = "${runtimeNode.getHomePath()}/downloads/rt${System.currentTimeMillis()}.class"
         try {
             runtimeNode.upload(source, dest)

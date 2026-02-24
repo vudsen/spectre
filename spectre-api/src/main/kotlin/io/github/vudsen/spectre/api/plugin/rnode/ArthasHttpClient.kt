@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.api.plugin.rnode
 
+import com.fasterxml.jackson.databind.JsonNode
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
@@ -11,7 +12,7 @@ interface ArthasHttpClient {
      * 同步执行命令
      * @return 返回一个 JSON 对象，该对象为成功响应中的 `body.result` 数组字段
      */
-    fun exec(command: String): Any
+    fun exec(command: String): JsonNode
 
     /**
      * 异步执行任务
@@ -28,7 +29,7 @@ interface ArthasHttpClient {
      * @param sessionId 会话id，如果该值非空，表示异步执行，否则同步
      * @return 如果为同步执行，返回执行结果，如果为异步执行，返回空
      */
-    fun execProfilerCommand(filename: String, commands: MutableList<String>, sessionId: String?): Any?
+    fun execProfilerCommand(filename: String, commands: MutableList<String>, sessionId: String?): JsonNode?
 
     /**
      * 列出 profiler 的结果
@@ -56,7 +57,7 @@ interface ArthasHttpClient {
      * @return 返回一个 JSON 对象
      */
     @Throws(ConsumerNotFountException::class)
-    fun pullResults(sessionId: String, consumerId: String): Any
+    fun pullResults(sessionId: String, consumerId: String): JsonNode
 
     /**
      * 创建会话
@@ -88,5 +89,5 @@ interface ArthasHttpClient {
      * arthas retransform.
      * @return 返回一个 JSON 对象
      */
-    fun retransform(source: BoundedInputStreamSource): Any
+    fun retransform(source: BoundedInputStreamSource): JsonNode
 }
