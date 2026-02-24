@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.service.impl
 
+import com.fasterxml.jackson.databind.JsonNode
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.dto.*
 import io.github.vudsen.spectre.api.entity.ProfilerFile
@@ -471,7 +472,7 @@ class DefaultArthasExecutionService(
 
     }
 
-    private fun beforeExec(instance: ArthasInstanceDTO, client: ArthasHttpClient, commands: MutableList<String>, sessionId: String?): Any? {
+    private fun beforeExec(instance: ArthasInstanceDTO, client: ArthasHttpClient, commands: MutableList<String>, sessionId: String?): JsonNode? {
         // 考虑抽离为一个接口?
         if (commands.isEmpty()) {
             return null
@@ -483,11 +484,7 @@ class DefaultArthasExecutionService(
             }
              when (commands[1]) {
                  "start", "collect", "dump", "stop" -> {
-                     val execProfilerCommand = client.execProfilerCommand("${instance.channelId}-${System.currentTimeMillis()}", commands, sessionId)
-                     if (sessionId != null) {
-                         return true
-                     }
-                     return execProfilerCommand
+                     return client.execProfilerCommand("${instance.channelId}-${System.currentTimeMillis()}", commands, sessionId)
                  }
                  "execute" -> {
                      // TODO 替换输出文件路径
@@ -510,7 +507,7 @@ class DefaultArthasExecutionService(
     }
 
 
-    override fun execSync(channelId: String, command: String): Any {
+    override fun execSync(channelId: String, command: String): JsonNode {
         val commands = splitCommand(command)
         val pair = checkAndGetNode(channelId, commands)
         beforeExec(pair.second, pair.first, commands, null)?.let {
@@ -659,7 +656,7 @@ class DefaultArthasExecutionService(
     }
 
 
-    override fun pullResults(channelId: String, consumerId: String): Any {
+    override fun pullResults(channelId: String, consumerId: String): JsonNode {
         checkTreeNodePermission(channelId)
         val pair = tryResolveClient(channelId)
         return pair.first.pullResults(pair.second.sessionId, consumerId)
@@ -672,7 +669,7 @@ class DefaultArthasExecutionService(
         pair.first.interruptJob(pair.second.sessionId)
     }
 
-    override fun retransform(channelId: String, source: BoundedInputStreamSource): Any {
+    override fun retransform(channelId: String, source: BoundedInputStreamSource): JsonNode {
         checkCommandExecPermission(channelId, listOf("retransform"))
         val pair = tryResolveClient(channelId)
 

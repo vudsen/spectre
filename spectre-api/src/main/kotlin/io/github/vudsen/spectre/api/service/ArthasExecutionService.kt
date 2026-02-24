@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.api.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
@@ -36,14 +37,14 @@ interface ArthasExecutionService {
     /**
      * 同步执行命令
      */
-    fun execSync(channelId: String, command: String): Any
+    fun execSync(channelId: String, command: String): JsonNode
 
     /**
      * 拉取 arthas 执行结果
      * @return arthas http 接口结果，JSON对象
      */
     @Throws(ConsumerNotFountException::class)
-    fun pullResults(channelId: String, consumerId: String): Any
+    fun pullResults(channelId: String, consumerId: String): JsonNode
 
 
     /**
@@ -54,7 +55,7 @@ interface ArthasExecutionService {
     /**
      * 替换字节码. 该命令为同步命令
      */
-    fun retransform(channelId: String, source: BoundedInputStreamSource): Any
+    fun retransform(channelId: String, source: BoundedInputStreamSource): JsonNode
 
     /**
      * 列出 profiler 文件
