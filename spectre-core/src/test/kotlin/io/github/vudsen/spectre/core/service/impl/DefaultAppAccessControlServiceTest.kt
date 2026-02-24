@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.core.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.vudsen.spectre.api.dto.CreateUserDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.PermissionDenyException
 import io.github.vudsen.spectre.api.perm.AppPermissions
@@ -58,15 +59,14 @@ class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
     }
 
     private fun createUser(username: String): Long {
-        val userPO = UserPO().apply {
+        val userPO = userService.createUser(CreateUserDTO().apply {
             this.username = username
-            password = TestConstant.USER_TESTER_ENCRYPTED_PASSWORD
-        }
-        userService.saveUser(userPO)
+            this.password = TestConstant.USER_TESTER_ENCRYPTED_PASSWORD
+        })
         GlobalDisposer.registerDispose {
-            userService.deleteUserById(userPO.id!!)
+            userService.deleteUserById(userPO.id)
         }
-        return userPO.id!!
+        return userPO.id
     }
 
     private fun bindPolicyPermission(subjectId: Long, entity: PermissionEntity, plugins: List<PolicyPermissionEnhancePlugin> ): Long {

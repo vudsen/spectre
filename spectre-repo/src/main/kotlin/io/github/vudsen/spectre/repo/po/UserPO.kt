@@ -18,17 +18,12 @@ import java.sql.Timestamp
 class UserPO {
 
     @Id
-    @Null(groups = [CreateGroup::class])
-    @NotNull(groups = [UpdateGroup::class])
     var id: Long = 0
 
     @Column(unique = true, updatable = false)
-    @NotNull(groups = [CreateGroup::class])
-    @Null(groups = [UpdateGroup::class])
     var username: String = ""
 
-    @NotNull(groups = [CreateGroup::class])
-    @Null(groups = [UpdateGroup::class])
+    @field:JsonIgnore
     @Column(updatable = false)
     var password: String = ""
 
@@ -39,7 +34,6 @@ class UserPO {
     var labels: Map<String, String>? = null
 
     @Column(name = "created_at", updatable = false, insertable = false)
-    @Null
     var createdAt: Timestamp = Timestamp(System.currentTimeMillis())
 
     @ManyToMany

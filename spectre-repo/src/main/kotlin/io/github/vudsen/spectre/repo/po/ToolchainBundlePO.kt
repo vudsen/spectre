@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.repo.po
 
+import io.github.vudsen.spectre.repo.util.RepoConstant
 import io.github.vudsen.spectre.repo.util.SnowFlake
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -29,8 +30,9 @@ data class ToolchainBundlePO(
 
     @PrePersist
     fun prePersist() {
-        if (id == 0L) {
+        if (id == RepoConstant.EMPTY_ID) {
             id = SnowFlake.nextId()
+            createdAt = Timestamp(System.currentTimeMillis())
         }
     }
 

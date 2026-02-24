@@ -1,13 +1,12 @@
 package io.github.vudsen.spectre.core.controller
 
-import io.github.vudsen.spectre.api.dto.UserDTO
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.core.integrate.UserWithID
 import io.github.vudsen.spectre.api.service.UserService
 import io.github.vudsen.spectre.core.vo.LoginRequestVO
+import io.github.vudsen.spectre.repo.po.UserPO
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -33,7 +32,7 @@ class AuthController(
      */
     @PostMapping("login")
     @Log("log.login", contextResolveExp = "{ username: #args[0].username }")
-    fun login(@RequestBody @Validated vo: LoginRequestVO, request: HttpServletRequest, response: HttpServletResponse): UserDTO {
+    fun login(@RequestBody @Validated vo: LoginRequestVO, request: HttpServletRequest, response: HttpServletResponse): UserPO {
         val authToken =
             UsernamePasswordAuthenticationToken(vo.username, vo.password)
         val authentication = authenticationManager.authenticate(authToken)

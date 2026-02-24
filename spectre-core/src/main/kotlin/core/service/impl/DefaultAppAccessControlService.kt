@@ -1,7 +1,6 @@
 package io.github.vudsen.spectre.core.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.vudsen.spectre.api.dto.UserDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.exception.PermissionDenyException
@@ -19,8 +18,6 @@ import io.github.vudsen.spectre.repo.UserRepository
 import io.github.vudsen.spectre.repo.entity.SubjectType
 import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
 import org.slf4j.LoggerFactory
-import org.springframework.cache.annotation.CachePut
-import org.springframework.cache.annotation.Caching
 import org.springframework.expression.spel.standard.SpelExpression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
@@ -54,7 +51,7 @@ class DefaultAppAccessControlService(
         if (principal !is UserWithID) {
             throw NamedExceptions.FORBIDDEN.toException()
         }
-        val user = userRepository.findById(principal.id).getOrNull()?.toDTO() ?: throw NamedExceptions.FORBIDDEN.toException()
+        val user = userRepository.findById(principal.id).getOrNull() ?: throw NamedExceptions.FORBIDDEN.toException()
         map.put("user", user)
         return principal
     }
@@ -79,7 +76,7 @@ class DefaultAppAccessControlService(
         permissionEntity: PermissionEntity
     ): Boolean {
         val ctx = EmptyContext(permissionEntity)
-        var provider = policyAuthenticationProviderManager.findByPermissionEntity(permissionEntity)
+        val provider = policyAuthenticationProviderManager.findByPermissionEntity(permissionEntity)
 
         val context: MutableMap<String, Any> = provider?.toContextMap(ctx) ?: mutableMapOf()
         val user = fulfillContext(context)

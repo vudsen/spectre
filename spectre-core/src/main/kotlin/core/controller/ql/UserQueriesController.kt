@@ -2,10 +2,8 @@ package io.github.vudsen.spectre.core.controller.ql
 
 import io.github.vudsen.spectre.core.bean.PageResult
 import io.github.vudsen.spectre.core.bean.toPageResult
-import io.github.vudsen.spectre.api.dto.UserDTO
 import io.github.vudsen.spectre.api.service.UserService
 import io.github.vudsen.spectre.repo.po.UserPO
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.QueryMapping
 import org.springframework.graphql.data.method.annotation.SchemaMapping
@@ -37,7 +35,7 @@ class UserQueriesController(
     }
 
     @SchemaMapping
-    fun user(@Argument id: String): UserDTO? {
+    fun user(@Argument id: String): UserPO? {
         return userService.findById(id.toLong())
     }
 

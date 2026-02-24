@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.api.service
 
-import io.github.vudsen.spectre.api.dto.UserDTO
+import io.github.vudsen.spectre.api.dto.CreateUserDTO
+import io.github.vudsen.spectre.api.dto.UpdateUserDTO
 import io.github.vudsen.spectre.repo.po.UserPO
 import org.springframework.data.domain.Page
 
@@ -11,10 +12,16 @@ interface UserService {
      */
     fun listUsers(page: Int, size: Int): Page<UserPO>
 
+
     /**
-     * 保存用户，如果 [UserPO.id] 不为空，则为更新
+     * 创建用户
      */
-    fun saveUser(userPO: UserPO)
+    fun createUser(userDTO: CreateUserDTO): UserPO
+
+    /**
+     * 更新用户
+     */
+    fun updateUser(userDTO: UpdateUserDTO)
 
     /**
      * 登录
@@ -30,7 +37,7 @@ interface UserService {
     /**
      * 根据 id 查询用户
      */
-    fun findById(id: Long): UserDTO?
+    fun findById(id: Long): UserPO?
 
     /**
      * 修改用户密码, 但是不校验原密码
