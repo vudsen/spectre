@@ -33,7 +33,7 @@ import 'shepherd.js/dist/css/shepherd.css'
 import Shepherd, { type Tour } from 'shepherd.js'
 
 const ListJvmSource = graphql(`
-  query ListJvmSource($page: Int, $size: Int) {
+  query ListJvmSource($page: Int!, $size: Int!) {
     runtimeNode {
       runtimeNodes(page: $page, size: $size) {
         totalPages

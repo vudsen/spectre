@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 
 //@RestController
 //@RequestMapping("permission/policy")
-//@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_READ)")
+//@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_READ)")
 //class PolicyPermissionController(
 //    private val policyPermissionService: PolicyPermissionService,
 //    private val appAccessControlService: AppAccessControlService
@@ -32,14 +32,14 @@ import org.springframework.web.bind.annotation.RestController
 //
 //
 //    @PostMapping("create")
-//    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
+//    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
 //    @Log("log.policy_perm.create", contextResolveExp = "pickAttributes(#args[0], 'id', 'subjectType', 'subjectId', 'resource', 'action', 'conditionExpression')")
 //    fun createPolicy(@RequestBody @Validated(CreateGroup::class) policy: PolicyPermissionPO) {
 //        policyPermissionService.save(policy)
 //    }
 //
 //    @PostMapping("update")
-//    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
+//    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
 //    @Log("log.policy_perm.update", contextResolveExp = "pickAttributes(#args[0], 'id', 'conditionExpression')")
 //    fun updatePolicy(@RequestBody @Validated(UpdateGroup ::class) policy: PolicyPermissionPO) {
 //        policyPermissionService.save(policy)
@@ -52,7 +52,7 @@ import org.springframework.web.bind.annotation.RestController
 //    }
 //
 //    @PostMapping("delete/{id}")
-//    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
+//    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
 //    @Log("log.policy_perm.delete", contextResolveExp = "{id: #args[0]}")
 //    fun deletePermission(@PathVariable id: Long) {
 //        policyPermissionService.deletePermission(id)

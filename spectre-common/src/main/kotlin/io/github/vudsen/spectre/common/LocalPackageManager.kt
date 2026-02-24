@@ -44,7 +44,13 @@ object LocalPackageManager {
 
     fun savePackage(type: ToolchainType, tag: String, isArm: Boolean, source: InputStreamSource) {
         source.inputStream.use { inputStream ->
-            FileOutputStream(File(resolvePackagePath(type, tag, isArm))).use { fileOutputStream ->
+            val file = File(resolvePackagePath(type, tag, isArm))
+            file.parentFile.let {
+                if (!it.exists()) {
+                    it.mkdirs()
+                }
+            }
+            FileOutputStream(file).use { fileOutputStream ->
                 inputStream.transferTo(fileOutputStream)
             }
         }

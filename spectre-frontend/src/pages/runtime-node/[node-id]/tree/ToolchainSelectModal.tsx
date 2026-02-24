@@ -31,7 +31,7 @@ interface MyModalContentProps {
 const ToolchainBundleQueryForAttach = graphql(`
   query ToolchainBundleQueryForAttach {
     toolchain {
-      toolchainBundles {
+      toolchainBundles(page: 0, size: 10) {
         result {
           id
           name

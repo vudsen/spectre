@@ -16,13 +16,34 @@ export const deleteToolchainBundle = (id: string) => {
   return axios.post(`toolchain/bundle/delete?id=${id}`)
 }
 
-type ToolchainBundlePO = {
+type UpdateToolchainBundleDTO = {
   id: string
+  name?: string
+  jattachTag?: string
+  arthasTag?: string
+}
+
+export const updateToolchainBundle = (po: UpdateToolchainBundleDTO) => {
+  return axios.post('toolchain/bundle/update', po)
+}
+
+type ToolchainItemDTO = {
+  type: string
+  tag: string
+  url: string
+  armUrl?: string
+}
+
+export const saveToolchainItem = (dto: ToolchainItemDTO) => {
+  return axios.post('toolchain/item/save', dto)
+}
+
+type CreateToolchainBundleDTO = {
   name: string
   jattachTag: string
   arthasTag: string
 }
 
-export const updateToolchainBundle = (po: ToolchainBundlePO) => {
-  return axios.post('toolchain/bundle/update', po)
+export const createToolchainBundle = (dto: CreateToolchainBundleDTO) => {
+  return axios.post('toolchain/bundle/create', dto)
 }

@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.repo.po
 
+import io.github.vudsen.spectre.repo.util.RepoConstant
 import io.github.vudsen.spectre.repo.util.SnowFlake
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -15,22 +16,23 @@ import java.sql.Timestamp
 @Table(name = "toolchain_bundle")
 data class ToolchainBundlePO(
     @Id
-    var id: Long? = null,
-    var name: String? = null,
+    var id: Long = 0,
+    var name: String = "",
     @Column(name = "created_at", updatable = false, insertable = false)
-    @Null
-    var createdAt: Timestamp? = null,
-    var jattachTag: String? = null,
-    var arthasTag: String? = null,
+    @field:Null
+    var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
+    var jattachTag: String = "",
+    var arthasTag: String = "",
     @Deprecated("Unused field. This tag is bundled in the server")
     @Column(updatable = false, insertable = false)
-    var httpClientTag: String? = null
+    var httpClientTag: String = ""
 ) {
 
     @PrePersist
     fun prePersist() {
-        if (id == null) {
+        if (id == RepoConstant.EMPTY_ID) {
             id = SnowFlake.nextId()
+            createdAt = Timestamp(System.currentTimeMillis())
         }
     }
 

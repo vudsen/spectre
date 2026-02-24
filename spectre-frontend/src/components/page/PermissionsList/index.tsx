@@ -36,8 +36,8 @@ const SubjectPermissionsQuery = graphql(`
   query SubjectPermissionsQuery(
     $subjectId: Long!
     $subjectType: String!
-    $page: Int
-    $size: Int
+    $page: Int!
+    $size: Int!
     $isUser: Boolean!
     $isRole: Boolean!
   ) {

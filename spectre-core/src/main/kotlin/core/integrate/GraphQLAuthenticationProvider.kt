@@ -22,8 +22,9 @@ class GraphQLAuthenticationProvider(
         return authentication
     }
 
-
-    override fun supports(authentication: Class<*>?): Boolean {
+    override fun supports(authentication: Class<*>): Boolean {
         return authentication == GraphQLAuthenticationToken::class.java
     }
+
+
 }

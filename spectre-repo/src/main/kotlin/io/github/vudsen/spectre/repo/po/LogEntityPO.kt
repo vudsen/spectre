@@ -13,39 +13,39 @@ import jakarta.persistence.Table
 class LogEntityPO {
 
     @Id
-    var id: Long? = null
+    var id: Long = 0
 
     /**
      * 操作，保存 i18n key
      */
-    var operation: String? = null
+    var operation: String = ""
 
     /**
      * 是否成功
      */
-    var isSuccess: Boolean? = null
+    var isSuccess: Boolean = false
 
     /**
      * 上下文，JSON 格式
      */
-    var context: String? = null
+    var context: String = ""
 
-    var time: Timestamp? = null
+    var time: Timestamp = Timestamp(System.currentTimeMillis())
 
-    var ip: String? = null
+    var ip: String = ""
 
-    var username: String? = null
+    var username: String = ""
 
-    var userId: Long? = null
+    var userId: Long = 0
 
     @Column(name = "user_agent")
-    var userAgent: String? = null
+    var userAgent: String = ""
 
     var message: String? = null
 
     @PrePersist
     fun prePersist() {
-        if (id == null) {
+        if (id == 0L) {
             id = SnowFlake.nextId()
         }
     }

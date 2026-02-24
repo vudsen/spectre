@@ -36,7 +36,7 @@ const RuntimeNodePluginQuery = graphql(`
 `)
 
 const RuntimeNodePluginDetailQuery = graphql(`
-  query RuntimeNodePluginDetailQuery($pluginId: String) {
+  query RuntimeNodePluginDetailQuery($pluginId: String!) {
     runtimeNode {
       plugin(pluginId: $pluginId) {
         description

@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre.core.service.impl
 
-import io.github.vudsen.spectre.api.dto.UserDTO
-import io.github.vudsen.spectre.api.dto.UserDTO.Companion.toDTO
+import io.github.vudsen.spectre.api.dto.CreateUserDTO
+import io.github.vudsen.spectre.api.dto.UpdateUserDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.repo.UserRepository
 import io.github.vudsen.spectre.api.service.UserService
@@ -32,33 +32,38 @@ class DefaultUserService(
         return userRepository.findAll(PageRequest.of(page, size))
     }
 
+
     @Transactional(rollbackFor = [Exception::class])
-    override fun saveUser(userPO: UserPO) {
-        val id = userPO.id
-        if (id == null) {
-            userPO.password = passwordEncoder.encode(userPO.password!!)
-            userRepository.save(userPO)
-            return
+    override fun createUser(userDTO: CreateUserDTO): UserPO {
+        val user = UserPO().apply {
+            password = passwordEncoder.encode(userDTO.password)!!
+            username = userDTO.username
+            displayName = userDTO.displayName
+            labels = userDTO.labels
         }
-        val builder = entityManager.criteriaBuilder
-        val criteria = builder.createCriteriaUpdate(UserPO::class.java)
+        userRepository.save(user)
+        return user
+    }
 
-        val root = criteria.from(UserPO::class.java)
-        userPO.displayName ?.let {
-            criteria.set(root.get("displayName"), it)
+    @Transactional(rollbackFor = [Exception::class])
+    override fun updateUser(userDTO: UpdateUserDTO) {
+        val userPO = userRepository.findById(userDTO.id).getOrNull() ?: throw BusinessException("error.user.not.exit")
+        userDTO.password?.let {
+            userPO.password = passwordEncoder.encode(it)!!
         }
-        userPO.labels ?.let {
-            criteria.set(root.get("labels"), it)
+        userDTO.labels?.let {
+            userPO.labels = it
         }
-
-        criteria.where(builder.equal(root.get<Long>("id"), id))
-        entityManager.createQuery(criteria).executeUpdate()
+        userDTO.displayName?.let {
+            userPO.displayName = it
+        }
+        userRepository.save(userPO)
     }
 
     override fun findByUsernameAndPassword(username: String, password: String): Long? {
         return userRepository.findByUsernameAndPassword(
             username,
-            passwordEncoder.encode(password)
+            passwordEncoder.encode(password)!!
         )?.id
     }
 
@@ -66,10 +71,8 @@ class DefaultUserService(
         return userRepository.searchByUsernameStartsWith(usernamePrefix, PageRequest.of(0, 10))
     }
 
-    override fun findById(id: Long): UserDTO? {
-        return userRepository.findById(id).getOrNull()?.toDTO().apply {
-            this?.password = ""
-        }
+    override fun findById(id: Long): UserPO? {
+        return userRepository.findById(id).getOrNull()
     }
 
     @Transactional(rollbackFor = [Exception::class])
@@ -87,7 +90,7 @@ class DefaultUserService(
 
     @Transactional(rollbackFor = [Exception::class])
     override fun modifyPassword(userId: Long, oldPassword: String, newPassword: String) {
-        val user = userRepository.findById(userId).getOrNull()?.toDTO() ?: throw BusinessException("用户不存在")
+        val user = userRepository.findById(userId).getOrNull() ?: throw BusinessException("error.user.not.exit")
         if (!passwordEncoder.matches(oldPassword, user.password)) {
             throw BusinessException("原密码不正确")
         }

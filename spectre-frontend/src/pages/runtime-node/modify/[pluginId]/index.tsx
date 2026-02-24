@@ -10,8 +10,8 @@ import { updateTourStep } from '@/api/impl/sys-conf.ts'
 
 const RuntimeNodeCreatePluginQuery = graphql(`
   query RuntimeNodeCreatePluginQuery(
-    $pluginId: String
-    $runtimeNodeId: String
+    $pluginId: String!
+    $runtimeNodeId: String!
   ) {
     runtimeNode {
       plugin(pluginId: $pluginId) {
@@ -36,7 +36,7 @@ const TEST_RUNTIME_NODE_ID = 'TestRuntimeNodeExtension'
 const PluginConfPage: React.FC = () => {
   const params = useParams()
   const searchParams = new URLSearchParams(location.search)
-  const runtimeNodeId = searchParams.get('runtimeNodeId')
+  const runtimeNodeId = searchParams.get('runtimeNodeId') ?? '-1'
   useCrumb(runtimeNodeId ? UPDATE_CRUMB : CREATE_CRUMB)
   const pluginId = params.pluginId!
   const qlParams = useRef({ pluginId, runtimeNodeId })

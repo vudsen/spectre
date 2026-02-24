@@ -6,12 +6,10 @@ import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.common.plugin.rnode.ShellBasedArthasHttpClient
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
-import io.github.vudsen.spectre.test.Disposer
 import io.github.vudsen.spectre.test.GlobalDisposer
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.plugin.AttachTester
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.extension.RegisterExtension
 import org.springframework.beans.factory.annotation.Autowired
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
@@ -82,13 +80,13 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
             ),
             "/opt/spectre"
         )
-        val runtimeNodeId = runtimeNodeService.saveRuntimeNode(
+        val runtimeNodeId = runtimeNodeService.createRuntimeNode(
             RuntimeNodePO(
                 name = "Test Node",
                 pluginId = SshRuntimeNodeExtension.ID,
                 configuration = objectMapper.writeValueAsString(conf)
             )
-        ).id!!
+        ).id
         return runtimeNodeId
     }
 
@@ -168,13 +166,13 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
             ),
             "/opt/spectre"
         )
-        val runtimeNodeId = runtimeNodeService.saveRuntimeNode(
+        val runtimeNodeId = runtimeNodeService.createRuntimeNode(
             RuntimeNodePO(
                 name = "Test Node",
                 pluginId = SshRuntimeNodeExtension.ID,
                 configuration = objectMapper.writeValueAsString(conf)
             )
-        ).id!!
+        ).id
         return Pair(container,runtimeNodeId)
     }
 

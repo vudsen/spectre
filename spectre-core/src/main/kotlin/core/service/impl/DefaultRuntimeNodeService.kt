@@ -15,6 +15,7 @@ import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
+import io.github.vudsen.spectre.repo.util.RepoConstant
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
@@ -24,7 +25,7 @@ import kotlin.jvm.optionals.getOrNull
 
 @Service
 class DefaultRuntimeNodeService(
-    private val repository: RuntimeNodeRepository,
+    private val runtimeNodeRepository: RuntimeNodeRepository,
     private val extManager: RuntimeNodeExtManager,
     cacheManager: CacheManager
 ) : RuntimeNodeService {
@@ -36,8 +37,8 @@ class DefaultRuntimeNodeService(
     private val cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
 
     override fun insert(runtimeNodePO: RuntimeNodePO): Long {
-        val saved = repository.save(runtimeNodePO)
-        return saved.id!!
+        val saved = runtimeNodeRepository.save(runtimeNodePO)
+        return saved.id
     }
 
     override fun findPluginById(extPointId: String): RuntimeNodeExtensionPoint {
@@ -45,11 +46,11 @@ class DefaultRuntimeNodeService(
     }
 
     override fun update(configuration: RuntimeNodePO) {
-        repository.save(configuration)
+        runtimeNodeRepository.save(configuration)
     }
 
     override fun listRuntimeNodes(page: Int, size: Int): Page<RuntimeNodeDTO> {
-        return repository.findAll(PageRequest.of(page, size)).map { po ->
+        return runtimeNodeRepository.findAll(PageRequest.of(page, size)).map { po ->
             val dto = po.toDTO(true)
             dto
         }
@@ -61,28 +62,36 @@ class DefaultRuntimeNodeService(
         return extManager.listPlugins()
     }
 
-    override fun saveRuntimeNode(po: RuntimeNodePO): RuntimeNodePO {
-        val pluginId = po.pluginId!!
+    private fun saveRuntimeNode(po: RuntimeNodePO) {
+        val pluginId = po.pluginId
         val plugin = findPluginById(pluginId)
-
         val updated = objectMapper.readValue(po.configuration, plugin.getConfigurationClass())
-        po.id?.let {
-            val node = repository.findById(it).getOrNull() ?: throw BusinessException("节点不存在")
+
+        if (po.id != RepoConstant.EMPTY_ID) {
+            val node = runtimeNodeRepository.findById(po.id).getOrNull() ?: throw BusinessException("节点不存在")
             plugin.fillSensitiveConfiguration(
                 updated,
                 objectMapper.readValue(node.configuration, plugin.getConfigurationClass())
             )
         }
-
         try {
             plugin.test(updated)
         } catch (e: Exception) {
             logger.debug("Test Failed", e)
             throw BusinessException(e.message ?: "测试失败")
         }
-        // 过滤多余字段
-        po.configuration = objectMapper.writeValueAsString(updated)
-        return repository.save(po)
+        runtimeNodeRepository.save(po)
+    }
+
+    override fun createRuntimeNode(po: RuntimeNodePO): RuntimeNodePO {
+        po.id = RepoConstant.EMPTY_ID
+        saveRuntimeNode(po)
+        return po
+    }
+
+    override fun updateRuntimeNode(po: RuntimeNodePO): RuntimeNodePO {
+        saveRuntimeNode(po)
+        return po
     }
 
     override fun test(testObj: RuntimeNodeTestDTO) {
@@ -104,7 +113,7 @@ class DefaultRuntimeNodeService(
     }
 
     override fun deleteById(id: Long) {
-        repository.deleteById(id)
+        runtimeNodeRepository.deleteById(id)
     }
 
     /**
@@ -140,12 +149,12 @@ class DefaultRuntimeNodeService(
 
 
     override fun getRuntimeNode(runtimeNodeId: Long): RuntimeNodeDTO? {
-        val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: return null
+        val dto = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: return null
         return dto
     }
 
     override fun findPureRuntimeNodeById(runtimeNodeId: Long): RuntimeNodeDTO? {
-        return repository.findById(runtimeNodeId).getOrNull()?.toDTO()
+        return runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO()
     }
 
     override fun findTreeNode(id: String): JvmSearchNode<Any>? {
@@ -175,14 +184,14 @@ class DefaultRuntimeNodeService(
     }
 
     override fun connect(runtimeNodeId: Long): RuntimeNode {
-        val runtimeNodeDTO = repository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
+        val runtimeNodeDTO = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
         val extPoint = findPluginById(runtimeNodeDTO.pluginId)
         return extPoint.connect(runtimeNodeDTO.configuration)
     }
 
 
     override fun resolveViewPage(runtimeNodeId: Long): PageDescriptor {
-        val dto = repository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: throw BusinessException("节点不存在")
+        val dto = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: throw BusinessException("节点不存在")
         val ext = extManager.findById(dto.pluginId)
         return ext.getViewPage(dto, dto.configuration)
     }

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 @SchemaMapping(typeName = "ToolchainItemQueries")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_READ)")
+@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_READ)")
 class ToolchainQueriesController(
     private val toolchainService: ToolchainService
 ) {
@@ -48,18 +48,18 @@ class ToolchainQueriesController(
         @Argument type: String,
         @Argument page: Int,
         @Argument size: Int
-    ): PageResult<ToolchainItemResponseVO>? {
+    ): PageResult<ToolchainItemResponseVO> {
         val result = toolchainService.listToolchainItems(ToolchainType.valueOf(type), page, size)
         return PageResult(result.totalPages, result.mapIndexed { _, item ->
-            val id = item.id!!
-            val type = id.type!!
-            val tag = id.tag!!
+            val id = item.id
+            val type = id.type
+            val tag = id.tag
             return@mapIndexed ToolchainItemResponseVO(
                 type,
                 tag,
-                item.url!!,
-                item.armUrl!!,
-                item.createdAt!!,
+                item.url,
+                item.armUrl,
+                item.createdAt,
                 toolchainService.isPackageCached(type, tag, false),
                 toolchainService.isPackageCached(type, tag, true)
             )

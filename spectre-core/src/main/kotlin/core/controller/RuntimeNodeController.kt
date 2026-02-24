@@ -25,14 +25,14 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("runtime-node")
-@PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_READ)")
+@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_READ)")
 class RuntimeNodeController(
     private val service: RuntimeNodeService,
     private val appAccessControlService: AppAccessControlService
 ) {
 
 
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE) or hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE) or hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
     @GetMapping("configuration-page")
     fun configurationPage(pluginId: String): PageDescriptor? {
         return service.findPluginById(pluginId)?.getConfigurationForm(null)
@@ -40,19 +40,19 @@ class RuntimeNodeController(
 
     @PostMapping("create")
     @Log("log.runtime_node.create", contextResolveExp = "{ id: #args[0].id }")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
     fun createRuntimeNode(@RequestBody @Validated(CreateGroup::class) po: RuntimeNodePO) {
-        service.saveRuntimeNode(po)
+        service.createRuntimeNode(po)
     }
 
     @Log("log.runtime_node.update", contextResolveExp = "{ id: #args[0].id }")
     @PostMapping("update")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE)")
     fun updateRuntimeNode(@RequestBody @Validated(UpdateGroup::class) po: RuntimeNodePO) {
-        service.saveRuntimeNode(po)
+        service.updateRuntimeNode(po)
     }
 
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE) or hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE) or hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
     @PostMapping("test")
     fun testConnection(@RequestBody @Validated testObj: RuntimeNodeTestDTO) {
         service.test(testObj)
@@ -69,7 +69,7 @@ class RuntimeNodeController(
 
     @PostMapping("delete/{id}")
     @Log("log.runtime_node.delete", contextResolveExp = "{ id: #args[0] }")
-    @PreAuthorize("hasPermission(null, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_DELETE)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_DELETE)")
     fun delete(@PathVariable id: Long) {
         service.deleteById(id)
     }
