@@ -124,6 +124,7 @@ jobs:
           echo "# Test Report" >> $GITHUB_STEP_SUMMARY
           echo "❌ Run test failed, click [here](${{ steps.cloudflare.outputs.deployment-url }}) to check the test report." >> $GITHUB_STEP_SUMMARY
   integration-test:
+    name: Integration Test
     runs-on: ubuntu-latest
     steps:
       - name: Fetch Sources
