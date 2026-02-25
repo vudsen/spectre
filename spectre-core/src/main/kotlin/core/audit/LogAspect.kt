@@ -148,7 +148,7 @@ class LogAspect(
                 logEntity.userId = it.id
             }
         }
-        if (logEntity.username == null && context != null) {
+        if (logEntity.username.isEmpty() && context != null) {
             val un = context["username"]
             if (un is String) {
                 logEntity.username = un
@@ -162,7 +162,7 @@ class LogAspect(
         logEntity.time = Timestamp(System.currentTimeMillis())
 
         val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
-        logEntity.userAgent = request.getHeader(HttpHeaders.USER_AGENT)
+        logEntity.userAgent = request.getHeader(HttpHeaders.USER_AGENT) ?: "<Unknown>"
         logEntity.operation = logAnnotation.messageKey
 
         logEntity.ip = request.getHeader("X-Forwarded-For")?.split(",")?.firstOrNull()?.trim()

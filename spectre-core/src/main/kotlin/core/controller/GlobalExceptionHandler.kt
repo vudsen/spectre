@@ -95,7 +95,7 @@ class GlobalExceptionHandler(
 
             else -> {
                 logger.error("", ex)
-                return ResponseEntity.ok(
+                return ResponseEntity.status(500).body(
                     ErrorResponseVO(
                         messageSource.getMessage("error.server.internal.error", emptyArray(), null)
                     )

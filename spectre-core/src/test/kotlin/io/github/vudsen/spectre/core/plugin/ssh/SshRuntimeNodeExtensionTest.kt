@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
+import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
@@ -81,11 +82,11 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
             "/opt/spectre"
         )
         val runtimeNodeId = runtimeNodeService.createRuntimeNode(
-            RuntimeNodePO(
-                name = "Test Node",
-                pluginId = SshRuntimeNodeExtension.ID,
+            CreateRuntimeNodeDTO().apply {
+                name = "Test Node"
+                pluginId = SshRuntimeNodeExtension.ID
                 configuration = objectMapper.writeValueAsString(conf)
-            )
+            }
         ).id
         return runtimeNodeId
     }
@@ -167,11 +168,11 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
             "/opt/spectre"
         )
         val runtimeNodeId = runtimeNodeService.createRuntimeNode(
-            RuntimeNodePO(
-                name = "Test Node",
-                pluginId = SshRuntimeNodeExtension.ID,
+            CreateRuntimeNodeDTO().apply {
+                name = "Test Node"
+                pluginId = SshRuntimeNodeExtension.ID
                 configuration = objectMapper.writeValueAsString(conf)
-            )
+            }
         ).id
         return Pair(container,runtimeNodeId)
     }

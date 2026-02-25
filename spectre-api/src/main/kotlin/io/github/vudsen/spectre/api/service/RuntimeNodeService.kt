@@ -1,8 +1,10 @@
 package io.github.vudsen.spectre.api.service
 
+import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
+import io.github.vudsen.spectre.api.dto.UpdateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
@@ -44,12 +46,12 @@ interface RuntimeNodeService {
     /**
      * 创建运行节点
      */
-    fun createRuntimeNode(po: RuntimeNodePO): RuntimeNodePO
+    fun createRuntimeNode(dto: CreateRuntimeNodeDTO): RuntimeNodePO
 
     /**
      * 保存节点
      */
-    fun updateRuntimeNode(po: RuntimeNodePO): RuntimeNodePO
+    fun updateRuntimeNode(dto: UpdateRuntimeNodeDTO): RuntimeNodePO
 
 
     /**

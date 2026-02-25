@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
+import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
@@ -33,11 +34,11 @@ class K8sRuntimeNodeExtensionTest : AbstractSpectreTest() {
             true
         )
         val runtimeNodeId = runtimeNodeService.createRuntimeNode(
-            RuntimeNodePO(
-                name = "K8s",
-                pluginId = K8sRuntimeNodeExtension.ID,
+            CreateRuntimeNodeDTO().apply {
+                name = "K8s"
+                pluginId = K8sRuntimeNodeExtension.ID
                 configuration = ObjectMapper().writeValueAsString(runtimeNodeConfig)
-            )
+            }
         ).id
 
         val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
