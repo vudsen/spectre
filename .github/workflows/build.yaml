@@ -73,7 +73,7 @@ jobs:
         uses: fenio/setup-k3s@v1
 
       - name: Update Http Client
-        if: ${{ steps.filter.outputs.isHttpClientChange && github.event_name == 'pull_request' }}
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
         run: |
           sh ./gradlew :cli:http-client:build -x test
           APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
@@ -146,12 +146,8 @@ jobs:
             isHttpClientChange:
               - 'cli/http-client/**'
 
-      - name: Setup k3s
-        id: k3s
-        uses: fenio/setup-k3s@v1
-
       - name: Update Http Client
-        if: ${{ steps.filter.outputs.isHttpClientChange && github.event_name == 'pull_request' }}
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
         run: |
           sh ./gradlew :cli:http-client:build -x test
           APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
