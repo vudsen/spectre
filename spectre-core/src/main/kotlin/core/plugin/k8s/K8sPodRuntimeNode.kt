@@ -209,6 +209,7 @@ class K8sPodRuntimeNode(
             outputStream.flush()
             outputStream.close()
             writer.close()
+            ws.close(1000, null)
         }
     }
 

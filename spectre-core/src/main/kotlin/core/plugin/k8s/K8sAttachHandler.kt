@@ -52,7 +52,7 @@ class K8sAttachHandler(
                 "load",
                 "instrument",
                 "false",
-                "${paths.arthasHome}/arthas-agent.jar=;password=${password};httpPort=${KUBERNETES_LISTEN_PORT};telnetPort=-1;"
+                "${paths.arthasHome}/arthas-agent.jar=;localConnectionNonAuth=false;password=${password};httpPort=${KUBERNETES_LISTEN_PORT};telnetPort=-1;"
             ).ok()
         }
         return ShellBasedArthasHttpClient(
