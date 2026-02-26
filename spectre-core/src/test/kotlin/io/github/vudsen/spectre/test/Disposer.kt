@@ -22,9 +22,7 @@ class Disposer : Closeable, Extension {
         for (runnable in resources) {
             try {
                 runnable.run()
-            } catch (e: Exception) {
-                logger.error("Failed to close resource", e)
-            }
+            } catch (_: Exception) { }
         }
     }
 

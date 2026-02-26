@@ -40,7 +40,9 @@ open class ShellBasedArthasHttpClient(
             StandardCharsets.UTF_8))
         val result = runtimeNode.execute("$javaPath -jar $clientPath $arthasHttpEndpoint $encodedBody $password")
         if (result.exitCode != 0) {
-            logger.info("Running command '{}' failed, exit code: {}", "$javaPath -jar $clientPath $arthasHttpEndpoint $encodedBody $password", result.exitCode)
+            if (logger.isDebugEnabled) {
+                logger.debug("Running command '{}' failed, exit code: {}", "$javaPath -jar $clientPath $arthasHttpEndpoint $encodedBody $password", result.exitCode)
+            }
             throw BusinessException("命令执行失败, Arthas 接口请求错误，响应信息: " + result.stdout)
         }
         val response = result.stdout

@@ -160,8 +160,10 @@ class K8sExecClient(
      * 执行命令，并阻塞当前线程直到执行完毕
      */
     fun exec(): CommandExecuteResult {
-        createWs()
-        return future.get()
+        val ws = createWs()
+        val result = future.get()
+        ws.close(0, null)
+        return result
     }
 
     fun isAlive(): Boolean {
