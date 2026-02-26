@@ -162,7 +162,7 @@ class K8sExecClient(
     fun exec(): CommandExecuteResult {
         val ws = createWs()
         val result = future.get()
-        ws.close(0, null)
+        ws.close(1000, null)
         return result
     }
 
