@@ -1,12 +1,14 @@
 package io.github.vudsen.spectre.core.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.common.plugin.RuntimeNodeExtManager
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
 import io.github.vudsen.spectre.repo.RuntimeNodeRepository
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
+import io.github.vudsen.spectre.api.dto.UpdateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
@@ -83,15 +85,48 @@ class DefaultRuntimeNodeService(
         runtimeNodeRepository.save(po)
     }
 
-    override fun createRuntimeNode(po: RuntimeNodePO): RuntimeNodePO {
-        po.id = RepoConstant.EMPTY_ID
-        saveRuntimeNode(po)
+    override fun createRuntimeNode(dto: CreateRuntimeNodeDTO): RuntimeNodePO {
+        val extensionPoint = extManager.findById(dto.pluginId)
+        val configurationObj = objectMapper.readValue(dto.configuration, extensionPoint.getConfigurationClass())
+        val pureConfiguration = objectMapper.writeValueAsString(configurationObj)
+
+
+        val po = RuntimeNodePO().apply {
+            name = dto.name
+            pluginId = dto.pluginId
+            configuration = pureConfiguration
+            restrictedMode = dto.restrictedMode ?: false
+            labels = dto.labels
+        }
+        runtimeNodeRepository.save(po)
         return po
     }
 
-    override fun updateRuntimeNode(po: RuntimeNodePO): RuntimeNodePO {
-        saveRuntimeNode(po)
-        return po
+    override fun updateRuntimeNode(dto: UpdateRuntimeNodeDTO): RuntimeNodePO {
+        val oldEntity = runtimeNodeRepository.findById(dto.id).getOrNull()
+            ?: throw BusinessException("error.runtime.node.not.exist")
+
+        dto.labels?.let {
+            oldEntity.labels = it
+        }
+        dto.restrictedMode?.let {
+            oldEntity.restrictedMode = it
+        }
+        dto.configuration?.let {
+            if (it != oldEntity.configuration) {
+                val extensionPoint = extManager.findById(oldEntity.pluginId)
+                val full = extensionPoint.fillSensitiveConfiguration(
+                    objectMapper.readValue(it, extensionPoint.getConfigurationClass()),
+                    objectMapper.readValue(oldEntity.configuration, extensionPoint.getConfigurationClass())
+                )
+                oldEntity.configuration = objectMapper.writeValueAsString(full)
+            }
+        }
+        dto.name?.let {
+            oldEntity.name = it
+        }
+        runtimeNodeRepository.save(oldEntity)
+        return oldEntity
     }
 
     override fun test(testObj: RuntimeNodeTestDTO) {

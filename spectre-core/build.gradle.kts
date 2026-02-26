@@ -17,9 +17,28 @@ springBoot {
     mainClass.set("io.github.vudsen.spectre.SpectreApplicationKt")
 }
 
+sourceSets {
+    create("integrationTest") {
+        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+        runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    }
+}
+
+val integrationTestImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+
+val integrationTestRuntimeOnly: Configuration by configurations.getting {
+    extendsFrom(configurations.testRuntimeOnly.get())
+}
+
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    integrationTestImplementation("org.springframework.boot:spring-boot-starter-graphql-test")
+    integrationTestImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    integrationTestImplementation("org.springframework.boot:spring-boot-webtestclient")
+    integrationTestImplementation("org.springframework.graphql:spring-graphql-test:2.0.2")
     testImplementation("org.testcontainers:testcontainers:2.0.3")
     implementation("org.bouncycastle:bcprov-jdk18on:1.83")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.83")
@@ -52,6 +71,8 @@ dependencies {
 }
 
 
+
+
 fun Copy.configureTokenReplace() {
     inputs.properties(
         mapOf(
@@ -81,6 +102,24 @@ tasks.processResources {
 tasks.processTestResources {
     configureTokenReplace()
 }
+tasks.named<ProcessResources>("processIntegrationTestResources") {
+    configureTokenReplace()
+    from(project.file("src/main/resources/graphql")) {
+        into("graphql")
+    }
+}
+
+tasks.register<Test>("integrationTest") {
+    description = "Runs integration tests."
+    group = "verification"
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
+
+    outputs.upToDateWhen { false }
+
+    useJUnitPlatform()
+}
+
 
 kotlin {
     jvmToolchain(17)

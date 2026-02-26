@@ -1,0 +1,31 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.ehcache.org/v3"
+        xmlns:jsr107="http://www.ehcache.org/v3/jsr107">
+    <service>
+        <jsr107:defaults enable-management="true" enable-statistics="true"/>
+    </service>
+
+    <default-serializers>
+        <serializer type="java.lang.Object">io.github.vudsen.spectre.core.integrate.EhCacheSerializer</serializer>
+    </default-serializers>
+
+    <cache alias="defaultCache">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.lang.Object</value-type>
+        <expiry>
+            <tti unit="minutes">10</tti>
+        </expiry>
+        <heap>1000</heap>
+    </cache>
+
+    <cache alias="quickExpireCache">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.lang.Object</value-type>
+        <expiry>
+            <tti unit="minutes">1</tti>
+        </expiry>
+        <heap>128</heap>
+    </cache>
+
+
+</config>

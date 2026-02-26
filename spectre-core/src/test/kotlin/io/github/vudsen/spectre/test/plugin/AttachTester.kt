@@ -2,6 +2,7 @@ package io.github.vudsen.spectre.test.plugin
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
@@ -174,12 +175,12 @@ class AttachTester {
             "/opt/spectre"
         )
         runtimeNodeService.createRuntimeNode(
-            RuntimeNodePO(
-                name = "Test Node",
-                pluginId = SshRuntimeNodeExtension.ID,
-                configuration = objectMapper.writeValueAsString(conf),
+            CreateRuntimeNodeDTO().apply {
+                name = "Test Node"
+                pluginId = SshRuntimeNodeExtension.ID
+                configuration = objectMapper.writeValueAsString(conf)
                 restrictedMode = true
-            )
+            }
         ).id
     }
 

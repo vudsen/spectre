@@ -1,8 +1,10 @@
 package io.github.vudsen.spectre.core.controller
 
+import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
+import io.github.vudsen.spectre.api.dto.UpdateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.core.integrate.abac.RuntimeNodePolicyPermissionContext
 import io.github.vudsen.spectre.api.service.AppAccessControlService
@@ -39,17 +41,17 @@ class RuntimeNodeController(
     }
 
     @PostMapping("create")
-    @Log("log.runtime_node.create", contextResolveExp = "{ id: #args[0].id }")
+    @Log("log.runtime_node.create", contextResolveExp = "{ id: #returnObj }")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
-    fun createRuntimeNode(@RequestBody @Validated(CreateGroup::class) po: RuntimeNodePO) {
-        service.createRuntimeNode(po)
+    fun createRuntimeNode(@RequestBody @Validated dto: CreateRuntimeNodeDTO): Long {
+        return service.createRuntimeNode(dto).id
     }
 
     @Log("log.runtime_node.update", contextResolveExp = "{ id: #args[0].id }")
     @PostMapping("update")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE)")
-    fun updateRuntimeNode(@RequestBody @Validated(UpdateGroup::class) po: RuntimeNodePO) {
-        service.updateRuntimeNode(po)
+    fun updateRuntimeNode(@RequestBody @Validated dto: UpdateRuntimeNodeDTO) {
+        service.updateRuntimeNode(dto)
     }
 
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_UPDATE) or hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_CREATE)")
