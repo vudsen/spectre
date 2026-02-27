@@ -46,7 +46,8 @@ jobs:
         run: |
           sh ./gradlew :cli:http-client:build -x test
           APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
-          mv -f cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
+          jar tf cli/http-client/build/libs/http-client-$APP_VERSION.jar
+          cp cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
           BRANCH="${{ github.head_ref }}"
 
           git config user.email "action@github.com"
