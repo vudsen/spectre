@@ -127,9 +127,6 @@ class K8sExecClient(
 
             override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
                 val stream = bytes.get(0)
-                if (logger.isDebugEnabled) {
-                    logger.debug("Receive bytes: {}", bytes.toString())
-                }
                 val arr = bytes.toByteArray()
                 if (stream == 255.toByte()) {
                     pipedOutputStream.write(arr, 1, arr.size - 1)
@@ -141,6 +138,12 @@ class K8sExecClient(
                     val tree = objectMapper.readTree(arr, 1, arr.size - 1)
                     val status = tree.get("status")
                     if (status == null || !status.isTextual || "Success" != status.asText()) {
+                        tree.get("message")?.let {
+                            if (it.isTextual) {
+                                pipedOutputStream.write('\n'.code)
+                                pipedOutputStream.write(it.asText().toByteArray())
+                            }
+                        }
                         complete(1)
                         if (logger.isDebugEnabled) {
                             logger.debug("Failed to execute command, api response:\n{}", tree.toPrettyString())
@@ -164,7 +167,6 @@ class K8sExecClient(
      * 执行命令，并阻塞当前线程直到执行完毕
      */
     fun exec(): CommandExecuteResult {
-        logger.debug("Sending K8s request: {}", request.url)
         val ws = createWs()
         val result = future.get()
         ws.close(1000, null)
@@ -179,7 +181,6 @@ class K8sExecClient(
      * 当 stdin 开启时，使用该命令开启交互式执行
      */
     fun execWithStdinOpen(): WebSocket {
-        logger.debug("Sending K8s request: {}", request.url)
         return createWs()
     }
 

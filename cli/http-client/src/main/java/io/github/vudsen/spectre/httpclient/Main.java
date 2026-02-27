@@ -25,7 +25,6 @@ public class Main {
             doRequest(encodedBody, endpoint, password);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            e.printStackTrace();
             System.exit(1);
         }
     }
