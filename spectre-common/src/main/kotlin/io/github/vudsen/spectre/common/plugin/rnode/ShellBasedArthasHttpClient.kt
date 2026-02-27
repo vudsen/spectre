@@ -38,7 +38,7 @@ open class ShellBasedArthasHttpClient(
     protected open fun sendRequest(body: Any, noCheckResponse: Boolean): JsonNode {
         val encodedBody = Base64.getEncoder().encodeToString(objectMapper.writeValueAsString(body).toByteArray(
             StandardCharsets.UTF_8))
-        val result = runtimeNode.execute("$javaPath -jar $clientPath $arthasHttpEndpoint $encodedBody $password")
+        val result = runtimeNode.execute(javaPath, "-jar", clientPath, arthasHttpEndpoint ,encodedBody, password)
         if (result.exitCode != 0) {
             throw BusinessException("命令执行失败, Arthas 接口请求错误，响应信息: " + result.stdout)
         }

@@ -23,7 +23,7 @@ public class Main {
         var password = args[2];
         try {
             doRequest(encodedBody, endpoint, password);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }

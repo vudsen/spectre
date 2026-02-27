@@ -35,11 +35,12 @@ val integrationTestRuntimeOnly: Configuration by configurations.getting {
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.testcontainers:k3s:1.21.4")
+    testImplementation("org.testcontainers:testcontainers:1.21.4")
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-graphql-test")
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     integrationTestImplementation("org.springframework.boot:spring-boot-webtestclient")
     integrationTestImplementation("org.springframework.graphql:spring-graphql-test:2.0.2")
-    testImplementation("org.testcontainers:testcontainers:2.0.3")
     implementation("org.bouncycastle:bcprov-jdk18on:1.83")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.83")
     implementation("org.springframework.boot:spring-boot-starter-web")

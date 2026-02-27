@@ -27,6 +27,18 @@ jobs:
           filters: |
             isHttpClientChange:
               - 'cli/http-client/**'
+
+      - name: Setup Java
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Update Http Client
         if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
         env:
@@ -34,7 +46,8 @@ jobs:
         run: |
           sh ./gradlew :cli:http-client:build -x test
           APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
-          mv -f cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
+          jar tf cli/http-client/build/libs/http-client-$APP_VERSION.jar
+          cp cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
           BRANCH="${{ github.head_ref }}"
 
           git config user.email "action@github.com"
@@ -68,10 +81,6 @@ jobs:
             isHttpClientChange:
               - 'cli/http-client/**'
 
-      - name: Setup k3s
-        id: k3s
-        uses: fenio/setup-k3s@v1
-
       - name: Update Http Client
         if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
         run: |
@@ -79,26 +88,8 @@ jobs:
           APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
           mv -f cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
 
-      - name: Setup Test Environment
-        id: env
-        env:
-          KUBECONFIG: ${{ steps.k3s.outputs.kubeconfig }}
-        run: |
-          kubectl apply -f deploy/k8s-full-roles.yaml
-          kubectl apply -f spectre-core/src/test/resources/k8s-deploy.yaml
-          sleep 5
-          kubectl wait --for=condition=ready pod -l app=math-game -n spectre --timeout=60s
-          K8S_TOKEN=`kubectl create token spectre -n spectre`
-          echo "token=$K8S_TOKEN" >> $GITHUB_OUTPUT
-          
-          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_OUTPUT
-
       - name: Tests
         id: test
-        env:
-          K8S_ENDPOINT: https://127.0.0.1:6443
-          K8S_TOKEN: ${{ steps.env.outputs.token }}
         run: sh ./gradlew spectre-core:test
 
       - name: Upload Test Output

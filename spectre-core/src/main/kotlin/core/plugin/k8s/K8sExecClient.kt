@@ -17,6 +17,7 @@ import java.io.PipedOutputStream
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
+import java.util.Arrays
 import java.util.concurrent.CompletableFuture
 import javax.net.ssl.SSLContext
 
@@ -137,6 +138,12 @@ class K8sExecClient(
                     val tree = objectMapper.readTree(arr, 1, arr.size - 1)
                     val status = tree.get("status")
                     if (status == null || !status.isTextual || "Success" != status.asText()) {
+                        tree.get("message")?.let {
+                            if (it.isTextual) {
+                                pipedOutputStream.write('\n'.code)
+                                pipedOutputStream.write(it.asText().toByteArray())
+                            }
+                        }
                         complete(1)
                         if (logger.isDebugEnabled) {
                             logger.debug("Failed to execute command, api response:\n{}", tree.toPrettyString())
@@ -160,8 +167,10 @@ class K8sExecClient(
      * 执行命令，并阻塞当前线程直到执行完毕
      */
     fun exec(): CommandExecuteResult {
-        createWs()
-        return future.get()
+        val ws = createWs()
+        val result = future.get()
+        ws.close(1000, null)
+        return result
     }
 
     fun isAlive(): Boolean {
