@@ -27,6 +27,18 @@ jobs:
           filters: |
             isHttpClientChange:
               - 'cli/http-client/**'
+
+      - name: Setup Java
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Update Http Client
         if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
         env:
