@@ -70,9 +70,9 @@ spec:
           image: vudsen/math-game:0.0.1
           resources:
             requests:
-              memory: 40Mi
+              memory: "128Mi"
             limits:
-              memory: 150Mi
+              memory: "256Mi"
   selector:
     matchLabels:
       app: math-game
