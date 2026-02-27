@@ -17,3 +17,4 @@ spring:
 logging:
   level:
     io.github.vudsen.spectre.core.service.impl.DefaultArthasExecutionService: debug
+    io.github.vudsen.spectre.core.plugin.k8s.K8sExecClient: debug

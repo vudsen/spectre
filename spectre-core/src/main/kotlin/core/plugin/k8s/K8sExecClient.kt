@@ -17,6 +17,7 @@ import java.io.PipedOutputStream
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
+import java.util.Arrays
 import java.util.concurrent.CompletableFuture
 import javax.net.ssl.SSLContext
 
@@ -126,6 +127,9 @@ class K8sExecClient(
 
             override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
                 val stream = bytes.get(0)
+                if (logger.isDebugEnabled) {
+                    logger.debug("Receive bytes: {}", bytes.toString())
+                }
                 val arr = bytes.toByteArray()
                 if (stream == 255.toByte()) {
                     pipedOutputStream.write(arr, 1, arr.size - 1)
@@ -160,6 +164,7 @@ class K8sExecClient(
      * 执行命令，并阻塞当前线程直到执行完毕
      */
     fun exec(): CommandExecuteResult {
+        logger.debug("Sending K8s request: {}", request.url)
         val ws = createWs()
         val result = future.get()
         ws.close(1000, null)
@@ -174,6 +179,7 @@ class K8sExecClient(
      * 当 stdin 开启时，使用该命令开启交互式执行
      */
     fun execWithStdinOpen(): WebSocket {
+        logger.debug("Sending K8s request: {}", request.url)
         return createWs()
     }
 
