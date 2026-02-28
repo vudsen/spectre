@@ -33,9 +33,6 @@ class K8sPodRuntimeNode(
         private const val MAX_SINGLE_UPDATE_SIZE = 1024 * 1024 * 12L
     }
 
-    override fun upload(source: BoundedInputStreamSource, dest: String) {
-        return doUpload(source, dest)
-    }
 
     override fun doUpload(source: BoundedInputStreamSource, dest: String) {
         if (source.size() > MAX_SINGLE_UPDATE_SIZE) {
