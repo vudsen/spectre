@@ -23,6 +23,29 @@ import org.springframework.web.context.request.ServletRequestAttributes
 import java.sql.Timestamp
 import java.util.WeakHashMap
 
+/**
+ * 日志切面
+ *
+ * > 日志注解：[io.github.vudsen.spectre.core.audit.Log].
+ *
+ * 用于插入日志到库中。
+ *
+ * ## 关于上下文解析
+ *
+ * [io.github.vudsen.spectre.core.audit.Log.contextResolveExp] 会被当做一个 ognl 表达式，表达式应该返回一个 Map 对象.
+ *
+ * 表达式会在接口执行完成后执行
+ *
+ * ### 上下文可用参数
+ *
+ * - `args`: 入参，Object 数组
+ * - `returnObject`: 返回对象
+ *
+ * ### 上下文可用函数
+ *
+ * See [LogRootObject.pickAttributes]
+ *
+ */
 @Aspect
 @Component
 class LogAspect(
@@ -55,6 +78,9 @@ class LogAspect(
      */
     object LogRootObject {
 
+        /**
+         * 从 target 中选择指定的数据并返回一个 Map
+         */
         fun pickAttributes(target: Any, vararg attributes: String): Map<String, Any?> {
             return buildMap {
                 for (attr in attributes) {
@@ -92,7 +118,7 @@ class LogAspect(
         } finally {
             executor.execute {
                 val context = resolveContext(logAnnotation, returnObj, joinPoint)
-                if (logEntity.username == null) {
+                if (logEntity.username.isEmpty()) {
                     tryFillUserInfo(logEntity, context)
                 }
                 try {
