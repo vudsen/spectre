@@ -14,11 +14,6 @@ object TestConstant {
 
     const val DOCKER_IMAGE_SSHD_WITH_DOCKER = "vudsen/sshd-with-docker:0.0.1"
 
-    const val ENV_K8S_ENDPOINT = "K8S_ENDPOINT"
-
-    const val ENV_K8S_TOKEN = "K8S_TOKEN"
-
-    const val USER_TESTER_ID = 2L
 
     const val ROLE_TEST_ID = 2L
 

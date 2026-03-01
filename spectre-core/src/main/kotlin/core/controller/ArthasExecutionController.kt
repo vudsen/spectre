@@ -57,14 +57,14 @@ class ArthasExecutionController(
      */
     @PostMapping("/channel/{channelId}/join")
     @Log("log.arthas.channel.join", "{ channelId: #args[0], consumerId: #returnObj?.consumerId }")
-    fun joinChannel(@PathVariable channelId: String, request: HttpServletRequest): ArthasConsumerDTO? {
+    fun joinChannel(@PathVariable channelId: String, request: HttpServletRequest): ArthasConsumerDTO {
         return joinChannel0(request, channelId)
     }
 
     /**
      * @return consumerId
      */
-    private fun joinChannel0(request: HttpServletRequest, channelId: String): ArthasConsumerDTO? {
+    private fun joinChannel0(request: HttpServletRequest, channelId: String): ArthasConsumerDTO {
         val session = request.getSession(true)
         val key = channelSessionDataKey(channelId)
         val oldConsumerId = session.getAttribute(key) as ArthasConsumerDTO?
