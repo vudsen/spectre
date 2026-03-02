@@ -274,12 +274,12 @@ jobs:
             -t public.ecr.aws/b9z8l9n7/vudsen/spectre:${{ needs.build.outputs.app_version }}-${{ github.sha }} \
             deploy/image
 
-      - name: 执行远程 SSH 命令（密钥认证）
+      - name: Restart Service
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          script: sh /opt/spectre/reboot.sh ${{ needs.build.outputs.app_version }}-${{ github.sha }}
+          script: sudo sh /opt/spectre/reboot.sh ${{ needs.build.outputs.app_version }}-${{ github.sha }}
 
