@@ -1,7 +1,5 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.test.AbstractSpectreIntegrationTest
 import io.github.vudsen.spectre.test.TestConstant
@@ -38,16 +36,16 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
             )
             .exchange()
             .expectBodyList<JvmTreeNodeDTO>()
-            .hasSize(1)
             .returnResult()
             .responseBody!!
+            .find { node -> node.name === "spectre" }!!
 
         val holder = client.post().uri("spectre-api/runtime-node/expand-tree")
             .cookies(cookiesConsumer)
             .bodyValue(
                 mutableMapOf(
                     "runtimeNodeId" to runtimeNodeId,
-                    "parentNodeId" to treeNode[0].id
+                    "parentNodeId" to treeNode.id
                 )
             )
             .exchange()

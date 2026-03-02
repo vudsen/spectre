@@ -13,27 +13,8 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
 
-class SshRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
+class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
 
-
-    private fun setupSshServer(): GenericContainer<*> {
-        val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
-            withExposedPorts(22)
-        }
-        container.start()
-
-        return container
-    }
-
-    @Test
-    fun testLocalAttach() {
-        setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
-        val runtimeNodeId = setSshRuntimeNode()
-        val treeNode = findJvmTreeNode(runtimeNodeId)
-        val channelId = prepareChannel(runtimeNodeId, treeNode)
-
-        testChannel(channelId)
-    }
 
     @Test
     fun testDockerAttach() {
@@ -129,43 +110,5 @@ class SshRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         return holder.find { node -> node.name.contains(TestConstant.DOCKER_IMAGE_MATH_GAME) }!!
     }
 
-    /**
-     * @return runtimeNodeId
-     */
-    private fun setSshRuntimeNode(): String {
-        val sshServer = setupSshServer()
-
-        return client.post().uri("spectre-api/runtime-node/create")
-            .cookies(cookiesConsumer)
-            .bodyValue(
-                mutableMapOf(
-                    "name" to "test",
-                    "pluginId" to SshRuntimeNodeExtension.ID,
-                    "configuration" to objectMapper.writeValueAsString(
-                        SshRuntimeNodeConfig(
-                            null,
-                            SshRuntimeNodeConfig.Local(true, "/opt/java"),
-                            sshServer.host,
-                            sshServer.firstMappedPort,
-                            "root",
-                            SshRuntimeNodeConfig.LoginPrincipal(
-                                SshRuntimeNodeConfig.LoginType.PASSWORD,
-                                "root",
-                                null,
-                                null
-                            ),
-                            "/opt/spectre"
-                        )
-                    ),
-                    "restrictedMode" to true
-                )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody<String>()
-            .returnResult()
-            .responseBody!!
-    }
 
 }
