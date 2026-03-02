@@ -85,7 +85,7 @@ function removeAnonymousPassword(principal?: LoginPrincipal) {
     principal.password = undefined
   }
   if (principal.secretKey === ANONYMOUS_PASSWORD) {
-    principal.secretKeyPassword = undefined
+    principal.secretKey = undefined
   }
 }
 
