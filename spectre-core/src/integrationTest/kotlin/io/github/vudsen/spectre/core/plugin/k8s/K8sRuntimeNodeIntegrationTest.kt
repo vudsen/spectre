@@ -38,7 +38,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
             .expectBodyList<JvmTreeNodeDTO>()
             .returnResult()
             .responseBody!!
-            .find { node -> node.name === "spectre" }!!
+            .find { node -> node.name == "spectre" }!!
 
         val holder = client.post().uri("spectre-api/runtime-node/expand-tree")
             .cookies(cookiesConsumer)
