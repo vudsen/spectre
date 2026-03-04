@@ -18,6 +18,29 @@
 
 ♨️: 支持运行在 Jre 环境的 JVM
 
+## 实现原理
+
+服务使用了 3 个核心组件(工具):
+- arthas: 核心工具，attach jvm 后开启 http 接口进行交互
+- jattach: 用于 jre 环境下的连接
+- [http-client](/cli/http-client): 用于和 arthas http 接口交互
+
+连接流程：
+
+1. 上传这 3 个工具到对应的服务器/容器中
+2. 通过 shell 命令，使用 jattach + arthas 来连接到 JVM，并开启 arthas 的 http 端口(带有 basic 认证)
+3. 使用 http-client 进行交互，Specrte 作为一个 "网关" 进行鉴权和调用
+
+### 常见问题
+
+Q: 服务器/容器需要暴露 arthas 的 http 端口吗?
+
+A: 不需要，整个交互完全通过 http-client 进行，不需要向外暴露端口
+
+Q: 可以绕过 Spectre，在命令行直接通过 http-client 和 arthas 交互吗?
+
+A: 不行，除非能够知到 basic 认证的密码，这个密码是随机生成，保存在 Spectre 中
+
 ## 增强功能
 
 我们对一些命令进行了增强，能更方便的进行使用和查看。
