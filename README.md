@@ -33,11 +33,11 @@
 
 ### 常见问题
 
-Q: 服务器/容器需要暴露 arthas 的 http 端口吗?
+**Q: 被 Spectre 管理的服务器/容器需要暴露 arthas 的 http 端口吗?**
 
 A: 不需要，整个交互完全通过 http-client 进行，不需要向外暴露端口
 
-Q: 可以绕过 Spectre，在命令行直接通过 http-client 和 arthas 交互吗?
+**Q: 可以绕过 Spectre，在命令行直接通过 http-client 和 arthas 交互吗?**
 
 A: 不行，除非能够知到 basic 认证的密码，这个密码是随机生成，保存在 Spectre 中
 
