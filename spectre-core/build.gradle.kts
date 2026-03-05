@@ -35,8 +35,8 @@ val integrationTestRuntimeOnly: Configuration by configurations.getting {
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.testcontainers:k3s:1.21.4")
-    testImplementation("org.testcontainers:testcontainers:1.21.4")
+    testImplementation("org.testcontainers:k3s:2.0.3")
+    testImplementation("org.testcontainers:testcontainers:2.0.3")
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-graphql-test")
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     integrationTestImplementation("org.springframework.boot:spring-boot-webtestclient")
