@@ -1,6 +1,6 @@
 package io.github.vudsen.spectre.core.integrate
 
-import io.github.vudsen.spectre.support.SpectreEnvironment
+import io.github.vudsen.spectre.common.SpectreEnvironment
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.authentication.DisabledException
 import org.springframework.security.core.Authentication

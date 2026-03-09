@@ -2,8 +2,8 @@ package io.github.vudsen.spectre.core.plugin.k8s
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
-import io.github.vudsen.spectre.api.entity.OS
-import io.github.vudsen.spectre.api.entity.currentOS
+import io.github.vudsen.spectre.common.util.OS
+import io.github.vudsen.spectre.common.util.currentOS
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig

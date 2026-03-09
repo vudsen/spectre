@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.api.entity
+package io.github.vudsen.spectre.common.util
 
 enum class OS {
     WINDOWS,
