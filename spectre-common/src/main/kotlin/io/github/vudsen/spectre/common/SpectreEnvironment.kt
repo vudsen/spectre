@@ -9,6 +9,11 @@ object SpectreEnvironment {
     val SPECTRE_HOME: String
 
     /**
+     * 是否为当前公开的预览环境
+     */
+    val PREVIEW_ENVIRONMENT: Boolean
+
+    /**
      * graphql 请求 schema 的 token
      */
     val GRAPHQL_AUTHORIZATION_TOKEN: String?
@@ -44,6 +49,7 @@ object SpectreEnvironment {
         ENCRYPTOR_KEY = System.getenv("ENCRYPTOR_KEY")
         ENCRYPTOR_SALT = System.getenv("ENCRYPTOR_SALT")
         GRAPHQL_AUTHORIZATION_TOKEN = System.getenv("GRAPHQL_AUTHORIZATION_TOKEN")
+        PREVIEW_ENVIRONMENT = System.getenv("PREVIEW_ENVIRONMENT") == "true"
     }
 
 
