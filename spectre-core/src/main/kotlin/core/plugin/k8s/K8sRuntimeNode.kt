@@ -1,8 +1,5 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.core.plugin.k8s.entity.K8sPod
 import io.github.vudsen.spectre.core.util.InsecureRequestFactory
@@ -12,6 +9,11 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.body
+import tools.jackson.core.type.TypeReference
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 
 class K8sRuntimeNode(
     private val conf: K8sRuntimeNodeConfig,
@@ -19,15 +21,12 @@ class K8sRuntimeNode(
 ) : RuntimeNode {
 
     companion object {
-        private val objectMapper: ObjectMapper
+        private val objectMapper: ObjectMapper = JsonMapper
+            .builder()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build()
 
         private val ignoredNamespaces = setOf("kube-public", "kube-system")
-
-        init {
-            val objectMapper = ObjectMapper()
-            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            this.objectMapper = objectMapper
-        }
     }
 
     private val restClient: RestClient
@@ -70,12 +69,12 @@ class K8sRuntimeNode(
         val root = objectMapper.readTree(body)
 
         val items = root.get("items") ?: return emptyList()
-        return items.map { node -> node.get("metadata").get("name").asText() }.filter { s -> !ignoredNamespaces.contains(s) }
+        return items.map { node -> node.get("metadata").get("name").asString() }.filter { s -> !ignoredNamespaces.contains(s) }
     }
 
     private fun doRequest(spec: RestClient.ResponseSpec, permission: String): String? {
         try {
-            return spec.body(String::class.java)
+            return spec.body<String>()
         } catch (_: HttpClientErrorException.Forbidden) {
             throw BusinessException("权限不足，请确认您已为服务账号分配 `$permission` 权限")
         }

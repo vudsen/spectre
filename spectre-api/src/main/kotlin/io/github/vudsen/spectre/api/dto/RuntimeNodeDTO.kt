@@ -1,8 +1,6 @@
 package io.github.vudsen.spectre.api.dto
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
-import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import java.sql.Timestamp
 
 class RuntimeNodeDTO(
@@ -19,7 +17,4 @@ class RuntimeNodeDTO(
     var labels: Map<String, String>,
 
     var restrictedMode: Boolean
-) {
-
-
-}
+)

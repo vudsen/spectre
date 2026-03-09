@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.core.service.impl
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.exception.PermissionDenyException
@@ -9,8 +8,8 @@ import io.github.vudsen.spectre.api.perm.EmptyContext
 import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
 import io.github.vudsen.spectre.api.service.AppAccessControlService
-import io.github.vudsen.spectre.common.plugin.PolicyAuthenticationExtManager
-import io.github.vudsen.spectre.common.plugin.PolicyAuthenticationProviderManager
+import io.github.vudsen.spectre.support.plugin.PolicyAuthenticationExtManager
+import io.github.vudsen.spectre.support.plugin.PolicyAuthenticationProviderManager
 import io.github.vudsen.spectre.core.integrate.UserWithID
 import io.github.vudsen.spectre.repo.PolicyPermissionRepository
 import io.github.vudsen.spectre.repo.RoleRepository
@@ -23,6 +22,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import java.util.WeakHashMap
 import kotlin.jvm.optionals.getOrNull
 
@@ -44,7 +44,7 @@ class DefaultAppAccessControlService(
 
     private val spelParser = SpelExpressionParser()
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = JsonMapper.builderWithJackson2Defaults().build()
 
     private fun fulfillContext(map: MutableMap<String, Any>): UserWithID {
         val principal = SecurityContextHolder.getContext().authentication!!.principal

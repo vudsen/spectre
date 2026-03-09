@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.common.plugin
+package io.github.vudsen.spectre.support.plugin
 
 import io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint
 import io.github.vudsen.spectre.api.exception.AppException

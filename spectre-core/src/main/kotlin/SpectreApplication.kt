@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre
 
 import io.github.vudsen.spectre.common.ApplicationContextHolder
-import io.github.vudsen.spectre.common.SpectreEnvironment
+import io.github.vudsen.spectre.support.SpectreEnvironment
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.persistence.autoconfigure.EntityScan

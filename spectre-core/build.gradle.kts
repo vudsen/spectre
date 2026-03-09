@@ -56,6 +56,8 @@ dependencies {
     implementation(project(":spectre-repo"))
     implementation(project(":spectre-api"))
     implementation(project(":spectre-common"))
+    implementation(project(":spectre-api-support"))
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation(libs.sshdCore)
     implementation(libs.sshdSftp)
     implementation("com.squareup.okhttp3:okhttp:5.3.2")

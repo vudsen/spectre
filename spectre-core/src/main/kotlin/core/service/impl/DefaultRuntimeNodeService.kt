@@ -1,8 +1,7 @@
 package io.github.vudsen.spectre.core.service.impl
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
-import io.github.vudsen.spectre.common.plugin.RuntimeNodeExtManager
+import io.github.vudsen.spectre.support.plugin.RuntimeNodeExtManager
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
 import io.github.vudsen.spectre.repo.RuntimeNodeRepository
@@ -17,12 +16,12 @@ import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
-import io.github.vudsen.spectre.repo.util.RepoConstant
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -34,22 +33,14 @@ class DefaultRuntimeNodeService(
 
     private val logger = LoggerFactory.getLogger(DefaultRuntimeNodeService::class.java)
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = JsonMapper.builderWithJackson2Defaults().build()
 
     private val cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
-
-    override fun insert(runtimeNodePO: RuntimeNodePO): Long {
-        val saved = runtimeNodeRepository.save(runtimeNodePO)
-        return saved.id
-    }
 
     override fun findPluginById(extPointId: String): RuntimeNodeExtensionPoint {
         return extManager.findById(extPointId)
     }
 
-    override fun update(configuration: RuntimeNodePO) {
-        runtimeNodeRepository.save(configuration)
-    }
 
     override fun listRuntimeNodes(page: Int, size: Int): Page<RuntimeNodeDTO> {
         return runtimeNodeRepository.findAll(PageRequest.of(page, size)).map { po ->
@@ -62,27 +53,6 @@ class DefaultRuntimeNodeService(
 
     override fun listPlugins(): Collection<RuntimeNodeExtensionPoint> {
         return extManager.listPlugins()
-    }
-
-    private fun saveRuntimeNode(po: RuntimeNodePO) {
-        val pluginId = po.pluginId
-        val plugin = findPluginById(pluginId)
-        val updated = objectMapper.readValue(po.configuration, plugin.getConfigurationClass())
-
-        if (po.id != RepoConstant.EMPTY_ID) {
-            val node = runtimeNodeRepository.findById(po.id).getOrNull() ?: throw BusinessException("节点不存在")
-            plugin.fillSensitiveConfiguration(
-                updated,
-                objectMapper.readValue(node.configuration, plugin.getConfigurationClass())
-            )
-        }
-        try {
-            plugin.test(updated)
-        } catch (e: Exception) {
-            logger.debug("Test Failed", e)
-            throw BusinessException(e.message ?: "测试失败")
-        }
-        runtimeNodeRepository.save(po)
     }
 
     override fun createRuntimeNode(dto: CreateRuntimeNodeDTO): RuntimeNodePO {
@@ -201,15 +171,15 @@ class DefaultRuntimeNodeService(
     }
 
     fun RuntimeNodePO.toDTO(filterSensitiveProps: Boolean = false): RuntimeNodeDTO {
-        val myPluginId = pluginId!!
+        val myPluginId = pluginId
         val extensionPoint = findPluginById(myPluginId)
-        val nodeConfig = objectMapper.readValue(configuration!!, extensionPoint.getConfigurationClass())
+        val nodeConfig = objectMapper.readValue(configuration, extensionPoint.getConfigurationClass())
         if (filterSensitiveProps) {
             extensionPoint.filterSensitiveConfiguration(nodeConfig)
         }
         return RuntimeNodeDTO(
-            id!!,
-            name!!,
+            id,
+            name,
             myPluginId,
             nodeConfig,
             createdAt!!,

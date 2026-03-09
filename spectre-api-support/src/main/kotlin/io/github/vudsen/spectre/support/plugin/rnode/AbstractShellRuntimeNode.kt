@@ -1,12 +1,11 @@
-package io.github.vudsen.spectre.common.plugin.rnode
+package io.github.vudsen.spectre.support.plugin.rnode
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
-import io.github.vudsen.spectre.common.BoundedInputStreamSourceEntity
-import io.github.vudsen.spectre.common.InteractiveShellInputStreamSource
+import io.github.vudsen.spectre.support.BoundedInputStreamSourceEntity
+import io.github.vudsen.spectre.support.InteractiveShellInputStreamSource
 import org.slf4j.LoggerFactory
-import org.springframework.core.io.InputStreamSource
 import java.io.File
 import kotlin.text.iterator
 

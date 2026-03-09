@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.common.plugin.rnode
+package io.github.vudsen.spectre.support.plugin.rnode
 
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode

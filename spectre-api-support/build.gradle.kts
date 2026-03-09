@@ -12,12 +12,12 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.data:spring-data-commons")
+    implementation(project(":spectre-api"))
+    implementation("org.slf4j:slf4j-api")
+    implementation("org.apache.commons", "commons-compress", libs.versions.apacheCommons.get())
     implementation("tools.jackson.core:jackson-core")
     implementation("tools.jackson.core:jackson-databind")
-    api(project(":spectre-repo"))
-    api(project(":spectre-common"))
+    implementation("org.springframework.boot:spring-boot")
 }
 
 tasks.test {

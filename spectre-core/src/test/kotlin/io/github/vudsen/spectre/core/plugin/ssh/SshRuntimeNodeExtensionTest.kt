@@ -4,8 +4,7 @@ import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
-import io.github.vudsen.spectre.common.plugin.rnode.ShellBasedArthasHttpClient
-import io.github.vudsen.spectre.repo.po.RuntimeNodePO
+import io.github.vudsen.spectre.support.plugin.rnode.ShellBasedArthasHttpClient
 import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.GlobalDisposer
 import io.github.vudsen.spectre.test.TestConstant

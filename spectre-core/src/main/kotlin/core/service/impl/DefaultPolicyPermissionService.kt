@@ -1,8 +1,7 @@
 package io.github.vudsen.spectre.core.service.impl
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.PermissionResourceDTO
-import io.github.vudsen.spectre.common.plugin.PolicyAuthenticationExtManager
+import io.github.vudsen.spectre.support.plugin.PolicyAuthenticationExtManager
 import io.github.vudsen.spectre.api.dto.PolicyPermissionDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.repo.PolicyPermissionRepository
@@ -16,6 +15,7 @@ import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import kotlin.jvm.optionals.getOrNull
 
 @Service
@@ -24,7 +24,7 @@ class DefaultPolicyPermissionService(
     private val policyAuthenticationExtManager: PolicyAuthenticationExtManager
 ) : PolicyPermissionService {
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = JsonMapper.builderWithJackson2Defaults().build()
 
     override fun save(policy: PolicyPermissionPO): PolicyPermissionPO {
         for (plugin in policy.enhancePlugins) {

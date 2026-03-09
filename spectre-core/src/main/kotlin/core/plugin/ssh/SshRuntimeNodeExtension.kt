@@ -1,23 +1,22 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
-import io.github.vudsen.spectre.common.plugin.rnode.TypedRuntimeNodeExtensionPoint
+import io.github.vudsen.spectre.support.plugin.rnode.TypedRuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
 import org.apache.sshd.common.Factory
 import org.apache.sshd.common.util.threads.CloseableExecutorService
 import org.apache.sshd.common.util.threads.SshThreadPoolExecutor
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
-import io.github.vudsen.spectre.common.plugin.rnode.SearchTreeBuilder
+import io.github.vudsen.spectre.support.plugin.rnode.SearchTreeBuilder
 import org.apache.sshd.common.SshException
+import tools.jackson.databind.ObjectMapper
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -38,7 +37,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
     private val executor = SshThreadPoolExecutor(1, 4, 1L, TimeUnit.MINUTES, ArrayBlockingQueue(16))
 
     inner class MyCloseableExecutorService : Factory<CloseableExecutorService> {
-        override fun create(): CloseableExecutorService? {
+        override fun create(): CloseableExecutorService {
             return executor
         }
     }
@@ -48,7 +47,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
     private val searcher: JvmSearcher by lazy {
         val builder = SearchTreeBuilder.create()
 
-        val localHost = builder.addHandler<Nothing?> { runtimeNode, ctx ->
+        val localHost = builder.addHandler<Nothing?> { runtimeNode, _ ->
             runtimeNode as SshRuntimeNode
             val configuration = runtimeNode.getConfiguration()
             if (configuration.local?.enabled == true) {
@@ -57,7 +56,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
             return@addHandler emptyList()
         }
 
-        val docker = builder.addHandler<Nothing?> { runtimeNode, ctx ->
+        val docker = builder.addHandler<Nothing?> { runtimeNode, _ ->
             runtimeNode as SshRuntimeNode
             val configuration = runtimeNode.getConfiguration()
             if (configuration.docker?.enabled == true) {
@@ -66,7 +65,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
             return@addHandler emptyList()
         }
 
-        val localImpl = localHost.addHandler { runtimeNode, ctx ->
+        val localImpl = localHost.addHandler { runtimeNode, _ ->
             runtimeNode as SshRuntimeNode
             val local = runtimeNode.getConfiguration().local
             if (local != null && local.enabled) {
@@ -75,7 +74,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
             return@addHandler emptyList()
         }
 
-        val dockerImpl = docker.addHandler { runtimeNode, ctx ->
+        val dockerImpl = docker.addHandler { runtimeNode, _ ->
             runtimeNode as SshRuntimeNode
             val docker = runtimeNode.getConfiguration().docker
             if (docker != null && docker.enabled) {
@@ -106,8 +105,8 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
                 continue
             }
             val tree = objectMapper.readTree(container)
-            val name = "${tree["Names"]!!.asText()}(${tree["Image"]!!.asText()})"
-            val jvm = DockerJvm(tree["ID"]!!.asText(), name)
+            val name = "${tree["Names"]!!.asString()}(${tree["Image"]!!.asString()})"
+            val jvm = DockerJvm(tree["ID"]!!.asString(), name)
             result.add(
                 JvmSearchNode(jvm.name, true, jvm)
             )
@@ -121,7 +120,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         conf: SshRuntimeNodeConfig.Local
     ): List<JvmSearchNode<LocalJvm>> {
         val jps = "${conf.javaHome}/bin/jps"
-        val out: String = runtimeNode.execute("${jps} -l").let {
+        val out: String = runtimeNode.execute("$jps -l").let {
             if (it.exitCode == 0) {
                 return@let it.stdout
             } else {

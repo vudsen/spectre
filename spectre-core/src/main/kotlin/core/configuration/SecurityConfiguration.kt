@@ -1,9 +1,8 @@
 package io.github.vudsen.spectre.core.configuration
 
 import io.github.vudsen.spectre.api.plugin.SecretEncryptor
-import io.github.vudsen.spectre.common.EmptySecretEncryptor
-import io.github.vudsen.spectre.common.SecureRandomFactory
-import io.github.vudsen.spectre.common.SpectreEnvironment
+import io.github.vudsen.spectre.support.EmptySecretEncryptor
+import io.github.vudsen.spectre.support.SpectreEnvironment
 import io.github.vudsen.spectre.core.filter.GraphqlSchemaAuthorizationFilter
 import io.github.vudsen.spectre.core.integrate.AesGcmSecretEncryptor
 import io.github.vudsen.spectre.core.integrate.GraphQLAuthenticationProvider

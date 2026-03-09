@@ -7,10 +7,9 @@ import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
-import io.github.vudsen.spectre.common.BoundedInputStreamSourceEntity
+import io.github.vudsen.spectre.support.BoundedInputStreamSourceEntity
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeConfig
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeExtension
-import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions

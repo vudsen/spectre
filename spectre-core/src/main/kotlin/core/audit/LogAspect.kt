@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.core.audit
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.core.integrate.UserWithID
 import io.github.vudsen.spectre.repo.LogEntityRepository
 import io.github.vudsen.spectre.repo.po.LogEntityPO
@@ -20,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import tools.jackson.databind.json.JsonMapper
 import java.sql.Timestamp
 import java.util.WeakHashMap
 
@@ -70,7 +70,7 @@ class LogAspect(
          */
         const val SPEL_VARIABLE_ARGS = "args"
         val logger = LoggerFactory.getLogger(LogAspect::class.java)
-        private val objectMapper = ObjectMapper()
+        private val objectMapper = JsonMapper.builderWithJackson2Defaults().build()
     }
 
     /**

@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.common.plugin
+package io.github.vudsen.spectre.support.plugin
 
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.perm.PermissionEntity

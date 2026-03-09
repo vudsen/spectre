@@ -12,12 +12,13 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    api("jakarta.persistence:jakarta.persistence-api")
-    api("jakarta.validation:jakarta.validation-api")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("org.springframework.data:spring-data-jpa")
-    api("org.hibernate.orm:hibernate-core")
+    compileOnly("jakarta.persistence:jakarta.persistence-api")
+    compileOnly("jakarta.validation:jakarta.validation-api")
+    compileOnly("com.fasterxml.jackson.core:jackson-core")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind")
+    implementation("org.springframework.data:spring-data-jpa")
+    implementation("org.hibernate.orm:hibernate-core")
+    implementation(project(":spectre-common"))
 }
 
 tasks.test {

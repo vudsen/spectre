@@ -1,14 +1,14 @@
 package io.github.vudsen.spectre.core.configuration
 
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
+
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.support.ResourceBundleMessageSource
-import java.io.IOException
+import tools.jackson.core.JsonParser
+import tools.jackson.databind.DeserializationContext
+import tools.jackson.databind.ValueDeserializer
+import tools.jackson.databind.module.SimpleModule
+import tools.jackson.databind.ser.std.ToStringSerializer
 import java.util.Locale
 
 
@@ -16,29 +16,30 @@ import java.util.Locale
 class CommonConfiguration {
 
     @Bean
-    fun longToStringModule(): com.fasterxml.jackson.databind.Module {
-        val module = SimpleModule()
-        // Long -> String
-        module.addSerializer<Any?>(Long::class.java, ToStringSerializer.instance)
-        module.addSerializer<Any?>(java.lang.Long.TYPE, ToStringSerializer.instance)
-        // String -> Long
-        module.addDeserializer<Long?>(Long::class.java, object : JsonDeserializer<Long?>() {
-            @Throws(IOException::class)
-            public override fun deserialize(p: JsonParser, ctxt: DeserializationContext?): Long? {
-                val value: String? = p.getValueAsString()
-                return if (value == null || value.isEmpty()) null else value.toLong()
+    fun longToStringModule(): SimpleModule {
+        val module = SimpleModule("LongToStringModule")
+
+        // 1. Long -> String (使用新的包名和 instance)
+        module.addSerializer(Long::class.java, ToStringSerializer.instance)
+        module.addSerializer(java.lang.Long.TYPE, ToStringSerializer.instance)
+
+        // 2. String -> Long (注意：不再强制声明 throws IOException)
+        module.addDeserializer(Long::class.java, object : ValueDeserializer<Long?>() {
+            override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Long? {
+                val value = p.valueAsString
+                return if (value.isNullOrBlank()) null else value.toLong()
             }
         })
-        module.addDeserializer<Long?>(java.lang.Long.TYPE, object : JsonDeserializer<Long?>() {
-            @Throws(IOException::class)
-            public override fun deserialize(p: JsonParser, ctxt: DeserializationContext?): Long {
-                val value: String? = p.getValueAsString()
-                return if (value == null || value.isEmpty()) 0L else value.toLong()
+
+        module.addDeserializer(java.lang.Long.TYPE, object : ValueDeserializer<Long>() {
+            override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Long {
+                val value = p.valueAsString
+                return if (value.isNullOrBlank()) 0L else value.toLong()
             }
         })
+
         return module
     }
-
 
 
     //这里的配置文件 也可以写在 application.yml 中

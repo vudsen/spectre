@@ -1,15 +1,14 @@
-package io.github.vudsen.spectre.common.plugin.rnode
+package io.github.vudsen.spectre.support.plugin.rnode
 
-import io.github.vudsen.spectre.common.LocalPackageManager
-import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.common.ApplicationContextHolder
+import io.github.vudsen.spectre.common.progress.ProgressReportHolder
+import io.github.vudsen.spectre.support.LocalPackageManager
 import org.slf4j.LoggerFactory
-import org.springframework.cglib.core.Local
 
 abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode>(
     protected val runtimeNode: T,
