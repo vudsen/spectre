@@ -22,7 +22,7 @@ class K8sRuntimeNode(
 
     companion object {
         private val objectMapper: ObjectMapper = JsonMapper
-            .builder()
+            .builderWithJackson2Defaults()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .build()
 

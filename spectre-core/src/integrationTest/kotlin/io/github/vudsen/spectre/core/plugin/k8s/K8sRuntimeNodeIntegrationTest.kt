@@ -35,6 +35,8 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                 )
             )
             .exchange()
+            .expectStatus()
+            .isOk
             .expectBodyList<JvmTreeNodeDTO>()
             .returnResult()
             .responseBody!!
@@ -49,6 +51,8 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                 )
             )
             .exchange()
+            .expectStatus()
+            .isOk
             .expectBodyList<JvmTreeNodeDTO>()
             .hasSize(1)
             .returnResult()
