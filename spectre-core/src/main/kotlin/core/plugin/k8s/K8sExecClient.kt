@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.core.util.TrustAllX509TrustManager
 import io.github.vudsen.spectre.core.util.TrustAnyHostnameVerifier
@@ -12,12 +11,12 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import org.slf4j.LoggerFactory
+import tools.jackson.databind.json.JsonMapper
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
-import java.util.Arrays
 import java.util.concurrent.CompletableFuture
 import javax.net.ssl.SSLContext
 
@@ -47,7 +46,7 @@ class K8sExecClient(
 
         private val secureHttpClient = OkHttpClient()
 
-        private val objectMapper = ObjectMapper()
+        private val objectMapper = JsonMapper.builderWithJackson2Defaults().build()
     }
 
     /**
@@ -136,12 +135,12 @@ class K8sExecClient(
                     return
                 } else if (stream == 3.toByte()){
                     val tree = objectMapper.readTree(arr, 1, arr.size - 1)
-                    val status = tree.get("status")
-                    if (status == null || !status.isTextual || "Success" != status.asText()) {
+                    val status = tree["status"]
+                    if (status == null || !status.isString || "Success" != status.asString()) {
                         tree.get("message")?.let {
-                            if (it.isTextual) {
+                            if (it.isString) {
                                 pipedOutputStream.write('\n'.code)
-                                pipedOutputStream.write(it.asText().toByteArray())
+                                pipedOutputStream.write(it.asString().toByteArray())
                             }
                         }
                         complete(1)

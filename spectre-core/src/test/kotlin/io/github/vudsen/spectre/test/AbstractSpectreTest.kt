@@ -4,7 +4,6 @@ import io.github.vudsen.spectre.SpectreApplication
 import io.github.vudsen.spectre.common.ApplicationContextHolder
 import io.github.vudsen.spectre.common.SpectreEnvironment
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired

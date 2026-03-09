@@ -1,11 +1,11 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
-import io.github.vudsen.spectre.common.plugin.rnode.ToolchainPaths
+import io.github.vudsen.spectre.support.plugin.rnode.ToolchainPaths
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.exception.AppException
-import io.github.vudsen.spectre.common.plugin.rnode.AbstractShellAvailableAttachHandler
+import io.github.vudsen.spectre.support.plugin.rnode.AbstractShellAvailableAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import io.github.vudsen.spectre.common.plugin.rnode.ShellBasedArthasHttpClient
+import io.github.vudsen.spectre.support.plugin.rnode.ShellBasedArthasHttpClient
 
 class K8sAttachHandler(
     runtimeNode: K8sRuntimeNode,

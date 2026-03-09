@@ -5,7 +5,7 @@ import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.CloseableRuntimeNode
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
-import io.github.vudsen.spectre.common.plugin.rnode.AbstractShellRuntimeNode
+import io.github.vudsen.spectre.support.plugin.rnode.AbstractShellRuntimeNode
 import org.apache.sshd.client.SshClient
 import org.apache.sshd.client.channel.ChannelExec
 import org.apache.sshd.client.channel.ClientChannelEvent

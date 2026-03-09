@@ -1,11 +1,12 @@
 package io.github.vudsen.spectre.api.dto
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
+import tools.jackson.databind.DefaultTyping
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import java.time.Instant
 
 data class ArthasInstanceDTO(
@@ -48,7 +49,7 @@ data class ArthasInstanceDTO(
                 BasicPolymorphicTypeValidator.builder()
                     .allowIfSubType(Jvm::class.java)
                     .build(),
-                ObjectMapper.DefaultTyping.NON_FINAL,
+                DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY
             )
             .build();

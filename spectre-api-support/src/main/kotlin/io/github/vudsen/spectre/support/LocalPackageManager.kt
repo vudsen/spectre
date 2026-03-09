@@ -1,6 +1,7 @@
-package io.github.vudsen.spectre.common
+package io.github.vudsen.spectre.support
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
+import io.github.vudsen.spectre.common.SpectreEnvironment
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.common.progress.checkCanceled
 import io.github.vudsen.spectre.repo.entity.ToolchainType

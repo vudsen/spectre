@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.common.plugin.rnode
+package io.github.vudsen.spectre.support.plugin.rnode
 
 class ToolchainPaths(
     val jattachPath: String,

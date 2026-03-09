@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.core.configuration
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.GraphQLContext
 import graphql.execution.CoercedVariables
 import graphql.language.IntValue

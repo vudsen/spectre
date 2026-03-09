@@ -1,10 +1,5 @@
 package io.github.vudsen.spectre.core.plugin.abac
 
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.node.ArrayNode
 import io.github.vudsen.spectre.api.entity.TypedPageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.PermissionDenyException
@@ -13,6 +8,11 @@ import io.github.vudsen.spectre.api.perm.PermissionEntity
 import io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.core.JsonParser
+import tools.jackson.databind.DeserializationContext
+import tools.jackson.databind.ValueDeserializer
+import tools.jackson.databind.annotation.JsonDeserialize
+import tools.jackson.databind.node.ArrayNode
 
 @Component
 class ArthasExecutionEnhancePolicyAuthenticationExtension : EnhancePolicyAuthenticationExtensionPoint() {
@@ -69,15 +69,15 @@ class ArthasExecutionEnhancePolicyAuthenticationExtension : EnhancePolicyAuthent
         )
     }
 
-    class LimitCommandsSerializer : JsonDeserializer<Set<String>>() {
+    class LimitCommandsSerializer : ValueDeserializer<Set<String>>() {
         override fun deserialize(
             p: JsonParser?,
             ctxt: DeserializationContext?
         ): Set<String> {
-            val node: ArrayNode = p!!.getCodec().readTree(p) ?: return emptySet()
+            val node: ArrayNode = p!!.readValueAsTree() ?: return emptySet()
             val values = mutableSetOf<String>()
             for (element in node) {
-                val command = element.asText()
+                val command = element.asString()
                 if (!arthasCommands.contains(command)) {
                     throw BusinessException("未知命令: $command")
                 }

@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre.core.integrate
 
 import io.github.vudsen.spectre.api.plugin.SecretEncryptor
-import io.github.vudsen.spectre.common.SecureRandomFactory
+import io.github.vudsen.spectre.support.SecureRandomFactory
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory

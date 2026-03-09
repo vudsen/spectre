@@ -1,16 +1,13 @@
 package io.github.vudsen.spectre.test.plugin
 
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.vudsen.spectre.api.dto.CreateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
-import io.github.vudsen.spectre.common.BoundedInputStreamSourceEntity
+import io.github.vudsen.spectre.support.BoundedInputStreamSourceEntity
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeConfig
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeExtension
-import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
@@ -23,6 +20,8 @@ import org.springframework.util.ResourceUtils
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
+import tools.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.ObjectNode
 
 @Component
 class AttachTester {
@@ -105,13 +104,13 @@ class AttachTester {
     }
 
     private fun checkScResult(node: ArrayNode) {
-        Assertions.assertTrue(node.size() == 10)
+        assertTrue(node.size() == 10)
         val messageNode = node.get(1) as ObjectNode
-        Assertions.assertEquals("Welcome to arthas!", messageNode.get("message").asText())
+        assertEquals("Welcome to arthas!", messageNode.get("message").asString())
         val scResult = node.get(6) as ObjectNode
         val classes = scResult.get("classNames") as ArrayNode
 
-        Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.map { node -> node.asText() })
+        Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.map { node -> node.asString() })
     }
 
     private fun testRetransform(channelId: String, consumerId: String) {

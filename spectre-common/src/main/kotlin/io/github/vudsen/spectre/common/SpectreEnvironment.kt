@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre.common
 
-import io.github.vudsen.spectre.api.entity.OS
-import io.github.vudsen.spectre.api.entity.currentOS
+import io.github.vudsen.spectre.common.util.OS
+import io.github.vudsen.spectre.common.util.currentOS
 import org.slf4j.LoggerFactory
 
 object SpectreEnvironment {

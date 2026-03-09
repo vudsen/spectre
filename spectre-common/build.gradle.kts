@@ -12,8 +12,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation(project(":spectre-api"))
-    implementation("org.apache.commons", "commons-compress", libs.versions.apacheCommons.get())
+    compileOnly("org.springframework.boot:spring-boot")
     implementation("org.slf4j:slf4j-api")
 }
 

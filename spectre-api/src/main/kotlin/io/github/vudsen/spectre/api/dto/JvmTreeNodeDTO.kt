@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.api.dto
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class JvmTreeNodeDTO(
@@ -10,6 +9,5 @@ data class JvmTreeNodeDTO(
     var id: String,
     var name: String,
     @field:JsonProperty("isJvm")
-    @get:JsonIgnore
     var isJvm: Boolean,
 )

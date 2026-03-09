@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.common
+package io.github.vudsen.spectre.support
 
 import io.github.vudsen.spectre.api.plugin.SecretEncryptor
 

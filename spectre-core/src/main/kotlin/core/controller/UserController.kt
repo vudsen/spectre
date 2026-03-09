@@ -6,9 +6,9 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.core.integrate.UserWithID
 import io.github.vudsen.spectre.api.service.UserService
-import io.github.vudsen.spectre.common.SpectreEnvironment
 import io.github.vudsen.spectre.core.vo.ModifyPasswordVO
 import io.github.vudsen.spectre.core.vo.ModifyUserPasswordVO
+import io.github.vudsen.spectre.common.SpectreEnvironment
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder

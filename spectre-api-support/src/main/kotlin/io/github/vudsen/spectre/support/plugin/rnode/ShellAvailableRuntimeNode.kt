@@ -1,10 +1,9 @@
-package io.github.vudsen.spectre.common.plugin.rnode
+package io.github.vudsen.spectre.support.plugin.rnode
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
-import org.springframework.core.io.InputStreamSource
 
 /**
  * 表示当前节点可以上传文件

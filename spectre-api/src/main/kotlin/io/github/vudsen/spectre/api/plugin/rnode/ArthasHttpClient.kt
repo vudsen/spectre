@@ -1,10 +1,10 @@
 package io.github.vudsen.spectre.api.plugin.rnode
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
+import tools.jackson.databind.JsonNode
 
 interface ArthasHttpClient {
 

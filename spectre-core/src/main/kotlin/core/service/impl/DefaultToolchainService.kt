@@ -9,7 +9,7 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.repo.ToolchainBundleRepository
 import io.github.vudsen.spectre.repo.ToolchainItemRepository
 import io.github.vudsen.spectre.api.service.ToolchainService
-import io.github.vudsen.spectre.common.LocalPackageManager
+import io.github.vudsen.spectre.support.LocalPackageManager
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemId

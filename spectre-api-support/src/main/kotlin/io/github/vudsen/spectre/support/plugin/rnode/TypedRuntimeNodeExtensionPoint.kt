@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.common.plugin.rnode
+package io.github.vudsen.spectre.support.plugin.rnode
 
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO

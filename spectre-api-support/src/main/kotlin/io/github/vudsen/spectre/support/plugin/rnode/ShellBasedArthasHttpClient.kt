@@ -1,20 +1,18 @@
-package io.github.vudsen.spectre.common.plugin.rnode
+package io.github.vudsen.spectre.support.plugin.rnode
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
-import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.common.util.SecureUtils
 import org.slf4j.LoggerFactory
-import org.springframework.core.io.InputStreamSource
+import tools.jackson.databind.json.JsonMapper
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.Base64
+import tools.jackson.databind.JsonNode
 
 open class ShellBasedArthasHttpClient(
     protected val runtimeNode: ShellAvailableRuntimeNode,
@@ -33,7 +31,7 @@ open class ShellBasedArthasHttpClient(
         private val supportedFormats = setOf("html", "flat", "traces", "collapsed", "flamegraph", "tee", "jfr")
     }
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper = JsonMapper.builderWithJackson2Defaults().build()
 
     protected open fun sendRequest(body: Any, noCheckResponse: Boolean): JsonNode {
         val encodedBody = Base64.getEncoder().encodeToString(objectMapper.writeValueAsString(body).toByteArray(
@@ -45,13 +43,13 @@ open class ShellBasedArthasHttpClient(
         val response = result.stdout
 
         val node = objectMapper.readTree(response)
-        val state = node.get("state").asText()
+        val state = node.get("state").asString()
         if (state == "FAILED" || state == "REFUSED") {
             if (noCheckResponse) {
                 return node
             }
             val msgNode = node.get("message") ?: throw BusinessException(response)
-            val msg = msgNode.asText()
+            val msg = msgNode.asString()
             if (msg.startsWith("consumer not found")) {
                 throw ConsumerNotFountException(msg)
             } else if (msg.startsWith("session not found")) {
@@ -168,7 +166,7 @@ open class ShellBasedArthasHttpClient(
         val response = sendRequest(buildMap {
             put("action", "init_session")
         }, false)
-        return ArthasSession(response.get("sessionId").asText(), response.get("consumerId").asText())
+        return ArthasSession(response.get("sessionId").asString(), response.get("consumerId").asString())
     }
 
     override fun joinSession(sessionId: String): ArthasSession {
@@ -176,7 +174,7 @@ open class ShellBasedArthasHttpClient(
             put("action", "join_session")
             put("sessionId", sessionId)
         }, false)
-        return ArthasSession(response.get("sessionId").asText(), response.get("consumerId").asText())
+        return ArthasSession(response.get("sessionId").asString(), response.get("consumerId").asString())
     }
 
     override fun closeSession(sessionId: String) {
@@ -193,7 +191,7 @@ open class ShellBasedArthasHttpClient(
         }
         for (node in response) {
             val ver = node.get("version")
-            if (ver.isTextual) {
+            if (ver.isString) {
                 return
             }
         }
@@ -211,7 +209,7 @@ open class ShellBasedArthasHttpClient(
             return exec("retransform $dest")
         } finally {
             if (runtimeNode.execute("rm $dest").isFailed()) {
-                logger.warn("Failed to remove file $dest on runtime node ${runtimeNode}")
+                logger.warn("Failed to remove file $dest on runtime node $runtimeNode")
             }
         }
     }

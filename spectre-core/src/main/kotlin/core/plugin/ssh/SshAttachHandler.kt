@@ -1,14 +1,14 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
-import io.github.vudsen.spectre.common.plugin.rnode.ToolchainPaths
+import io.github.vudsen.spectre.support.plugin.rnode.ToolchainPaths
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.common.plugin.rnode.AbstractShellAvailableAttachHandler
+import io.github.vudsen.spectre.support.plugin.rnode.AbstractShellAvailableAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import io.github.vudsen.spectre.common.plugin.rnode.ShellBasedArthasHttpClient
+import io.github.vudsen.spectre.support.plugin.rnode.ShellBasedArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
-import io.github.vudsen.spectre.common.plugin.rnode.ShellAvailableRuntimeNode
+import io.github.vudsen.spectre.support.plugin.rnode.ShellAvailableRuntimeNode
 import java.util.regex.Pattern
 import kotlin.random.Random
 

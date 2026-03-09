@@ -15,11 +15,6 @@ import org.springframework.data.domain.Page
 
 interface RuntimeNodeService {
 
-    /**
-     * 插入一个新的宿主机
-     * @return 宿主机id
-     */
-    fun insert(runtimeNodePO: RuntimeNodePO): Long
 
     /**
      * 获取拓展点.
@@ -28,10 +23,6 @@ interface RuntimeNodeService {
      */
     fun findPluginById(extPointId: String): RuntimeNodeExtensionPoint
 
-    /**
-     * 更新一个宿主机
-     */
-    fun update(runtimeNodePO: RuntimeNodePO)
 
     /**
      * 列出所有宿主机配置

@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.common
+package io.github.vudsen.spectre.support
 
 import java.security.SecureRandom
 

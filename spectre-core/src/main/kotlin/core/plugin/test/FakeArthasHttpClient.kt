@@ -1,11 +1,11 @@
 package io.github.vudsen.spectre.core.plugin.test
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import com.fasterxml.jackson.databind.node.NullNode
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.NullNode
 import java.util.UUID
 
 class FakeArthasHttpClient : ArthasHttpClient {

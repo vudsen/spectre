@@ -1,11 +1,11 @@
 package io.github.vudsen.spectre.core.configuration
 
-import io.github.vudsen.spectre.common.plugin.PolicyAuthenticationExtManager
-import io.github.vudsen.spectre.common.plugin.RuntimeNodeExtManager
+import io.github.vudsen.spectre.support.plugin.PolicyAuthenticationExtManager
+import io.github.vudsen.spectre.support.plugin.RuntimeNodeExtManager
 import io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider
-import io.github.vudsen.spectre.common.plugin.PolicyAuthenticationProviderManager
+import io.github.vudsen.spectre.support.plugin.PolicyAuthenticationProviderManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 

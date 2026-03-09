@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.core.service.impl
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.dto.*
 import io.github.vudsen.spectre.api.entity.ProfilerFile
@@ -15,7 +14,7 @@ import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.service.ToolchainService
-import io.github.vudsen.spectre.common.SecureRandomFactory
+import io.github.vudsen.spectre.support.SecureRandomFactory
 import io.github.vudsen.spectre.common.util.SecureUtils
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
@@ -34,6 +33,7 @@ import org.springframework.expression.spel.standard.SpelExpression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import tools.jackson.databind.JsonNode
 import java.lang.reflect.InvocationTargetException
 import java.time.Instant
 import java.util.UUID
@@ -44,7 +44,7 @@ import java.util.concurrent.locks.ReentrantLock
  * 管理 Arthas 连接的服务。
  *
  *
- * 为了确保未来集群能够正常使用，当成功 attach 到一个 JVM 后，会往 Redis 中写 [ArthasInstanceDTO] 数据，对于后续的 attach 请求
+ * 为了确保未来集群能够正常使用，当成功 attach 到一个 JVM 后，会往数据库中写 [ArthasInstanceDTO] 数据，对于后续的 attach 请求
  * 将会直接复用对应的端口以及其它数据。
  *
  * ## 资源类型：
@@ -362,10 +362,10 @@ class DefaultArthasExecutionService(
                 val runtimeNode = runtimeNodeService.connect(runtimeNodeDto.id)
 
                 val handler = runtimeNode.getExtPoint().createAttachHandler(runtimeNode, jvm, bundle)
-                var arthasInstance = arthasInstanceService.findInstanceById(treeNodeId)
-                var password = arthasInstance?.endpointPassword ?: generatePassword()
+                val arthasInstance = arthasInstanceService.findInstanceById(treeNodeId)
+                val password = arthasInstance?.endpointPassword ?: generatePassword()
 
-                var client = if (arthasInstance == null) {
+                val client = if (arthasInstance == null) {
                     handler.attach(null, password)
                 } else {
                     handler.attach(arthasInstance.boundPort, password)
@@ -457,7 +457,7 @@ class DefaultArthasExecutionService(
                     return@execute
                 }
                 val sortedBy = profilerFiles.sortedByDescending { f -> f.timestamp }
-                var end = profilerFiles.size - MAX_PROFILER_FILE_COUNT
+                val end = profilerFiles.size - MAX_PROFILER_FILE_COUNT
                 for (i in 0 until end) {
                     val filename = "${channelId}-${sortedBy[i].timestamp}.${sortedBy[i].extension}"
                     if (SecureUtils.isNotPureFilename(filename)) {
