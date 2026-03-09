@@ -2,9 +2,11 @@ package io.github.vudsen.spectre.core.controller
 
 import io.github.vudsen.spectre.api.dto.CreateUserDTO
 import io.github.vudsen.spectre.api.dto.UpdateUserDTO
+import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.core.integrate.UserWithID
 import io.github.vudsen.spectre.api.service.UserService
+import io.github.vudsen.spectre.common.SpectreEnvironment
 import io.github.vudsen.spectre.core.vo.ModifyPasswordVO
 import io.github.vudsen.spectre.core.vo.ModifyUserPasswordVO
 import jakarta.servlet.http.HttpServletRequest
@@ -46,9 +48,11 @@ class UserController(
 
     @PostMapping("modify-password")
     @Log(messageKey = "log.user.modify_password")
-    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).LOG_READ)")
     fun modifySelfPassword(@RequestBody @Validated vo: ModifyPasswordVO, request: HttpServletRequest) {
         val user = SecurityContextHolder.getContext().authentication!!.principal as UserWithID
+        if (SpectreEnvironment.PREVIEW_ENVIRONMENT && user.username == "public") {
+            throw BusinessException("error.cannot.change.pwd.in.preview")
+        }
         userService.modifyPassword(user.id, vo.oldPassword, vo.newPassword)
         SecurityContextHolder.clearContext()
         request.getSession(false)?.invalidate()
