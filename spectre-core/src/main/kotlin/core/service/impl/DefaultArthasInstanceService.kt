@@ -35,6 +35,7 @@ open class DefaultArthasInstanceService(
     )
 
     @Scheduled(cron = "0 0 3 * * ?")
+    @Transactional(rollbackOn = [Exception::class])
     fun clearStaleInstance() {
         logger.info("Start clean staled arthas instance")
         val accessBefore = arthasInstanceRepository.deleteAllByLastAccessBefore(
