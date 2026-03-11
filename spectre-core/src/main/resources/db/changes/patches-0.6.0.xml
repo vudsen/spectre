@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="202603111200" author="codex">
+        <createTable tableName="llm_configuration">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="provider" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="model" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="base_url" type="varchar(512)"/>
+            <column name="api_key" type="varchar(512)"/>
+            <column name="enabled" type="bool" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="last_update" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="202603111201" author="codex">
+        <createIndex tableName="llm_configuration" indexName="llm_configuration_enabled_idx">
+            <column name="enabled"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

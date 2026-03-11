@@ -33,6 +33,7 @@ val integrationTestRuntimeOnly: Configuration by configurations.getting {
 }
 
 dependencies {
+    implementation(platform("org.springframework.ai:spring-ai-bom:1.1.2"))
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:k3s:1.21.4")
@@ -51,6 +52,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    implementation("org.springframework.ai:spring-ai-openai")
     implementation("org.liquibase:liquibase-core:5.0.1")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation(project(":spectre-repo"))

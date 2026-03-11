@@ -16,6 +16,7 @@ dependencies {
     implementation("org.springframework.data:spring-data-commons")
     implementation("tools.jackson.core:jackson-core")
     implementation("tools.jackson.core:jackson-databind")
+    implementation("io.projectreactor:reactor-core")
     api(project(":spectre-repo"))
     api(project(":spectre-common"))
 }
