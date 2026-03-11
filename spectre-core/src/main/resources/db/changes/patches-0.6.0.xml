@@ -1,34 +1,39 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="202603111200" author="codex">
-        <createTable tableName="llm_configuration">
-            <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="provider" type="varchar(64)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="model" type="varchar(128)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="base_url" type="varchar(512)"/>
-            <column name="api_key" type="varchar(512)"/>
-            <column name="enabled" type="bool" defaultValueBoolean="true">
-                <constraints nullable="false"/>
-            </column>
-            <column name="created_at" type="DATETIME"/>
-            <column name="last_update" type="DATETIME"/>
-        </createTable>
-    </changeSet>
+        <insert tableName="sys_conf">
+            <column name="id" value="2001"/>
+            <column name="code" value="llm.provider"/>
+            <column name="value" value="OPENAI"/>
+        </insert>
 
-    <changeSet id="202603111201" author="codex">
-        <createIndex tableName="llm_configuration" indexName="llm_configuration_enabled_idx">
-            <column name="enabled"/>
-        </createIndex>
+        <insert tableName="sys_conf">
+            <column name="id" value="2002"/>
+            <column name="code" value="llm.model"/>
+            <column name="value" value=""/>
+        </insert>
+
+        <insert tableName="sys_conf">
+            <column name="id" value="2003"/>
+            <column name="code" value="llm.base-url"/>
+            <column name="value" value=""/>
+        </insert>
+
+        <insert tableName="sys_conf">
+            <column name="id" value="2004"/>
+            <column name="code" value="llm.api-key"/>
+            <column name="value" value=""/>
+        </insert>
+
+        <insert tableName="sys_conf">
+            <column name="id" value="2005"/>
+            <column name="code" value="llm.enabled"/>
+            <column name="value" value="false"/>
+        </insert>
     </changeSet>
 
 </databaseChangeLog>

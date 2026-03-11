@@ -1,27 +1,31 @@
-﻿package io.github.vudsen.spectre.core.service.impl
+package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
+import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.service.AiService
-import io.github.vudsen.spectre.api.service.LLMConfigurationService
 import io.github.vudsen.spectre.core.service.ai.AiConversationStateStore
 import io.github.vudsen.spectre.core.service.ai.AiSkillsLoader
 import io.github.vudsen.spectre.core.service.ai.AiToolCallContextHolder
 import io.github.vudsen.spectre.core.service.ai.AskHumanInterruptedException
+import io.github.vudsen.spectre.repo.SysConfigRepository
+import io.github.vudsen.spectre.repo.po.SysConfigPO
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.openai.OpenAiChatModel
-import org.springframework.ai.openai.api.OpenAiApi
 import org.springframework.ai.openai.OpenAiChatOptions
+import org.springframework.ai.openai.api.OpenAiApi
 import org.springframework.ai.tool.ToolCallback
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Flux
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 class DefaultAiService(
     private val chatClientBuilder: ChatClient.Builder,
-    private val llmConfigurationService: LLMConfigurationService,
+    private val sysConfigRepository: SysConfigRepository,
     private val aiConversationStateStore: AiConversationStateStore,
     private val aiSkillsLoader: AiSkillsLoader,
     private val aiToolCallContextHolder: AiToolCallContextHolder,
@@ -38,7 +42,7 @@ class DefaultAiService(
         question: String
     ): Flux<AiMessageDTO> {
         return Flux.create { sink ->
-            val llmConfig = llmConfigurationService.getCurrent()
+            val llmConfig = getCurrentLLMConfiguration()
             if (llmConfig == null) {
                 sink.next(AiMessageDTO(AiMessageDTO.MessageType.ERROR, "No enabled LLM configuration found"))
                 sink.complete()
@@ -99,6 +103,43 @@ class DefaultAiService(
         }
     }
 
+    override fun getCurrentLLMConfiguration(): LLMConfigurationDTO? {
+        val enabled = findConfigValue(SysConfigIds.LLM_ENABLED).toBoolean()
+        if (!enabled) {
+            return null
+        }
+
+        return LLMConfigurationDTO(
+            provider = findConfigValue(SysConfigIds.LLM_PROVIDER).ifBlank { "OPENAI" },
+            model = findConfigValue(SysConfigIds.LLM_MODEL),
+            baseUrl = findNullableConfigValue(SysConfigIds.LLM_BASE_URL),
+            apiKey = findNullableConfigValue(SysConfigIds.LLM_API_KEY),
+            enabled = true,
+        )
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    override fun saveLLMConfiguration(configuration: LLMConfigurationDTO): LLMConfigurationDTO {
+        val provider = configuration.provider.trim().ifBlank { "OPENAI" }
+        val model = configuration.model.trim()
+        val baseUrl = configuration.baseUrl?.trim()?.ifBlank { null }
+        val apiKey = configuration.apiKey?.trim()?.ifBlank { null }
+
+        upsertConfig(SysConfigIds.LLM_PROVIDER, "llm.provider", provider)
+        upsertConfig(SysConfigIds.LLM_MODEL, "llm.model", model)
+        upsertConfig(SysConfigIds.LLM_BASE_URL, "llm.base-url", baseUrl.orEmpty())
+        upsertConfig(SysConfigIds.LLM_API_KEY, "llm.api-key", apiKey.orEmpty())
+        upsertConfig(SysConfigIds.LLM_ENABLED, "llm.enabled", configuration.enabled.toString())
+
+        return LLMConfigurationDTO(
+            provider = provider,
+            model = model,
+            baseUrl = baseUrl,
+            apiKey = apiKey,
+            enabled = configuration.enabled,
+        )
+    }
+
     private fun buildChatClient(llmConfig: LLMConfigurationDTO): ChatClient {
         if (!llmConfig.provider.equals("OPENAI", ignoreCase = true)) {
             return chatClientBuilder.build()
@@ -126,5 +167,26 @@ class DefaultAiService(
 
         return ChatClient.builder(chatModel).build()
     }
-}
 
+    private fun findConfigValue(id: Long): String {
+        return sysConfigRepository.findById(id).getOrNull()?.value?.trim().orEmpty()
+    }
+
+    private fun findNullableConfigValue(id: Long): String? {
+        return findConfigValue(id).ifBlank { null }
+    }
+
+    private fun upsertConfig(id: Long, code: String, value: String) {
+        val po = sysConfigRepository.findById(id).getOrNull() ?: SysConfigPO().apply {
+            this.id = id
+            this.code = code
+        }
+
+        if (po.code.isNullOrBlank()) {
+            po.code = code
+        }
+        po.value = value
+
+        sysConfigRepository.save(po)
+    }
+}

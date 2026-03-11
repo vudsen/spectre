@@ -1,9 +1,8 @@
-﻿package io.github.vudsen.spectre.core.controller
+package io.github.vudsen.spectre.core.controller
 
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.service.AiService
-import io.github.vudsen.spectre.api.service.LLMConfigurationService
 import io.github.vudsen.spectre.core.vo.AiChatRequestVO
 import io.github.vudsen.spectre.core.vo.LLMConfigurationModifyVO
 import org.springframework.http.MediaType
@@ -21,7 +20,6 @@ import reactor.core.publisher.Flux
 @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_READ)")
 class AiController(
     private val aiService: AiService,
-    private val llmConfigurationService: LLMConfigurationService,
 ) {
 
     @PostMapping("chat", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
@@ -32,13 +30,13 @@ class AiController(
     @GetMapping("llm-config/current")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ALL)")
     fun currentLLMConfiguration(): LLMConfigurationDTO? {
-        return llmConfigurationService.getCurrent()
+        return aiService.getCurrentLLMConfiguration()
     }
 
     @PostMapping("llm-config")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ALL)")
     fun saveLLMConfiguration(@Validated @RequestBody request: LLMConfigurationModifyVO): LLMConfigurationDTO {
-        return llmConfigurationService.saveOrUpdate(
+        return aiService.saveLLMConfiguration(
             LLMConfigurationDTO(
                 id = request.id,
                 provider = request.provider,
