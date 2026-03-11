@@ -61,6 +61,18 @@
   },
   "settings": {
     "basic": "Basic Configuration",
-    "locale": "Locale"
+    "locale": "Locale",
+    "llm": {
+      "title": "LLM Configuration",
+      "loading": "Loading LLM configuration...",
+      "provider": "Provider",
+      "enabled": "Enable LLM",
+      "model": "Model",
+      "baseUrl": "Base URL",
+      "apiKey": "API Key",
+      "save": "Save LLM Configuration",
+      "saveSuccess": "LLM configuration saved",
+      "forbidden": "You do not have access to LLM configuration"
+    }
   }
 }

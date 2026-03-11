@@ -93,6 +93,12 @@ object AppPermissions : BasePermissionsHolder() {
     @JvmStatic
     val LOG_READ = PermissionEntity("audit", "read", "查询日志")
 
+    @JvmStatic
+    val LLM_READ = PermissionEntity("llm", "read", "使用 AI 对话")
+
+    @JvmStatic
+    val LLM_UPDATE = PermissionEntity("llm", "update", "更新 LLM 配置")
+
     init {
         registerPermission(ALL)
         registerPermission(RUNTIME_NODE_READ)
@@ -124,6 +130,8 @@ object AppPermissions : BasePermissionsHolder() {
         registerPermission(RUNTIME_NODE_TREE_EXPAND)
         registerPermission(RUNTIME_NODE_ATTACH)
         registerPermission(RUNTIME_NODE_ARTHAS_EXECUTE)
+        registerPermission(LLM_READ)
+        registerPermission(LLM_UPDATE)
 
 
         registerName("all", "所有权限")
@@ -134,6 +142,7 @@ object AppPermissions : BasePermissionsHolder() {
         registerName("role", "角色")
         registerName("audit", "审计")
         registerName("permission", "权限")
+        registerName("llm", "AI")
     }
 
 

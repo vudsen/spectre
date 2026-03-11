@@ -17,7 +17,7 @@ import reactor.core.publisher.Flux
 
 @RestController
 @RequestMapping("ai")
-@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).RUNTIME_NODE_READ)")
+@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).LLM_READ)")
 class AiController(
     private val aiService: AiService,
 ) {
@@ -28,13 +28,13 @@ class AiController(
     }
 
     @GetMapping("llm-config/current")
-    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ALL)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).LLM_READ)")
     fun currentLLMConfiguration(): LLMConfigurationDTO? {
         return aiService.getCurrentLLMConfiguration()
     }
 
     @PostMapping("llm-config")
-    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).ALL)")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).LLM_UPDATE)")
     fun saveLLMConfiguration(@Validated @RequestBody request: LLMConfigurationModifyVO): LLMConfigurationDTO {
         return aiService.saveLLMConfiguration(
             LLMConfigurationDTO(

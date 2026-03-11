@@ -24,7 +24,6 @@ import kotlin.jvm.optionals.getOrNull
 
 @Service
 class DefaultAiService(
-    private val chatClientBuilder: ChatClient.Builder,
     private val sysConfigRepository: SysConfigRepository,
     private val aiConversationStateStore: AiConversationStateStore,
     private val aiSkillsLoader: AiSkillsLoader,
@@ -142,12 +141,12 @@ class DefaultAiService(
 
     private fun buildChatClient(llmConfig: LLMConfigurationDTO): ChatClient {
         if (!llmConfig.provider.equals("OPENAI", ignoreCase = true)) {
-            return chatClientBuilder.build()
+            throw IllegalStateException("Only OPENAI provider is supported")
         }
 
         val apiKey = llmConfig.apiKey?.trim().orEmpty()
         if (apiKey.isBlank()) {
-            return chatClientBuilder.build()
+            throw IllegalStateException("LLM apiKey is required")
         }
 
         val openAiApi = OpenAiApi.builder()
