@@ -27,5 +27,14 @@
         <heap>128</heap>
     </cache>
 
+    <cache alias="securityEncryptionCache">
+        <key-type>java.lang.String</key-type>
+        <value-type>java.lang.Object</value-type>
+        <expiry>
+            <tti unit="minutes">5</tti>
+        </expiry>
+        <heap>1024</heap>
+    </cache>
+
 
 </config>

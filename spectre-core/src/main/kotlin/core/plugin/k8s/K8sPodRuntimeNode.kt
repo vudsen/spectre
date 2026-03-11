@@ -6,7 +6,7 @@ import io.github.vudsen.spectre.common.util.OS
 import io.github.vudsen.spectre.common.util.currentOS
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.support.plugin.rnode.AbstractShellRuntimeNode
 import okhttp3.WebSocket
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry

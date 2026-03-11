@@ -7,7 +7,7 @@ import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.support.plugin.rnode.SearchTreeBuilder
 import io.github.vudsen.spectre.support.plugin.rnode.TypedRuntimeNodeExtensionPoint
 import org.springframework.stereotype.Component

@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.api.plugin.rnode
 
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 
 interface RuntimeNode {
 

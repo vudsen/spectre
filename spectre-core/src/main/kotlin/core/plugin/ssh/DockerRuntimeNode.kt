@@ -3,7 +3,7 @@ package io.github.vudsen.spectre.core.plugin.ssh
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.support.plugin.rnode.AbstractShellRuntimeNode
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
 import io.github.vudsen.spectre.api.exception.BusinessException
 
