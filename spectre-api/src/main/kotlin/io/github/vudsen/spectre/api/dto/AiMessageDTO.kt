@@ -9,6 +9,7 @@ class AiMessageDTO(
     enum class MessageType {
         TOKEN,
         TOOL_CALL_START,
+        PENDING_CONFIRM,
         TOOL_CALL_END,
         ASK_HUMAN,
         ERROR
@@ -16,3 +17,4 @@ class AiMessageDTO(
 
 
 }
+

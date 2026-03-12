@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.core.service.impl
+﻿package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
@@ -8,6 +8,8 @@ import io.github.vudsen.spectre.core.service.ai.AiConversationStateStore
 import io.github.vudsen.spectre.core.service.ai.AiSkillsLoader
 import io.github.vudsen.spectre.core.service.ai.AiToolCallContextHolder
 import io.github.vudsen.spectre.core.service.ai.AskHumanInterruptedException
+import io.github.vudsen.spectre.core.service.ai.PendingConfirmInterruptedException
+import io.github.vudsen.spectre.core.service.ai.PendingConfirmToolService
 import io.github.vudsen.spectre.repo.SysConfigRepository
 import io.github.vudsen.spectre.repo.po.SysConfigPO
 import org.slf4j.LoggerFactory
@@ -28,6 +30,7 @@ class DefaultAiService(
     private val aiConversationStateStore: AiConversationStateStore,
     private val aiSkillsLoader: AiSkillsLoader,
     private val aiToolCallContextHolder: AiToolCallContextHolder,
+    private val pendingConfirmToolService: PendingConfirmToolService,
     private val toolCallbacks: List<ToolCallback>,
 ) : AiService {
 
@@ -49,37 +52,22 @@ class DefaultAiService(
             }
 
             aiConversationStateStore.bindChannel(conversationId, channelId)
-
-            val pendingAskHuman = aiConversationStateStore.takePendingAskHuman(conversationId)
-            val userPrompt = if (pendingAskHuman == null) {
-                question
-            } else {
-                "The user has provided a response for your previous askHuman tool call. User response: ${question}"
-            }
-
-            val skillsPrompt = if (pendingAskHuman == null) {
-                aiSkillsLoader.buildSkillsPrompt()
-            } else {
-                ""
-            }
-
-            val systemPrompt = buildString {
-                appendLine("You are an Arthas troubleshooting assistant.")
-                appendLine("Use available tools only when needed.")
-                appendLine("Current LLM provider: ${llmConfig.provider}, model: ${llmConfig.model}")
-                if (skillsPrompt.isNotBlank()) {
-                    appendLine()
-                    append(skillsPrompt)
-                }
-            }
-
             aiToolCallContextHolder.open(conversationId, channelId, SecurityContextHolder.getContext())
+
             try {
+                upsertSystemMessage(conversationId, llmConfig)
+
+                val pendingToolConfirm = aiConversationStateStore.takePendingToolConfirm(conversationId)
+                if (pendingToolConfirm != null) {
+                    handlePendingToolConfirm(conversationId, pendingToolConfirm, question)
+                } else {
+                    handleUserInput(conversationId, question)
+                }
+
                 val chatClient = buildChatClient(llmConfig)
                 val content = chatClient
                     .prompt()
-                    .system(systemPrompt)
-                    .user(userPrompt)
+                    .messages(aiConversationStateStore.buildChatMessages(conversationId))
                     .tools(toolCallbacks)
                     .call()
                     .content()
@@ -87,9 +75,12 @@ class DefaultAiService(
                 aiToolCallContextHolder.snapshotMessages().forEach { sink.next(it) }
 
                 if (!content.isNullOrBlank()) {
+                    aiConversationStateStore.appendAssistantTextMessage(conversationId, content)
                     sink.next(AiMessageDTO(AiMessageDTO.MessageType.TOKEN, content))
                 }
             } catch (_: AskHumanInterruptedException) {
+                aiToolCallContextHolder.snapshotMessages().forEach { sink.next(it) }
+            } catch (_: PendingConfirmInterruptedException) {
                 aiToolCallContextHolder.snapshotMessages().forEach { sink.next(it) }
             } catch (e: Exception) {
                 logger.error("AI query failed", e)
@@ -100,6 +91,60 @@ class DefaultAiService(
                 sink.complete()
             }
         }
+    }
+
+    private fun upsertSystemMessage(conversationId: String, llmConfig: LLMConfigurationDTO) {
+        val skillsPrompt = aiSkillsLoader.buildSkillsPrompt()
+        val systemPrompt = buildString {
+            appendLine("You are an Arthas troubleshooting assistant.")
+            appendLine("Use available tools only when needed.")
+            appendLine("Current LLM provider: ${llmConfig.provider}, model: ${llmConfig.model}")
+            if (skillsPrompt.isNotBlank()) {
+                appendLine()
+                append(skillsPrompt)
+            }
+        }
+        aiConversationStateStore.upsertSystemMessage(conversationId, systemPrompt)
+    }
+
+    private fun handleUserInput(conversationId: String, question: String) {
+        aiConversationStateStore.takePendingAskHuman(conversationId)
+        aiConversationStateStore.appendUserMessage(conversationId, question)
+    }
+
+    private fun handlePendingToolConfirm(
+        conversationId: String,
+        pending: AiConversationStateStore.PendingToolConfirmState,
+        question: String,
+    ) {
+        val toolResponse = when (question) {
+            "YES" -> pendingConfirmToolService.executePending(pending)
+            "SKIP" -> pendingConfirmToolService.skipPending(pending)
+            else -> {
+                aiConversationStateStore.savePendingToolConfirm(
+                    conversationId = conversationId,
+                    toolCallId = pending.toolCallId,
+                    toolName = pending.toolName,
+                    toolArguments = pending.toolArguments,
+                    parameter = pending.parameter,
+                    channelId = pending.channelId,
+                )
+                throw IllegalArgumentException("Pending confirmation requires query to be exactly YES or SKIP")
+            }
+        }
+
+        aiConversationStateStore.appendToolResponseMessage(
+            conversationId = conversationId,
+            toolCallId = pending.toolCallId,
+            toolName = pending.toolName,
+            responseData = toolResponse,
+        )
+
+        aiToolCallContextHolder.emit(
+            AiMessageDTO.MessageType.TOOL_CALL_END,
+            pending.toolName,
+            pending.parameter
+        )
     }
 
     override fun getCurrentLLMConfiguration(): LLMConfigurationDTO? {

@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonClassDescription("Ask human request")
 class AskHumanRequest {
 
+
+    var question: String = ""
+
     /**
      * 可用的选项.
      */

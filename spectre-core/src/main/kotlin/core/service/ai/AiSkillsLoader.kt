@@ -35,4 +35,11 @@ class AiSkillsLoader {
             }
         }
     }
+
+    /**
+     * 加载 Skill 内容
+     */
+    fun loadSkill(name: String): String {
+        TODO()
+    }
 }
