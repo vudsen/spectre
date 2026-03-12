@@ -1,14 +1,13 @@
 ﻿package io.github.vudsen.spectre.api.dto
 
-import java.time.Instant
+import com.fasterxml.jackson.annotation.JsonIgnore
 
 class LLMConfigurationDTO(
-    var id: Long? = null,
     var provider: String = "OPENAI",
-    var model: String = "",
-    var baseUrl: String? = null,
-    var apiKey: String? = null,
+    var model: String,
+    var baseUrl: String,
+    @field:JsonIgnore
+    var apiKey: String,
+    var maxTokenPerHour: Long = -1,
     var enabled: Boolean = true,
-    var createdAt: Instant? = null,
-    var lastUpdate: Instant? = null,
 )

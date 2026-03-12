@@ -36,4 +36,11 @@
         </insert>
     </changeSet>
 
+    <changeSet id="202603120900" author="codex">
+        <insert tableName="sys_conf">
+            <column name="id" value="2006"/>
+            <column name="code" value="llm.max-token-per-hour"/>
+            <column name="value" value="-1"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

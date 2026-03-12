@@ -2,6 +2,7 @@ package io.github.vudsen.spectre.api.service
 
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
+import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import reactor.core.publisher.Flux
 
 interface AiService {
@@ -13,6 +14,6 @@ interface AiService {
 
     fun getCurrentLLMConfiguration(): LLMConfigurationDTO?
 
-    fun saveLLMConfiguration(configuration: LLMConfigurationDTO): LLMConfigurationDTO
+    fun updateLLMConfiguration(configuration: UpdateLLMConfigurationDTO)
 
 }

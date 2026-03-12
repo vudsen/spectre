@@ -56,7 +56,7 @@ class AiConversationStateStore(
 
     private fun pendingToolConfirmKey(conversationId: String): String = "ai:pending:toolConfirm:${conversationId}"
 
-    private fun channelKey(conversationId: String): String = "ai:conversation:channel:${conversationId}"
+    private fun selectedSkillKey(conversationId: String): String = "ai:conversation:selectedSkill:${conversationId}"
 
     private fun messagesKey(conversationId: String): String = "ai:conversation:messages:${conversationId}"
 
@@ -104,12 +104,16 @@ class AiConversationStateStore(
         return cache.get(pendingToolConfirmKey(conversationId), PendingToolConfirmState::class.java) != null
     }
 
-    fun bindChannel(conversationId: String, channelId: String) {
-        cache.put(channelKey(conversationId), channelId)
+    fun saveSelectedSkill(conversationId: String, skillName: String) {
+        cache.put(selectedSkillKey(conversationId), skillName)
     }
 
-    fun resolveChannel(conversationId: String): String? {
-        return cache.get(channelKey(conversationId), String::class.java)
+    fun getSelectedSkill(conversationId: String): String? {
+        return cache.get(selectedSkillKey(conversationId), String::class.java)
+    }
+
+    fun clearSelectedSkill(conversationId: String) {
+        cache.evict(selectedSkillKey(conversationId))
     }
 
     fun upsertSystemMessage(conversationId: String, content: String) {
@@ -224,9 +228,6 @@ class AiConversationStateStore(
         return result
     }
 
-    fun clearConversationHistory(conversationId: String) {
-        cache.evict(messagesKey(conversationId))
-    }
 
     private fun appendStoredMessage(conversationId: String, message: StoredMessage) {
         val messages = getStoredMessages(conversationId).toMutableList()

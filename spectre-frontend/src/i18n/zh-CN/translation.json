@@ -20,7 +20,9 @@
     "status": "状态",
     "username": "用户名",
     "upload": "上传",
-    "save": "保存"
+    "save": "保存",
+    "createSuccess": "创建成功",
+    "updateSuccess": "更新成功"
   },
   "router": {
     "home": "首页",
@@ -61,6 +63,8 @@
       "model": "模型",
       "baseUrl": "Base URL",
       "apiKey": "API Key",
+      "maxTokenPerHour": "每小时最大 Token 消耗量",
+      "maxTokenPerHourDesc": "-1 表示不限制",
       "forbidden": "您没有访问 LLM 配置的权限"
     }
   }

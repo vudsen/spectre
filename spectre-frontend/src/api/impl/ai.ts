@@ -6,6 +6,7 @@ export type LLMConfigurationDTO = {
   model: string
   baseUrl?: string
   apiKey?: string
+  maxTokenPerHour: number
   enabled: boolean
 }
 
@@ -15,6 +16,7 @@ export type LLMConfigurationModifyVO = {
   model: string
   baseUrl?: string
   apiKey?: string
+  maxTokenPerHour: number
   enabled: boolean
 }
 

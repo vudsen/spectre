@@ -70,6 +70,8 @@
       "model": "Model",
       "baseUrl": "Base URL",
       "apiKey": "API Key",
+      "maxTokenPerHour": "Max token cost count per hour",
+      "maxTokenPerHourDesc": "Use -1 for unlimited",
       "save": "Save LLM Configuration",
       "saveSuccess": "LLM configuration saved",
       "forbidden": "You do not have access to LLM configuration"

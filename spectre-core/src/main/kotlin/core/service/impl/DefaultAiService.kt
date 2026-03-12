@@ -2,7 +2,10 @@
 
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
+import io.github.vudsen.spectre.api.dto.SkillDTO
+import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.entity.SysConfigIds
+import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.service.AiService
 import io.github.vudsen.spectre.core.service.ai.AiConversationStateStore
 import io.github.vudsen.spectre.core.service.ai.AiSkillsLoader
@@ -51,11 +54,10 @@ class DefaultAiService(
                 return@create
             }
 
-            aiConversationStateStore.bindChannel(conversationId, channelId)
             aiToolCallContextHolder.open(conversationId, channelId, SecurityContextHolder.getContext())
 
             try {
-                upsertSystemMessage(conversationId, llmConfig)
+                upsertSystemMessage(conversationId, llmConfig, question)
 
                 val pendingToolConfirm = aiConversationStateStore.takePendingToolConfirm(conversationId)
                 if (pendingToolConfirm != null) {
@@ -87,24 +89,103 @@ class DefaultAiService(
                 aiToolCallContextHolder.snapshotMessages().forEach { sink.next(it) }
                 sink.next(AiMessageDTO(AiMessageDTO.MessageType.ERROR, e.message ?: "AI query failed"))
             } finally {
+                val hasToolCall = aiToolCallContextHolder.snapshotMessages()
+                    .any { it.type == AiMessageDTO.MessageType.TOOL_CALL_START }
+                if (!hasToolCall) {
+                    aiConversationStateStore.clearSelectedSkill(conversationId)
+                }
                 aiToolCallContextHolder.clear()
                 sink.complete()
             }
         }
     }
 
-    private fun upsertSystemMessage(conversationId: String, llmConfig: LLMConfigurationDTO) {
-        val skillsPrompt = aiSkillsLoader.buildSkillsPrompt()
+    private fun upsertSystemMessage(conversationId: String, llmConfig: LLMConfigurationDTO, question: String) {
+        val selectedSkillName = resolveSelectedSkill(conversationId, llmConfig, question)
+        val selectedSkillContent = selectedSkillName?.let { aiSkillsLoader.loadSkill(it) }
+
         val systemPrompt = buildString {
             appendLine("You are an Arthas troubleshooting assistant.")
             appendLine("Use available tools only when needed.")
             appendLine("Current LLM provider: ${llmConfig.provider}, model: ${llmConfig.model}")
-            if (skillsPrompt.isNotBlank()) {
+            if (!selectedSkillName.isNullOrBlank() && !selectedSkillContent.isNullOrBlank()) {
                 appendLine()
-                append(skillsPrompt)
+                appendLine("Selected skill: $selectedSkillName")
+                appendLine(selectedSkillContent)
             }
         }
         aiConversationStateStore.upsertSystemMessage(conversationId, systemPrompt)
+    }
+
+    private fun resolveSelectedSkill(
+        conversationId: String,
+        llmConfig: LLMConfigurationDTO,
+        question: String,
+    ): String? {
+        val cachedSkill = aiConversationStateStore.getSelectedSkill(conversationId)
+        if (!cachedSkill.isNullOrBlank()) {
+            return cachedSkill
+        }
+
+        val skills = aiSkillsLoader.loadAllSkills()
+        if (skills.isEmpty()) {
+            return null
+        }
+
+        val selected = selectSkillWithLLM(llmConfig, question, skills)
+        if (skills.none { it.name == selected }) {
+            throw AppException("Invalid skill selected by LLM: $selected")
+        }
+
+        aiConversationStateStore.saveSelectedSkill(conversationId, selected)
+        return selected
+    }
+
+    private fun selectSkillWithLLM(
+        llmConfig: LLMConfigurationDTO,
+        question: String,
+        skills: List<SkillDTO>
+    ): String {
+        val skillList = skills.joinToString("\n") { "- ${it.name}: ${it.description}" }
+
+        val rawSelection = buildChatClient(llmConfig)
+            .prompt()
+            .system(
+                """
+                You are choosing one troubleshooting skill for the next response.
+                Choose exactly one skill name from the provided list.
+                Return only the skill name. Do not add any other text.
+                
+                Available skills:
+                $skillList
+                """.trimIndent()
+            )
+            .user(question)
+            .call()
+            .content()
+            ?.trim()
+            .orEmpty()
+
+        val normalized = normalizeSkillName(rawSelection)
+        if (normalized.isBlank()) {
+            throw IllegalStateException("Skill selection result is empty")
+        }
+        return normalized
+    }
+
+    private fun normalizeSkillName(raw: String): String {
+        val firstContentLine = raw.lineSequence()
+            .map { it.trim() }
+            .firstOrNull { it.isNotBlank() && it != "```" && !it.startsWith("```") }
+            .orEmpty()
+
+        val maybeNameLine = if (firstContentLine.startsWith("name:", ignoreCase = true)) {
+            firstContentLine.substringAfter(':').trim()
+        } else {
+            firstContentLine
+        }
+
+        return maybeNameLine.trim().trim('"', '\'', '`')
     }
 
     private fun handleUserInput(conversationId: String, question: String) {
@@ -156,32 +237,30 @@ class DefaultAiService(
         return LLMConfigurationDTO(
             provider = findConfigValue(SysConfigIds.LLM_PROVIDER).ifBlank { "OPENAI" },
             model = findConfigValue(SysConfigIds.LLM_MODEL),
-            baseUrl = findNullableConfigValue(SysConfigIds.LLM_BASE_URL),
-            apiKey = findNullableConfigValue(SysConfigIds.LLM_API_KEY),
+            baseUrl = findConfigValue(SysConfigIds.LLM_BASE_URL),
+            apiKey = findConfigValue(SysConfigIds.LLM_API_KEY),
+            maxTokenPerHour = findConfigValue(SysConfigIds.LLM_MAX_TOKEN_PER_HOUR).toLongOrNull() ?: -1,
             enabled = true,
         )
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun saveLLMConfiguration(configuration: LLMConfigurationDTO): LLMConfigurationDTO {
-        val provider = configuration.provider.trim().ifBlank { "OPENAI" }
-        val model = configuration.model.trim()
-        val baseUrl = configuration.baseUrl?.trim()?.ifBlank { null }
-        val apiKey = configuration.apiKey?.trim()?.ifBlank { null }
-
-        upsertConfig(SysConfigIds.LLM_PROVIDER, "llm.provider", provider)
-        upsertConfig(SysConfigIds.LLM_MODEL, "llm.model", model)
-        upsertConfig(SysConfigIds.LLM_BASE_URL, "llm.base-url", baseUrl.orEmpty())
-        upsertConfig(SysConfigIds.LLM_API_KEY, "llm.api-key", apiKey.orEmpty())
-        upsertConfig(SysConfigIds.LLM_ENABLED, "llm.enabled", configuration.enabled.toString())
-
-        return LLMConfigurationDTO(
-            provider = provider,
-            model = model,
-            baseUrl = baseUrl,
-            apiKey = apiKey,
-            enabled = configuration.enabled,
-        )
+    override fun updateLLMConfiguration(configuration: UpdateLLMConfigurationDTO) {
+        configuration.baseUrl?.let {
+            sysConfigRepository.updateValueById(SysConfigIds.LLM_BASE_URL, it)
+        }
+        configuration.apiKey?.let {
+            sysConfigRepository.updateValueById(SysConfigIds.LLM_API_KEY, it)
+        }
+        configuration.enabled?.let {
+            sysConfigRepository.updateValueById(SysConfigIds.LLM_ENABLED, it.toString())
+        }
+        configuration.model?.let {
+            sysConfigRepository.updateValueById(SysConfigIds.LLM_MODEL, it)
+        }
+        configuration.maxTokenPerHour?.let {
+            sysConfigRepository.updateValueById(SysConfigIds.LLM_MAX_TOKEN_PER_HOUR, it.toString())
+        }
     }
 
     private fun buildChatClient(llmConfig: LLMConfigurationDTO): ChatClient {
@@ -189,14 +268,14 @@ class DefaultAiService(
             throw IllegalStateException("Only OPENAI provider is supported")
         }
 
-        val apiKey = llmConfig.apiKey?.trim().orEmpty()
+        val apiKey = llmConfig.apiKey
         if (apiKey.isBlank()) {
             throw IllegalStateException("LLM apiKey is required")
         }
 
         val openAiApi = OpenAiApi.builder()
             .apiKey(apiKey)
-            .baseUrl(llmConfig.baseUrl?.trim()?.ifBlank { null })
+            .baseUrl(llmConfig.baseUrl)
             .build()
 
         val optionsBuilder = OpenAiChatOptions.builder()
@@ -213,24 +292,7 @@ class DefaultAiService(
     }
 
     private fun findConfigValue(id: Long): String {
-        return sysConfigRepository.findById(id).getOrNull()?.value?.trim().orEmpty()
+        return sysConfigRepository.findById(id).getOrNull()?.value.orEmpty()
     }
 
-    private fun findNullableConfigValue(id: Long): String? {
-        return findConfigValue(id).ifBlank { null }
-    }
-
-    private fun upsertConfig(id: Long, code: String, value: String) {
-        val po = sysConfigRepository.findById(id).getOrNull() ?: SysConfigPO().apply {
-            this.id = id
-            this.code = code
-        }
-
-        if (po.code.isNullOrBlank()) {
-            po.code = code
-        }
-        po.value = value
-
-        sysConfigRepository.save(po)
-    }
 }
