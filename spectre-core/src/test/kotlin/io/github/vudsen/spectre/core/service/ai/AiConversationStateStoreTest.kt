@@ -46,4 +46,66 @@ class AiConversationStateStoreTest {
         assertFalse(store.hasPendingToolConfirm(conversationId))
         assertNull(store.takePendingToolConfirm(conversationId))
     }
+
+    @Test
+    fun pendingAskHuman_shouldSupportSaveGetTakeAndConsume() {
+        val store = newStore()
+        val conversationId = "conv-2"
+
+        assertFalse(store.hasPendingAskHuman(conversationId))
+        assertNull(store.getPendingAskHuman(conversationId))
+
+        store.savePendingAskHuman(
+            conversationId = conversationId,
+            toolCallId = "call-2",
+            toolName = "askHuman",
+            requestJson = "{\"question\":\"q\"}",
+            parameter = "{\"question\":\"q\"}",
+        )
+
+        assertTrue(store.hasPendingAskHuman(conversationId))
+        val pending = store.getPendingAskHuman(conversationId)
+        assertNotNull(pending)
+        assertEquals("call-2", pending!!.toolCallId)
+        assertEquals("askHuman", pending.toolName)
+
+        val consumed = store.takePendingAskHuman(conversationId)
+        assertNotNull(consumed)
+        assertEquals("call-2", consumed!!.toolCallId)
+        assertFalse(store.hasPendingAskHuman(conversationId))
+        assertNull(store.takePendingAskHuman(conversationId))
+    }
+
+    @Test
+    fun buildChatCompletionMessages_shouldIncludeToolCallAndToolResponse() {
+        val store = newStore()
+        val conversationId = "conv-3"
+
+        store.upsertSystemMessage(conversationId, "sys")
+        store.appendUserMessage(conversationId, "user")
+        store.appendAssistantMessage(
+            conversationId = conversationId,
+            content = "",
+            toolCalls = listOf(
+                AiConversationStateStore.AssistantToolCall(
+                    id = "call-3",
+                    name = "executeArthasCommand",
+                    arguments = "{\"command\":\"thread -n 1\"}",
+                )
+            ),
+        )
+        store.appendToolResponseMessage(
+            conversationId = conversationId,
+            toolCallId = "call-3",
+            toolName = "executeArthasCommand",
+            responseData = "{\"ok\":true}",
+        )
+
+        val messages = store.buildChatCompletionMessages(conversationId)
+        assertEquals(4, messages.size)
+        assertTrue(messages[0].isSystem())
+        assertTrue(messages[1].isUser())
+        assertTrue(messages[2].isAssistant())
+        assertTrue(messages[3].isTool())
+    }
 }

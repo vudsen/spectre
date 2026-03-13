@@ -1,96 +1,65 @@
 ﻿package io.github.vudsen.spectre.core.configuration
 
+import io.github.vudsen.spectre.api.AiTools
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
-import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
-import io.github.vudsen.spectre.api.entity.AskHumanRequest
-import io.github.vudsen.spectre.api.entity.ExecuteArthasCommandRequest
 import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
-import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
-import io.github.vudsen.spectre.core.service.ai.AiConversationStateStore
-import io.github.vudsen.spectre.core.service.ai.AiToolCallContextHolder
-import io.github.vudsen.spectre.core.service.ai.AskHumanInterruptedException
-import io.github.vudsen.spectre.core.service.ai.PendingConfirmInterruptedException
-import io.github.vudsen.spectre.core.service.ai.PendingConfirmToolService
+import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
+import io.github.vudsen.spectre.core.service.ai.AiToolExecutionResult
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.node.JsonNodeFactory
 
 class AiToolsConfigurationTest {
 
     @Test
-    fun executeArthasCommand_whenConfirmRequired_shouldEmitPendingConfirmAndStoreState() {
-        val store = AiConversationStateStore(ConcurrentMapCacheManager(CacheConstant.DEFAULT_CACHE_KEY))
-        val holder = AiToolCallContextHolder()
+    fun executeArthasCommand_shouldBeConfirmRequiredAndExecutable() {
         val arthasExecutionService = FakeArthasExecutionService()
-        val configuration = AiToolsConfiguration(
-            arthasExecutionService,
-            store,
-            holder,
-            PendingConfirmToolService(arthasExecutionService)
+        val registry = AiToolsConfiguration(arthasExecutionService).openAiToolRegistry()
+
+        assertTrue(registry.requiresConfirm(AiTools.EXECUTE_ARTHAS_COMMAND))
+        assertFalse(registry.requiresConfirm(AiTools.ASK_HUMAN))
+
+        val result = registry.execute(
+            toolName = AiTools.EXECUTE_ARTHAS_COMMAND,
+            context = AiToolExecutionContext(
+                conversationId = "conv-1",
+                channelId = "channel-1",
+                securityContext = null,
+            ),
+            argumentsJson = "{\"command\":\"thread -n 1\"}",
         )
 
-        holder.open("conv-1", "channel-1", null)
-
-        val request = ExecuteArthasCommandRequest().apply {
-            command = "thread -n 1"
-        }
-
-        assertThrows<PendingConfirmInterruptedException> {
-            configuration.executeArthasCommand().invoke(request)
-        }
-
-        val messages = holder.snapshotMessages()
-        assertEquals(2, messages.size)
-        assertEquals(AiMessageDTO.MessageType.TOOL_CALL_START, messages[0].type)
-        assertEquals(AiMessageDTO.MessageType.PENDING_CONFIRM, messages[1].type)
-        assertEquals("executeArthasCommand", messages[1].data)
-        assertEquals("thread -n 1", messages[1].parameter)
-
-        val pending = store.takePendingToolConfirm("conv-1")
-        assertNotNull(pending)
-        assertEquals("executeArthasCommand", pending!!.toolName)
-        assertEquals("thread -n 1", pending.parameter)
-        assertEquals("channel-1", pending.channelId)
-        assertTrue(pending.toolCallId.isNotBlank())
-        assertEquals(0, arthasExecutionService.execSyncCallCount)
+        assertTrue(result is AiToolExecutionResult.Success)
+        assertEquals(1, arthasExecutionService.execSyncCallCount)
+        result as AiToolExecutionResult.Success
+        assertEquals("thread -n 1", result.parameter)
     }
 
     @Test
-    fun askHuman_shouldKeepOriginalInterruptFlow() {
-        val store = AiConversationStateStore(ConcurrentMapCacheManager(CacheConstant.DEFAULT_CACHE_KEY))
-        val holder = AiToolCallContextHolder()
-        val fakeArthas = FakeArthasExecutionService()
-        val configuration = AiToolsConfiguration(
-            fakeArthas,
-            store,
-            holder,
-            PendingConfirmToolService(fakeArthas)
+    fun askHuman_shouldReturnAskHumanResultWithJsonPayload() {
+        val registry = AiToolsConfiguration(FakeArthasExecutionService()).openAiToolRegistry()
+
+        val result = registry.execute(
+            toolName = AiTools.ASK_HUMAN,
+            context = AiToolExecutionContext(
+                conversationId = "conv-2",
+                channelId = "channel-2",
+                securityContext = null,
+            ),
+            argumentsJson = "{\"question\":\"confirm?\",\"options\":[\"YES\",\"NO\"]}",
         )
 
-        holder.open("conv-2", "channel-2", null)
-
-        val request = AskHumanRequest().apply {
-            question = "confirm?"
-            options = listOf("YES", "SKIP")
-        }
-
-        assertThrows<AskHumanInterruptedException> {
-            configuration.askHuman().invoke(request)
-        }
-
-        val messages = holder.snapshotMessages()
-        assertEquals(2, messages.size)
-        assertEquals(AiMessageDTO.MessageType.TOOL_CALL_START, messages[0].type)
-        assertEquals(AiMessageDTO.MessageType.ASK_HUMAN, messages[1].type)
-        assertTrue(store.hasPendingAskHuman("conv-2"))
+        assertTrue(result is AiToolExecutionResult.AskHuman)
+        result as AiToolExecutionResult.AskHuman
+        assertTrue(result.requestJson.contains("confirm?"))
+        assertTrue(result.requestJson.contains("YES"))
+        assertTrue(result.requestJson.contains("NO"))
     }
 
     private class FakeArthasExecutionService : ArthasExecutionService {

@@ -9,7 +9,22 @@ import org.springframework.data.repository.query.QueryByExampleExecutor
 import org.springframework.stereotype.Repository
 
 @Repository
-interface SysConfigRepository  : JpaRepository<SysConfigPO, Long>, QueryByExampleExecutor<SysConfigPO> {
+interface SysConfigRepository : JpaRepository<SysConfigPO, Long>, QueryByExampleExecutor<SysConfigPO> {
+
+    @Modifying
+    @Query(
+        """
+        UPDATE SysConfigPO s
+        SET s.value = :newValue
+        WHERE s.id = :id
+          AND ((:expectedOldValue IS NULL AND s.value IS NULL) OR s.value = :expectedOldValue)
+        """
+    )
+    fun updateValueByIdWithOptimisticCheck(
+        @Param("id") id: Long,
+        @Param("expectedOldValue") expectedOldValue: String?,
+        @Param("newValue") newValue: String,
+    ): Int
 
     @Modifying
     @Query("UPDATE SysConfigPO s SET s.value = :value WHERE s.id = :id")

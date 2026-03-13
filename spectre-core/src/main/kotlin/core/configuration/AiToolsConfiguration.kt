@@ -1,135 +1,115 @@
 ﻿package io.github.vudsen.spectre.core.configuration
 
 import io.github.vudsen.spectre.api.AiTools
-import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.entity.AskHumanRequest
 import io.github.vudsen.spectre.api.entity.ExecuteArthasCommandRequest
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
-import io.github.vudsen.spectre.core.service.ai.AiConversationStateStore
-import io.github.vudsen.spectre.core.service.ai.AiToolCallContextHolder
-import io.github.vudsen.spectre.core.service.ai.AskHumanInterruptedException
-import io.github.vudsen.spectre.core.service.ai.PendingConfirmInterruptedException
-import io.github.vudsen.spectre.core.service.ai.PendingConfirmToolService
-import org.springframework.ai.tool.ToolCallback
-import org.springframework.ai.tool.function.FunctionToolCallback
+import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
+import io.github.vudsen.spectre.core.service.ai.AiToolExecutionResult
+import io.github.vudsen.spectre.core.service.ai.OpenAiToolDefinition
+import io.github.vudsen.spectre.core.service.ai.OpenAiToolRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Description
 import org.springframework.security.core.context.SecurityContextHolder
-import tools.jackson.databind.JsonNode
-import java.util.UUID
+import tools.jackson.databind.ObjectMapper
 
 @Configuration
 class AiToolsConfiguration(
     private val arthasExecutionService: ArthasExecutionService,
-    private val aiConversationStateStore: AiConversationStateStore,
-    private val aiToolCallContextHolder: AiToolCallContextHolder,
-    private val pendingConfirmToolService: PendingConfirmToolService,
 ) {
 
+    private val objectMapper = ObjectMapper()
+
     @Bean
-    fun executeArthasCommandToolCallback(executeArthasCommand: (ExecuteArthasCommandRequest) -> JsonNode): ToolCallback {
-        return FunctionToolCallback.builder(AiTools.EXECUTE_ARTHAS_COMMAND, executeArthasCommand)
-            .description("Execute arthas command")
-            .inputType(ExecuteArthasCommandRequest::class.java)
-            .build()
+    fun openAiToolRegistry(): OpenAiToolRegistry {
+        return OpenAiToolRegistry(
+            listOf(
+                executeArthasCommandDefinition(),
+                askHumanDefinition(),
+            )
+        )
     }
 
-    @Bean
-    @Description("Execute arthas command")
-    fun executeArthasCommand(): (ExecuteArthasCommandRequest) -> JsonNode = { request ->
-        val ctx = aiToolCallContextHolder.requireContext()
-        val cmd = request.command.trim()
-        val toolCallId = UUID.randomUUID().toString()
-        val toolArguments = "{\"command\":\"${escapeJson(cmd)}\"}"
-
-        aiConversationStateStore.appendAssistantToolCallMessage(
-            conversationId = ctx.conversationId,
-            toolCallId = toolCallId,
-            toolName = AiTools.EXECUTE_ARTHAS_COMMAND,
-            toolArguments = toolArguments,
+    private fun executeArthasCommandDefinition(): OpenAiToolDefinition {
+        return OpenAiToolDefinition(
+            name = AiTools.EXECUTE_ARTHAS_COMMAND,
+            description = "Execute arthas command",
+            parametersSchema = mapOf(
+                "type" to "object",
+                "properties" to mapOf(
+                    "command" to mapOf(
+                        "type" to "string",
+                        "description" to "Arthas command to execute",
+                    )
+                ),
+                "required" to listOf("command"),
+                "additionalProperties" to false,
+            ),
+            requiresConfirm = true,
+            parameterResolver = { argumentsJson ->
+                parseExecuteArthasCommandRequest(argumentsJson).command.trim()
+            },
+            executor = { context, argumentsJson ->
+                executeArthasCommand(context, argumentsJson)
+            },
         )
+    }
 
-        aiToolCallContextHolder.emit(
-            AiMessageDTO.MessageType.TOOL_CALL_START,
-            AiTools.EXECUTE_ARTHAS_COMMAND,
-            cmd
+    private fun askHumanDefinition(): OpenAiToolDefinition {
+        return OpenAiToolDefinition(
+            name = AiTools.ASK_HUMAN,
+            description = "Ask user to provide missing information",
+            parametersSchema = mapOf(
+                "type" to "object",
+                "properties" to mapOf(
+                    "question" to mapOf(
+                        "type" to "string",
+                        "description" to "Question shown to user",
+                    ),
+                    "options" to mapOf(
+                        "type" to "array",
+                        "description" to "Candidate options for user",
+                        "items" to mapOf("type" to "string"),
+                    ),
+                ),
+                "required" to listOf("question"),
+                "additionalProperties" to false,
+            ),
+            parameterResolver = { argumentsJson ->
+                normalizeAskHumanRequestJson(argumentsJson)
+            },
+            executor = { _, argumentsJson ->
+                AiToolExecutionResult.AskHuman(normalizeAskHumanRequestJson(argumentsJson))
+            },
         )
+    }
 
-        if (pendingConfirmToolService.requiresConfirm(AiTools.EXECUTE_ARTHAS_COMMAND)) {
-            aiConversationStateStore.savePendingToolConfirm(
-                conversationId = ctx.conversationId,
-                toolCallId = toolCallId,
-                toolName = AiTools.EXECUTE_ARTHAS_COMMAND,
-                toolArguments = toolArguments,
-                parameter = cmd,
-                channelId = ctx.channelId,
-            )
-            aiToolCallContextHolder.emit(
-                AiMessageDTO.MessageType.PENDING_CONFIRM,
-                AiTools.EXECUTE_ARTHAS_COMMAND,
-                cmd
-            )
-            throw PendingConfirmInterruptedException()
-        }
+    private fun executeArthasCommand(
+        context: AiToolExecutionContext,
+        argumentsJson: String,
+    ): AiToolExecutionResult {
+        val request = parseExecuteArthasCommandRequest(argumentsJson)
+        val command = request.command.trim()
 
-        val old = SecurityContextHolder.getContext()
-        try {
-            ctx.securityContext?.let { SecurityContextHolder.setContext(it) }
-            val result = arthasExecutionService.execSync(ctx.channelId, cmd)
-            aiConversationStateStore.appendToolResponseMessage(
-                conversationId = ctx.conversationId,
-                toolCallId = toolCallId,
-                toolName = AiTools.EXECUTE_ARTHAS_COMMAND,
-                responseData = result.toString(),
+        val oldContext = SecurityContextHolder.getContext()
+        return try {
+            context.securityContext?.let { SecurityContextHolder.setContext(it) }
+            val result = arthasExecutionService.execSync(context.channelId, command)
+            AiToolExecutionResult.Success(
+                output = result.toString(),
+                parameter = command,
             )
-            result
         } finally {
-            aiToolCallContextHolder.emit(
-                AiMessageDTO.MessageType.TOOL_CALL_END,
-                AiTools.EXECUTE_ARTHAS_COMMAND,
-                cmd
-            )
-            SecurityContextHolder.setContext(old)
+            SecurityContextHolder.setContext(oldContext)
         }
     }
 
-    @Bean
-    fun askHumanToolCallback(askHuman: (AskHumanRequest) -> String): ToolCallback {
-        return FunctionToolCallback.builder(AiTools.ASK_HUMAN, askHuman)
-            .description("Ask human for response")
-            .inputType(AskHumanRequest::class.java)
-            .build()
+    private fun parseExecuteArthasCommandRequest(argumentsJson: String): ExecuteArthasCommandRequest {
+        return objectMapper.readValue(argumentsJson, ExecuteArthasCommandRequest::class.java)
     }
 
-    @Bean
-    @Description("Ask human for response")
-    fun askHuman(): (AskHumanRequest) -> String = { request ->
-        val ctx = aiToolCallContextHolder.requireContext()
-
-        aiToolCallContextHolder.emit(
-            AiMessageDTO.MessageType.TOOL_CALL_START,
-            AiTools.ASK_HUMAN,
-            request.options.joinToString(",")
-        )
-
-        aiConversationStateStore.savePendingAskHuman(ctx.conversationId, request)
-
-        aiToolCallContextHolder.emit(
-            AiMessageDTO.MessageType.ASK_HUMAN,
-            "Please provide additional information",
-            request.options.joinToString(",")
-        )
-
-        throw AskHumanInterruptedException()
-    }
-
-    private fun escapeJson(text: String): String {
-        return text
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
+    private fun normalizeAskHumanRequestJson(argumentsJson: String): String {
+        val request = objectMapper.readValue(argumentsJson, AskHumanRequest::class.java)
+        return objectMapper.writeValueAsString(request)
     }
 }

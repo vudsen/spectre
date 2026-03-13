@@ -17,4 +17,6 @@ object SysConfigIds {
     const val LLM_ENABLED = 2005L
 
     const val LLM_MAX_TOKEN_PER_HOUR = 2006L
+
+    const val LLM_USED = 2007L
 }

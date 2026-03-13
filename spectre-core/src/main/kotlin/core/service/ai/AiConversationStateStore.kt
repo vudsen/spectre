@@ -1,19 +1,19 @@
 ﻿package io.github.vudsen.spectre.core.service.ai
 
-import io.github.vudsen.spectre.api.entity.AskHumanRequest
+import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam
+import com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall
+import com.openai.models.chat.completions.ChatCompletionMessageParam
+import com.openai.models.chat.completions.ChatCompletionSystemMessageParam
+import com.openai.models.chat.completions.ChatCompletionToolMessageParam
+import com.openai.models.chat.completions.ChatCompletionUserMessageParam
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
-import org.springframework.ai.chat.messages.AssistantMessage
-import org.springframework.ai.chat.messages.Message
-import org.springframework.ai.chat.messages.SystemMessage
-import org.springframework.ai.chat.messages.ToolResponseMessage
-import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.cache.Cache
 import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Component
 
 @Component
 class AiConversationStateStore(
-    cacheManager: CacheManager
+    cacheManager: CacheManager,
 ) {
 
     enum class StoredMessageType {
@@ -23,13 +23,17 @@ class AiConversationStateStore(
         TOOL_RESPONSE,
     }
 
+    data class AssistantToolCall(
+        val id: String,
+        val name: String,
+        val arguments: String,
+        val type: String = "function",
+    )
+
     data class StoredMessage(
         val type: StoredMessageType,
         val content: String = "",
-        val assistantToolCallId: String? = null,
-        val assistantToolType: String? = null,
-        val assistantToolName: String? = null,
-        val assistantToolArguments: String? = null,
+        val assistantToolCalls: List<AssistantToolCall> = emptyList(),
         val toolResponseCallId: String? = null,
         val toolResponseName: String? = null,
         val toolResponseData: String? = null,
@@ -37,7 +41,10 @@ class AiConversationStateStore(
     )
 
     data class PendingAskHumanState(
-        val options: List<String> = emptyList(),
+        val toolCallId: String,
+        val toolName: String,
+        val requestJson: String,
+        val parameter: String? = null,
         val createdAt: Long = System.currentTimeMillis(),
     )
 
@@ -52,16 +59,34 @@ class AiConversationStateStore(
 
     private val cache: Cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
 
-    private fun pendingAskKey(conversationId: String): String = "ai:pending:askHuman:${conversationId}"
+    private fun pendingAskKey(conversationId: String): String = "ai:pending:askHuman:$conversationId"
 
-    private fun pendingToolConfirmKey(conversationId: String): String = "ai:pending:toolConfirm:${conversationId}"
+    private fun pendingToolConfirmKey(conversationId: String): String = "ai:pending:toolConfirm:$conversationId"
 
-    private fun selectedSkillKey(conversationId: String): String = "ai:conversation:selectedSkill:${conversationId}"
+    private fun selectedSkillKey(conversationId: String): String = "ai:conversation:selectedSkill:$conversationId"
 
-    private fun messagesKey(conversationId: String): String = "ai:conversation:messages:${conversationId}"
+    private fun messagesKey(conversationId: String): String = "ai:conversation:messages:$conversationId"
 
-    fun savePendingAskHuman(conversationId: String, request: AskHumanRequest) {
-        cache.put(pendingAskKey(conversationId), PendingAskHumanState(request.options))
+    fun savePendingAskHuman(
+        conversationId: String,
+        toolCallId: String,
+        toolName: String,
+        requestJson: String,
+        parameter: String? = null,
+    ) {
+        cache.put(
+            pendingAskKey(conversationId),
+            PendingAskHumanState(
+                toolCallId = toolCallId,
+                toolName = toolName,
+                requestJson = requestJson,
+                parameter = parameter,
+            )
+        )
+    }
+
+    fun getPendingAskHuman(conversationId: String): PendingAskHumanState? {
+        return cache.get(pendingAskKey(conversationId), PendingAskHumanState::class.java)
     }
 
     fun takePendingAskHuman(conversationId: String): PendingAskHumanState? {
@@ -81,7 +106,7 @@ class AiConversationStateStore(
         toolName: String,
         toolArguments: String,
         parameter: String?,
-        channelId: String
+        channelId: String,
     ) {
         cache.put(
             pendingToolConfirmKey(conversationId),
@@ -116,6 +141,10 @@ class AiConversationStateStore(
         cache.evict(selectedSkillKey(conversationId))
     }
 
+    fun hasAnyMessage(conversationId: String): Boolean {
+        return getStoredMessages(conversationId).isNotEmpty()
+    }
+
     fun upsertSystemMessage(conversationId: String, content: String) {
         val messages = getStoredMessages(conversationId).toMutableList()
         val index = messages.indexOfFirst { it.type == StoredMessageType.SYSTEM }
@@ -131,26 +160,17 @@ class AiConversationStateStore(
         appendStoredMessage(conversationId, StoredMessage(type = StoredMessageType.USER, content = content))
     }
 
-    fun appendAssistantTextMessage(conversationId: String, content: String) {
-        appendStoredMessage(conversationId, StoredMessage(type = StoredMessageType.ASSISTANT, content = content))
-    }
-
-    fun appendAssistantToolCallMessage(
+    fun appendAssistantMessage(
         conversationId: String,
-        toolCallId: String,
-        toolName: String,
-        toolArguments: String,
-        content: String = ""
+        content: String,
+        toolCalls: List<AssistantToolCall>,
     ) {
         appendStoredMessage(
             conversationId,
             StoredMessage(
                 type = StoredMessageType.ASSISTANT,
                 content = content,
-                assistantToolCallId = toolCallId,
-                assistantToolType = "function",
-                assistantToolName = toolName,
-                assistantToolArguments = toolArguments,
+                assistantToolCalls = toolCalls,
             )
         )
     }
@@ -159,7 +179,7 @@ class AiConversationStateStore(
         conversationId: String,
         toolCallId: String,
         toolName: String,
-        responseData: String
+        responseData: String,
     ) {
         appendStoredMessage(
             conversationId,
@@ -172,54 +192,58 @@ class AiConversationStateStore(
         )
     }
 
-    fun buildChatMessages(conversationId: String): List<Message> {
-        val result = mutableListOf<Message>()
+    fun buildChatCompletionMessages(conversationId: String): List<ChatCompletionMessageParam> {
+        val result = mutableListOf<ChatCompletionMessageParam>()
         for (stored in getStoredMessages(conversationId)) {
             when (stored.type) {
                 StoredMessageType.SYSTEM -> {
-                    result.add(SystemMessage(stored.content))
+                    result.add(
+                        ChatCompletionMessageParam.ofSystem(
+                            ChatCompletionSystemMessageParam.builder()
+                                .content(stored.content)
+                                .build()
+                        )
+                    )
                 }
 
                 StoredMessageType.USER -> {
-                    result.add(UserMessage(stored.content))
+                    result.add(
+                        ChatCompletionMessageParam.ofUser(
+                            ChatCompletionUserMessageParam.builder()
+                                .content(stored.content)
+                                .build()
+                        )
+                    )
                 }
 
                 StoredMessageType.ASSISTANT -> {
-                    val toolCallId = stored.assistantToolCallId
-                    if (toolCallId.isNullOrBlank()) {
-                        result.add(AssistantMessage(stored.content))
-                    } else {
-                        result.add(
-                            AssistantMessage.builder()
-                                .content(stored.content)
-                                .toolCalls(
-                                    listOf(
-                                        AssistantMessage.ToolCall(
-                                            toolCallId,
-                                            stored.assistantToolType ?: "function",
-                                            stored.assistantToolName ?: "",
-                                            stored.assistantToolArguments ?: "{}",
-                                        )
-                                    )
-                                )
-                                .build()
-                        )
+                    val assistantBuilder = ChatCompletionAssistantMessageParam.builder()
+                    if (stored.content.isNotBlank()) {
+                        assistantBuilder.content(stored.content)
                     }
+                    stored.assistantToolCalls.forEach { toolCall ->
+                        val functionToolCall = ChatCompletionMessageFunctionToolCall.builder()
+                            .id(toolCall.id)
+                            .function(
+                                ChatCompletionMessageFunctionToolCall.Function.builder()
+                                    .name(toolCall.name)
+                                    .arguments(toolCall.arguments)
+                                    .build()
+                            )
+                            .build()
+                        assistantBuilder.addToolCall(functionToolCall)
+                    }
+                    result.add(ChatCompletionMessageParam.ofAssistant(assistantBuilder.build()))
                 }
 
                 StoredMessageType.TOOL_RESPONSE -> {
                     result.add(
-                        ToolResponseMessage.builder()
-                            .responses(
-                                listOf(
-                                    ToolResponseMessage.ToolResponse(
-                                        stored.toolResponseCallId ?: "",
-                                        stored.toolResponseName ?: "",
-                                        stored.toolResponseData ?: "",
-                                    )
-                                )
-                            )
-                            .build()
+                        ChatCompletionMessageParam.ofTool(
+                            ChatCompletionToolMessageParam.builder()
+                                .toolCallId(stored.toolResponseCallId ?: "")
+                                .content(stored.toolResponseData ?: "")
+                                .build()
+                        )
                     )
                 }
             }
@@ -227,7 +251,6 @@ class AiConversationStateStore(
 
         return result
     }
-
 
     private fun appendStoredMessage(conversationId: String, message: StoredMessage) {
         val messages = getStoredMessages(conversationId).toMutableList()
