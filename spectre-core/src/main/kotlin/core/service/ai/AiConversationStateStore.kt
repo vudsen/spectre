@@ -28,10 +28,13 @@ class AiConversationStateStore(
         val name: String,
         val arguments: String,
         val type: String = "function",
-    )
+    ) {
+
+        constructor() : this("", "", "")
+    }
 
     data class StoredMessage(
-        val type: StoredMessageType,
+        val type: StoredMessageType = StoredMessageType.USER,
         val content: String = "",
         val assistantToolCalls: List<AssistantToolCall> = emptyList(),
         val toolResponseCallId: String? = null,
@@ -46,7 +49,10 @@ class AiConversationStateStore(
         val requestJson: String,
         val parameter: String? = null,
         val createdAt: Long = System.currentTimeMillis(),
-    )
+    ) {
+
+        constructor() : this("", "", "")
+    }
 
     data class PendingToolConfirmState(
         val toolCallId: String,
@@ -55,7 +61,9 @@ class AiConversationStateStore(
         val parameter: String?,
         val channelId: String,
         val createdAt: Long = System.currentTimeMillis(),
-    )
+    ) {
+        constructor() : this("", "", "", null, "")
+    }
 
     private val cache: Cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
 

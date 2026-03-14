@@ -1,4 +1,4 @@
-﻿---
+---
 name: cpu_spike_diagnosis
 description: Troubleshooting high CPU usage issues
 ---

@@ -3,8 +3,10 @@
 import com.openai.client.OpenAIClient
 import com.openai.client.okhttp.OpenAIOkHttpClient
 import com.openai.helpers.ChatCompletionAccumulator
+import com.openai.models.chat.completions.ChatCompletionChunk
 import com.openai.models.chat.completions.ChatCompletionCreateParams
 import com.openai.models.chat.completions.ChatCompletionMessage
+import com.openai.models.chat.completions.ChatCompletionStreamOptions
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
@@ -255,6 +257,9 @@ class DefaultAiService(
     }
 
     private fun requestAssistantTurn(context: AiQueryContext): AssistantTurn {
+        val conversationMessages = aiConversationStateStore.buildChatCompletionMessages(context.conversationId)
+        val tools = openAiToolRegistry.openAiTools()
+
         val requestBuilder = ChatCompletionCreateParams.builder()
             .model(context.llmConfig.model)
             .parallelToolCalls(false)
@@ -263,21 +268,36 @@ class DefaultAiService(
             requestBuilder.maxCompletionTokens(context.llmConfig.maxTokenPerHour)
         }
 
-        aiConversationStateStore.buildChatCompletionMessages(context.conversationId).forEach { message ->
+        conversationMessages.forEach { message ->
             requestBuilder.addMessage(message)
         }
 
-        openAiToolRegistry.openAiTools().forEach { tool ->
+        tools.forEach { tool ->
             requestBuilder.addTool(tool)
         }
 
         val accumulator = ChatCompletionAccumulator.create()
         val streamedText = StringBuilder()
+        var hasChoiceChunk = false
 
         context.client.chat().completions().createStreaming(requestBuilder.build()).use { stream ->
             stream.stream().forEach { chunk ->
-                accumulator.accumulate(chunk)
                 val choice = chunk.choices()[0]
+                hasChoiceChunk = true
+                if (chunk.usage().isPresent) {
+                    // 有 bug，直接传会报错，需要过滤掉 usage 属性
+                    accumulator.accumulate(
+                        ChatCompletionChunk.builder()
+                            .id(chunk.id())
+                            .created(chunk.created())
+                            .model(chunk.model())
+                            .systemFingerprint(chunk.systemFingerprint().get())
+                            .addChoice(choice)
+                            .build()
+                    )
+                } else {
+                    accumulator.accumulate(chunk)
+                }
                 choice.delta().content().ifPresent { delta ->
                     if (delta.isNotEmpty()) {
                         streamedText.append(delta)
@@ -287,8 +307,11 @@ class DefaultAiService(
             }
         }
 
+        if (!hasChoiceChunk) {
+            throw AppException("No completion choices returned from model stream")
+        }
+
         val completion = accumulator.chatCompletion()
-        val totalTokens = completion.usage().get().totalTokens()
 
         val message = completion.choices().firstOrNull()?.message()
             ?: throw AppException("Empty completion from model")
@@ -299,6 +322,17 @@ class DefaultAiService(
         }
 
         val toolCalls = extractFunctionToolCalls(message)
+        val estimatedPromptTokens =
+            estimateTokens(conversationMessages.sumOf { it.toString().length } + tools.sumOf { it.toString().length })
+        val estimatedCompletionTokens = estimateTokens(
+            text.length + toolCalls.sumOf { it.name.length + it.arguments.length }
+        )
+        logger.debug(
+            "Estimated token usage (streaming): prompt={}, completion={}, total={}",
+            estimatedPromptTokens,
+            estimatedCompletionTokens,
+            estimatedPromptTokens + estimatedCompletionTokens,
+        )
 
         aiConversationStateStore.appendAssistantMessage(
             conversationId = context.conversationId,
@@ -443,11 +477,64 @@ class DefaultAiService(
         ) ?: return
 
         val selectedSkillContent = aiSkillsLoader.loadSkill(selectedSkillName)
-        aiConversationStateStore.upsertSystemMessage(context.conversationId, """You are an Java troubleshooting assistant.
-            You are allowed to run arthas command to help user solve problems. Follow the next instructions to help user:
-            
-            $selectedSkillContent
-        """.trimIndent())
+        aiConversationStateStore.upsertSystemMessage(context.conversationId, """You are a Java troubleshooting assistant responsible for diagnosing runtime problems in Java applications.
+
+You are allowed to run Arthas commands to collect runtime information and help the user analyze the issue.
+
+Use the following skill instructions:
+
+$selectedSkillContent
+
+## Decision Flow
+
+When handling a user problem:
+
+1. Read the Skill instructions.
+2. Identify whether the Skill requires specific parameters.
+3. If all required parameters are available:
+   - Execute the Arthas command suggested by the Skill.
+4. If a required parameter is missing:
+   - Ask the user ONLY for that parameter using `askHuman`.
+5. If the Skill does not require additional parameters:
+   - Do NOT ask the user questions.
+   - Continue with diagnostic commands.
+
+## Skill Parameter Policy
+
+You MUST follow these rules:
+
+1. Only ask the user for information if the Skill explicitly requires a parameter that is currently missing.
+2. If the Skill does NOT explicitly require the information, DO NOT ask the user.
+3. Do NOT ask general diagnostic questions.
+4. Do NOT ask exploratory questions.
+5. Do NOT ask multiple questions.
+
+When a required parameter is missing, ask ONLY for that specific parameter using the `askHuman` tool.
+
+## Tool Usage Rules
+
+### askHuman
+- If you need additional context (logs, class names, method names, reproduction steps, etc.), you MUST use the `askHuman` tool.
+- DO NOT ask questions directly in the message without calling this tool.
+
+### Arthas Commands
+- You MAY run Arthas commands to collect diagnostic information.
+- Before running any Arthas command, you MUST ensure the command will terminate automatically.
+- If the command may run indefinitely, you MUST limit it using arguments such as `-n`.
+- The value of `-n` must not greater than 3.
+
+Examples:
+- `watch ... -n 3`
+- `trace ... -n 3`
+- `stack ... -n 3`
+- `dashboard -n 1`
+
+## Strict Restrictions
+- NEVER run Arthas commands that do not terminate automatically.
+- NEVER run commands that continuously stream output without a termination condition.
+- If you are unsure whether a command will terminate, DO NOT run it.
+
+Always prefer safe, bounded diagnostic commands.""".trimIndent())
     }
 
     private fun resolveSelectedSkill(
@@ -503,9 +590,16 @@ class DefaultAiService(
             .addUserMessage(question)
 
         val response = context.client.chat().completions().create(requestBuilder.build())
-        val totalTokens = response.usage().get().totalTokens()
 
         val content = response.choices().firstOrNull()?.message()?.content()?.orElse("").orEmpty().trim()
+        val estimatedPromptTokens = estimateTokens(selectionPrompt.length + question.length)
+        val estimatedCompletionTokens = estimateTokens(content.length)
+        logger.debug(
+            "Estimated token usage (skill selection): prompt={}, completion={}, total={}",
+            estimatedPromptTokens,
+            estimatedCompletionTokens,
+            estimatedPromptTokens + estimatedCompletionTokens,
+        )
         val normalized = normalizeSkillSelection(content)
         if (normalized.isBlank() || normalized.equals("none", ignoreCase = true)) {
             return null
@@ -527,6 +621,13 @@ class DefaultAiService(
         }
 
         return candidate.trim('"', '\'', '`')
+    }
+
+    private fun estimateTokens(charCount: Int): Long {
+        if (charCount <= 0) {
+            return 0
+        }
+        return ((charCount + 3) / 4).toLong()
     }
 
     override fun getCurrentLLMConfiguration(): LLMConfigurationDTO? {
