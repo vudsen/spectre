@@ -6,7 +6,7 @@ import com.openai.helpers.ChatCompletionAccumulator
 import com.openai.models.chat.completions.ChatCompletionChunk
 import com.openai.models.chat.completions.ChatCompletionCreateParams
 import com.openai.models.chat.completions.ChatCompletionMessage
-import com.openai.models.chat.completions.ChatCompletionStreamOptions
+import com.openai.models.completions.CompletionUsage
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
@@ -27,7 +27,10 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Flux
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.optionals.getOrNull
+import kotlin.concurrent.withLock
+import kotlin.math.min
 
 @Service
 class DefaultAiService(
@@ -54,8 +57,17 @@ class DefaultAiService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultAiService::class.java)
-        private const val TOKEN_REFRESH_INTERVAL = 1000 * 60 * 60L
+        private const val TOKEN_USAGE_UPDATE_MAX_RETRIES = 3
+        private const val MILLIS_PER_HOUR = 1000L * 60 * 60
+        private const val MAX_CONVERSATION_TOKEN = 100000L
     }
+
+    private data class HourlyTokenUsage(
+        val epochHour: Long,
+        val used: Long,
+    )
+
+    private val tokenUsageLock = ReentrantLock()
 
 
 
@@ -257,6 +269,8 @@ class DefaultAiService(
     }
 
     private fun requestAssistantTurn(context: AiQueryContext): AssistantTurn {
+        ensureNotExceededTokenLimit(context.llmConfig.maxTokenPerHour)
+
         val conversationMessages = aiConversationStateStore.buildChatCompletionMessages(context.conversationId)
         val tools = openAiToolRegistry.openAiTools()
 
@@ -265,7 +279,9 @@ class DefaultAiService(
             .parallelToolCalls(false)
 
         if (context.llmConfig.maxTokenPerHour > 0) {
-            requestBuilder.maxCompletionTokens(context.llmConfig.maxTokenPerHour)
+            requestBuilder.maxCompletionTokens(min(context.llmConfig.maxTokenPerHour, MAX_CONVERSATION_TOKEN))
+        } else {
+            requestBuilder.maxCompletionTokens(MAX_CONVERSATION_TOKEN)
         }
 
         conversationMessages.forEach { message ->
@@ -280,11 +296,13 @@ class DefaultAiService(
         val streamedText = StringBuilder()
         var hasChoiceChunk = false
 
+        var usage: CompletionUsage? = null
         context.client.chat().completions().createStreaming(requestBuilder.build()).use { stream ->
             stream.stream().forEach { chunk ->
                 val choice = chunk.choices()[0]
                 hasChoiceChunk = true
                 if (chunk.usage().isPresent) {
+                    usage = chunk.usage().get()
                     // 有 bug，直接传会报错，需要过滤掉 usage 属性
                     accumulator.accumulate(
                         ChatCompletionChunk.builder()
@@ -322,17 +340,11 @@ class DefaultAiService(
         }
 
         val toolCalls = extractFunctionToolCalls(message)
-        val estimatedPromptTokens =
-            estimateTokens(conversationMessages.sumOf { it.toString().length } + tools.sumOf { it.toString().length })
-        val estimatedCompletionTokens = estimateTokens(
-            text.length + toolCalls.sumOf { it.name.length + it.arguments.length }
-        )
-        logger.debug(
-            "Estimated token usage (streaming): prompt={}, completion={}, total={}",
-            estimatedPromptTokens,
-            estimatedCompletionTokens,
-            estimatedPromptTokens + estimatedCompletionTokens,
-        )
+        val estimatedCompletionTokens = usage?.totalTokens()
+            ?: (estimateTokens(text.length + toolCalls.sumOf { it.name.length + it.arguments.length }) +
+                    estimateTokens(conversationMessages.sumOf { it.toString().length } + tools.sumOf { it.toString().length }))
+
+        recordTokenUsage(estimatedCompletionTokens)
 
         aiConversationStateStore.appendAssistantMessage(
             conversationId = context.conversationId,
@@ -573,6 +585,8 @@ Always prefer safe, bounded diagnostic commands.""".trimIndent())
         question: String,
         skills: List<SkillDTO>,
     ): String? {
+        ensureNotExceededTokenLimit(context.llmConfig.maxTokenPerHour)
+
         val skillList = skills.joinToString("\n") { "- ${it.name}: ${it.description}" }
 
         val selectionPrompt = """
@@ -586,20 +600,18 @@ Always prefer safe, bounded diagnostic commands.""".trimIndent())
 
         val requestBuilder = ChatCompletionCreateParams.builder()
             .model(context.llmConfig.model)
+            .maxCompletionTokens(if (context.llmConfig.maxTokenPerHour >= 0) { min(context.llmConfig.maxTokenPerHour, MAX_CONVERSATION_TOKEN) } else { MAX_CONVERSATION_TOKEN })
             .addSystemMessage(selectionPrompt)
             .addUserMessage(question)
 
         val response = context.client.chat().completions().create(requestBuilder.build())
 
         val content = response.choices().firstOrNull()?.message()?.content()?.orElse("").orEmpty().trim()
-        val estimatedPromptTokens = estimateTokens(selectionPrompt.length + question.length)
-        val estimatedCompletionTokens = estimateTokens(content.length)
-        logger.debug(
-            "Estimated token usage (skill selection): prompt={}, completion={}, total={}",
-            estimatedPromptTokens,
-            estimatedCompletionTokens,
-            estimatedPromptTokens + estimatedCompletionTokens,
-        )
+
+        val usedTokens = response.usage().getOrNull()?.totalTokens()
+            ?: (estimateTokens(selectionPrompt.length + question.length) + estimateTokens(content.length))
+
+        recordTokenUsage(usedTokens)
         val normalized = normalizeSkillSelection(content)
         if (normalized.isBlank() || normalized.equals("none", ignoreCase = true)) {
             return null
@@ -628,6 +640,76 @@ Always prefer safe, bounded diagnostic commands.""".trimIndent())
             return 0
         }
         return ((charCount + 3) / 4).toLong()
+    }
+
+    private fun ensureNotExceededTokenLimit(maxTokenPerHour: Long) {
+        if (maxTokenPerHour == -1L) {
+            return
+        }
+        val currentEpochHour = System.currentTimeMillis() / MILLIS_PER_HOUR
+        tokenUsageLock.withLock {
+            val rawValue = findConfigValue(SysConfigIds.LLM_USED)
+            val usage = parseHourlyTokenUsage(rawValue)
+            val usedInCurrentHour = if (usage.epochHour == currentEpochHour) {
+                usage.used
+            } else {
+                0L
+            }
+            if (usedInCurrentHour >= maxTokenPerHour) {
+                throw BusinessException("LLM token 已超每小时上限")
+            }
+        }
+    }
+
+    private fun recordTokenUsage(delta: Long) {
+        if (delta <= 0) {
+            return
+        }
+        val currentEpochHour = System.currentTimeMillis() / MILLIS_PER_HOUR
+        tokenUsageLock.withLock {
+            repeat(TOKEN_USAGE_UPDATE_MAX_RETRIES) {
+                val oldValue = findConfigValue(SysConfigIds.LLM_USED)
+                val oldUsage = parseHourlyTokenUsage(oldValue)
+                val baseUsed = if (oldUsage.epochHour == currentEpochHour) {
+                    oldUsage.used
+                } else {
+                    0L
+                }
+                val newUsed = baseUsed + delta
+                val newValue = "$currentEpochHour:$newUsed"
+
+                val updatedCount = sysConfigRepository.updateValueByIdWithOptimisticCheck(
+                    id = SysConfigIds.LLM_USED,
+                    expectedOldValue = oldValue,
+                    newValue = newValue,
+                )
+                if (updatedCount > 0) {
+                    return
+                }
+            }
+            throw BusinessException("更新 LLM token 使用量失败，请稍后重试")
+        }
+    }
+
+    private fun parseHourlyTokenUsage(rawValue: String?): HourlyTokenUsage {
+        val currentEpochHour = System.currentTimeMillis() / MILLIS_PER_HOUR
+        val value = rawValue?.trim().orEmpty()
+        if (value.isBlank()) {
+            return HourlyTokenUsage(epochHour = currentEpochHour, used = 0)
+        }
+
+        val delimiterIndex = value.indexOf(':')
+        if (delimiterIndex <= 0 || delimiterIndex == value.length - 1) {
+            return HourlyTokenUsage(epochHour = currentEpochHour, used = 0)
+        }
+
+        val hour = value.substring(0, delimiterIndex).toLongOrNull()
+        val used = value.substring(delimiterIndex + 1).toLongOrNull()
+        if (hour == null || used == null || used < 0) {
+            return HourlyTokenUsage(epochHour = currentEpochHour, used = 0)
+        }
+
+        return HourlyTokenUsage(epochHour = hour, used = used)
     }
 
     override fun getCurrentLLMConfiguration(): LLMConfigurationDTO? {
