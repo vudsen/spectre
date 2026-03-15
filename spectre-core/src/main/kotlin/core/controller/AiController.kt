@@ -27,6 +27,11 @@ class AiController(
         return aiService.query(request.conversationId, request.channelId, request.query)
     }
 
+    @PostMapping("chat/with-skill", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun chatWithSkill(@Validated @RequestBody request: AiChatRequestVO): Flux<AiMessageDTO> {
+        return aiService.queryWithSkill(request.conversationId, request.channelId, request.query)
+    }
+
     @GetMapping("llm-config/current")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).LLM_READ)")
     fun currentLLMConfiguration(): LLMConfigurationDTO? {

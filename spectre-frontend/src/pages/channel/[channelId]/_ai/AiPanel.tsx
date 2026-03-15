@@ -17,6 +17,7 @@ import type {
   PendingAskHumanState,
   PendingConfirmState,
 } from '@/pages/channel/[channelId]/_ai/types.ts'
+import { store } from '@/store'
 
 interface AiPanelProps {
   channelId: string
@@ -318,6 +319,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
             signal: abortRef.current.signal,
             onMessage: handleAiMessage,
           },
+          store.getState().config.useAiSkills ?? false,
         )
       } catch (e) {
         if (abortRef.current?.signal.aborted) {

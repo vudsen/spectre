@@ -1,5 +1,10 @@
 import React, { type KeyboardEvent, useState } from 'react'
-import { Button, Textarea } from '@heroui/react'
+import { Button, Switch, Textarea, Tooltip } from '@heroui/react'
+import SvgIcon from '@/components/icon/SvgIcon.tsx'
+import Icon from '@/components/icon/icon.ts'
+import { useDispatch, useSelector } from 'react-redux'
+import type { RootState } from '@/store'
+import { updateConfig } from '@/store/configSlice.ts'
 
 interface AiComposerProps {
   disabled?: boolean
@@ -8,6 +13,18 @@ interface AiComposerProps {
 
 const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
   const [value, setValue] = useState('')
+  const dispatch = useDispatch()
+  const useSkills = useSelector<RootState, boolean | undefined>(
+    (state) => state.config.useAiSkills,
+  )
+
+  const setUseSkills = (b: boolean) => {
+    dispatch(
+      updateConfig({
+        useAiSkills: b,
+      }),
+    )
+  }
 
   const submit = async () => {
     const query = value.trim()
@@ -39,7 +56,19 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
         onValueChange={setValue}
         placeholder="向 AI 描述你的问题。使用 Enter 发送，Alt + Enter 换行"
       />
-      <div className="mt-2 flex justify-end">
+      <div className="mt-2 flex justify-between">
+        <div className="flex items-center">
+          <Switch isSelected={useSkills} onValueChange={setUseSkills} size="sm">
+            启用 Skills(Beta)
+          </Switch>
+          <Tooltip content="启动 Skills 以回答更专业的问题，例如 'CPU 占用高怎么办?'。一般情况下，您可能不需要该功能">
+            <SvgIcon
+              icon={Icon.QUESTION}
+              className="text-default-600 ml-1"
+              size={16}
+            />
+          </Tooltip>
+        </div>
         <Button
           color="primary"
           isDisabled={disabled || !value.trim()}

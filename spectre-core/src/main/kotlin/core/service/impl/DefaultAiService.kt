@@ -131,6 +131,33 @@ class DefaultAiService(
         channelId: String,
         question: String,
     ): Flux<AiMessageDTO> {
+        return queryInternal(
+            conversationId = conversationId,
+            channelId = channelId,
+            question = question,
+            enableSkill = false,
+        )
+    }
+
+    override fun queryWithSkill(
+        conversationId: String,
+        channelId: String,
+        question: String,
+    ): Flux<AiMessageDTO> {
+        return queryInternal(
+            conversationId = conversationId,
+            channelId = channelId,
+            question = question,
+            enableSkill = true,
+        )
+    }
+
+    private fun queryInternal(
+        conversationId: String,
+        channelId: String,
+        question: String,
+        enableSkill: Boolean,
+    ): Flux<AiMessageDTO> {
         val llmConfig = getCurrentLLMConfiguration() ?: throw BusinessException("LLM 未开启")
         val securityContext = SecurityContextHolder.getContext()
 
@@ -150,10 +177,14 @@ class DefaultAiService(
                     question = question,
                 )
 
-                ensureSystemMessageIfNeeded(
-                    context = queryContext,
-                    questionForSkillSelection = if (recoverResult.appendUserMessage) question else null,
-                )
+                if (enableSkill) {
+                    ensureSystemMessageWithSkill(
+                        context = queryContext,
+                        questionForSkillSelection = if (recoverResult.appendUserMessage) question else null,
+                    )
+                } else {
+                    ensureSystemMessageWithoutSkill(queryContext)
+                }
 
                 if (recoverResult.appendUserMessage) {
                     aiConversationStateStore.appendUserMessage(conversationId, question)
@@ -233,7 +264,7 @@ class DefaultAiService(
                             AiMessageDTO(
                                 type = AiMessageDTO.MessageType.TOOL_CALL_END,
                                 data = toolCall.name,
-                                parameter = executionResult.parameter ?: parameter,
+                                parameter = executionResult.output,
                             )
                         )
                     }
@@ -467,14 +498,14 @@ class DefaultAiService(
             AiMessageDTO(
                 type = AiMessageDTO.MessageType.TOOL_CALL_END,
                 data = pending.toolName,
-                parameter = pending.parameter,
+                parameter = response,
             )
         )
 
         return RecoverResult(appendUserMessage = false)
     }
 
-    private fun ensureSystemMessageIfNeeded(
+    private fun ensureSystemMessageWithSkill(
         context: AiQueryContext,
         questionForSkillSelection: String?,
     ) {
@@ -547,6 +578,55 @@ Examples:
 - If you are unsure whether a command will terminate, DO NOT run it.
 
 Always prefer safe, bounded diagnostic commands.""".trimIndent())
+    }
+
+    private fun ensureSystemMessageWithoutSkill(context: AiQueryContext) {
+        if (aiConversationStateStore.hasAnyMessage(context.conversationId)) {
+            return
+        }
+
+        aiConversationStateStore.upsertSystemMessage(context.conversationId, """You are a helpful Java troubleshooting assistant.
+
+You can answer daily user questions directly. Use tools only when necessary.
+
+**IMPORTANT**: 
+- Do NOT guess or infer additional targets. If the provided information is unclear or incomplete, do not try to "fix" it by guessing.
+- Do not search for related terms, synonyms, or alternatives unless the user explicitly instructs you to do so.
+
+## Tool Usage Rules
+
+### askHuman
+- If required context is missing for your next step, use `askHuman` to request exactly that missing information.
+- Ask only one specific question.
+
+### Arthas Commands
+
+Before running any Arthas command:
+- Ensure the command terminates automatically.
+- If the command may run continuously, you MUST limit it using arguments like `-n`.
+- `-n` must not be greater than 3.
+
+Search rules:
+- Only search for the exact class / method / keyword provided by the user or required by the skill.
+- Run **at most one search command**.
+
+If the search result does not contain an exact match:
+- Stop immediately.
+- Do NOT run another search.
+- Do NOT attempt spelling corrections or similar names.
+
+Forbidden behaviors:
+- guessing alternative identifiers
+- fixing typos
+- wildcard searches
+- partial matches
+- repeated searches with modified keywords
+
+If the target cannot be found, report that it may not exist or may be misspelled.
+
+## Strict Restrictions
+- Never run commands that can stream output indefinitely without a stop condition.
+- If you are unsure whether a command is bounded, do not run it.""".trimIndent())
     }
 
     private fun resolveSelectedSkill(

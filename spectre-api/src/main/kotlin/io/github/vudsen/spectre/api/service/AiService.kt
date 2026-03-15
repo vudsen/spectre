@@ -12,6 +12,11 @@ interface AiService {
      */
     fun query(conversationId: String, channelId: String, question: String): Flux<AiMessageDTO>
 
+    /**
+     * 询问 AI（启用 Skill）
+     */
+    fun queryWithSkill(conversationId: String, channelId: String, question: String): Flux<AiMessageDTO>
+
     fun getCurrentLLMConfiguration(): LLMConfigurationDTO?
 
     fun updateLLMConfiguration(configuration: UpdateLLMConfigurationDTO)
