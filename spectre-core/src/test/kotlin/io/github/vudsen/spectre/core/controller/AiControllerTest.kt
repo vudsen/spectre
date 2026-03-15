@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.http.codec.ServerSentEvent
 import reactor.core.publisher.Flux
 
 class AiControllerTest {
@@ -20,13 +21,13 @@ class AiControllerTest {
         val controller = AiController(aiService)
         val request = newRequest("hello")
 
-        val result = controller.chat(request).collectList().block() ?: emptyList()
+        val result = controller.chat(request).body?.collectList()?.block() ?: emptyList()
 
         assertEquals("query", aiService.lastMethod)
         assertEquals("conv-1", aiService.lastConversationId)
         assertEquals("channel-1", aiService.lastChannelId)
         assertEquals("hello", aiService.lastQuestion)
-        assertEquals(AiMessageDTO.MessageType.TOKEN, result.first().type)
+        assertEquals(AiMessageDTO.MessageType.TOKEN, result.first().data()!!.type)
     }
 
     @Test
@@ -35,13 +36,13 @@ class AiControllerTest {
         val controller = AiController(aiService)
         val request = newRequest("hello skill")
 
-        val result = controller.chatWithSkill(request).collectList().block() ?: emptyList()
+        val result = controller.chatWithSkill(request).body?.collectList()?.block() ?: emptyList<ServerSentEvent<AiMessageDTO>>()
 
         assertEquals("queryWithSkill", aiService.lastMethod)
         assertEquals("conv-1", aiService.lastConversationId)
         assertEquals("channel-1", aiService.lastChannelId)
         assertEquals("hello skill", aiService.lastQuestion)
-        assertEquals(AiMessageDTO.MessageType.TOKEN, result.first().type)
+        assertEquals(AiMessageDTO.MessageType.TOKEN, result.first().data()!!.type)
     }
 
     @Test

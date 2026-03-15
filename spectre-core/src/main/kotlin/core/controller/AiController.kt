@@ -5,7 +5,10 @@ import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.service.AiService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
 import io.github.vudsen.spectre.core.vo.AiChatRequestVO
+import org.springframework.http.CacheControl
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Flux
+import org.springframework.http.codec.ServerSentEvent
 
 @RestController
 @RequestMapping("ai")
@@ -23,13 +27,28 @@ class AiController(
 ) {
 
     @PostMapping("chat", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun chat(@Validated @RequestBody request: AiChatRequestVO): Flux<AiMessageDTO> {
-        return aiService.query(request.conversationId, request.channelId, request.query)
+    fun chat(@Validated @RequestBody request: AiChatRequestVO): ResponseEntity<Flux<ServerSentEvent<AiMessageDTO>>> {
+        return streamResponse(
+            aiService.query(request.conversationId, request.channelId, request.query)
+        )
     }
 
     @PostMapping("chat/with-skill", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun chatWithSkill(@Validated @RequestBody request: AiChatRequestVO): Flux<AiMessageDTO> {
-        return aiService.queryWithSkill(request.conversationId, request.channelId, request.query)
+    fun chatWithSkill(@Validated @RequestBody request: AiChatRequestVO): ResponseEntity<Flux<ServerSentEvent<AiMessageDTO>>> {
+        return streamResponse(
+            aiService.queryWithSkill(request.conversationId, request.channelId, request.query)
+        )
+    }
+
+    private fun streamResponse(payload: Flux<AiMessageDTO>): ResponseEntity<Flux<ServerSentEvent<AiMessageDTO>>> {
+        val stream = payload.map { ServerSentEvent.builder(it).build() }
+        return ResponseEntity.ok()
+            .contentType(MediaType.TEXT_EVENT_STREAM)
+            .cacheControl(CacheControl.noStore())
+            .header(HttpHeaders.CONNECTION, "keep-alive")
+            // Disable response buffering when serving through nginx.
+            .header("X-Accel-Buffering", "no")
+            .body(stream)
     }
 
     @GetMapping("llm-config/current")

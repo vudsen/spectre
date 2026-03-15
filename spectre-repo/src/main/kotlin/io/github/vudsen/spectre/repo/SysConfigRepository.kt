@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional
 @Repository
 interface SysConfigRepository : JpaRepository<SysConfigPO, Long>, QueryByExampleExecutor<SysConfigPO> {
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query(
         """
