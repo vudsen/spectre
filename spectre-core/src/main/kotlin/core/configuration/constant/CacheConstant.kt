@@ -7,4 +7,6 @@ object CacheConstant {
 
     const val QUICK_EXPIRE_CACHE_KEY = "quickExpireCache"
 
+    const val ENCRYPT_CACHE_KEY = "securityEncryptionCache"
+
 }

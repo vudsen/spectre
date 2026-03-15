@@ -15,6 +15,7 @@ import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.AiService
+import io.github.vudsen.spectre.api.service.SysConfigService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
 import io.github.vudsen.spectre.core.service.ai.AiConversationStateStore
 import io.github.vudsen.spectre.core.service.ai.AiQueryContext
@@ -22,7 +23,6 @@ import io.github.vudsen.spectre.core.service.ai.AiSkillsLoader
 import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
 import io.github.vudsen.spectre.core.service.ai.AiToolExecutionResult
 import io.github.vudsen.spectre.core.service.ai.OpenAiToolRegistry
-import io.github.vudsen.spectre.repo.SysConfigRepository
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
@@ -36,7 +36,7 @@ import kotlin.math.min
 
 @Service
 class DefaultAiService(
-    private val sysConfigRepository: SysConfigRepository,
+    private val sysConfigService: SysConfigService,
     private val aiConversationStateStore: AiConversationStateStore,
     private val aiSkillsLoader: AiSkillsLoader,
     private val openAiToolRegistry: OpenAiToolRegistry,
@@ -760,10 +760,10 @@ If the target cannot be found, report that it may not exist or may be misspelled
                 val newUsed = baseUsed + delta
                 val newValue = "$currentEpochHour:$newUsed"
 
-                val updatedCount = sysConfigRepository.updateValueByIdWithOptimisticCheck(
-                    id = SysConfigIds.LLM_USED,
-                    expectedOldValue = oldValue,
-                    newValue = newValue,
+                val updatedCount = sysConfigService.updateConfigByIdWithOptimisticCheck(
+                    SysConfigIds.LLM_USED,
+                    oldValue,
+                    newValue,
                 )
                 if (updatedCount > 0) {
                     return
@@ -796,10 +796,9 @@ If the target cannot be found, report that it may not exist or may be misspelled
 
     override fun getCurrentLLMConfiguration(): LLMConfigurationVO? {
         val llmConfig = getCurrentLLMConfigurationDTO() ?: return null
-        val currentEpochHour = System.currentTimeMillis() / MILLIS_PER_HOUR
         val hourlyUsage = parseHourlyTokenUsage(findConfigValue(SysConfigIds.LLM_USED))
         val currentUsed = hourlyUsage.used
-        val nextRefresh = Instant.ofEpochMilli((currentEpochHour + 1) * MILLIS_PER_HOUR)
+        val nextRefresh = Instant.ofEpochMilli((hourlyUsage.epochHour + 1) * MILLIS_PER_HOUR)
 
         return LLMConfigurationVO(
             baseUrl = llmConfig.baseUrl,
@@ -830,19 +829,19 @@ If the target cannot be found, report that it may not exist or may be misspelled
     @Transactional(rollbackFor = [Exception::class])
     override fun updateLLMConfiguration(configuration: UpdateLLMConfigurationDTO) {
         configuration.baseUrl?.let {
-            sysConfigRepository.updateValueById(SysConfigIds.LLM_BASE_URL, it)
+            sysConfigService.updateConfig(SysConfigIds.LLM_BASE_URL, it)
         }
         configuration.apiKey?.let {
-            sysConfigRepository.updateValueById(SysConfigIds.LLM_API_KEY, it)
+            sysConfigService.updateConfig(SysConfigIds.LLM_API_KEY, it)
         }
         configuration.enabled?.let {
-            sysConfigRepository.updateValueById(SysConfigIds.LLM_ENABLED, it.toString())
+            sysConfigService.updateConfig(SysConfigIds.LLM_ENABLED, it.toString())
         }
         configuration.model?.let {
-            sysConfigRepository.updateValueById(SysConfigIds.LLM_MODEL, it)
+            sysConfigService.updateConfig(SysConfigIds.LLM_MODEL, it)
         }
         configuration.maxTokenPerHour?.let {
-            sysConfigRepository.updateValueById(SysConfigIds.LLM_MAX_TOKEN_PER_HOUR, it.toString())
+            sysConfigService.updateConfig(SysConfigIds.LLM_MAX_TOKEN_PER_HOUR, it.toString())
         }
     }
 
@@ -869,6 +868,6 @@ If the target cannot be found, report that it may not exist or may be misspelled
     }
 
     private fun findConfigValue(id: Long): String {
-        return sysConfigRepository.findById(id).getOrNull()?.value.orEmpty()
+        return sysConfigService.findConfigValue(id)
     }
 }

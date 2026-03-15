@@ -16,7 +16,7 @@ import {
   type LLMConfigurationModifyVO,
 } from '@/api/impl/ai.ts'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
-import Time from '@/components/Time.tsx'
+import { formatTime } from '@/common/util.ts'
 
 type Values = Omit<LLMConfigurationModifyVO, 'maxTokenPerHour'> & {
   maxTokenPerHour: string
@@ -242,8 +242,8 @@ const LLMForm: React.FC = () => {
                     label={
                       <div>
                         当前剩余用量 (已使用{usage.used}) (
-                        <Time time={usage.nextRefresh} />
-                        刷新)
+                        {formatTime(usage.nextRefresh)}
+                        后使用后刷新)
                       </div>
                     }
                     value={

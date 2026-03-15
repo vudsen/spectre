@@ -24,7 +24,7 @@ class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
             base64Password: String,
             salt: String,
             iterations: Int = 100_000,
-            keySize: Int = 64
+            keySize: Int = 256
         ): SecretKey {
             val password = Base64.decode(base64Password)
 
@@ -43,7 +43,9 @@ class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
 
     }
 
-
+    override fun getTag(): String {
+        return "AES_GCM"
+    }
 
     override fun encrypt(raw: String, salt: String): String {
         val iv = ByteArray(IV_LENGTH)
@@ -65,8 +67,8 @@ class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
         return Base64.encode(result)
     }
 
-    override fun decrypt(encoded: String, salt: String): String {
-        val encrypted = Base64.decode(encoded)
+    override fun decrypt(encoded: String, salt: String, startIndex: Int, endIndex: Int): String {
+        val encrypted = Base64.decode(encoded, startIndex, endIndex)
 
         val iv = encrypted.copyOfRange(0, IV_LENGTH)
         val cipherText = encrypted.copyOfRange(IV_LENGTH, encrypted.size)

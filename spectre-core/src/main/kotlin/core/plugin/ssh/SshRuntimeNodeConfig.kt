@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.common.secure.Encrypted
 

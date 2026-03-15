@@ -1,10 +1,12 @@
 package io.github.vudsen.spectre.core.service.impl
 
+import io.github.vudsen.spectre.api.SecretEncryptorManager
 import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.SysConfigService
 import io.github.vudsen.spectre.repo.SysConfigRepository
 import io.github.vudsen.spectre.repo.po.SysConfigPO
+import io.github.vudsen.spectre.support.DefaultSecretEncryptorManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import kotlin.jvm.optionals.getOrNull
@@ -12,19 +14,38 @@ import kotlin.jvm.optionals.getOrNull
 @Service
 class DefaultSysConfigService(
     private val sysConfigRepository: SysConfigRepository,
+    private val secretEncryptorManager: SecretEncryptorManager
 ) : SysConfigService {
 
     override fun findConfigValue(id: Long): String {
-        return sysConfigRepository.findById(id).getOrNull()?.value ?: throw BusinessException("配置不存在")
+        val value = sysConfigRepository.findById(id).getOrNull()?.value ?: throw BusinessException("配置不存在")
+
+        SysConfigIds.encryptedIds[id]?.let {
+            return secretEncryptorManager.decrypt(value, it)
+        }
+        return value
     }
+
+
 
     @Transactional(rollbackFor = [Exception::class])
     override fun updateConfig(id: Long, value: String) {
+        val salt = SysConfigIds.encryptedIds[id]
+        val actualValue: String = if (salt == null) {
+            value
+        } else {
+            secretEncryptorManager.encrypt(value, salt)
+        }
+
         val po = SysConfigPO().apply {
             this.id = id
-            this.value = value
+            this.value = actualValue
         }
         sysConfigRepository.save(po)
+    }
+
+    override fun updateConfigByIdWithOptimisticCheck(id: Long, oldValue: String, value: String): Int {
+        return sysConfigRepository.updateValueByIdWithOptimisticCheck(id, oldValue, value)
     }
 
     @Transactional(rollbackFor = [Exception::class])
