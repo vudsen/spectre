@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardBody,
+  Progress,
   Spinner,
   Switch,
 } from '@heroui/react'
@@ -15,9 +16,11 @@ import {
   type LLMConfigurationModifyVO,
 } from '@/api/impl/ai.ts'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
+import Time from '@/components/Time.tsx'
 
 type Values = Omit<LLMConfigurationModifyVO, 'maxTokenPerHour'> & {
   maxTokenPerHour: string
+  provider: string
 }
 
 const DEFAULT_LLM_CONFIG: Values = {
@@ -40,13 +43,19 @@ const toFormValues = (value?: LLMConfigurationModifyVO | null): Values => {
 
   return {
     id: value.id,
-    provider: value.provider || 'OPENAI',
+    provider: 'OPENAI',
     model: value.model || '',
     baseUrl: value.baseUrl ?? '',
     apiKey: value.enabled ? FAKE_SK : '',
     maxTokenPerHour: String(value.maxTokenPerHour ?? -1),
     enabled: value.enabled,
   }
+}
+
+type Usage = {
+  used: number
+  total: number
+  nextRefresh: string
 }
 
 const LLMForm: React.FC = () => {
@@ -57,6 +66,7 @@ const LLMForm: React.FC = () => {
   const { control, trigger, getValues, reset } = useForm<Values>({
     defaultValues: DEFAULT_LLM_CONFIG,
   })
+  const [usage, setUsage] = useState<Usage | undefined>()
   const enabled = useWatch({ control, name: 'enabled' })
 
   const resolveLlmErrorText = useCallback(
@@ -86,6 +96,13 @@ const LLMForm: React.FC = () => {
     queryCurrentLLMConfiguration()
       .then((result) => {
         reset(toFormValues(result))
+        if (result) {
+          setUsage({
+            used: result.currentUsed,
+            total: result.maxTokenPerHour,
+            nextRefresh: result.nextRefresh,
+          })
+        }
         setErrorText(undefined)
       })
       .catch((error) => {
@@ -107,15 +124,13 @@ const LLMForm: React.FC = () => {
     setSaving(true)
     saveLLMConfiguration({
       id: values.id,
-      provider: values.provider || 'OPENAI',
       model: values.model.trim() || 'gpt-4o-mini',
       baseUrl: (values.baseUrl ?? '').trim() || undefined,
       apiKey: values.apiKey === FAKE_SK ? undefined : values.apiKey,
       maxTokenPerHour: Number.isNaN(maxTokenPerHour) ? -1 : maxTokenPerHour,
       enabled: values.enabled,
     })
-      .then((result) => {
-        reset(toFormValues(result))
+      .then((_) => {
         setErrorText(undefined)
         addToast({ title: t('保存成功'), color: 'success' })
       })
@@ -220,6 +235,25 @@ const LLMForm: React.FC = () => {
                     isRequired: true,
                   }}
                 />
+
+                {usage ? (
+                  <Progress
+                    className="max-w-xl"
+                    label={
+                      <div>
+                        当前剩余用量 (已使用{usage.used}) (
+                        <Time time={usage.nextRefresh} />
+                        刷新)
+                      </div>
+                    }
+                    value={
+                      usage.total < 0
+                        ? 100
+                        : 100 - (usage.used / usage.total) * 100
+                    }
+                    showValueLabel
+                  ></Progress>
+                ) : null}
               </>
             ) : null}
 

@@ -1,9 +1,9 @@
 package io.github.vudsen.spectre.core.controller
 
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
-import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.service.AiService
+import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
 import io.github.vudsen.spectre.core.vo.AiChatRequestVO
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -87,7 +87,7 @@ class AiControllerTest {
             return Flux.just(AiMessageDTO(AiMessageDTO.MessageType.TOKEN, "ok"))
         }
 
-        override fun getCurrentLLMConfiguration(): LLMConfigurationDTO? = null
+        override fun getCurrentLLMConfiguration(): LLMConfigurationVO? = null
 
         override fun updateLLMConfiguration(configuration: UpdateLLMConfigurationDTO) {
         }

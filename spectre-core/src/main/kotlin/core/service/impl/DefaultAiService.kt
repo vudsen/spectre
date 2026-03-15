@@ -15,6 +15,7 @@ import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.AiService
+import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
 import io.github.vudsen.spectre.core.service.ai.AiConversationStateStore
 import io.github.vudsen.spectre.core.service.ai.AiQueryContext
 import io.github.vudsen.spectre.core.service.ai.AiSkillsLoader
@@ -27,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Flux
+import java.time.Instant
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.optionals.getOrNull
 import kotlin.concurrent.withLock
@@ -158,7 +160,7 @@ class DefaultAiService(
         question: String,
         enableSkill: Boolean,
     ): Flux<AiMessageDTO> {
-        val llmConfig = getCurrentLLMConfiguration() ?: throw BusinessException("LLM 未开启")
+        val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("LLM 未开启")
         val securityContext = SecurityContextHolder.getContext()
 
         return Flux.create { sink ->
@@ -792,7 +794,24 @@ If the target cannot be found, report that it may not exist or may be misspelled
         return HourlyTokenUsage(epochHour = hour, used = used)
     }
 
-    override fun getCurrentLLMConfiguration(): LLMConfigurationDTO? {
+    override fun getCurrentLLMConfiguration(): LLMConfigurationVO? {
+        val llmConfig = getCurrentLLMConfigurationDTO() ?: return null
+        val currentEpochHour = System.currentTimeMillis() / MILLIS_PER_HOUR
+        val hourlyUsage = parseHourlyTokenUsage(findConfigValue(SysConfigIds.LLM_USED))
+        val currentUsed = hourlyUsage.used
+        val nextRefresh = Instant.ofEpochMilli((currentEpochHour + 1) * MILLIS_PER_HOUR)
+
+        return LLMConfigurationVO(
+            baseUrl = llmConfig.baseUrl,
+            model = llmConfig.model,
+            maxTokenPerHour = llmConfig.maxTokenPerHour,
+            enabled = llmConfig.enabled,
+            currentUsed = currentUsed,
+            nextRefresh = nextRefresh,
+        )
+    }
+
+    private fun getCurrentLLMConfigurationDTO(): LLMConfigurationDTO? {
         val enabled = findConfigValue(SysConfigIds.LLM_ENABLED).toBoolean()
         if (!enabled) {
             return null

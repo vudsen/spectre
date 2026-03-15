@@ -1,9 +1,9 @@
 package io.github.vudsen.spectre.core.controller
 
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
-import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.service.AiService
+import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
 import io.github.vudsen.spectre.core.vo.AiChatRequestVO
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
@@ -34,7 +34,7 @@ class AiController(
 
     @GetMapping("llm-config/current")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).LLM_READ)")
-    fun currentLLMConfiguration(): LLMConfigurationDTO? {
+    fun currentLLMConfiguration(): LLMConfigurationVO? {
         return aiService.getCurrentLLMConfiguration()
     }
 

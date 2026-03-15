@@ -10,9 +10,17 @@ export type LLMConfigurationDTO = {
   enabled: boolean
 }
 
+type LLMConfigurationVO = {
+  baseUrl: string
+  model: string
+  maxTokenPerHour: number
+  enabled: boolean
+  currentUsed: number
+  nextRefresh: string
+}
+
 export type LLMConfigurationModifyVO = {
   id?: number
-  provider: string
   model: string
   baseUrl?: string
   apiKey?: string
@@ -21,7 +29,7 @@ export type LLMConfigurationModifyVO = {
 }
 
 export const queryCurrentLLMConfiguration =
-  (): Promise<LLMConfigurationDTO | null> => axios.get('ai/llm-config/current')
+  (): Promise<LLMConfigurationVO | null> => axios.get('ai/llm-config/current')
 
 export const saveLLMConfiguration = (
   vo: LLMConfigurationModifyVO,
