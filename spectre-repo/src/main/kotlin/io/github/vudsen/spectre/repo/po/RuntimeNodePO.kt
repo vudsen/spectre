@@ -22,16 +22,12 @@ import java.sql.Timestamp
 @Table(name = "runtime_node")
 open class RuntimeNodePO (
     @Id
-    @field:NotNull(groups = [UpdateGroup::class])
-    @field:Null(groups = [CreateGroup::class])
     open var id: Long = 0,
 
     @Column(nullable = false)
-    @field:NotEmpty
     open var name: String = "",
 
     @Column(nullable = false)
-    @field:NotEmpty
     open var pluginId: String = "",
 
     @Convert(converter = LabelsConvert::class)
@@ -39,11 +35,9 @@ open class RuntimeNodePO (
 
     @Column(nullable = false)
     @JsonRawValue
-    @field:NotEmpty()
     open var configuration: String = "",
 
     @Column(updatable = false, insertable = false)
-    @field:Null
     open var createdAt: Timestamp? = null,
 
     open var restrictedMode: Boolean? = false

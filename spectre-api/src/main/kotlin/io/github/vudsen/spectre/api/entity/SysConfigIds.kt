@@ -19,4 +19,11 @@ object SysConfigIds {
     const val LLM_MAX_TOKEN_PER_HOUR = 2006L
 
     const val LLM_USED = 2007L
+
+    /**
+     * id to salt
+     */
+    val encryptedIds = mapOf(
+        LLM_API_KEY to "LLM_API_KEY"
+    )
 }
