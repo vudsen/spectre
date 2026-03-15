@@ -28,6 +28,8 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Flux
+import reactor.core.publisher.FluxSink
+import reactor.core.scheduler.Schedulers
 import java.time.Instant
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.optionals.getOrNull
@@ -163,7 +165,7 @@ class DefaultAiService(
         val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("LLM 未开启")
         val securityContext = SecurityContextHolder.getContext()
 
-        return Flux.create { sink ->
+        return Flux.create({ sink ->
             val client = buildOpenAiClient(llmConfig)
             val queryContext = AiQueryContext(
                 conversationId = conversationId,
@@ -200,7 +202,7 @@ class DefaultAiService(
                 client.close()
                 sink.complete()
             }
-        }
+        }, FluxSink.OverflowStrategy.BUFFER).subscribeOn(Schedulers.boundedElastic())
     }
 
     private fun processConversationLoop(context: AiQueryContext) {
@@ -589,7 +591,7 @@ Always prefer safe, bounded diagnostic commands.""".trimIndent())
 
         aiConversationStateStore.upsertSystemMessage(context.conversationId, """You are a helpful Java troubleshooting assistant.
 
-You can answer daily user questions directly. Use tools only when necessary.
+You are allowed to run Arthas commands to collect runtime information and help the user analyze the issue.
 
 **IMPORTANT**: 
 - Do NOT guess or infer additional targets. If the provided information is unclear or incomplete, do not try to "fix" it by guessing.
