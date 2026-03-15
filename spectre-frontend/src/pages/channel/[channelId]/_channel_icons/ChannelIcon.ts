@@ -8,6 +8,7 @@ const ChannelIcon = {
   ARRAY: 'jb-db-array',
   ALIGN_LEFT: 'fc-align-left',
   GAUGE: 'fc-gauge',
+  AI: 'fc-robot',
 }
 
 export default ChannelIcon

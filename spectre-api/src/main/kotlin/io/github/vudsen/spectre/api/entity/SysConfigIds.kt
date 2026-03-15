@@ -4,8 +4,19 @@ package io.github.vudsen.spectre.api.entity
  * Save all system configuration codes.
  */
 object SysConfigIds {
-    /**
-     * 用于首页显示，系统的初始化进度
-     */
     const val SPECTRE_TOUR_STEP = 1L
+
+    const val LLM_PROVIDER = 2001L
+
+    const val LLM_MODEL = 2002L
+
+    const val LLM_BASE_URL = 2003L
+
+    const val LLM_API_KEY = 2004L
+
+    const val LLM_ENABLED = 2005L
+
+    const val LLM_MAX_TOKEN_PER_HOUR = 2006L
+
+    const val LLM_USED = 2007L
 }

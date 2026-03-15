@@ -25,6 +25,8 @@ interface ToolbarProps {
   appName: string
   channelId: string
   ref: React.RefObject<QuickCommandRef | null>
+  aiConsoleOpen?: boolean
+  onAiConsoleToggle: () => void
 }
 
 const Header: React.FC<ToolbarProps> = (props) => {
@@ -128,6 +130,11 @@ const Header: React.FC<ToolbarProps> = (props) => {
         <Tooltip content="回到首页">
           <Button isIconOnly variant="light" onPress={toHome}>
             <SvgIcon icon={Icon.HOME} size={22} />
+          </Button>
+        </Tooltip>
+        <Tooltip content="AI 助手">
+          <Button variant="light" isIconOnly onPress={props.onAiConsoleToggle}>
+            <SvgIcon size={23} icon={ChannelIcon.AI}></SvgIcon>
           </Button>
         </Tooltip>
         <Tooltip content="显示所有消息">
