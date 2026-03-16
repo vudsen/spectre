@@ -50,4 +50,14 @@
             <column name="code" value="llm.used"/>
         </insert>
     </changeSet>
+
+    <changeSet id="202603160956" author="vudsen">
+        <update tableName="sys_conf">
+            <column name="value" value="0:0"/>
+            <where>id = :value</where>
+            <whereParams>
+                <param value="2007"/>
+            </whereParams>
+        </update>
+    </changeSet>
 </databaseChangeLog>

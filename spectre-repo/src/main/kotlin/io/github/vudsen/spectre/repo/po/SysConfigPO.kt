@@ -20,7 +20,7 @@ class SysConfigPO {
     @Id
     var id: Long? = null
 
-    var code: String? = null
+    var code: String = ""
 
     var value: String? = null
 

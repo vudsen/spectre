@@ -41,7 +41,7 @@ class AiSkillsLoader {
     }
 
     private fun loadFromResources(): SkillCache {
-        val resources = resolver.getResources("classpath*:skills/*.md")
+        val resources = resolver.getResources("classpath*:skills/**/*.md")
             .filter { it.exists() }
             .sortedBy { it.filename ?: "" }
 

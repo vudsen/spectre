@@ -61,7 +61,10 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
           <Switch isSelected={useSkills} onValueChange={setUseSkills} size="sm">
             启用 Skills(Beta)
           </Switch>
-          <Tooltip content="启动 Skills 以回答更专业的问题，例如 'CPU 占用高怎么办?'。一般情况下，您可能不需要该功能">
+          <Tooltip
+            classNames={{ content: 'max-w-48 break-all' }}
+            content="启动 Skills 以解决更流程性的问题，例如 `帮我排查一下 CPU 占用高的问题`、`帮我获取一下 ApplicationContext`等。"
+          >
             <SvgIcon
               icon={Icon.QUESTION}
               className="text-default-600 ml-1"

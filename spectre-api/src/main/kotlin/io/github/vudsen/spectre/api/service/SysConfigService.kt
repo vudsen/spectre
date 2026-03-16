@@ -3,9 +3,11 @@ package io.github.vudsen.spectre.api.service
 interface SysConfigService {
 
     /**
-     * 查询配置的值
+     * 查询配置的值.
+     *
+     * 该方法会自动对加密的值解密
      */
-    fun findConfigValue(id: Long): String
+    fun findConfigValue(id: Long): String?
 
     /**
      * 更新配置

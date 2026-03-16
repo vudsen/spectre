@@ -17,8 +17,9 @@ class DefaultSysConfigService(
     private val secretEncryptorManager: SecretEncryptorManager
 ) : SysConfigService {
 
-    override fun findConfigValue(id: Long): String {
-        val value = sysConfigRepository.findById(id).getOrNull()?.value ?: throw BusinessException("配置不存在")
+    override fun findConfigValue(id: Long): String? {
+        val conf = sysConfigRepository.findById(id).getOrNull() ?: throw BusinessException("配置不存在")
+        val value = conf.value ?: return null
 
         SysConfigIds.encryptedIds[id]?.let {
             return secretEncryptorManager.decrypt(value, it)
@@ -37,11 +38,7 @@ class DefaultSysConfigService(
             secretEncryptorManager.encrypt(value, salt)
         }
 
-        val po = SysConfigPO().apply {
-            this.id = id
-            this.value = actualValue
-        }
-        sysConfigRepository.save(po)
+        sysConfigRepository.updateValueById(id, actualValue)
     }
 
     override fun updateConfigByIdWithOptimisticCheck(id: Long, oldValue: String, value: String): Int {
@@ -51,7 +48,7 @@ class DefaultSysConfigService(
     @Transactional(rollbackFor = [Exception::class])
     override fun updateTourStep(step: Int) {
         val totalStep = 3
-        val currentStep = findConfigValue(SysConfigIds.SPECTRE_TOUR_STEP).toInt()
+        val currentStep = findConfigValue(SysConfigIds.SPECTRE_TOUR_STEP)!!.toInt()
         if (step == currentStep) {
             if (step >= totalStep) {
                 return
