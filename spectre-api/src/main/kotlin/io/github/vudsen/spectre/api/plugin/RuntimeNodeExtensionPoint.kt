@@ -8,7 +8,7 @@ import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.api.plugin.rnode.pool.ResourcesPool
 import io.github.vudsen.spectre.api.plugin.rnode.pool.RuntimeNodeResourcesPoolRegister
 import org.springframework.cglib.proxy.Enhancer

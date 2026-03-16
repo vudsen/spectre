@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.support.plugin.rnode.SearchTreeBuilder
 import org.apache.sshd.common.SshException
 import tools.jackson.databind.ObjectMapper
@@ -210,13 +210,13 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
     ): RuntimeNodeConfig {
         val basePrincipal = base.principal ?: return updated
         updated.principal ?.let {
-            if (it.password.isNullOrEmpty()) {
+            if (it.password == null) {
                 it.password = basePrincipal.password
             }
-            if (it.secretKey.isNullOrEmpty()) {
+            if (it.secretKey == null) {
                 it.secretKey = basePrincipal.secretKey
             }
-            if (it.secretKeyPassword.isNullOrEmpty()) {
+            if (it.secretKeyPassword == null) {
                 it.secretKeyPassword = basePrincipal.secretKeyPassword
             }
         }

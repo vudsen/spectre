@@ -1,6 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 
 data class K8sRuntimeNodeConfig(
     var apiServerEndpoint: String,

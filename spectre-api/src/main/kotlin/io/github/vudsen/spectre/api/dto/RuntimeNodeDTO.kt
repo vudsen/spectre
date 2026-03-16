@@ -1,6 +1,6 @@
 package io.github.vudsen.spectre.api.dto
 
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import java.sql.Timestamp
 
 class RuntimeNodeDTO(

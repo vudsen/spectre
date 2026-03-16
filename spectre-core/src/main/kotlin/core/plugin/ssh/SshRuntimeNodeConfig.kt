@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
+import io.github.vudsen.spectre.common.secure.Encrypted
 
 data class SshRuntimeNodeConfig(
     var docker: Docker?,
@@ -39,8 +39,11 @@ data class SshRuntimeNodeConfig(
 
     data class LoginPrincipal(
         var loginType: LoginType,
+        @Encrypted
         var password: String?,
+        @Encrypted
         var secretKey: String?,
+        @Encrypted
         var secretKeyPassword: String?,
     ) {
         constructor() : this(LoginType.NONE, null, null, null)

@@ -16,6 +16,7 @@ import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
+import io.github.vudsen.spectre.support.secure.SecretSupportedObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
@@ -31,9 +32,7 @@ class DefaultRuntimeNodeService(
     cacheManager: CacheManager
 ) : RuntimeNodeService {
 
-    private val logger = LoggerFactory.getLogger(DefaultRuntimeNodeService::class.java)
-
-    private val objectMapper = JsonMapper.builderWithJackson2Defaults().build()
+    private val objectMapper = SecretSupportedObjectMapper.instance
 
     private val cache = cacheManager.getCache(CacheConstant.DEFAULT_CACHE_KEY)!!
 
