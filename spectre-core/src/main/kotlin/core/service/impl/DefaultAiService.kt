@@ -798,7 +798,7 @@ If the target cannot be found, report that it may not exist or may be misspelled
 
     override fun getCurrentLLMConfiguration(): LLMConfigurationVO? {
         val llmConfig = getCurrentLLMConfigurationDTO() ?: return null
-        val hourlyUsage = parseHourlyTokenUsage(findConfigValue(SysConfigIds.LLM_USED))
+        val hourlyUsage = parseHourlyTokenUsage(sysConfigService.findConfigValue(SysConfigIds.LLM_USED))
         val currentUsed = hourlyUsage.used
         val nextRefresh = Instant.ofEpochMilli((hourlyUsage.epochHour + 1) * MILLIS_PER_HOUR)
 
@@ -870,6 +870,6 @@ If the target cannot be found, report that it may not exist or may be misspelled
     }
 
     private fun findConfigValue(id: Long): String {
-        return sysConfigService.findConfigValue(id)
+        return sysConfigService.findConfigValue(id) ?: ""
     }
 }

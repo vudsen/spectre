@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.controller
 
+import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.service.SysConfigService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -21,7 +22,10 @@ class SysConfigController(
 
 
     @GetMapping("{id}")
-    fun resolveValue(@PathVariable id: Long): String {
+    fun resolveValue(@PathVariable id: Long): String? {
+        if (SysConfigIds.encryptedIds.containsKey(id)) {
+            return null
+        }
         return sysConfigService.findConfigValue(id)
     }
 
