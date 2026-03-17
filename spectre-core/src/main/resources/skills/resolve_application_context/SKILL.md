@@ -1,6 +1,8 @@
 ---
 name: resolve_application_context
 description: Resolve the runtime Spring `ApplicationContext` for the current request flow. Use when users need to inspect context state, verify bean wiring, or troubleshoot environment/configuration issues in a live application.
+nameI18nKey: skill.resolve.application.context
+descriptionI18nKey: skill.resolve.application.context.desc
 ---
 
 # Resolve Application Context

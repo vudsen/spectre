@@ -1,6 +1,8 @@
 ---
 name: slow_query
 description: Diagnose slow API/database query paths with Arthas trace. Use when users report high latency, timeout, or intermittent slow responses and need to locate the most time-consuming method path from an entry method to likely downstream bottlenecks.
+nameI18nKey: skill.slow.query
+descriptionI18nKey: skill.slow.query.desc
 ---
 
 # Slow Query Diagnosis Workflow

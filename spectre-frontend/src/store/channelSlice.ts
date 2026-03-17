@@ -1,11 +1,13 @@
 import type { InputStatusResponse } from '@/api/impl/arthas.ts'
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import type { SkillDTO } from '@/api/impl/ai.ts'
 
 type ChannelContext = {
   isDebugMode?: boolean
   channelId: string
   classloaderHash?: string
   inputStatus: InputStatusResponse['inputStatus']
+  selectedSkill?: SkillDTO
 }
 
 interface ChannelState {

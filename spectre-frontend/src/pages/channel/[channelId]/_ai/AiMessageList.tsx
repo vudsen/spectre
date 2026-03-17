@@ -108,8 +108,7 @@ const ToolEventLine: React.FC<{
       ) : null}
       {event.type === 'TOOL_CALL_START' || event.type === 'TOOL_CALL_END' ? (
         <div className="text-default-700 mt-1 text-xs break-all">
-          {event.data}
-          {event.parameter ? ` (${event.parameter})` : ''}
+          {event.parameter}
         </div>
       ) : null}
       {event.type === 'PENDING_CONFIRM' ? (

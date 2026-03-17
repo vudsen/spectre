@@ -9,6 +9,7 @@ const ChannelIcon = {
   ALIGN_LEFT: 'fc-align-left',
   GAUGE: 'fc-gauge',
   AI: 'fc-robot',
+  SKILL: 'fc-book',
 }
 
 export default ChannelIcon

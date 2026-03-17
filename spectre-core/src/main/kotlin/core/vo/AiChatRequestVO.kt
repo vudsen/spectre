@@ -12,4 +12,6 @@ class AiChatRequestVO {
 
     @NotEmpty
     var conversationId: String = ""
+
+    var skillId: String? = null
 }

@@ -10,6 +10,7 @@ import com.openai.models.completions.CompletionUsage
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
+import io.github.vudsen.spectre.api.entity.Skill
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.exception.AppException
@@ -19,6 +20,7 @@ import io.github.vudsen.spectre.api.service.SysConfigService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
 import io.github.vudsen.spectre.core.service.ai.*
 import org.slf4j.LoggerFactory
+import org.springframework.context.MessageSource
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -29,6 +31,7 @@ import java.util.concurrent.Executor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.collections.emptyList
 import kotlin.concurrent.withLock
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.min
@@ -37,8 +40,8 @@ import kotlin.math.min
 class DefaultAiService(
     private val sysConfigService: SysConfigService,
     private val aiConversationStateStore: AiConversationStateStore,
-    private val aiSkillsLoader: AiSkillsLoader,
     private val openAiToolRegistry: OpenAiToolRegistry,
+    private val messageSource: MessageSource
 ) : AiService {
 
     private val executor: Executor = ThreadPoolExecutor(
@@ -146,6 +149,7 @@ class DefaultAiService(
             question = question,
             emitter = emitter,
             enableSkill = false,
+            null,
         )
     }
 
@@ -154,6 +158,7 @@ class DefaultAiService(
         channelId: String,
         question: String,
         emitter: SseEmitter,
+        selectedSkillId: String?
     ) {
         queryInternal(
             conversationId = conversationId,
@@ -161,6 +166,7 @@ class DefaultAiService(
             question = question,
             emitter = emitter,
             enableSkill = true,
+            selectedSkillId
         )
     }
 
@@ -170,6 +176,7 @@ class DefaultAiService(
         question: String,
         emitter: SseEmitter,
         enableSkill: Boolean,
+        selectedSkillId: String?
     ) {
         val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("LLM 未开启")
         val securityContext = SecurityContextHolder.getContext()
@@ -194,6 +201,7 @@ class DefaultAiService(
                     if (ensureSystemMessageWithSkill(
                             context = queryContext,
                             questionForSkillSelection = if (recoverResult.appendUserMessage) question else null,
+                            selectedSkillId,
                         )
                     ) {
                         emitter.send(
@@ -542,21 +550,23 @@ class DefaultAiService(
     private fun ensureSystemMessageWithSkill(
         context: AiQueryContext,
         questionForSkillSelection: String?,
+        selectedSkillId: String?
     ): Boolean {
         val alreadySelected = aiConversationStateStore.getSelectedSkill(context.conversationId)
         if (!alreadySelected.isNullOrBlank()) {
             return false
         }
 
-        val selectedSkillName = resolveSelectedSkill(
-            context = context,
-            questionForSkillSelection = questionForSkillSelection,
-        )
+        val selectedSkillName = selectedSkillId
+            ?: resolveSelectedSkill(
+                context = context,
+                questionForSkillSelection = questionForSkillSelection,
+            )
         if (selectedSkillName == null) {
             return true
         }
 
-        val selectedSkillContent = aiSkillsLoader.loadSkill(selectedSkillName)
+        val selectedSkillContent = AiSkillsLoader.loadSkill(selectedSkillName)
         aiConversationStateStore.upsertSystemMessage(
             context.conversationId,
             """You are a Java troubleshooting assistant responsible for diagnosing runtime problems in Java applications.
@@ -603,12 +613,12 @@ When a required parameter is missing, ask ONLY for that specific parameter using
 - You MAY run Arthas commands to collect diagnostic information.
 - Before running any Arthas command, you MUST ensure the command will terminate automatically.
 - If the command may run indefinitely, you MUST limit it using arguments such as `-n`.
-- The value of `-n` must not greater than 3.
+- The value of `-n` must not greater than 2.
 
 Examples:
-- `watch ... -n 3`
-- `trace ... -n 3`
-- `stack ... -n 3`
+- `watch ... -n 1`
+- `trace ... -n 1`
+- `stack ... -n 1`
 - `dashboard -n 1`
 
 ## Strict Restrictions
@@ -686,7 +696,7 @@ If the target cannot be found, report that it may not exist or may be misspelled
             return null
         }
 
-        val skills = aiSkillsLoader.loadAllSkills()
+        val skills = AiSkillsLoader.loadAllSkills()
         if (skills.isEmpty()) {
             return null
         }
@@ -706,7 +716,7 @@ If the target cannot be found, report that it may not exist or may be misspelled
     private fun selectSkillWithLlm(
         context: AiQueryContext,
         question: String,
-        skills: List<SkillDTO>,
+        skills: List<Skill>,
     ): String? {
         ensureNotExceededTokenLimit(context.llmConfig.maxTokenPerHour)
 
@@ -890,6 +900,18 @@ If the target cannot be found, report that it may not exist or may be misspelled
         configuration.maxTokenPerHour?.let {
             sysConfigService.updateConfig(SysConfigIds.LLM_MAX_TOKEN_PER_HOUR, it.toString())
         }
+    }
+
+    override fun listSkills(): List<SkillDTO> {
+        return AiSkillsLoader.loadAllSkills().map { skill ->
+            val nameI18nKey = skill.nameI18nKey
+            val descriptionI18nKey = skill.descriptionI18nKey
+            return@map SkillDTO(
+                skill.name,
+            if (nameI18nKey == null) { skill.name } else { messageSource.getMessage(nameI18nKey, arrayOf(), null) },
+            if (descriptionI18nKey == null) { skill.description} else { messageSource.getMessage(descriptionI18nKey, arrayOf(), null) },
+            "System"
+        ) }
     }
 
     private fun sendMessage(context: AiQueryContext, message: AiMessageDTO) {
