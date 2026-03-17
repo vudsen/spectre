@@ -34,7 +34,7 @@ open class DefaultArthasInstanceService(
         var lastAccess: Long
     )
 
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 0 0/1 * * ?")
     @Transactional(rollbackOn = [Exception::class])
     fun clearStaleInstance() {
         logger.info("Start clean staled arthas instance")
