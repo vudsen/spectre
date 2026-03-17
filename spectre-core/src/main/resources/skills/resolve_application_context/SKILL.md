@@ -9,7 +9,25 @@ descriptionI18nKey: skill.resolve.application.context.desc
 
 Use this skill when the user wants to capture a Spring MVC request handling invocation and inspect its `ApplicationContext`.
 
-## Steps
+You should try one of the following method.
+
+## Method 1
+
+Run: 
+
+```
+vmtool -a getInstances --className org.springframework.context.ApplicationContext --express 'instances[0].active'
+```
+
+If succeeds returns the expected value, remind the user:
+
+```
+vmtool -a getInstances --className org.springframework.context.ApplicationContext --express 'instances[0]'
+```
+
+This command can be used directly to retrieve the application context.
+
+## Method 2
 
 1. Run:
 ```bash
