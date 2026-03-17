@@ -17,23 +17,20 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.AiService
 import io.github.vudsen.spectre.api.service.SysConfigService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
-import io.github.vudsen.spectre.core.service.ai.AiConversationStateStore
-import io.github.vudsen.spectre.core.service.ai.AiQueryContext
-import io.github.vudsen.spectre.core.service.ai.AiSkillsLoader
-import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
-import io.github.vudsen.spectre.core.service.ai.AiToolExecutionResult
-import io.github.vudsen.spectre.core.service.ai.OpenAiToolRegistry
+import io.github.vudsen.spectre.core.service.ai.*
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import reactor.core.publisher.Flux
-import reactor.core.publisher.FluxSink
-import reactor.core.scheduler.Schedulers
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.time.Instant
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.Executor
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.jvm.optionals.getOrNull
 import kotlin.concurrent.withLock
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.min
 
 @Service
@@ -43,6 +40,14 @@ class DefaultAiService(
     private val aiSkillsLoader: AiSkillsLoader,
     private val openAiToolRegistry: OpenAiToolRegistry,
 ) : AiService {
+
+    private val executor: Executor = ThreadPoolExecutor(
+        0,
+        4,
+        30,
+        TimeUnit.MINUTES,
+        ArrayBlockingQueue(32)
+    ) { _, _ -> throw BusinessException("服务繁忙，请稍后再试") }
 
     data class FunctionToolCall(
         val id: String,
@@ -72,7 +77,6 @@ class DefaultAiService(
     )
 
     private val tokenUsageLock = ReentrantLock()
-
 
 
     /**
@@ -134,11 +138,13 @@ class DefaultAiService(
         conversationId: String,
         channelId: String,
         question: String,
-    ): Flux<AiMessageDTO> {
-        return queryInternal(
+        emitter: SseEmitter,
+    ) {
+        queryInternal(
             conversationId = conversationId,
             channelId = channelId,
             question = question,
+            emitter = emitter,
             enableSkill = false,
         )
     }
@@ -147,11 +153,13 @@ class DefaultAiService(
         conversationId: String,
         channelId: String,
         question: String,
-    ): Flux<AiMessageDTO> {
-        return queryInternal(
+        emitter: SseEmitter,
+    ) {
+        queryInternal(
             conversationId = conversationId,
             channelId = channelId,
             question = question,
+            emitter = emitter,
             enableSkill = true,
         )
     }
@@ -160,17 +168,18 @@ class DefaultAiService(
         conversationId: String,
         channelId: String,
         question: String,
+        emitter: SseEmitter,
         enableSkill: Boolean,
-    ): Flux<AiMessageDTO> {
+    ) {
         val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("LLM 未开启")
         val securityContext = SecurityContextHolder.getContext()
 
-        return Flux.create({ sink ->
+        executor.execute {
             val client = buildOpenAiClient(llmConfig)
             val queryContext = AiQueryContext(
                 conversationId = conversationId,
                 channelId = channelId,
-                sink = sink,
+                emitter = emitter,
                 client = client,
                 securityContext = securityContext,
                 llmConfig = llmConfig,
@@ -182,10 +191,16 @@ class DefaultAiService(
                 )
 
                 if (enableSkill) {
-                    ensureSystemMessageWithSkill(
-                        context = queryContext,
-                        questionForSkillSelection = if (recoverResult.appendUserMessage) question else null,
-                    )
+                    if (ensureSystemMessageWithSkill(
+                            context = queryContext,
+                            questionForSkillSelection = if (recoverResult.appendUserMessage) question else null,
+                        )
+                    ) {
+                        emitter.send(
+                            AiMessageDTO(AiMessageDTO.MessageType.TOKEN, "未能理解您的问题，请提供更多上下文后重试")
+                        )
+                        return@execute
+                    }
                 } else {
                     ensureSystemMessageWithoutSkill(queryContext)
                 }
@@ -197,12 +212,17 @@ class DefaultAiService(
                 processConversationLoop(queryContext)
             } catch (e: Exception) {
                 logger.error("AI query failed", e)
-                sink.next(AiMessageDTO(AiMessageDTO.MessageType.ERROR, e.message ?: "AI query failed"))
+                runCatching {
+                    sendMessage(
+                        queryContext,
+                        AiMessageDTO(AiMessageDTO.MessageType.ERROR, e.message ?: "AI query failed")
+                    )
+                }
             } finally {
                 client.close()
-                sink.complete()
+                emitter.complete()
             }
-        }, FluxSink.OverflowStrategy.BUFFER).subscribeOn(Schedulers.boundedElastic())
+        }
     }
 
     private fun processConversationLoop(context: AiQueryContext) {
@@ -219,7 +239,8 @@ class DefaultAiService(
 
             for (toolCall in assistantTurn.toolCalls) {
                 val parameter = openAiToolRegistry.resolveParameter(toolCall.name, toolCall.arguments)
-                context.sink.next(
+                sendMessage(
+                    context,
                     AiMessageDTO(
                         type = AiMessageDTO.MessageType.TOOL_CALL_START,
                         data = toolCall.name,
@@ -236,7 +257,8 @@ class DefaultAiService(
                         parameter = parameter,
                         channelId = context.channelId,
                     )
-                    context.sink.next(
+                    sendMessage(
+                        context,
                         AiMessageDTO(
                             type = AiMessageDTO.MessageType.PENDING_CONFIRM,
                             data = toolCall.name,
@@ -264,7 +286,8 @@ class DefaultAiService(
                             toolName = toolCall.name,
                             responseData = executionResult.output,
                         )
-                        context.sink.next(
+                        sendMessage(
+                            context,
                             AiMessageDTO(
                                 type = AiMessageDTO.MessageType.TOOL_CALL_END,
                                 data = toolCall.name,
@@ -281,7 +304,8 @@ class DefaultAiService(
                             requestJson = executionResult.requestJson,
                             parameter = executionResult.requestJson,
                         )
-                        context.sink.next(
+                        sendMessage(
+                            context,
                             AiMessageDTO(
                                 type = AiMessageDTO.MessageType.ASK_HUMAN,
                                 data = toolCall.name,
@@ -294,7 +318,8 @@ class DefaultAiService(
             }
         }
         if (currentIteration == maxIteration) {
-            context.sink.next(
+            sendMessage(
+                context,
                 AiMessageDTO(
                     type = AiMessageDTO.MessageType.ERROR,
                     data = "达到迭代次数"
@@ -354,7 +379,7 @@ class DefaultAiService(
                 choice.delta().content().ifPresent { delta ->
                     if (delta.isNotEmpty()) {
                         streamedText.append(delta)
-                        context.sink.next(AiMessageDTO(AiMessageDTO.MessageType.TOKEN, delta))
+                        sendMessage(context, AiMessageDTO(AiMessageDTO.MessageType.TOKEN, delta))
                     }
                 }
             }
@@ -371,7 +396,7 @@ class DefaultAiService(
 
         val text = message.content().orElse("").ifBlank { streamedText.toString() }
         if (streamedText.isEmpty() && text.isNotBlank()) {
-            context.sink.next(AiMessageDTO(AiMessageDTO.MessageType.TOKEN, text))
+            sendMessage(context, AiMessageDTO(AiMessageDTO.MessageType.TOKEN, text))
         }
 
         val toolCalls = extractFunctionToolCalls(message)
@@ -442,7 +467,8 @@ class DefaultAiService(
                 toolName = pendingAskHuman.toolName,
                 responseData = question,
             )
-            context.sink.next(
+            sendMessage(
+                context,
                 AiMessageDTO(
                     type = AiMessageDTO.MessageType.TOOL_CALL_END,
                     data = pendingAskHuman.toolName,
@@ -498,7 +524,8 @@ class DefaultAiService(
             responseData = response,
         )
 
-        context.sink.next(
+        sendMessage(
+            context,
             AiMessageDTO(
                 type = AiMessageDTO.MessageType.TOOL_CALL_END,
                 data = pending.toolName,
@@ -509,22 +536,30 @@ class DefaultAiService(
         return RecoverResult(appendUserMessage = false)
     }
 
+    /**
+     * @return true 表示获取技能失败
+     */
     private fun ensureSystemMessageWithSkill(
         context: AiQueryContext,
         questionForSkillSelection: String?,
-    ) {
+    ): Boolean {
         val alreadySelected = aiConversationStateStore.getSelectedSkill(context.conversationId)
         if (!alreadySelected.isNullOrBlank()) {
-            return
+            return false
         }
 
         val selectedSkillName = resolveSelectedSkill(
             context = context,
             questionForSkillSelection = questionForSkillSelection,
-        ) ?: return
+        )
+        if (selectedSkillName == null) {
+            return true
+        }
 
         val selectedSkillContent = aiSkillsLoader.loadSkill(selectedSkillName)
-        aiConversationStateStore.upsertSystemMessage(context.conversationId, """You are a Java troubleshooting assistant responsible for diagnosing runtime problems in Java applications.
+        aiConversationStateStore.upsertSystemMessage(
+            context.conversationId,
+            """You are a Java troubleshooting assistant responsible for diagnosing runtime problems in Java applications.
 
 You are allowed to run Arthas commands to collect runtime information and help the user analyze the issue.
 
@@ -581,7 +616,9 @@ Examples:
 - NEVER run commands that continuously stream output without a termination condition.
 - If you are unsure whether a command will terminate, DO NOT run it.
 
-Always prefer safe, bounded diagnostic commands.""".trimIndent())
+Always prefer safe, bounded diagnostic commands.""".trimIndent()
+        )
+        return false
     }
 
     private fun ensureSystemMessageWithoutSkill(context: AiQueryContext) {
@@ -589,7 +626,8 @@ Always prefer safe, bounded diagnostic commands.""".trimIndent())
             return
         }
 
-        aiConversationStateStore.upsertSystemMessage(context.conversationId, """You are a helpful Java troubleshooting assistant.
+        aiConversationStateStore.upsertSystemMessage(
+            context.conversationId, """You are a helpful Java troubleshooting assistant.
 
 You are allowed to run Arthas commands to collect runtime information and help the user analyze the issue.
 
@@ -630,7 +668,8 @@ If the target cannot be found, report that it may not exist or may be misspelled
 
 ## Strict Restrictions
 - Never run commands that can stream output indefinitely without a stop condition.
-- If you are unsure whether a command is bounded, do not run it.""".trimIndent())
+- If you are unsure whether a command is bounded, do not run it.""".trimIndent()
+        )
     }
 
     private fun resolveSelectedSkill(
@@ -684,7 +723,13 @@ If the target cannot be found, report that it may not exist or may be misspelled
 
         val requestBuilder = ChatCompletionCreateParams.builder()
             .model(context.llmConfig.model)
-            .maxCompletionTokens(if (context.llmConfig.maxTokenPerHour >= 0) { min(context.llmConfig.maxTokenPerHour, MAX_CONVERSATION_TOKEN) } else { MAX_CONVERSATION_TOKEN })
+            .maxCompletionTokens(
+                if (context.llmConfig.maxTokenPerHour >= 0) {
+                    min(context.llmConfig.maxTokenPerHour, MAX_CONVERSATION_TOKEN)
+                } else {
+                    MAX_CONVERSATION_TOKEN
+                }
+            )
             .addSystemMessage(selectionPrompt)
             .addUserMessage(question)
 
@@ -845,6 +890,10 @@ If the target cannot be found, report that it may not exist or may be misspelled
         configuration.maxTokenPerHour?.let {
             sysConfigService.updateConfig(SysConfigIds.LLM_MAX_TOKEN_PER_HOUR, it.toString())
         }
+    }
+
+    private fun sendMessage(context: AiQueryContext, message: AiMessageDTO) {
+        context.emitter.send(message)
     }
 
     private fun buildOpenAiClient(llmConfig: LLMConfigurationDTO): OpenAIClient {
