@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.controller
 
+import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.service.AiService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
@@ -83,8 +84,14 @@ class AiControllerTest {
             lastEmitter = emitter
         }
 
-        override fun queryWithSkill(conversationId: String, channelId: String, question: String, emitter: SseEmitter) {
-            lastMethod = "queryWithSkill"
+        override fun queryWithSkill(
+            conversationId: String,
+            channelId: String,
+            question: String,
+            emitter: SseEmitter,
+            selectedSkillId: String?
+        ) {
+            lastMethod = "query"
             lastConversationId = conversationId
             lastChannelId = channelId
             lastQuestion = question
@@ -94,6 +101,10 @@ class AiControllerTest {
         override fun getCurrentLLMConfiguration(): LLMConfigurationVO? = null
 
         override fun updateLLMConfiguration(configuration: UpdateLLMConfigurationDTO) {
+        }
+
+        override fun listSkills(): List<SkillDTO> {
+            TODO("Not yet implemented")
         }
     }
 }
