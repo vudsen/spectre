@@ -314,12 +314,12 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
             query,
             channelId,
             conversationId,
+            skillId: store.getState().channel.context.selectedSkill?.id,
           },
           {
             signal: abortRef.current.signal,
             onMessage: handleAiMessage,
           },
-          store.getState().config.useAiSkills ?? false,
         )
       } catch (e) {
         if (abortRef.current?.signal.aborted) {

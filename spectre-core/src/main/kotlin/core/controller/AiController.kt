@@ -1,5 +1,6 @@
 package io.github.vudsen.spectre.core.controller
 
+import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.service.AiService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
@@ -34,7 +35,7 @@ class AiController(
     @PostMapping("chat/with-skill", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun chatWithSkill(@Validated @RequestBody request: AiChatRequestVO): ResponseEntity<SseEmitter> {
         val emitter = SseEmitter(0L)
-        aiService.queryWithSkill(request.conversationId, request.channelId, request.query, emitter)
+        aiService.queryWithSkill(request.conversationId, request.channelId, request.query, emitter, request.skillId)
         return streamResponse(emitter)
     }
 
@@ -59,4 +60,10 @@ class AiController(
     fun saveLLMConfiguration(@Validated @RequestBody request: UpdateLLMConfigurationDTO) {
         aiService.updateLLMConfiguration(request)
     }
+
+    @GetMapping("skills")
+    fun listSkills(): List<SkillDTO> {
+        return aiService.listSkills()
+    }
+
 }

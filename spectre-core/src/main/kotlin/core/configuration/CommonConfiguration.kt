@@ -51,7 +51,7 @@ class CommonConfiguration {
         // i18n目录，messages文件名
         //Spring Boot 会根据不同的语言环境自动加载对应的资源文件，
         // 例如 messages_zh_CN.properties 或 messages_en_US.properties
-        source.setBasenames("i18n/log", "i18n/error");
+        source.setBasenames("i18n/log", "i18n/error", "i18n/skill");
         //设置根据key如果没有获取到对应的文本信息,则返回key作为信息
         source.setUseCodeAsDefaultMessage(true);
         //设置字符编码

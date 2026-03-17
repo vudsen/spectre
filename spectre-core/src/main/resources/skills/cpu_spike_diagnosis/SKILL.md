@@ -1,6 +1,8 @@
 ---
 name: cpu_spike_diagnosis
 description: Diagnose Java application CPU spikes with Arthas. Use when users report high CPU, load average spikes, container throttling, or unstable response time suspected to be CPU-bound. Identify hottest threads, map stack frames to business classes, and guide focused decompilation with `jad` for code-level inspection.
+nameI18nKey: skill.cpu.spike.diagnosis
+descriptionI18nKey: skill.cpu.spike.diagnosis.desc
 ---
 
 # CPU Spike Diagnosis Workflow

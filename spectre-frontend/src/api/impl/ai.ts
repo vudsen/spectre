@@ -53,6 +53,7 @@ export type AiChatRequestVO = {
   query: string
   channelId: string
   conversationId: string
+  skillId?: string
 }
 
 interface ChatByAiStreamHandlers {
@@ -103,10 +104,9 @@ async function parseErrorMessage(response: Response): Promise<string> {
 export async function chatByAiStream(
   request: AiChatRequestVO,
   handlers: ChatByAiStreamHandlers = {},
-  withSkills: boolean,
 ): Promise<void> {
   const response = await fetch(
-    resolveApiUrl(withSkills ? 'ai/chat/with-skill' : 'ai/chat'),
+    resolveApiUrl(request.skillId ? 'ai/chat/with-skill' : 'ai/chat'),
     {
       method: 'POST',
       headers: {
@@ -161,3 +161,12 @@ export async function chatByAiStream(
     reader.releaseLock()
   }
 }
+
+export type SkillDTO = {
+  id: string
+  name: string
+  description: string
+  creator: string
+}
+
+export const listSkills = (): Promise<SkillDTO[]> => axios.get('ai/skills')

@@ -1,12 +1,10 @@
 package io.github.vudsen.spectre.core.service.ai
 
-import io.github.vudsen.spectre.api.dto.SkillDTO
+import io.github.vudsen.spectre.api.entity.Skill
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
-import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
 
-@Component
-class AiSkillsLoader {
+object AiSkillsLoader {
 
     private val resolver = PathMatchingResourcePatternResolver()
 
@@ -14,11 +12,11 @@ class AiSkillsLoader {
     private var cache: SkillCache? = null
 
     private data class SkillCache(
-        val skillsMeta: List<SkillDTO>,
+        val skillsMeta: List<Skill>,
         val skillContentByName: Map<String, String>,
     )
 
-    fun loadAllSkills(): List<SkillDTO> {
+    fun loadAllSkills(): List<Skill> {
         return getOrInitCache().skillsMeta
     }
 
@@ -52,7 +50,7 @@ class AiSkillsLoader {
                 ?: throw IllegalStateException("Skill file ${resource.filename ?: "unknown"} missing front matter name")
             val description = frontMatter["description"]?.takeIf { it.isNotBlank() }
                 ?: throw IllegalStateException("Skill file ${resource.filename ?: "unknown"} missing front matter description")
-            SkillDTO(name, description) to content
+            Skill(name, description, frontMatter["nameI18nKey"], frontMatter["descriptionI18nKey"]) to content
         }
 
         val skillsMeta = entries.map { it.first }
