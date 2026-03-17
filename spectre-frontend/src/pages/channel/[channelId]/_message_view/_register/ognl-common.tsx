@@ -68,3 +68,18 @@ registerMessageView({
   }),
   detailComponent: createComponent<OgnlMessage>((msg) => msg.value),
 })
+
+type VmToolMessage = {
+  jobId: number
+  type: 'vmtool'
+  value: string
+}
+
+registerMessageView({
+  type: 'vmtool',
+  display: (_) => ({
+    name: 'vmtool',
+    tag: 'vmtool',
+  }),
+  detailComponent: createComponent<VmToolMessage>((msg) => msg.value),
+})
