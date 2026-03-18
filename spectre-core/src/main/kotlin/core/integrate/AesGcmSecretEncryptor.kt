@@ -10,7 +10,7 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.io.encoding.Base64
 
-class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
+class AesGcmSecretEncryptor(key: ByteArray, salt: ByteArray) : SecretEncryptor {
 
     private val key = deriveAesKeyFromPassword(key, salt)
 
@@ -21,16 +21,15 @@ class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
         private const val TAG_LENGTH_BIT = 128       // 认证标签长度
 
         fun deriveAesKeyFromPassword(
-            base64Password: String,
-            salt: String,
+            password: ByteArray,
+            salt: ByteArray,
             iterations: Int = 100_000,
             keySize: Int = 256
         ): SecretKey {
-            val password = Base64.decode(base64Password)
 
             val spec = PBEKeySpec(
                 password.toString(Charsets.UTF_8).toCharArray(),
-                Base64.decode(salt),
+                salt,
                 iterations,
                 keySize
             )
@@ -47,7 +46,7 @@ class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
         return "AES_GCM"
     }
 
-    override fun encrypt(raw: String, salt: String): String {
+    override fun encrypt(raw: String, salt: ByteArray): String {
         val iv = ByteArray(IV_LENGTH)
         SecureRandomFactory.secureRandom.nextBytes(iv)
 
@@ -55,7 +54,7 @@ class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
         val spec = GCMParameterSpec(TAG_LENGTH_BIT, iv)
         cipher.init(Cipher.ENCRYPT_MODE, key, spec)
 
-        cipher.updateAAD(salt.toByteArray())
+        cipher.updateAAD(salt)
 
         val cipherText = cipher.doFinal(raw.toByteArray())
 
@@ -67,7 +66,7 @@ class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
         return Base64.encode(result)
     }
 
-    override fun decrypt(encoded: String, salt: String, startIndex: Int, endIndex: Int): String {
+    override fun decrypt(encoded: String, salt: ByteArray, startIndex: Int, endIndex: Int): String {
         val encrypted = Base64.decode(encoded, startIndex, endIndex)
 
         val iv = encrypted.copyOfRange(0, IV_LENGTH)
@@ -77,7 +76,7 @@ class AesGcmSecretEncryptor(key: String, salt: String) : SecretEncryptor {
         val spec = GCMParameterSpec(TAG_LENGTH_BIT, iv)
         cipher.init(Cipher.DECRYPT_MODE, key, spec)
 
-        cipher.updateAAD(salt.toByteArray())
+        cipher.updateAAD(salt)
 
         // 如果数据被篡改，这里会直接抛 AEADBadTagException
         return String(cipher.doFinal(cipherText))

@@ -8,11 +8,11 @@ class EmptySecretEncryptor : SecretEncryptor {
         return "RAW"
     }
 
-    override fun encrypt(raw: String, salt: String): String {
+    override fun encrypt(raw: String, salt: ByteArray): String {
         return raw
     }
 
-    override fun decrypt(encoded: String, salt: String, startIndex: Int, endIndex: Int): String {
+    override fun decrypt(encoded: String, salt: ByteArray, startIndex: Int, endIndex: Int): String {
         return encoded.substring(startIndex, endIndex)
     }
 }
