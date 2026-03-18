@@ -1,10 +1,11 @@
 package io.github.vudsen.spectre.api.service
 
+import io.github.vudsen.spectre.api.dto.CreatePolicyPermissionDTO
 import io.github.vudsen.spectre.api.dto.PermissionResourceDTO
 import io.github.vudsen.spectre.api.dto.PolicyPermissionDTO
+import io.github.vudsen.spectre.api.dto.UpdatePolicyPermissionDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.perm.PermissionEntity
-import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
 import io.github.vudsen.spectre.repo.entity.SubjectType
 import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
 import org.springframework.data.domain.Page
@@ -17,7 +18,12 @@ interface PolicyPermissionService {
     /**
      * 保存策略
      */
-    fun save(policy: PolicyPermissionPO): PolicyPermissionPO
+    fun savePolicyPermission(policy: CreatePolicyPermissionDTO): PolicyPermissionPO
+
+    /**
+     * 更新策略
+     */
+    fun updatePolicyPermission(dto: UpdatePolicyPermissionDTO)
 
     /**
      * 根据id查询策略权限
