@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.common
 import io.github.vudsen.spectre.common.util.OS
 import io.github.vudsen.spectre.common.util.currentOS
 import org.slf4j.LoggerFactory
+import java.util.Base64
 
 object SpectreEnvironment {
 
@@ -21,12 +22,12 @@ object SpectreEnvironment {
     /**
      * 加密器的 key
      */
-    val ENCRYPTOR_KEY: String?
+    val ENCRYPTOR_KEY: ByteArray?
 
     /**
      * 加密器的 salt
      */
-    val ENCRYPTOR_SALT: String?
+    val ENCRYPTOR_SALT: ByteArray?
 
     init {
         var home = System.getenv("SPECTRE_HOME")
@@ -46,8 +47,12 @@ object SpectreEnvironment {
             logger.warn("SPECTRE_HOME is not specific, will use the default path: {}", home)
         }
         SPECTRE_HOME = home
-        ENCRYPTOR_KEY = System.getenv("ENCRYPTOR_KEY")
-        ENCRYPTOR_SALT = System.getenv("ENCRYPTOR_SALT")
+        ENCRYPTOR_KEY = System.getenv("ENCRYPTOR_KEY")?.let {
+            Base64.getDecoder().decode(it)
+        }
+        ENCRYPTOR_SALT = System.getenv("ENCRYPTOR_SALT")?.let {
+            Base64.getDecoder().decode(it)
+        }
         GRAPHQL_AUTHORIZATION_TOKEN = System.getenv("GRAPHQL_AUTHORIZATION_TOKEN")
         PREVIEW_ENVIRONMENT = System.getenv("PREVIEW_ENVIRONMENT") == "true"
     }

@@ -19,7 +19,7 @@ class DefaultSecretEncryptorManager(
     }
 
     companion object {
-        private const val DEFAULT_ENCRYPTION_SALT = "uG3vD5zN2hC3kA2k"
+        private val DEFAULT_ENCRYPTION_SALT = "uG3vD5zN2hC3kA2k".toByteArray()
     }
 
     private fun findTag(raw: String): String? {
@@ -35,14 +35,14 @@ class DefaultSecretEncryptorManager(
     }
 
 
-    override fun encrypt(raw: String, salt: String?): String {
+    override fun encrypt(raw: String, salt: ByteArray?): String {
         if (raw.isBlank()) {
             return ""
         }
         return "{${defaultEncryptor.getTag()}}${defaultEncryptor.encrypt(raw, salt ?: SpectreEnvironment.ENCRYPTOR_SALT ?: DEFAULT_ENCRYPTION_SALT)}"
     }
 
-    override fun decrypt(encoded: String, salt: String?): String {
+    override fun decrypt(encoded: String, salt: ByteArray?): String {
         cache.get(encoded)?.let {
             return it.get() as String
         }

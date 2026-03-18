@@ -49,7 +49,7 @@ class SecurityConfiguration {
             context: ConditionContext,
             metadata: AnnotatedTypeMetadata
         ): Boolean {
-            return !SpectreEnvironment.ENCRYPTOR_KEY.isNullOrEmpty()
+            return SpectreEnvironment.ENCRYPTOR_KEY != null
         }
     }
 
@@ -58,8 +58,7 @@ class SecurityConfiguration {
     fun secretEncryptor(): SecretEncryptor {
         val key = SpectreEnvironment.ENCRYPTOR_KEY!!
         val salt = SpectreEnvironment.ENCRYPTOR_SALT
-        val defaultSalt = "dU05W2pVNj9wUjUlakY1YA=="
-        return AesGcmSecretEncryptor(key, salt ?: defaultSalt)
+        return AesGcmSecretEncryptor(key, salt ?: "uM9[jU6?pR5%jF5`".toByteArray())
     }
 
     @Bean

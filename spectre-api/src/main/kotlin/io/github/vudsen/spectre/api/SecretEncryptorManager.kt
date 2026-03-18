@@ -5,8 +5,8 @@ package io.github.vudsen.spectre.api
  */
 interface SecretEncryptorManager {
 
-    fun encrypt(raw: String, salt: String? = null): String
+    fun encrypt(raw: String, salt: ByteArray? = null): String
 
-    fun decrypt(encoded: String, salt: String? = null): String
+    fun decrypt(encoded: String, salt: ByteArray? = null): String
 
 }
