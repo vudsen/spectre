@@ -89,6 +89,8 @@ services:
   web:
     environment:
       SPECTRE_HOME: '/home/spectre/data'
+      ENCRYPTOR_KEY: '<可选，base64 字符串>'
+      ENCRYPTOR_SALT: '<可选，base64 字符串，可以只提供 key，不给 salt>'
     ports:
       - "80:8080"
     volumes:
