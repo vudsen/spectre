@@ -1,6 +1,8 @@
 package io.github.vudsen.spectre.core.controller
 
+import io.github.vudsen.spectre.api.dto.CreatePolicyPermissionDTO
 import io.github.vudsen.spectre.api.dto.PermissionResourceDTO
+import io.github.vudsen.spectre.api.dto.UpdatePolicyPermissionDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
@@ -8,9 +10,6 @@ import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.PolicyPermissionService
 import io.github.vudsen.spectre.core.audit.Log
-import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
-import io.github.vudsen.spectre.repo.util.CreateGroup
-import io.github.vudsen.spectre.repo.util.UpdateGroup
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -41,16 +40,16 @@ class PermissionController(
 
     @PostMapping("create")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
-    @Log("log.policy_perm.create", contextResolveExp = "pickAttributes(#args[0], 'id', 'subjectType', 'subjectId', 'resource', 'action', 'conditionExpression')")
-    fun createPolicy(@RequestBody @Validated(CreateGroup::class) policy: PolicyPermissionPO) {
-        policyPermissionService.save(policy)
+    @Log("log.policy_perm.create", contextResolveExp = "pickAttributes(#returnObj, 'id', 'subjectType', 'subjectId', 'resource', 'action', 'conditionExpression', 'description')")
+    fun createPolicy(@RequestBody @Validated policy: CreatePolicyPermissionDTO) {
+        policyPermissionService.savePolicyPermission(policy)
     }
 
     @PostMapping("update")
     @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).PERMISSION_BIND)")
-    @Log("log.policy_perm.update", contextResolveExp = "pickAttributes(#args[0], 'id', 'conditionExpression')")
-    fun updatePolicy(@RequestBody @Validated(UpdateGroup ::class) policy: PolicyPermissionPO) {
-        policyPermissionService.save(policy)
+    @Log("log.policy_perm.update", contextResolveExp = "pickAttributes(#args[0], 'id', 'conditionExpression', 'description')")
+    fun updatePolicy(@RequestBody @Validated updateDTO: UpdatePolicyPermissionDTO) {
+        policyPermissionService.updatePolicyPermission(updateDTO)
     }
 
     @GetMapping("enhance-pages")

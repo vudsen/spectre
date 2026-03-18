@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.core.plugin.abac
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.vudsen.spectre.api.dto.CreatePolicyPermissionDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.perm.AppPermissions
@@ -48,7 +49,7 @@ class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
     fun `test redirect operator`() {
         val objectMapper = ObjectMapper()
         // setup permission
-        val id = policyPermissionService.save(PolicyPermissionPO().apply {
+        val id = policyPermissionService.savePolicyPermission(CreatePolicyPermissionDTO().apply {
             subjectType = SubjectType.ROLE
             subjectId = TestConstant.ROLE_TEST_ID
             resource = AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.resource
@@ -61,7 +62,7 @@ class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
                     allowRedirect = false
                 })
             })
-        }).id!!
+        }).id
         try {
             setupSecurityContext(TestConstant.USER_TESTER_USERNAME, TestConstant.USER_TESTER_PASSWORD)
 

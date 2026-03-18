@@ -1,8 +1,8 @@
 package io.github.vudsen.spectre.core.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.vudsen.spectre.api.dto.CreatePolicyPermissionDTO
 import io.github.vudsen.spectre.api.dto.CreateUserDTO
-import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.PermissionDenyException
 import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.perm.PermissionEntity
@@ -17,7 +17,6 @@ import io.github.vudsen.spectre.repo.entity.PolicyPermissionEnhancePlugin
 import io.github.vudsen.spectre.repo.entity.SubjectType
 import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
 import io.github.vudsen.spectre.repo.po.RolePO
-import io.github.vudsen.spectre.repo.po.UserPO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.GlobalDisposer
 import io.github.vudsen.spectre.test.TestConstant
@@ -70,7 +69,7 @@ class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
     }
 
     private fun bindPolicyPermission(subjectId: Long, entity: PermissionEntity, plugins: List<PolicyPermissionEnhancePlugin> ): Long {
-        val policyPermissionPO = PolicyPermissionPO().apply {
+        val dto = CreatePolicyPermissionDTO().apply {
             subjectType = SubjectType.ROLE
             this.subjectId = subjectId
             resource = entity.resource
@@ -78,8 +77,8 @@ class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
             this.conditionExpression = "true"
             enhancePlugins = plugins
         }
-        policyPermissionService.save(policyPermissionPO)
-        return policyPermissionPO.id!!
+        val policyPermissionPO = policyPermissionService.savePolicyPermission(dto)
+        return policyPermissionPO.id
     }
 
     @Test
