@@ -34,12 +34,12 @@ open class DefaultArthasInstanceService(
         var lastAccess: Long
     )
 
-    @Scheduled(cron = "0 0 0/1 * * ?")
+    @Scheduled(cron = "0 0 0/6 * * ?")
     @Transactional(rollbackOn = [Exception::class])
     fun clearStaleInstance() {
         logger.info("Start clean staled arthas instance")
         val accessBefore = arthasInstanceRepository.deleteAllByLastAccessBefore(
-            Instant.ofEpochMilli(System.currentTimeMillis() - 1000 * 60 * 60 * 2),
+            Instant.ofEpochMilli(System.currentTimeMillis() - 1000 * 60 * 60 * 24), // 1 day
         )
         logger.info("Successfully remove {} instances", accessBefore)
     }
@@ -169,8 +169,12 @@ open class DefaultArthasInstanceService(
         )
     }
 
-    override fun clearCachedClient() {
+    @Transactional
+    override fun clearCachedClient(cleanAllInstance: Boolean) {
         clientMap.clear()
+        if (cleanAllInstance) {
+            arthasInstanceRepository.deleteAll()
+        }
     }
 
 

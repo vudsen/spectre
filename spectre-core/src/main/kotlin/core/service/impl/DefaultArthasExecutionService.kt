@@ -9,20 +9,17 @@ import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.plugin.rnode.Jvm
-import io.github.vudsen.spectre.api.service.AppAccessControlService
-import io.github.vudsen.spectre.api.service.ArthasExecutionService
-import io.github.vudsen.spectre.api.service.ArthasInstanceService
-import io.github.vudsen.spectre.api.service.RuntimeNodeService
-import io.github.vudsen.spectre.api.service.ToolchainService
-import io.github.vudsen.spectre.support.SecureRandomFactory
-import io.github.vudsen.spectre.common.util.SecureUtils
+import io.github.vudsen.spectre.api.service.*
+import io.github.vudsen.spectre.common.SpectreEnvironment
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
+import io.github.vudsen.spectre.common.util.KeyBasedLock
+import io.github.vudsen.spectre.common.util.SecureUtils
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
 import io.github.vudsen.spectre.core.integrate.abac.AttachNodePolicyPermissionContext
-import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
+import io.github.vudsen.spectre.support.SecureRandomFactory
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.CacheManager
@@ -36,8 +33,13 @@ import org.springframework.stereotype.Service
 import tools.jackson.databind.JsonNode
 import java.lang.reflect.InvocationTargetException
 import java.time.Instant
+import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
+import javax.crypto.spec.SecretKeySpec
+import javax.crypto.Mac
+
+
 
 
 /**
@@ -84,6 +86,8 @@ class DefaultArthasExecutionService(
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
         private const val MAX_IDLE_MILLISECONDS = 1000 * 60 * 5
         private const val MAX_PROFILER_FILE_COUNT= 10
+        private const val HMAC_SHA_256 = "HmacSHA256"
+        private val defaultHashKey = "hM0,vR4_vV5^rZ2<gL1\$oL3`hD0:gH9~".toByteArray()
         private val ALLOWED_EXPRESSION: Set<Class<*>> = setOf(
             Literal::class.java,
             PropertyOrFieldReference::class.java,
@@ -327,8 +331,16 @@ class DefaultArthasExecutionService(
         return httpClient
     }
 
-    private fun generatePassword(): String {
-        return SecureRandomFactory.randomString(32)
+    private fun buildPassword(dto: RuntimeNodeDTO, jvm: Jvm, treeNodeId: String): String {
+        val mac: Mac = Mac.getInstance(HMAC_SHA_256)
+        val keySpec = SecretKeySpec(
+            SpectreEnvironment.ENCRYPTOR_KEY ?: defaultHashKey,
+            HMAC_SHA_256
+        )
+        mac.init(keySpec)
+
+        val result: ByteArray? = mac.doFinal("${dto.id}:${jvm.id}:${treeNodeId}".toByteArray())
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(result)
     }
 
     /**
@@ -363,7 +375,7 @@ class DefaultArthasExecutionService(
 
                 val handler = runtimeNode.getExtPoint().createAttachHandler(runtimeNode, jvm, bundle)
                 val arthasInstance = arthasInstanceService.findInstanceById(treeNodeId)
-                val password = arthasInstance?.endpointPassword ?: generatePassword()
+                val password = arthasInstance?.endpointPassword ?: buildPassword(runtimeNodeDto, jvm , treeNodeId)
 
                 val client = if (arthasInstance == null) {
                     handler.attach(null, password)

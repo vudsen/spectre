@@ -186,6 +186,13 @@ abstract class AbstractSpectreIntegrationTest {
     }
 
     protected fun testChannel(context: ChannelTestContext) {
+        testChannel0(context)
+        testRetransform(context)
+        testRestart(context)
+        testInstanceDeleted(context)
+    }
+
+    private fun testChannel0(context: ChannelTestContext) {
         val bytes = client.get().uri("spectre-api/arthas/channel/${context.channelId}/pull-result")
             .cookies(cookiesConsumer)
             .exchange()
@@ -201,8 +208,6 @@ abstract class AbstractSpectreIntegrationTest {
         assertEquals("Welcome to arthas!", jsonNodes[1].get("message").textValue())
 
         testBasicCommand(context)
-        testRetransform(context)
-        testRestart(context)
     }
 
     /**
@@ -218,6 +223,22 @@ abstract class AbstractSpectreIntegrationTest {
         val treeNode = findJvmTreeNode(context.runtimeNodeId)
         val newChannelId = prepareChannel(context.runtimeNodeId, treeNode)
         assertEquals(context.channelId, newChannelId.channelId)
+    }
+
+    /**
+     * 测试服务缓存的 arthasInstance 被删除
+     */
+    private fun testInstanceDeleted(context: ChannelTestContext) {
+        client.post().uri("spectre-api/admin-tools/clear-arthas-instance?cleanAll=true")
+            .cookies(cookiesConsumer)
+            .exchange()
+            .expectStatus()
+            .isOk
+
+        val treeNode = findJvmTreeNode(context.runtimeNodeId)
+        val newChannel = prepareChannel(context.runtimeNodeId, treeNode)
+        context.channelId = newChannel.channelId
+        testChannel0(context)
     }
 
     protected fun testRetransform(info: ChannelTestContext) {
