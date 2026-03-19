@@ -214,7 +214,7 @@ abstract class AbstractSpectreIntegrationTest {
      * 测试服务重启，缓存清空
      */
     private fun testRestart(context: ChannelTestContext) {
-        client.post().uri("spectre-api/admin-tools/clear-arthas-instance")
+        client.post().uri("spectre-api/admin-tools/clear-arthas-instance?cleanAll=false")
             .cookies(cookiesConsumer)
             .exchange()
             .expectStatus()
