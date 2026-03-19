@@ -155,25 +155,52 @@ class SshAttachHandler(
         return null
     }
 
+    private fun findPortsByFd(runtimeNode: ShellAvailableRuntimeNode, processPid: Int): List<Int>? {
+        val text =
+            runtimeNode.execute("sh -c 'PID=$processPid; ls -l /proc/\$PID/fd 2>/dev/null | sed -n '\\''s/.*socket:\\[\\([0-9]*\\)\\]/\\1/p'\\'' | while read i; do grep -h \$i /proc/net/tcp /proc/net/tcp6 2>/dev/null; done | awk '\\''{split(\$2,a,\":\"); printf \"%d\\n\",\"0x\"a[2]}'\\'''")
+                .tryUnwrap() ?: return null
+        return buildList {
+            for (string in text.split('\n')) {
+                if (string.isEmpty()) {
+                    continue
+                }
+                try {
+                    add(string.toInt())
+                } catch (_: NumberFormatException) { }
+            }
+        }
+    }
 
-    private fun tryFindLocalClient(runtimeNode: ShellAvailableRuntimeNode, processPid: Int, paths: ToolchainPaths, password: String): ArthasHttpClient? {
+    private fun findPortsBySS(runtimeNode: ShellAvailableRuntimeNode, processPid: Int): List<Int>? {
         val data = runtimeNode.execute("ss -tulnp | grep $processPid").tryUnwrap() ?: return null
         val binds = data.split("\n")
-        for (bind in binds) {
-            val dataLine = bind.split(whiteSpaces)
-            if (dataLine.size < 4) {
-                continue
+        return buildList {
+            for (bind in binds) {
+                val dataLine = bind.split(whiteSpaces)
+                if (dataLine.size < 4) {
+                    continue
+                }
+                val mayBePort = dataLine[4]
+                val pos = mayBePort.lastIndexOf(':')
+                if (pos < 0) {
+                    continue
+                }
+                val port = try {
+                    mayBePort.substring(pos + 1).toInt()
+                } catch (_: NumberFormatException) {
+                    continue
+                }
+                add(port)
             }
-            val mayBePort = dataLine[4]
-            val pos = mayBePort.lastIndexOf(':')
-            if (pos < 0) {
-                continue
-            }
-            val port = try {
-                mayBePort.substring(pos + 1).toInt()
-            } catch (_: NumberFormatException) {
-                continue
-            }
+        }
+    }
+
+    private fun tryFindLocalClient(runtimeNode: ShellAvailableRuntimeNode, processPid: Int, paths: ToolchainPaths, password: String): ArthasHttpClient? {
+        val ports = findPortsBySS(runtimeNode, processPid) ?: findPortsByFd(runtimeNode, processPid)
+        if (ports.isNullOrEmpty()) {
+            return null
+        }
+        for (port in ports) {
             try {
                 val client = doAttach(port, password, paths)
                 client.test()
