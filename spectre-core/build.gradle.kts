@@ -66,7 +66,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.10")
     implementation("org.hibernate.orm:hibernate-community-dialects")
     // 稳定后再删除.
-    implementation("org.xerial:sqlite-jdbc:3.51.2.0")
+    implementation("org.xerial:sqlite-jdbc:3.51.3.0")
     implementation("org.ehcache:ehcache:3.11.1:jakarta")
     implementation("jakarta.xml.bind:jakarta.xml.bind-api")
     implementation("org.glassfish.jaxb:jaxb-runtime")
