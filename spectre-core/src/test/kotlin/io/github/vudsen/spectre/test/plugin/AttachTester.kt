@@ -53,7 +53,7 @@ class AttachTester {
      * 测试服务重启，缓存清空
      */
     private fun testRestart(prevChannelId: String, runtimeNodeId: Long, jvmNode: JvmTreeNodeDTO) {
-        arthasInstanceService.clearCachedClient()
+        arthasInstanceService.clearCachedClient(false)
         val channelId = attachSync(runtimeNodeId, jvmNode)
         assertEquals(prevChannelId, channelId)
     }
