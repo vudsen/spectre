@@ -3,9 +3,11 @@ package io.github.vudsen.spectre.common.util
 import java.nio.file.Paths
 
 object SecureUtils {
-
-    fun isPathInjection(fileName: String, baseDir: String): Boolean {
-        return try {
+    fun isPathInjection(
+        fileName: String,
+        baseDir: String,
+    ): Boolean =
+        try {
             // 1. 定义基准路径并规范化（不依赖文件是否存在）
             val base = Paths.get(baseDir).toAbsolutePath().normalize()
 
@@ -21,13 +23,9 @@ object SecureUtils {
             // 发生任何解析异常（非法路径字符等）均视为注入攻击
             true
         }
-    }
-
 
     /**
      * 是否为单纯的文件名，没有保护路径等信息
      */
-    fun isNotPureFilename(fileName: String): Boolean  {
-        return fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")
-    }
+    fun isNotPureFilename(fileName: String): Boolean = fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")
 }

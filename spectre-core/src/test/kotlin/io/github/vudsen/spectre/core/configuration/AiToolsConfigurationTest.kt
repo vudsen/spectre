@@ -2,8 +2,8 @@
 
 import io.github.vudsen.spectre.api.AiTools
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
-import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
+import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
@@ -16,7 +16,6 @@ import tools.jackson.databind.JsonNode
 import tools.jackson.databind.node.JsonNodeFactory
 
 class AiToolsConfigurationTest {
-
     @Test
     fun executeArthasCommand_shouldBeConfirmRequiredAndExecutable() {
         val arthasExecutionService = FakeArthasExecutionService()
@@ -25,15 +24,17 @@ class AiToolsConfigurationTest {
         assertTrue(registry.requiresConfirm(AiTools.EXECUTE_ARTHAS_COMMAND))
         assertFalse(registry.requiresConfirm(AiTools.ASK_HUMAN))
 
-        val result = registry.execute(
-            toolName = AiTools.EXECUTE_ARTHAS_COMMAND,
-            context = AiToolExecutionContext(
-                conversationId = "conv-1",
-                channelId = "channel-1",
-                securityContext = null,
-            ),
-            argumentsJson = "{\"command\":\"thread -n 1\"}",
-        )
+        val result =
+            registry.execute(
+                toolName = AiTools.EXECUTE_ARTHAS_COMMAND,
+                context =
+                    AiToolExecutionContext(
+                        conversationId = "conv-1",
+                        channelId = "channel-1",
+                        securityContext = null,
+                    ),
+                argumentsJson = "{\"command\":\"thread -n 1\"}",
+            )
 
         assertTrue(result is AiToolExecutionResult.Success)
         assertEquals(1, arthasExecutionService.execSyncCallCount)
@@ -45,15 +46,17 @@ class AiToolsConfigurationTest {
     fun askHuman_shouldReturnAskHumanResultWithJsonPayload() {
         val registry = AiToolsConfiguration(FakeArthasExecutionService()).openAiToolRegistry()
 
-        val result = registry.execute(
-            toolName = AiTools.ASK_HUMAN,
-            context = AiToolExecutionContext(
-                conversationId = "conv-2",
-                channelId = "channel-2",
-                securityContext = null,
-            ),
-            argumentsJson = "{\"question\":\"confirm?\",\"options\":[\"YES\",\"NO\"]}",
-        )
+        val result =
+            registry.execute(
+                toolName = AiTools.ASK_HUMAN,
+                context =
+                    AiToolExecutionContext(
+                        conversationId = "conv-2",
+                        channelId = "channel-2",
+                        securityContext = null,
+                    ),
+                argumentsJson = "{\"question\":\"confirm?\",\"options\":[\"YES\",\"NO\"]}",
+            )
 
         assertTrue(result is AiToolExecutionResult.AskHuman)
         result as AiToolExecutionResult.AskHuman
@@ -65,41 +68,45 @@ class AiToolsConfigurationTest {
     private class FakeArthasExecutionService : ArthasExecutionService {
         var execSyncCallCount: Int = 0
 
-        override fun requireAttach(runtimeNodeId: Long, treeNodeId: String, bundleId: Long): AttachStatus {
-            throw UnsupportedOperationException("not used in test")
-        }
+        override fun requireAttach(
+            runtimeNodeId: Long,
+            treeNodeId: String,
+            bundleId: Long,
+        ): AttachStatus = throw UnsupportedOperationException("not used in test")
 
-        override fun joinChannel(channelId: String, ownerIdentifier: String): ArthasConsumerDTO {
-            throw UnsupportedOperationException("not used in test")
-        }
+        override fun joinChannel(
+            channelId: String,
+            ownerIdentifier: String,
+        ): ArthasConsumerDTO = throw UnsupportedOperationException("not used in test")
 
-        override fun execAsync(channelId: String, command: String) {
-            throw UnsupportedOperationException("not used in test")
-        }
+        override fun execAsync(
+            channelId: String,
+            command: String,
+        ): Unit = throw UnsupportedOperationException("not used in test")
 
-        override fun execSync(channelId: String, command: String): JsonNode {
+        override fun execSync(
+            channelId: String,
+            command: String,
+        ): JsonNode {
             execSyncCallCount += 1
             return JsonNodeFactory.instance.objectNode()
         }
 
-        override fun pullResults(channelId: String, consumerId: String): JsonNode {
-            throw UnsupportedOperationException("not used in test")
-        }
+        override fun pullResults(
+            channelId: String,
+            consumerId: String,
+        ): JsonNode = throw UnsupportedOperationException("not used in test")
 
-        override fun interruptCommand(channelId: String) {
-            throw UnsupportedOperationException("not used in test")
-        }
+        override fun interruptCommand(channelId: String): Unit = throw UnsupportedOperationException("not used in test")
 
-        override fun retransform(channelId: String, source: BoundedInputStreamSource): JsonNode {
-            throw UnsupportedOperationException("not used in test")
-        }
+        override fun retransform(
+            channelId: String,
+            source: BoundedInputStreamSource,
+        ): JsonNode = throw UnsupportedOperationException("not used in test")
 
-        override fun listProfilerFiles(channelId: String): List<ProfilerFile> {
-            throw UnsupportedOperationException("not used in test")
-        }
+        override fun listProfilerFiles(channelId: String): List<ProfilerFile> = throw UnsupportedOperationException("not used in test")
 
-        override fun readProfilerFile(file: ProfilerFile): BoundedInputStreamSource? {
+        override fun readProfilerFile(file: ProfilerFile): BoundedInputStreamSource? =
             throw UnsupportedOperationException("not used in test")
-        }
     }
 }

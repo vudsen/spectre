@@ -19,31 +19,40 @@ import java.util.zip.GZIPOutputStream
 import java.util.zip.ZipFile
 
 object LocalPackageManager {
-
     private val logger = LoggerFactory.getLogger(LocalPackageManager::class.java)
 
-    private fun resolvePackageName(type: ToolchainType, tag: String, isArm: Boolean): String {
-        return if (isArm) {
-            "${type.originalName}-arm-${tag}.${type.bundleExtensionName}"
+    private fun resolvePackageName(
+        type: ToolchainType,
+        tag: String,
+        isArm: Boolean,
+    ): String =
+        if (isArm) {
+            "${type.originalName}-arm-$tag.${type.bundleExtensionName}"
         } else {
-            "${type.originalName}-${tag}.${type.bundleExtensionName}"
+            "${type.originalName}-$tag.${type.bundleExtensionName}"
         }
-    }
 
     private fun resolvePackagePath(
         type: ToolchainType,
         tag: String,
-        isArm: Boolean
-    ): String =
-        "${SpectreEnvironment.SPECTRE_HOME}/downloads/${resolvePackageName(type, tag, isArm)}"
+        isArm: Boolean,
+    ): String = "${SpectreEnvironment.SPECTRE_HOME}/downloads/${resolvePackageName(type, tag, isArm)}"
 
-
-    fun isCached(type: ToolchainType, tag: String, isArm: Boolean): Boolean {
+    fun isCached(
+        type: ToolchainType,
+        tag: String,
+        isArm: Boolean,
+    ): Boolean {
         val destPath = resolvePackagePath(type, tag, isArm)
         return File(destPath).exists()
     }
 
-    fun savePackage(type: ToolchainType, tag: String, isArm: Boolean, source: InputStreamSource) {
+    fun savePackage(
+        type: ToolchainType,
+        tag: String,
+        isArm: Boolean,
+        source: InputStreamSource,
+    ) {
         source.inputStream.use { inputStream ->
             val file = File(resolvePackagePath(type, tag, isArm))
             file.parentFile.let {
@@ -57,17 +66,14 @@ object LocalPackageManager {
         }
     }
 
-    private class ConstantBoundedInputStreamSource(private val data: ByteArray) : BoundedInputStreamSource {
-        override fun size(): Long {
-            return data.size.toLong()
-        }
+    private class ConstantBoundedInputStreamSource(
+        private val data: ByteArray,
+    ) : BoundedInputStreamSource {
+        override fun size(): Long = data.size.toLong()
 
-        override fun getInputStream(): InputStream {
-            return ByteArrayInputStream(data)
-        }
+        override fun getInputStream(): InputStream = ByteArrayInputStream(data)
 
         override fun close() {}
-
     }
 
     private val httpClient: ConstantBoundedInputStreamSource
@@ -79,9 +85,7 @@ object LocalPackageManager {
         }
     }
 
-    fun resolveBundledHttpClient(): BoundedInputStreamSource {
-        return httpClient
-    }
+    fun resolveBundledHttpClient(): BoundedInputStreamSource = httpClient
 
     /**
      * 获取对应软件包的路径.
@@ -90,7 +94,12 @@ object LocalPackageManager {
      * @param url 文件路径
      * @return 软件包路径
      */
-    fun resolvePackage(type: ToolchainType, tag: String, isArm: Boolean, url: String): File {
+    fun resolvePackage(
+        type: ToolchainType,
+        tag: String,
+        isArm: Boolean,
+        url: String,
+    ): File {
         val destPath = resolvePackagePath(type, tag, isArm)
         val destFile = File(destPath)
         if (destFile.exists()) {
@@ -122,9 +131,9 @@ object LocalPackageManager {
                             "Unexpected HTTP status ${connection.responseCode}, body: ${
                                 String(
                                     connection.inputStream.readAllBytes(),
-                                    StandardCharsets.UTF_8
+                                    StandardCharsets.UTF_8,
                                 )
-                            }"
+                            }",
                         )
                     }
                     val total = connection.contentLength
@@ -142,7 +151,7 @@ object LocalPackageManager {
                                 it.currentProgress()?.title = "$baseText (${
                                     String.format(
                                         "%.2fMB",
-                                        totalBytesRead * 1.0 / 1024 / 1024
+                                        totalBytesRead * 1.0 / 1024 / 1024,
                                     )
                                 } / ${totalMb}MB)"
                             }
@@ -204,6 +213,4 @@ object LocalPackageManager {
         }
         return tarGzFile
     }
-
 }
-

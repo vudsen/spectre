@@ -5,7 +5,6 @@ import java.io.OutputStream
 import java.io.Writer
 
 interface InteractiveShell : AutoCloseable {
-
     fun getInputStream(): InputStream
 
     /**
@@ -28,6 +27,4 @@ interface InteractiveShell : AutoCloseable {
      * 退出码，如果还没有退出，返回空
      */
     fun exitCode(): Int?
-
-
 }

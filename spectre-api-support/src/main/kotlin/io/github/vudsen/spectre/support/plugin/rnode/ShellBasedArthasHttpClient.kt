@@ -8,11 +8,11 @@ import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.common.util.SecureUtils
 import org.slf4j.LoggerFactory
+import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-import tools.jackson.databind.JsonNode
 
 open class ShellBasedArthasHttpClient(
     protected val runtimeNode: ShellAvailableRuntimeNode,
@@ -22,9 +22,8 @@ open class ShellBasedArthasHttpClient(
     /**
      * 该字段暴露仅用于测试
      */
-    var password: String
+    var password: String,
 ) : ArthasHttpClient {
-
     companion object {
         @JvmStatic
         private val logger = LoggerFactory.getLogger(ShellBasedArthasHttpClient::class.java)
@@ -33,10 +32,17 @@ open class ShellBasedArthasHttpClient(
 
     private val objectMapper = JsonMapper.builderWithJackson2Defaults().build()
 
-    protected open fun sendRequest(body: Any, noCheckResponse: Boolean): JsonNode {
-        val encodedBody = Base64.getEncoder().encodeToString(objectMapper.writeValueAsString(body).toByteArray(
-            StandardCharsets.UTF_8))
-        val result = runtimeNode.execute(javaPath, "-jar", clientPath, arthasHttpEndpoint ,encodedBody, password)
+    protected open fun sendRequest(
+        body: Any,
+        noCheckResponse: Boolean,
+    ): JsonNode {
+        val encodedBody =
+            Base64.getEncoder().encodeToString(
+                objectMapper.writeValueAsString(body).toByteArray(
+                    StandardCharsets.UTF_8,
+                ),
+            )
+        val result = runtimeNode.execute(javaPath, "-jar", clientPath, arthasHttpEndpoint, encodedBody, password)
         if (result.exitCode != 0) {
             throw BusinessException("命令执行失败, Arthas 接口请求错误，响应信息: " + result.stdout)
         }
@@ -61,23 +67,37 @@ open class ShellBasedArthasHttpClient(
     }
 
     override fun exec(command: String): JsonNode {
-        val response = sendRequest(buildMap {
-            put("action", "exec")
-            put("command", command)
-        }, false)
+        val response =
+            sendRequest(
+                buildMap {
+                    put("action", "exec")
+                    put("command", command)
+                },
+                false,
+            )
         return response.get("body").get("results")
     }
 
-    override fun execAsync(sessionId: String, command: String): Int {
-        val response = sendRequest(buildMap {
-            put("action", "async_exec")
-            put("command", command)
-            put("sessionId", sessionId)
-        }, false)
+    override fun execAsync(
+        sessionId: String,
+        command: String,
+    ): Int {
+        val response =
+            sendRequest(
+                buildMap {
+                    put("action", "async_exec")
+                    put("command", command)
+                    put("sessionId", sessionId)
+                },
+                false,
+            )
         return response.get("body").get("jobId").asInt()
     }
 
-    private fun findArgValue(commands: List<String>, key: String): Pair<String, Int>? {
+    private fun findArgValue(
+        commands: List<String>,
+        key: String,
+    ): Pair<String, Int>? {
         val i = commands.indexOf(key)
         if (i < 0) {
             return null
@@ -88,23 +108,22 @@ open class ShellBasedArthasHttpClient(
         return Pair(commands[i + 1], i + 1)
     }
 
-
     override fun execProfilerCommand(
         filename: String,
         commands: MutableList<String>,
-        sessionId: String?
+        sessionId: String?,
     ): JsonNode? {
         val pair = findArgValue(commands, "--file") ?: findArgValue(commands, "-f")
         if (pair == null) {
             val formatPair = findArgValue(commands, "--format") ?: findArgValue(commands, "-o")
             commands.add("--file")
             if (formatPair == null) {
-                commands.add("${runtimeNode.getHomePath()}/profiler/${filename}.html")
+                commands.add("${runtimeNode.getHomePath()}/profiler/$filename.html")
             } else {
                 if (!supportedFormats.contains(formatPair.first)) {
                     throw BusinessException("不支持的输出类型: ${formatPair.first}")
                 }
-                commands.add("${runtimeNode.getHomePath()}/profiler/${filename}.${formatPair.first}")
+                commands.add("${runtimeNode.getHomePath()}/profiler/$filename.${formatPair.first}")
             }
         } else {
             val pos = pair.first.lastIndexOf('.')
@@ -113,7 +132,7 @@ open class ShellBasedArthasHttpClient(
             if (SecureUtils.isNotPureFilename(ext)) {
                 throw BusinessException("Invalid file extension: $ext")
             }
-            commands[pair.second] = "${getProfilerDirectory()}/${filename}.${ext}"
+            commands[pair.second] = "${getProfilerDirectory()}/$filename.$ext"
         }
         if (sessionId == null) {
             return exec(commands.joinToString(" "))
@@ -131,57 +150,69 @@ open class ShellBasedArthasHttpClient(
         return directory
     }
 
-    override fun listProfilerFiles(): List<String> {
-        return runtimeNode.listFiles(getProfilerDirectory())
-    }
+    override fun listProfilerFiles(): List<String> = runtimeNode.listFiles(getProfilerDirectory())
 
-    override fun deleteProfilerFile(filename: String) {
-        return runtimeNode.deleteFile("${getProfilerDirectory()}/${filename}")
-    }
+    override fun deleteProfilerFile(filename: String) = runtimeNode.deleteFile("${getProfilerDirectory()}/$filename")
 
-    override fun readProfilerFile(filename: String): BoundedInputStreamSource? {
-        return runtimeNode.readFile("${getProfilerDirectory()}/${filename}")
-    }
+    override fun readProfilerFile(filename: String): BoundedInputStreamSource? = runtimeNode.readFile("${getProfilerDirectory()}/$filename")
 
     override fun interruptJob(sessionId: String) {
-        sendRequest(buildMap {
-            put("action", "interrupt_job")
-            put("sessionId", sessionId)
-        }, false)
+        sendRequest(
+            buildMap {
+                put("action", "interrupt_job")
+                put("sessionId", sessionId)
+            },
+            false,
+        )
     }
 
     override fun pullResults(
         sessionId: String,
-        consumerId: String
+        consumerId: String,
     ): JsonNode {
-        val response = sendRequest(buildMap {
-            put("action", "pull_results")
-            put("sessionId", sessionId)
-            put("consumerId", consumerId)
-        }, false)
+        val response =
+            sendRequest(
+                buildMap {
+                    put("action", "pull_results")
+                    put("sessionId", sessionId)
+                    put("consumerId", consumerId)
+                },
+                false,
+            )
         return response.get("body").get("results")
     }
 
     override fun initSession(): ArthasSession {
-        val response = sendRequest(buildMap {
-            put("action", "init_session")
-        }, false)
+        val response =
+            sendRequest(
+                buildMap {
+                    put("action", "init_session")
+                },
+                false,
+            )
         return ArthasSession(response.get("sessionId").asString(), response.get("consumerId").asString())
     }
 
     override fun joinSession(sessionId: String): ArthasSession {
-        val response = sendRequest(buildMap {
-            put("action", "join_session")
-            put("sessionId", sessionId)
-        }, false)
+        val response =
+            sendRequest(
+                buildMap {
+                    put("action", "join_session")
+                    put("sessionId", sessionId)
+                },
+                false,
+            )
         return ArthasSession(response.get("sessionId").asString(), response.get("consumerId").asString())
     }
 
     override fun closeSession(sessionId: String) {
-        sendRequest(buildMap {
-            put("action", "close_session")
-            put("sessionId", sessionId)
-        }, false)
+        sendRequest(
+            buildMap {
+                put("action", "close_session")
+                put("sessionId", sessionId)
+            },
+            false,
+        )
     }
 
     override fun test() {
@@ -198,9 +229,7 @@ open class ShellBasedArthasHttpClient(
         throw BusinessException("Attach failed.")
     }
 
-    override fun getPort(): Int {
-        return URL(arthasHttpEndpoint).port
-    }
+    override fun getPort(): Int = URL(arthasHttpEndpoint).port
 
     override fun retransform(source: BoundedInputStreamSource): JsonNode {
         val dest = "${runtimeNode.getHomePath()}/downloads/rt${System.currentTimeMillis()}.class"
@@ -213,5 +242,4 @@ open class ShellBasedArthasHttpClient(
             }
         }
     }
-
 }

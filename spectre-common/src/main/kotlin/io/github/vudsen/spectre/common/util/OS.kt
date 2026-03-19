@@ -4,7 +4,7 @@ enum class OS {
     WINDOWS,
     MAC,
     LINUX,
-    UNKNOWN
+    UNKNOWN,
 }
 
 val currentOS = resolveCurrentOS()

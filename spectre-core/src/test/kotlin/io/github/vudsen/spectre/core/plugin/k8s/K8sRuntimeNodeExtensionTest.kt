@@ -16,9 +16,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.test.Test
 
-
 class K8sRuntimeNodeExtensionTest : AbstractSpectreTest() {
-
     @set:Autowired
     lateinit var runtimeNodeService: RuntimeNodeService
 
@@ -50,8 +48,9 @@ class K8sRuntimeNodeExtensionTest : AbstractSpectreTest() {
     }
 
     private fun setupK3s(): Long {
-        val k3s = K3sContainer(DockerImageName.parse("rancher/k3s:v1.31.0-k3s1"))
-            .withCommand("server", "--disable=traefik", "--disable=local-storage")
+        val k3s =
+            K3sContainer(DockerImageName.parse("rancher/k3s:v1.31.0-k3s1"))
+                .withCommand("server", "--disable=traefik", "--disable=local-storage")
 
         k3s.start()
         K8sRuntimeNodeExtensionTest::class.java.classLoader.getResourceAsStream("k8s-deploy.yaml").use { stream ->
@@ -69,37 +68,39 @@ class K8sRuntimeNodeExtensionTest : AbstractSpectreTest() {
         val token = result.stdout
 
         loop(60) {
-            val execInContainer = k3s.execInContainer(
-                "kubectl",
-                "get",
-                "deployment",
-                "math-game",
-                "-n",
-                "spectre",
-                "-o",
-                "jsonpath='{.status.readyReplicas}'"
-            )
+            val execInContainer =
+                k3s.execInContainer(
+                    "kubectl",
+                    "get",
+                    "deployment",
+                    "math-game",
+                    "-n",
+                    "spectre",
+                    "-o",
+                    "jsonpath='{.status.readyReplicas}'",
+                )
             if (execInContainer.stdout == "'1'") {
                 return@loop true
             }
             return@loop null
         }
 
-        val runtimeNodeConfig = K8sRuntimeNodeConfig(
-            endpoint,
-            token,
-            "/opt/spectre",
-            true
-        )
-        val runtimeNodeId = runtimeNodeService.createRuntimeNode(
-            CreateRuntimeNodeDTO().apply {
-                name = "K8s"
-                pluginId = K8sRuntimeNodeExtension.ID
-                configuration = ObjectMapper().writeValueAsString(runtimeNodeConfig)
-            }
-        ).id
+        val runtimeNodeConfig =
+            K8sRuntimeNodeConfig(
+                endpoint,
+                token,
+                "/opt/spectre",
+                true,
+            )
+        val runtimeNodeId =
+            runtimeNodeService
+                .createRuntimeNode(
+                    CreateRuntimeNodeDTO().apply {
+                        name = "K8s"
+                        pluginId = K8sRuntimeNodeExtension.ID
+                        configuration = ObjectMapper().writeValueAsString(runtimeNodeConfig)
+                    },
+                ).id
         return runtimeNodeId
     }
-
-
 }

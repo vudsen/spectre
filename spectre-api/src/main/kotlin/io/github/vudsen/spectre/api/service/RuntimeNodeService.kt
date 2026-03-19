@@ -14,8 +14,6 @@ import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.springframework.data.domain.Page
 
 interface RuntimeNodeService {
-
-
     /**
      * 获取拓展点.
      *
@@ -23,11 +21,13 @@ interface RuntimeNodeService {
      */
     fun findPluginById(extPointId: String): RuntimeNodeExtensionPoint
 
-
     /**
      * 列出所有宿主机配置
      */
-    fun listRuntimeNodes(page: Int, size: Int): Page<RuntimeNodeDTO>
+    fun listRuntimeNodes(
+        page: Int,
+        size: Int,
+    ): Page<RuntimeNodeDTO>
 
     /**
      * 列出所有插件
@@ -44,7 +44,6 @@ interface RuntimeNodeService {
      */
     fun updateRuntimeNode(dto: UpdateRuntimeNodeDTO): RuntimeNodePO
 
-
     /**
      * 测试连接
      */
@@ -58,7 +57,10 @@ interface RuntimeNodeService {
     /**
      * 展开节点树
      */
-    fun expandRuntimeNodeTree(runtimeNodeId: Long, parentNodeId: String?): List<JvmTreeNodeDTO>
+    fun expandRuntimeNodeTree(
+        runtimeNodeId: Long,
+        parentNodeId: String?,
+    ): List<JvmTreeNodeDTO>
 
     /**
      * 获取运行时节点. 该方法会过滤敏感信息，如果需要敏感信息，请使用 [findPureRuntimeNodeById]
@@ -78,7 +80,10 @@ interface RuntimeNodeService {
     /**
      * 将树节点转换为对应的 jvm
      */
-    fun deserializeToJvm(pluginId: String, node: JvmSearchNode<Any>): Jvm
+    fun deserializeToJvm(
+        pluginId: String,
+        node: JvmSearchNode<Any>,
+    ): Jvm
 
     /**
      * 获取运行节点
@@ -89,5 +94,4 @@ interface RuntimeNodeService {
      * 获取详情界面
      */
     fun resolveViewPage(runtimeNodeId: Long): PageDescriptor
-
 }

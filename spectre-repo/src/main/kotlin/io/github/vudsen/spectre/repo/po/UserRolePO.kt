@@ -10,7 +10,6 @@ import org.hibernate.annotations.DynamicUpdate
 @DynamicUpdate
 @Table(name = "user_role")
 class UserRolePO {
-
     @EmbeddedId
     var id: UserRoleId = UserRoleId()
 
@@ -18,6 +17,6 @@ class UserRolePO {
         @Column("user_id")
         var userId: Long = 0,
         @Column("role_id")
-        var roleId: Long = 0
+        var roleId: Long = 0,
     )
 }

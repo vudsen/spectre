@@ -6,4 +6,6 @@ import org.springframework.data.repository.query.QueryByExampleExecutor
 import org.springframework.stereotype.Repository
 
 @Repository
-interface LogEntityRepository : JpaRepository<LogEntityPO, Long>, QueryByExampleExecutor<LogEntityPO>
+interface LogEntityRepository :
+    JpaRepository<LogEntityPO, Long>,
+    QueryByExampleExecutor<LogEntityPO>

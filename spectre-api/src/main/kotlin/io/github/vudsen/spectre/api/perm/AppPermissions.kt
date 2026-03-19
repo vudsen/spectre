@@ -1,8 +1,6 @@
 package io.github.vudsen.spectre.api.perm
 
-
 object AppPermissions : BasePermissionsHolder() {
-
     @JvmStatic
     val ALL = PermissionEntity("all", "all", "所有权限")
 
@@ -133,7 +131,6 @@ object AppPermissions : BasePermissionsHolder() {
         registerPermission(LLM_READ)
         registerPermission(LLM_UPDATE)
 
-
         registerName("all", "所有权限")
         registerName("runtime-node", "运行节点")
         registerName("tool-chain", "工具链")
@@ -144,6 +141,4 @@ object AppPermissions : BasePermissionsHolder() {
         registerName("permission", "权限")
         registerName("llm", "AI")
     }
-
-
 }

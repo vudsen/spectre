@@ -17,16 +17,14 @@ class ToolchainItemDTO(
     var armUrl: String? = null,
     val createdAt: Timestamp,
 ) {
-
     companion object {
-        fun ToolchainItemPO.toDTO(): ToolchainItemDTO {
-            return ToolchainItemDTO(
+        fun ToolchainItemPO.toDTO(): ToolchainItemDTO =
+            ToolchainItemDTO(
                 id.type,
                 id.tag,
                 url,
                 armUrl,
-                createdAt
+                createdAt,
             )
-        }
     }
 }

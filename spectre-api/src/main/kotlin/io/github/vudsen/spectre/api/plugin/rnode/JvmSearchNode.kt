@@ -18,9 +18,8 @@ data class JvmSearchNode<T>(
     /**
      * 当前上下文. 用于下一次搜索. 必须提供 [hashCode] 方法的重写
      */
-    var ctx: T?
+    var ctx: T?,
 ) {
-
     /**
      * 反序列化使用
      */

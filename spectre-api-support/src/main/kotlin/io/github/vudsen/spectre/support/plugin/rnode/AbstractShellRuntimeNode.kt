@@ -10,7 +10,6 @@ import java.io.File
 import kotlin.text.iterator
 
 abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
-
     companion object {
         @JvmStatic
         private val logger = LoggerFactory.getLogger(AbstractShellRuntimeNode::class.java)
@@ -22,19 +21,19 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
         this.extensionPoint = extensionPoint
     }
 
-
-    override fun isFileExist(path: String): Boolean {
-        return execute("test -f $path").exitCode == 0
-    }
+    override fun isFileExist(path: String): Boolean = execute("test -f $path").exitCode == 0
 
     override fun isArm(): Boolean {
         val result = execute("uname -a").ok()
         return result.contains("arm", ignoreCase = true) ||
-                result.contains("aarch64", ignoreCase = true) ||
-                result.contains("arm64", ignoreCase = true)
+            result.contains("aarch64", ignoreCase = true) ||
+            result.contains("arm64", ignoreCase = true)
     }
 
-    override fun upload(src: String, dest: String) {
+    override fun upload(
+        src: String,
+        dest: String,
+    ) {
         val file = File(src)
         if (file.length() == 0L) {
             return
@@ -44,7 +43,10 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
         }
     }
 
-    override fun upload(source: BoundedInputStreamSource, dest: String) {
+    override fun upload(
+        source: BoundedInputStreamSource,
+        dest: String,
+    ) {
         if (source.size() == 0L) {
             return
         }
@@ -56,12 +58,13 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
         execute("mv $tmp $dest").ok()
     }
 
-
     /**
      * 上传文件. 子类不需要任何检查
      */
-    protected abstract fun doUpload(source: BoundedInputStreamSource, dest: String)
-
+    protected abstract fun doUpload(
+        source: BoundedInputStreamSource,
+        dest: String,
+    )
 
     override fun mkdirs(path: String) {
         execute("mkdir -p $path").let {
@@ -85,9 +88,7 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
         execute("rm -f $path").ok()
     }
 
-    override fun isDirectoryExist(path: String): Boolean {
-        return execute("test -d $path").exitCode == 0
-    }
+    override fun isDirectoryExist(path: String): Boolean = execute("test -d $path").exitCode == 0
 
     override fun listFiles(directory: String): List<String> {
         execute("ls $directory").tryUnwrap() ?.let {
@@ -112,9 +113,7 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
         return emptyList()
     }
 
-    override fun getExtPoint(): RuntimeNodeExtensionPoint {
-        return extensionPoint
-    }
+    override fun getExtPoint(): RuntimeNodeExtensionPoint = extensionPoint
 
     fun setExtPoint(extensionPoint: RuntimeNodeExtensionPoint) {
         this.extensionPoint = extensionPoint

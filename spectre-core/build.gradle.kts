@@ -74,32 +74,29 @@ dependencies {
     implementation("com.openai:openai-java:4.26.0")
 }
 
-
-
-
 fun Copy.configureTokenReplace() {
     inputs.properties(
         mapOf(
             "version" to project.version.toString(),
-        )
+        ),
     )
 
     filesMatching("**/*.yaml") {
         filter(
             ReplaceTokens::class,
-            "tokens" to mapOf(
-                "version" to project.version.toString(),
-            )
+            "tokens" to
+                mapOf(
+                    "version" to project.version.toString(),
+                ),
         )
     }
 }
 
-
 tasks.test {
     useJUnitPlatform()
 }
-tasks.register("prepareKotlinBuildScriptModel"){}
-tasks.register("wrapper"){}
+tasks.register("prepareKotlinBuildScriptModel") {}
+tasks.register("wrapper") {}
 tasks.processResources {
     configureTokenReplace()
 }
@@ -123,7 +120,6 @@ tasks.register<Test>("integrationTest") {
 
     useJUnitPlatform()
 }
-
 
 kotlin {
     jvmToolchain(17)

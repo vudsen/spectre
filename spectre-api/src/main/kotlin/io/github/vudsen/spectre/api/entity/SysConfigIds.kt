@@ -23,7 +23,8 @@ object SysConfigIds {
     /**
      * id to salt
      */
-    val encryptedIds = mapOf(
-        LLM_API_KEY to "LLM_API_KEY".toByteArray()
-    )
+    val encryptedIds =
+        mapOf(
+            LLM_API_KEY to "LLM_API_KEY".toByteArray(),
+        )
 }

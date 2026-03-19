@@ -23,11 +23,10 @@ data class ArthasInstanceDTO(
     val bundleId: Long,
     val extPointId: String,
     var jvm: Jvm,
-    val lastAccess: Instant
+    val lastAccess: Instant,
 ) {
-
-    fun toPO(): ArthasInstancePO {
-        return ArthasInstancePO().apply {
+    fun toPO(): ArthasInstancePO =
+        ArthasInstancePO().apply {
             this@apply.id = this@ArthasInstanceDTO.id
             this@apply.channelId = this@ArthasInstanceDTO.channelId
             this@apply.endpointPassword = this@ArthasInstanceDTO.endpointPassword
@@ -37,24 +36,25 @@ data class ArthasInstanceDTO(
             this@apply.restrictedMode = this@ArthasInstanceDTO.restrictedMode
             this@apply.bundleId = this@ArthasInstanceDTO.bundleId
             this@apply.extPointId = this@ArthasInstanceDTO.extPointId
-            this@apply.jvm = objectMapper.writerFor(Object::class.java).writeValueAsString(this@ArthasInstanceDTO.jvm)
+            this@apply.jvm = objectMapper.writerFor(Any::class.java).writeValueAsString(this@ArthasInstanceDTO.jvm)
             this@apply.lastAccess = this@ArthasInstanceDTO.lastAccess
         }
-    }
 
     companion object {
+        val objectMapper: ObjectMapper =
+            JsonMapper
+                .builder()
+                .activateDefaultTyping(
+                    BasicPolymorphicTypeValidator
+                        .builder()
+                        .allowIfSubType(Jvm::class.java)
+                        .build(),
+                    DefaultTyping.NON_FINAL,
+                    JsonTypeInfo.As.PROPERTY,
+                ).build()
 
-        val objectMapper: ObjectMapper = JsonMapper.builder()
-            .activateDefaultTyping(
-                BasicPolymorphicTypeValidator.builder()
-                    .allowIfSubType(Jvm::class.java)
-                    .build(),
-                DefaultTyping.NON_FINAL,
-                JsonTypeInfo.As.PROPERTY
-            )
-            .build();
-        fun ArthasInstancePO.toDTO(): ArthasInstanceDTO {
-            return ArthasInstanceDTO(
+        fun ArthasInstancePO.toDTO(): ArthasInstanceDTO =
+            ArthasInstanceDTO(
                 id!!,
                 channelId!!,
                 endpointPassword!!,
@@ -67,6 +67,5 @@ data class ArthasInstanceDTO(
                 objectMapper.readValue(jvm!!, Jvm::class.java),
                 lastAccess!!,
             )
-        }
     }
 }

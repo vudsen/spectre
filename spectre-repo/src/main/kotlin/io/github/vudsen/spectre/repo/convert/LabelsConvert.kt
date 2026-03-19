@@ -7,9 +7,7 @@ import jakarta.persistence.Converter
 
 @Converter
 class LabelsConvert : AttributeConverter<Map<String, String>, String> {
-
     private val objectMapper = ObjectMapper()
-
 
     override fun convertToDatabaseColumn(labels: Map<String, String>?): String? {
         labels ?: return null

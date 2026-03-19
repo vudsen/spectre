@@ -6,8 +6,6 @@ import io.github.vudsen.spectre.repo.entity.PolicyPermissionEnhancePlugin
 import jakarta.persistence.AttributeConverter
 
 class PolicyPermissionEnhancePluginConverter : AttributeConverter<List<PolicyPermissionEnhancePlugin>, String> {
-
-
     private val objectMapper = ObjectMapper()
 
     override fun convertToDatabaseColumn(attribute: List<PolicyPermissionEnhancePlugin>?): String? {
@@ -20,5 +18,5 @@ class PolicyPermissionEnhancePluginConverter : AttributeConverter<List<PolicyPer
         return objectMapper.readValue(dbData, MyTypeReference)
     }
 
-    private object MyTypeReference : TypeReference<List<PolicyPermissionEnhancePlugin>>(){}
+    private object MyTypeReference : TypeReference<List<PolicyPermissionEnhancePlugin>>()
 }

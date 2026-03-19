@@ -6,7 +6,6 @@ class AttachStatus(
     @field:JsonProperty("isReady")
     var isReady: Boolean,
 ) {
-
     /**
      * 每个 arthas 进程在全局唯一的 id
      */
@@ -17,6 +16,6 @@ class AttachStatus(
 
     class ErrorInfo(
         var message: String,
-        var nextRetryTime: Long
+        var nextRetryTime: Long,
     )
 }

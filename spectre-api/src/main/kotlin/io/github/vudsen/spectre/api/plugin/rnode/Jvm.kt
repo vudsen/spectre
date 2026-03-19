@@ -1,6 +1,6 @@
 package io.github.vudsen.spectre.api.plugin.rnode
 
-abstract class Jvm (
+abstract class Jvm(
     /**
      * id，可以是 pid，也可以是容器id 或者容器名称
      */
@@ -8,7 +8,6 @@ abstract class Jvm (
     var name: String,
 //    val context: JvmContext
 ) {
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

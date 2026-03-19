@@ -5,8 +5,9 @@ import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
-class KeyBasedLock(private val lockCleanExecutor: Executor) {
-
+class KeyBasedLock(
+    private val lockCleanExecutor: Executor,
+) {
     companion object {
         private const val MAX_LOCK_SIZE = 150
         private const val LOCK_THRESHOLD = 100

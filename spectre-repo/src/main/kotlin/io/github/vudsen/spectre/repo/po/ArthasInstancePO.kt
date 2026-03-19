@@ -13,7 +13,6 @@ import java.time.Instant
 @Table(name = "arthas_instance")
 @DynamicUpdate
 class ArthasInstancePO {
-
     /**
      * 实例id，和节点树节点 id 一致
      */
@@ -47,5 +46,4 @@ class ArthasInstancePO {
             lastAccess = Instant.now()
         }
     }
-
 }

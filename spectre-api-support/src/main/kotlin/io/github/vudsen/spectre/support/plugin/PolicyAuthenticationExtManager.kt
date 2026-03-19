@@ -1,12 +1,12 @@
 package io.github.vudsen.spectre.support.plugin
 
-import io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.perm.PermissionEntity
+import io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint
 
-class PolicyAuthenticationExtManager(extensions: List<EnhancePolicyAuthenticationExtensionPoint>) {
-
-
+class PolicyAuthenticationExtManager(
+    extensions: List<EnhancePolicyAuthenticationExtensionPoint>,
+) {
     private val policyAuthenticationExtensions: Map<PermissionEntity, List<EnhancePolicyAuthenticationExtensionPoint>>
 
     private val idMap: Map<String, EnhancePolicyAuthenticationExtensionPoint>
@@ -28,13 +28,8 @@ class PolicyAuthenticationExtManager(extensions: List<EnhancePolicyAuthenticatio
         policyAuthenticationExtensions = map
     }
 
-    fun getById(id: String): EnhancePolicyAuthenticationExtensionPoint {
-        return idMap[id] ?: throw AppException("插件不存在，id: ${id}")
-    }
+    fun getById(id: String): EnhancePolicyAuthenticationExtensionPoint = idMap[id] ?: throw AppException("插件不存在，id: $id")
 
-    fun getExtPoints(permissionEntity: PermissionEntity): List<EnhancePolicyAuthenticationExtensionPoint> {
-        return policyAuthenticationExtensions[permissionEntity] ?: emptyList()
-    }
-
-
+    fun getExtPoints(permissionEntity: PermissionEntity): List<EnhancePolicyAuthenticationExtensionPoint> =
+        policyAuthenticationExtensions[permissionEntity] ?: emptyList()
 }

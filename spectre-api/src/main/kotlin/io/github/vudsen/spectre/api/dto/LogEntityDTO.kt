@@ -13,24 +13,21 @@ class LogEntityDTO(
     var username: String,
     var userId: Long,
     var userAgent: String,
-    var message: String?
+    var message: String?,
 ) {
-
     companion object {
-        fun LogEntityPO.toDTO(): LogEntityDTO {
-            return LogEntityDTO(
-                id!!,
-                operation!!,
-                isSuccess!!,
+        fun LogEntityPO.toDTO(): LogEntityDTO =
+            LogEntityDTO(
+                id,
+                operation,
+                isSuccess,
                 context,
-                time!!,
-                ip!!,
-                username!!,
-                userId!!,
-                userAgent!!,
-                message
+                time,
+                ip,
+                username,
+                userId,
+                userAgent,
+                message,
             )
-        }
     }
-
 }

@@ -7,7 +7,6 @@ import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import tools.jackson.databind.JsonNode
 
 interface ArthasHttpClient {
-
     /**
      * 同步执行命令
      * @return 返回一个 JSON 对象，该对象为成功响应中的 `body.result` 数组字段
@@ -20,7 +19,10 @@ interface ArthasHttpClient {
      * @param command 命令
      * @return 任务 id
      */
-    fun execAsync(sessionId: String, command: String): Int
+    fun execAsync(
+        sessionId: String,
+        command: String,
+    ): Int
 
     /**
      * 同步执行 profiler 命令，对于这些命令，需要覆盖其中的 --file 参数
@@ -29,7 +31,11 @@ interface ArthasHttpClient {
      * @param sessionId 会话id，如果该值非空，表示异步执行，否则同步
      * @return 如果为同步执行，返回执行结果，如果为异步执行，返回空
      */
-    fun execProfilerCommand(filename: String, commands: MutableList<String>, sessionId: String?): JsonNode?
+    fun execProfilerCommand(
+        filename: String,
+        commands: MutableList<String>,
+        sessionId: String?,
+    ): JsonNode?
 
     /**
      * 列出 profiler 的结果
@@ -57,7 +63,10 @@ interface ArthasHttpClient {
      * @return 返回一个 JSON 对象
      */
     @Throws(ConsumerNotFountException::class)
-    fun pullResults(sessionId: String, consumerId: String): JsonNode
+    fun pullResults(
+        sessionId: String,
+        consumerId: String,
+    ): JsonNode
 
     /**
      * 创建会话

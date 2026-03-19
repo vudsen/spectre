@@ -12,17 +12,22 @@ import org.springframework.core.io.InputStreamSource
 import org.springframework.data.domain.Page
 
 interface ToolchainService {
-
-
     /**
      * 列出所有工具
      */
-    fun listToolchainItems(type: ToolchainType, page: Int, size: Int): Page<ToolchainItemPO>
+    fun listToolchainItems(
+        type: ToolchainType,
+        page: Int,
+        size: Int,
+    ): Page<ToolchainItemPO>
 
     /**
      * 列出所有工具包
      */
-    fun listToolchainBundles(page: Int, size: Int): Page<ToolchainBundlePO>
+    fun listToolchainBundles(
+        page: Int,
+        size: Int,
+    ): Page<ToolchainBundlePO>
 
     /**
      * 查询工具包
@@ -55,17 +60,29 @@ interface ToolchainService {
      *
      * 该方法仅适用于单机部署，用于手动上传工具包。对于集群环境，该方法不一定可靠.
      */
-    fun isPackageCached(type: ToolchainType, tag: String, isArm: Boolean): Boolean
+    fun isPackageCached(
+        type: ToolchainType,
+        tag: String,
+        isArm: Boolean,
+    ): Boolean
 
     /**
      * 将包缓存到本地
      */
-    fun cachePackageToLocal(type: ToolchainType, tag: String, isArm: Boolean, source: InputStreamSource)
+    fun cachePackageToLocal(
+        type: ToolchainType,
+        tag: String,
+        isArm: Boolean,
+        source: InputStreamSource,
+    )
 
     /**
      * 根据 id 查询工具
      */
-    fun findToolchainItemById(type: ToolchainType, tag: String): ToolchainItemDTO?
+    fun findToolchainItemById(
+        type: ToolchainType,
+        tag: String,
+    ): ToolchainItemDTO?
 
     /**
      * 根据 id 删除工具

@@ -9,14 +9,12 @@ import jakarta.persistence.PrePersist
 import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import org.hibernate.annotations.DynamicUpdate
-import java.sql.Timestamp
 import java.time.Instant
 
 @Entity
 @DynamicUpdate
 @Table(name = "sys_conf")
 class SysConfigPO {
-
     @Id
     var id: Long? = null
 
@@ -38,5 +36,4 @@ class SysConfigPO {
     fun preUpdate() {
         lastUpdate = Instant.now()
     }
-
 }

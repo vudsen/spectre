@@ -6,9 +6,6 @@ import io.github.vudsen.spectre.repo.util.UpdateGroup
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
 import jakarta.persistence.PrePersist
 import jakarta.persistence.Table
 import jakarta.validation.constraints.NotNull
@@ -20,7 +17,6 @@ import java.sql.Timestamp
 @DynamicUpdate
 @Table(name = "role")
 class RolePO {
-
     @Id
     @Null(groups = [CreateGroup::class])
     @NotNull(groups = [UpdateGroup::class])
@@ -50,6 +46,4 @@ class RolePO {
             id = SnowFlake.nextId()
         }
     }
-
-
 }

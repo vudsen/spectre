@@ -1,7 +1,6 @@
 package io.github.vudsen.spectre.api.dto
 
 class UpdateLLMConfigurationDTO {
-
     var apiKey: String? = null
 
     var model: String? = null
@@ -11,5 +10,4 @@ class UpdateLLMConfigurationDTO {
     var maxTokenPerHour: Long? = null
 
     var enabled: Boolean? = null
-
 }

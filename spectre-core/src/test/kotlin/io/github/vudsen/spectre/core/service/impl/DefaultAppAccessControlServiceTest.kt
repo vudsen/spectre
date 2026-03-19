@@ -15,7 +15,6 @@ import io.github.vudsen.spectre.core.plugin.abac.ArthasExecutionEnhancePolicyAut
 import io.github.vudsen.spectre.core.plugin.abac.ArthasExecutionEnhancePolicyAuthenticationExtension.ArthasExecutionConfiguration
 import io.github.vudsen.spectre.repo.entity.PolicyPermissionEnhancePlugin
 import io.github.vudsen.spectre.repo.entity.SubjectType
-import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
 import io.github.vudsen.spectre.repo.po.RolePO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.GlobalDisposer
@@ -26,7 +25,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
-
     @set:Autowired
     lateinit var roleService: RoleService
 
@@ -46,9 +44,10 @@ class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
     lateinit var attachTester: AttachTester
 
     private fun createRole(roleName: String): Long {
-        val rolePO = RolePO().apply {
-            name = roleName
-        }
+        val rolePO =
+            RolePO().apply {
+                name = roleName
+            }
         roleService.saveRole(rolePO)
 
         GlobalDisposer.registerDispose {
@@ -58,25 +57,33 @@ class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
     }
 
     private fun createUser(username: String): Long {
-        val userPO = userService.createUser(CreateUserDTO().apply {
-            this.username = username
-            this.password = TestConstant.USER_TESTER_ENCRYPTED_PASSWORD
-        })
+        val userPO =
+            userService.createUser(
+                CreateUserDTO().apply {
+                    this.username = username
+                    this.password = TestConstant.USER_TESTER_ENCRYPTED_PASSWORD
+                },
+            )
         GlobalDisposer.registerDispose {
             userService.deleteUserById(userPO.id)
         }
         return userPO.id
     }
 
-    private fun bindPolicyPermission(subjectId: Long, entity: PermissionEntity, plugins: List<PolicyPermissionEnhancePlugin> ): Long {
-        val dto = CreatePolicyPermissionDTO().apply {
-            subjectType = SubjectType.ROLE
-            this.subjectId = subjectId
-            resource = entity.resource
-            action = entity.action
-            this.conditionExpression = "true"
-            enhancePlugins = plugins
-        }
+    private fun bindPolicyPermission(
+        subjectId: Long,
+        entity: PermissionEntity,
+        plugins: List<PolicyPermissionEnhancePlugin>,
+    ): Long {
+        val dto =
+            CreatePolicyPermissionDTO().apply {
+                subjectType = SubjectType.ROLE
+                this.subjectId = subjectId
+                resource = entity.resource
+                action = entity.action
+                this.conditionExpression = "true"
+                enhancePlugins = plugins
+            }
         val policyPermissionPO = policyPermissionService.savePolicyPermission(dto)
         return policyPermissionPO.id
     }
@@ -98,22 +105,30 @@ class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
             listOf(
                 PolicyPermissionEnhancePlugin().apply {
                     pluginId = ArthasExecutionEnhancePolicyAuthenticationExtension.ID
-                    configuration = objectMapper.writeValueAsString(ArthasExecutionConfiguration().apply {
-                        allowedCommands = setOf("watch")
-                    })
-                }
-            ))
+                    configuration =
+                        objectMapper.writeValueAsString(
+                            ArthasExecutionConfiguration().apply {
+                                allowedCommands = setOf("watch")
+                            },
+                        )
+                },
+            ),
+        )
         bindPolicyPermission(
             role2,
             AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE,
             listOf(
                 PolicyPermissionEnhancePlugin().apply {
                     pluginId = ArthasExecutionEnhancePolicyAuthenticationExtension.ID
-                    configuration = objectMapper.writeValueAsString(ArthasExecutionConfiguration().apply {
-                        allowedCommands = setOf("trace")
-                    })
-                }
-            ))
+                    configuration =
+                        objectMapper.writeValueAsString(
+                            ArthasExecutionConfiguration().apply {
+                                allowedCommands = setOf("trace")
+                            },
+                        )
+                },
+            ),
+        )
 
         bindPolicyPermission(role2, AppPermissions.RUNTIME_NODE_ATTACH, emptyList())
 
@@ -126,6 +141,4 @@ class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
             arthasExecutionService.execAsync(defaultChannel, "jad demo.mathGame")
         }
     }
-
-
 }

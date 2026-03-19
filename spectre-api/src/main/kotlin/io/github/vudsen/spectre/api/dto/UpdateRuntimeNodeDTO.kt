@@ -1,8 +1,6 @@
 package io.github.vudsen.spectre.api.dto
 
-
 class UpdateRuntimeNodeDTO {
-
     var id: Long = 0
 
     var name: String? = null
@@ -12,6 +10,4 @@ class UpdateRuntimeNodeDTO {
     var configuration: String? = null
 
     var restrictedMode: Boolean? = null
-
-
 }

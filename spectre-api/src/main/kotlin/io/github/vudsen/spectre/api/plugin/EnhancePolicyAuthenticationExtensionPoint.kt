@@ -12,8 +12,9 @@ import io.github.vudsen.spectre.api.perm.PermissionEntity
  * 详见: [io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider]
  */
 abstract class EnhancePolicyAuthenticationExtensionPoint : ExtensionPoint {
-
-    class EnhancePageParameterVO(var pluginId: String)
+    class EnhancePageParameterVO(
+        var pluginId: String,
+    )
 
     /**
      * 获取该扩展要增强的目标
@@ -32,11 +33,13 @@ abstract class EnhancePolicyAuthenticationExtensionPoint : ExtensionPoint {
      * @return 是否拥有对应权限
      */
     @Throws(PermissionDenyException::class)
-    abstract fun hasPermission(context: Map<String, Any>, conf: Any): Boolean
+    abstract fun hasPermission(
+        context: Map<String, Any>,
+        conf: Any,
+    ): Boolean
 
     /**
      * 获取配置类
      */
     abstract fun getConfigurationClass(): Class<*>
-
 }

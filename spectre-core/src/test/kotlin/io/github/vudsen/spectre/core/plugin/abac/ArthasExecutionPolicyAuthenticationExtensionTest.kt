@@ -13,7 +13,6 @@ import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermiss
 import io.github.vudsen.spectre.core.plugin.abac.ArthasExecutionEnhancePolicyAuthenticationExtension.ArthasExecutionConfiguration
 import io.github.vudsen.spectre.repo.entity.PolicyPermissionEnhancePlugin
 import io.github.vudsen.spectre.repo.entity.SubjectType
-import io.github.vudsen.spectre.repo.po.PolicyPermissionPO
 import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.plugin.AttachTester
@@ -22,7 +21,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
-
     @set:Autowired
     lateinit var appAccessControlService: AppAccessControlService
 
@@ -32,16 +30,20 @@ class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
     @set:Autowired
     lateinit var runtimeNodeService: RuntimeNodeService
 
-
     @set:Autowired
     lateinit var attachTester: AttachTester
 
-    private fun checkPermission(command: List<String>, runtimeNodeDTO: RuntimeNodeDTO, jvm: Jvm) {
-        val context = ArthasExecutionPolicyPermissionContext(
-            command,
-            runtimeNodeDTO,
-            jvm
-        )
+    private fun checkPermission(
+        command: List<String>,
+        runtimeNodeDTO: RuntimeNodeDTO,
+        jvm: Jvm,
+    ) {
+        val context =
+            ArthasExecutionPolicyPermissionContext(
+                command,
+                runtimeNodeDTO,
+                jvm,
+            )
         appAccessControlService.checkPolicyPermission(context)
     }
 
@@ -49,28 +51,39 @@ class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
     fun `test redirect operator`() {
         val objectMapper = ObjectMapper()
         // setup permission
-        val id = policyPermissionService.savePolicyPermission(CreatePolicyPermissionDTO().apply {
-            subjectType = SubjectType.ROLE
-            subjectId = TestConstant.ROLE_TEST_ID
-            resource = AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.resource
-            action = AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.action
-            conditionExpression = "'true'"
-            enhancePlugins = listOf(PolicyPermissionEnhancePlugin().apply {
-                pluginId = ArthasExecutionEnhancePolicyAuthenticationExtension.ID
-                configuration = objectMapper.writeValueAsString(ArthasExecutionConfiguration().apply {
-                    allowedCommands = setOf("watch")
-                    allowRedirect = false
-                })
-            })
-        }).id
+        val id =
+            policyPermissionService
+                .savePolicyPermission(
+                    CreatePolicyPermissionDTO().apply {
+                        subjectType = SubjectType.ROLE
+                        subjectId = TestConstant.ROLE_TEST_ID
+                        resource = AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.resource
+                        action = AppPermissions.RUNTIME_NODE_ARTHAS_EXECUTE.action
+                        conditionExpression = "'true'"
+                        enhancePlugins =
+                            listOf(
+                                PolicyPermissionEnhancePlugin().apply {
+                                    pluginId = ArthasExecutionEnhancePolicyAuthenticationExtension.ID
+                                    configuration =
+                                        objectMapper.writeValueAsString(
+                                            ArthasExecutionConfiguration().apply {
+                                                allowedCommands = setOf("watch")
+                                                allowRedirect = false
+                                            },
+                                        )
+                                },
+                            )
+                    },
+                ).id
         try {
             setupSecurityContext(TestConstant.USER_TESTER_USERNAME, TestConstant.USER_TESTER_PASSWORD)
 
             val runtimeNodeDTO = runtimeNodeService.findPureRuntimeNodeById(attachTester.commonRuntimeNodeId)!!
-            val jvm = runtimeNodeService.deserializeToJvm(
-                runtimeNodeDTO.pluginId,
-                runtimeNodeService.findTreeNode(attachTester.resolveDefaultJvm().id)!!
-            )
+            val jvm =
+                runtimeNodeService.deserializeToJvm(
+                    runtimeNodeDTO.pluginId,
+                    runtimeNodeService.findTreeNode(attachTester.resolveDefaultJvm().id)!!,
+                )
 
             checkPermission(listOf("watch", "foo.Bar", "'#cost>200'"), runtimeNodeDTO, jvm)
             Assertions.assertThrows(BusinessException::class.java) {
@@ -82,8 +95,5 @@ class ArthasExecutionPolicyAuthenticationExtensionTest : AbstractSpectreTest() {
         } finally {
             policyPermissionService.deletePermission(id)
         }
-
     }
-
-
 }

@@ -5,7 +5,6 @@ package io.github.vudsen.spectre.api.plugin
  * TODO: rename to plugin.
  */
 interface ExtensionPoint {
-
     /**
      * 获取唯一id
      */
@@ -15,6 +14,4 @@ interface ExtensionPoint {
      * 获取扩展点名称
      */
     fun getExtensionPointName(): String
-
-
 }

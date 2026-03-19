@@ -1,8 +1,8 @@
 package io.github.vudsen.spectre.test
 
-import io.github.vudsen.spectre.SpectreApplication
 import io.github.vudsen.spectre.common.ApplicationContextHolder
 import io.github.vudsen.spectre.common.SpectreEnvironment
+import io.github.vudsen.spectre.io.github.vudsen.spectre.SpectreApplication
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -15,14 +15,12 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 
-
 /**
  * 提供一些基础环境的初始化.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(classes = [SpectreApplication::class], webEnvironment = SpringBootTest.WebEnvironment.NONE)
 abstract class AbstractSpectreTest {
-
     @set:Autowired
     lateinit var authenticationManager: AuthenticationManager
 
@@ -38,7 +36,10 @@ abstract class AbstractSpectreTest {
         }
     }
 
-    fun setupSecurityContext(username: String, password: String) {
+    fun setupSecurityContext(
+        username: String,
+        password: String,
+    ) {
         val authToken =
             UsernamePasswordAuthenticationToken(username, password)
         val authentication = authenticationManager.authenticate(authToken)
@@ -49,16 +50,14 @@ abstract class AbstractSpectreTest {
     }
 
     @BeforeEach
-    fun _setupSecurityContext() {
+    fun setupSecurityContext() {
         ApplicationContextHolder.applicationContext = applicationContext
         setupSecurityContext(TestConstant.ROOT_USER_USERNAME, TestConstant.ROOT_USER_PASSWORD)
     }
 
     @AfterEach
-    fun _cleanSecurityContext() {
+    fun cleanSecurityContext() {
         SecurityContextHolder.clearContext()
         GlobalDisposer.destroy()
     }
-
-
 }

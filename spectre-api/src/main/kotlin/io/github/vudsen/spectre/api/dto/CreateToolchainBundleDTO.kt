@@ -3,7 +3,6 @@ package io.github.vudsen.spectre.api.dto
 import jakarta.validation.constraints.NotEmpty
 
 class CreateToolchainBundleDTO {
-
     @field:NotEmpty
     var name: String = ""
 
@@ -12,6 +11,4 @@ class CreateToolchainBundleDTO {
 
     @field:NotEmpty
     var arthasTag: String = ""
-
-
 }

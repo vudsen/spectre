@@ -13,8 +13,6 @@ import org.testcontainers.k3s.K3sContainer
 import org.testcontainers.utility.DockerImageName
 
 class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
-
-
     @Test
     fun testFullBusinessFlow() {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
@@ -27,46 +25,50 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
     }
 
     override fun findJvmTreeNode(runtimeNodeId: String): JvmTreeNodeDTO {
-        val treeNode = client.post().uri("spectre-api/runtime-node/expand-tree")
-            .cookies(cookiesConsumer)
-            .bodyValue(
-                mutableMapOf(
-                    "runtimeNodeId" to runtimeNodeId
-                )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBodyList<JvmTreeNodeDTO>()
-            .returnResult()
-            .responseBody!!
-            .find { node -> node.name == "spectre" }!!
+        val treeNode =
+            client
+                .post()
+                .uri("spectre-api/runtime-node/expand-tree")
+                .cookies(cookiesConsumer)
+                .bodyValue(
+                    mutableMapOf(
+                        "runtimeNodeId" to runtimeNodeId,
+                    ),
+                ).exchange()
+                .expectStatus()
+                .isOk
+                .expectBodyList<JvmTreeNodeDTO>()
+                .returnResult()
+                .responseBody!!
+                .find { node -> node.name == "spectre" }!!
 
-        val holder = client.post().uri("spectre-api/runtime-node/expand-tree")
-            .cookies(cookiesConsumer)
-            .bodyValue(
-                mutableMapOf(
-                    "runtimeNodeId" to runtimeNodeId,
-                    "parentNodeId" to treeNode.id
-                )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBodyList<JvmTreeNodeDTO>()
-            .hasSize(1)
-            .returnResult()
-            .responseBody!!
+        val holder =
+            client
+                .post()
+                .uri("spectre-api/runtime-node/expand-tree")
+                .cookies(cookiesConsumer)
+                .bodyValue(
+                    mutableMapOf(
+                        "runtimeNodeId" to runtimeNodeId,
+                        "parentNodeId" to treeNode.id,
+                    ),
+                ).exchange()
+                .expectStatus()
+                .isOk
+                .expectBodyList<JvmTreeNodeDTO>()
+                .hasSize(1)
+                .returnResult()
+                .responseBody!!
         return holder[0]
     }
-
 
     /**
      * @return runtimeNodeId
      */
     private fun setupK8sRuntimeNode(): String {
-        val k3s = K3sContainer(DockerImageName.parse("rancher/k3s:v1.31.0-k3s1"))
-            .withCommand("server", "--disable=traefik", "--disable=local-storage")
+        val k3s =
+            K3sContainer(DockerImageName.parse("rancher/k3s:v1.31.0-k3s1"))
+                .withCommand("server", "--disable=traefik", "--disable=local-storage")
 
         k3s.start()
         K8sRuntimeNodeExtensionTest::class.java.classLoader.getResourceAsStream("k8s-deploy.yaml").use { stream ->
@@ -84,45 +86,46 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         val token = result.stdout
 
         loop(60) {
-            val execInContainer = k3s.execInContainer(
-                "kubectl",
-                "get",
-                "deployment",
-                "math-game",
-                "-n",
-                "spectre",
-                "-o",
-                "jsonpath='{.status.readyReplicas}'"
-            )
+            val execInContainer =
+                k3s.execInContainer(
+                    "kubectl",
+                    "get",
+                    "deployment",
+                    "math-game",
+                    "-n",
+                    "spectre",
+                    "-o",
+                    "jsonpath='{.status.readyReplicas}'",
+                )
             if (execInContainer.stdout == "'1'") {
                 return@loop true
             }
             return@loop null
         }
 
-        return client.post().uri("spectre-api/runtime-node/create")
+        return client
+            .post()
+            .uri("spectre-api/runtime-node/create")
             .cookies(cookiesConsumer)
             .bodyValue(
                 mutableMapOf(
                     "name" to "K8s",
                     "pluginId" to K8sRuntimeNodeExtension.ID,
-                    "configuration" to objectMapper.writeValueAsString(
-                        K8sRuntimeNodeConfig(
-                            endpoint,
-                            token,
-                            "/opt/spectre",
-                            true
-                        )
-                    )
-                )
-            )
-            .exchange()
+                    "configuration" to
+                        objectMapper.writeValueAsString(
+                            K8sRuntimeNodeConfig(
+                                endpoint,
+                                token,
+                                "/opt/spectre",
+                                true,
+                            ),
+                        ),
+                ),
+            ).exchange()
             .expectStatus()
             .isOk
             .expectBody<String>()
             .returnResult()
             .responseBody!!
     }
-
-
 }

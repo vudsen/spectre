@@ -6,7 +6,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 
 class MyWebTestClientCustomizer : WebTestClientBuilderCustomizer {
     override fun customize(builder: WebTestClient.Builder) {
-        builder.baseUrl("/spectre-api/")
+        builder
+            .baseUrl("/spectre-api/")
             .defaultHeader(HttpHeaders.USER_AGENT, "Spectre Integration Test")
     }
 }

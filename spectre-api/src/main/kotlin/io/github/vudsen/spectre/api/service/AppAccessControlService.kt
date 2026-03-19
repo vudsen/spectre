@@ -1,9 +1,8 @@
 package io.github.vudsen.spectre.api.service
 
-import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
 import io.github.vudsen.spectre.api.perm.PermissionEntity
+import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
 import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
-
 
 /**
  * 安全服务.
@@ -13,25 +12,22 @@ import io.github.vudsen.spectre.api.plugin.policy.PolicyPermissionContextExample
  * - ACL: 主要用于基础的菜单权限
  */
 interface AppAccessControlService {
-
-
     /**
      * 是否拥有权限. 该方法会创建一个 [io.github.vudsen.spectre.api.perm.EmptyContext] 用于校验策略权限
      */
-    fun hasPermission(userId: Long, permissionEntity: PermissionEntity): Boolean
+    fun hasPermission(
+        userId: Long,
+        permissionEntity: PermissionEntity,
+    ): Boolean
 
     /**
      * 获取用于帮助编写 ognl 表达式的样例
      */
     fun resolveExamplePolicyPermissionContext(permissionEntity: PermissionEntity): List<PolicyPermissionContextExample>
 
-
     /**
      * 通过 abac 校验当前用户是否可以访问该资源
      * @param context 上下文
      */
-    fun checkPolicyPermission(
-        context: PolicyPermissionContext
-    )
-
+    fun checkPolicyPermission(context: PolicyPermissionContext)
 }
