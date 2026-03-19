@@ -53,6 +53,11 @@ object SpectreEnvironment {
         ENCRYPTOR_SALT = System.getenv("ENCRYPTOR_SALT")?.let {
             Base64.getDecoder().decode(it)
         }
+        if (ENCRYPTOR_KEY == null) {
+            logger.warn("ENCRYPTOR_KEY is not specific, sensitive fields will be stored in plaintext.")
+        } else if (ENCRYPTOR_SALT == null) {
+            logger.warn("ENCRYPTOR_SALT is not specific, providing this environment variable is recommended for better security.")
+        }
         GRAPHQL_AUTHORIZATION_TOKEN = System.getenv("GRAPHQL_AUTHORIZATION_TOKEN")
         PREVIEW_ENVIRONMENT = System.getenv("PREVIEW_ENVIRONMENT") == "true"
     }

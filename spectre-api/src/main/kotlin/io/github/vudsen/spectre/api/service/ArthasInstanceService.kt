@@ -43,6 +43,6 @@ interface ArthasInstanceService {
     /**
      * 测试使用，清除所有客户端缓存
      */
-    fun clearCachedClient()
+    fun clearCachedClient(cleanAllInstance: Boolean)
 
 }
