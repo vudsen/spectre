@@ -107,8 +107,7 @@ abstract class AbstractSpectreIntegrationTest {
     protected fun prepareChannel(runtimeNodeId: String, treeNode: JvmTreeNodeDTO): ChannelTestContext {
         val bundleId = findLatestBundleId()
 
-        var channelId = ""
-        while (true) {
+        val channelId: String = loop(30) {
             val attachStatus = client.post().uri("spectre-api/arthas/create-channel")
                 .cookies(cookiesConsumer)
                 .bodyValue(
@@ -122,10 +121,10 @@ abstract class AbstractSpectreIntegrationTest {
                 .returnResult().responseBody!!
             attachStatus.channelId?.let {
                 if (attachStatus.isReady) {
-                    channelId = it
-                    break
+                    return@loop it
                 }
             }
+            return@loop null
         }
 
         client.post().uri("spectre-api/arthas/channel/$channelId/join")
@@ -238,7 +237,7 @@ abstract class AbstractSpectreIntegrationTest {
         val treeNode = findJvmTreeNode(context.runtimeNodeId)
         val newChannel = prepareChannel(context.runtimeNodeId, treeNode)
         context.channelId = newChannel.channelId
-        testChannel0(context)
+        testChannel0(newChannel)
     }
 
     protected fun testRetransform(info: ChannelTestContext) {

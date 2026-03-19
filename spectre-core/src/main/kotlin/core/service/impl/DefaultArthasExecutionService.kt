@@ -203,7 +203,8 @@ class DefaultArthasExecutionService(
             runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId)
                 ?: throw BusinessException("error.runtime.node.not.exist")
 
-        val node = runtimeNodeService.findTreeNode(treeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
+        val node = runtimeNodeService.findTreeNode(treeNodeId) ?:
+            throw NamedExceptions.SESSION_EXPIRED.toException()
         val jvm = runtimeNodeService.deserializeToJvm(runtimeNodeDto.pluginId, node)
         arthasInstanceService.resolveCachedClient(treeNodeId)?.let {
             if (it.first != null) {
@@ -403,6 +404,7 @@ class DefaultArthasExecutionService(
                             Instant.now()
                         ), client
                     )
+                    clientInitMap.remove(resolveJvmId(runtimeNodeDto.id, jvm))
                 } else if (client.getPort() != arthasInstance.boundPort) {
                     arthasInstanceService.updateArthasInstance(ArthasInstancePO().apply {
                         id = arthasInstance.id
