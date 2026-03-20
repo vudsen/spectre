@@ -2,7 +2,7 @@ package io.github.vudsen.spectre.test
 
 import io.github.vudsen.spectre.common.ApplicationContextHolder
 import io.github.vudsen.spectre.common.SpectreEnvironment
-import io.github.vudsen.spectre.io.github.vudsen.spectre.SpectreApplication
+import io.github.vudsen.spectre.SpectreApplication
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance

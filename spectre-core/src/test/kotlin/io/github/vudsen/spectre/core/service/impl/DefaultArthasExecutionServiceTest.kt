@@ -41,25 +41,25 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
         )
 
         // 样例 2: 转义字符
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("hello", "\"\\\"wo \\\"rld\"", "'\\\\!!\\'!!'"),
             testSplit("""hello "\"wo \"rld" '\\!!\'!!'"""),
         )
 
         // 样例 3: 嵌套引号处理
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("I", "\"love 'you'\""),
             testSplit("""I "love 'you'""""),
         )
 
         // 样例 4: 多个连续空格
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("hello", "world"),
             testSplit("""    hello     world     """),
         )
 
         // 样例 5: 未闭合的引号
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("hello", "'my beautiful \"world"),
             testSplit("""hello 'my beautiful "world"""),
         )
@@ -68,20 +68,20 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
     @Test
     fun checkOgnlExpression() {
         val defaultChannel = attachTester.resolveDefaultChannel()
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl \"T(java.lang.Runtime).getRuntime().exec('touch ~/hacked.txt')\"")
         }
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl \"''.getClass().forName('java.lang.Runtime')\"")
         }
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl \"(#root.class.forName('java.lang.Runtime'))\"")
         }
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             // test prase failed.
             arthasExecutionService.execAsync(defaultChannel, "ognl \"exawxe-=-+\"")
         }
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl '#root.toString()'")
         }
 
