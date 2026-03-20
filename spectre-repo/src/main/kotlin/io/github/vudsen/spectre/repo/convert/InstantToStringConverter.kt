@@ -5,20 +5,19 @@ import jakarta.persistence.Converter
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
-
 @Converter(autoApply = true)
 class InstantToStringConverter : AttributeConverter<Instant?, String?> {
-    override fun convertToDatabaseColumn(attribute: Instant?): String? {
-        return if (attribute == null)
+    override fun convertToDatabaseColumn(attribute: Instant?): String? =
+        if (attribute == null) {
             null
-        else
+        } else {
             DateTimeFormatter.ISO_INSTANT.format(attribute)
-    }
+        }
 
-    override fun convertToEntityAttribute(dbData: String?): Instant? {
-        return if (dbData == null)
+    override fun convertToEntityAttribute(dbData: String?): Instant? =
+        if (dbData == null) {
             null
-        else
+        } else {
             Instant.parse(dbData)
-    }
+        }
 }

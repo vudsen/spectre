@@ -8,9 +8,9 @@ import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
-import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.api.plugin.rnode.pool.ResourcesPool
 import io.github.vudsen.spectre.api.plugin.rnode.pool.RuntimeNodeResourcesPoolRegister
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import org.springframework.cglib.proxy.Enhancer
 import org.springframework.cglib.proxy.MethodInterceptor
 import org.springframework.cglib.proxy.MethodProxy
@@ -20,15 +20,12 @@ import java.util.WeakHashMap
 /**
  * 运行节点扩展点.
  */
-abstract class RuntimeNodeExtensionPoint (
-    val name: String
+abstract class RuntimeNodeExtensionPoint(
+    val name: String,
 ) : ExtensionPoint {
-
     private val instanceCache = WeakHashMap<RuntimeNodeConfig, RuntimeNode>()
 
-    final override fun getExtensionPointName(): String {
-        return "RuntimeNode"
-    }
+    final override fun getExtensionPointName(): String = "RuntimeNode"
 
     /**
      * 获取描述，可以使用 html 富文本
@@ -45,7 +42,10 @@ abstract class RuntimeNodeExtensionPoint (
      * @param runtimeNodeDTO 已经过滤敏感字段后的数据
      * @param configuration 完整的配置，包含敏感字段
      */
-    abstract fun getViewPage(runtimeNodeDTO: RuntimeNodeDTO, configuration: RuntimeNodeConfig): PageDescriptor
+    abstract fun getViewPage(
+        runtimeNodeDTO: RuntimeNodeDTO,
+        configuration: RuntimeNodeConfig,
+    ): PageDescriptor
 
     /**
      * 获取配置的类名
@@ -65,18 +65,17 @@ abstract class RuntimeNodeExtensionPoint (
     /**
      * 若 [isCloseableRuntimeNode] 返回了 true，[connect] 方法将会返回一个代理类，代理类实现的接口需要在这里指定
      */
-    protected open fun runtimeNodeClass(): Class<*> {
-        return Nothing::class.java
-    }
+    protected open fun runtimeNodeClass(): Class<*> = Nothing::class.java
 
-    private class RuntimeNodeProxy(private val pool: ResourcesPool, private val config: RuntimeNodeConfig) :
-        MethodInterceptor {
-
+    private class RuntimeNodeProxy(
+        private val pool: ResourcesPool,
+        private val config: RuntimeNodeConfig,
+    ) : MethodInterceptor {
         override fun intercept(
             obj: Any?,
             method: Method,
             args: Array<out Any?>,
-            proxy: MethodProxy?
+            proxy: MethodProxy?,
         ): Any? {
             RuntimeNodeResourcesPoolRegister.reportInUsing(config)
             val node = pool.borrow()
@@ -86,7 +85,6 @@ abstract class RuntimeNodeExtensionPoint (
                 pool.retrieve(node)
             }
         }
-
     }
 
     fun connect(config: RuntimeNodeConfig): RuntimeNode {
@@ -95,9 +93,10 @@ abstract class RuntimeNodeExtensionPoint (
             return node
         }
         if (isCloseableRuntimeNode()) {
-            val pool = RuntimeNodeResourcesPoolRegister.getPool(config) {
-                createRuntimeNode(config) as CloseableRuntimeNode
-            }
+            val pool =
+                RuntimeNodeResourcesPoolRegister.getPool(config) {
+                    createRuntimeNode(config) as CloseableRuntimeNode
+                }
             val enhancer = Enhancer()
             enhancer.setSuperclass(runtimeNodeClass())
             enhancer.setCallback(RuntimeNodeProxy(pool, config))
@@ -126,8 +125,10 @@ abstract class RuntimeNodeExtensionPoint (
      * @param base 数据库中的配置
      * @return [updated]
      */
-    abstract fun fillSensitiveConfiguration(updated: RuntimeNodeConfig, base: RuntimeNodeConfig): RuntimeNodeConfig
-
+    abstract fun fillSensitiveConfiguration(
+        updated: RuntimeNodeConfig,
+        base: RuntimeNodeConfig,
+    ): RuntimeNodeConfig
 
     /**
      * 创建 jvm searcher
@@ -137,6 +138,9 @@ abstract class RuntimeNodeExtensionPoint (
     /**
      * 创建 attach handler
      */
-    abstract fun createAttachHandler(runtimeNode: RuntimeNode, jvm: Jvm, bundles: ToolchainBundleDTO): JvmAttachHandler
-
+    abstract fun createAttachHandler(
+        runtimeNode: RuntimeNode,
+        jvm: Jvm,
+        bundles: ToolchainBundleDTO,
+    ): JvmAttachHandler
 }

@@ -22,12 +22,9 @@ data class ToolchainItemPO(
      * arm url
      */
     var armUrl: String,
-
     @field:Null
     @Column(name = "created_at", updatable = false, insertable = false)
     val createdAt: Timestamp,
 ) {
-
     constructor() : this(ToolchainItemId(), "", "", Timestamp(System.currentTimeMillis()))
-
 }

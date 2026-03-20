@@ -1,7 +1,6 @@
 package io.github.vudsen.spectre.test
 
 object TestConstant {
-
     const val TOOLCHAIN_BUNDLE_LATEST_ID = 1L
 
     const val ROOT_USER_USERNAME = "admin"
@@ -14,7 +13,6 @@ object TestConstant {
 
     const val DOCKER_IMAGE_SSHD_WITH_DOCKER = "vudsen/sshd-with-docker:0.0.1"
 
-
     const val ROLE_TEST_ID = 2L
 
     const val USER_TESTER_USERNAME = "tester"
@@ -22,5 +20,4 @@ object TestConstant {
     const val USER_TESTER_PASSWORD = "P@ssw0rd"
 
     const val USER_TESTER_ENCRYPTED_PASSWORD = "\$2a\$10\$HYWbzz/kgOxgklyf5pF0Vu2Hyfpir1xCeVua.NqpHynWurqRa2QI."
-
 }

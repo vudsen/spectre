@@ -10,10 +10,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 
 class AiConversationStateStoreTest {
-
-    private fun newStore(): AiConversationStateStore {
-        return AiConversationStateStore(ConcurrentMapCacheManager(CacheConstant.DEFAULT_CACHE_KEY))
-    }
+    private fun newStore(): AiConversationStateStore = AiConversationStateStore(ConcurrentMapCacheManager(CacheConstant.DEFAULT_CACHE_KEY))
 
     @Test
     fun pendingToolConfirm_shouldSupportSaveGetTakeAndConsume() {
@@ -86,13 +83,14 @@ class AiConversationStateStoreTest {
         store.appendAssistantMessage(
             conversationId = conversationId,
             content = "",
-            toolCalls = listOf(
-                AiConversationStateStore.AssistantToolCall(
-                    id = "call-3",
-                    name = "executeArthasCommand",
-                    arguments = "{\"command\":\"thread -n 1\"}",
-                )
-            ),
+            toolCalls =
+                listOf(
+                    AiConversationStateStore.AssistantToolCall(
+                        id = "call-3",
+                        name = "executeArthasCommand",
+                        arguments = "{\"command\":\"thread -n 1\"}",
+                    ),
+                ),
         )
         store.appendToolResponseMessage(
             conversationId = conversationId,

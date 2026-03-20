@@ -14,8 +14,6 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
 
 class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
-
-
     @Test
     fun testDockerAttach() {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
@@ -27,12 +25,12 @@ class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         testChannel(channelId)
     }
 
-
     private fun setupSshDockerRuntimeNode(): String {
-        val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSHD_WITH_DOCKER)).apply {
-            withExposedPorts(22)
-            withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
-        }
+        val container =
+            GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSHD_WITH_DOCKER)).apply {
+                withExposedPorts(22)
+                withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
+            }
         container.start()
 
         val result =
@@ -47,32 +45,34 @@ class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
 
         val objectMapper = ObjectMapper()
 
-        return client.post().uri("spectre-api/runtime-node/create")
+        return client
+            .post()
+            .uri("spectre-api/runtime-node/create")
             .cookies(cookiesConsumer)
             .bodyValue(
                 mutableMapOf(
                     "name" to "test",
                     "pluginId" to SshRuntimeNodeExtension.ID,
-                    "configuration" to objectMapper.writeValueAsString(
-                        SshRuntimeNodeConfig(
-                            SshRuntimeNodeConfig.Docker(true, "docker", null, null),
-                            null,
-                            container.host,
-                            container.firstMappedPort,
-                            "root",
-                            SshRuntimeNodeConfig.LoginPrincipal(
-                                SshRuntimeNodeConfig.LoginType.PASSWORD,
-                                "P@ssw0rd",
+                    "configuration" to
+                        objectMapper.writeValueAsString(
+                            SshRuntimeNodeConfig(
+                                SshRuntimeNodeConfig.Docker(true, "docker", null, null),
                                 null,
-                                null
+                                container.host,
+                                container.firstMappedPort,
+                                "root",
+                                SshRuntimeNodeConfig.LoginPrincipal(
+                                    SshRuntimeNodeConfig.LoginType.PASSWORD,
+                                    "P@ssw0rd",
+                                    null,
+                                    null,
+                                ),
+                                "/opt/spectre",
                             ),
-                            "/opt/spectre"
-                        )
-                    ),
-                    "restrictedMode" to true
-                )
-            )
-            .exchange()
+                        ),
+                    "restrictedMode" to true,
+                ),
+            ).exchange()
             .expectStatus()
             .isOk
             .expectBody<String>()
@@ -81,34 +81,35 @@ class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
     }
 
     override fun findJvmTreeNode(runtimeNodeId: String): JvmTreeNodeDTO {
-        val treeNode = client.post().uri("spectre-api/runtime-node/expand-tree")
-            .cookies(cookiesConsumer)
-            .bodyValue(
-                mutableMapOf(
-                    "runtimeNodeId" to runtimeNodeId
-                )
-            )
-            .exchange()
-            .expectBodyList<JvmTreeNodeDTO>()
-            .hasSize(1)
-            .returnResult()
-            .responseBody!!
+        val treeNode =
+            client
+                .post()
+                .uri("spectre-api/runtime-node/expand-tree")
+                .cookies(cookiesConsumer)
+                .bodyValue(
+                    mutableMapOf(
+                        "runtimeNodeId" to runtimeNodeId,
+                    ),
+                ).exchange()
+                .expectBodyList<JvmTreeNodeDTO>()
+                .hasSize(1)
+                .returnResult()
+                .responseBody!!
 
-
-        val holder = client.post().uri("spectre-api/runtime-node/expand-tree")
-            .cookies(cookiesConsumer)
-            .bodyValue(
-                mutableMapOf(
-                    "runtimeNodeId" to runtimeNodeId,
-                    "parentNodeId" to treeNode[0].id
-                )
-            )
-            .exchange()
-            .expectBodyList<JvmTreeNodeDTO>()
-            .returnResult()
-            .responseBody!!
+        val holder =
+            client
+                .post()
+                .uri("spectre-api/runtime-node/expand-tree")
+                .cookies(cookiesConsumer)
+                .bodyValue(
+                    mutableMapOf(
+                        "runtimeNodeId" to runtimeNodeId,
+                        "parentNodeId" to treeNode[0].id,
+                    ),
+                ).exchange()
+                .expectBodyList<JvmTreeNodeDTO>()
+                .returnResult()
+                .responseBody!!
         return holder.find { node -> node.name.contains(TestConstant.DOCKER_IMAGE_MATH_GAME) }!!
     }
-
-
 }

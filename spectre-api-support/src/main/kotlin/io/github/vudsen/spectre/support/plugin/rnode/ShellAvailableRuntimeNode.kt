@@ -9,7 +9,6 @@ import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
  * 表示当前节点可以上传文件
  */
 interface ShellAvailableRuntimeNode : RuntimeNode {
-
     /**
      * 执行命令
      */
@@ -18,10 +17,7 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
     /**
      * 执行命令
      */
-    fun execute(vararg commands: String): CommandExecuteResult {
-        return execute(commands.joinToString(" "))
-    }
-
+    fun execute(vararg commands: String): CommandExecuteResult = execute(commands.joinToString(" "))
 
     /**
      * 创建交互式命令
@@ -55,20 +51,25 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
      */
     fun mkdirs(path: String)
 
-
     /**
      * 将本地的文件发送到宿主机上面
      * @param src 本地文件路径.
      * @param dest 目标路径，指定文件的绝对路径。 **需要确保父目录存在**
      */
-    fun upload(src: String, dest: String)
+    fun upload(
+        src: String,
+        dest: String,
+    )
 
     /**
      * 上传文件
      * @param source 输入流
      * @param dest 目标路径
      */
-    fun upload(source: BoundedInputStreamSource, dest: String)
+    fun upload(
+        source: BoundedInputStreamSource,
+        dest: String,
+    )
 
     /**
      * 是否为 arm 架构
@@ -84,5 +85,4 @@ interface ShellAvailableRuntimeNode : RuntimeNode {
      * 获取家路径
      */
     fun getHomePath(): String
-
 }

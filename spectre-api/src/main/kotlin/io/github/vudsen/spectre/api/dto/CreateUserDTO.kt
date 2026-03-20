@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Size
 
 class CreateUserDTO {
-
     @NotEmpty
     var username: String = ""
 
@@ -15,5 +14,4 @@ class CreateUserDTO {
     var displayName: String? = null
 
     var labels: Map<String, String> = emptyMap()
-
 }

@@ -1,22 +1,24 @@
 package io.github.vudsen.spectre.repo.po
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import io.github.vudsen.spectre.repo.util.CreateGroup
-import io.github.vudsen.spectre.repo.util.SnowFlake
-import io.github.vudsen.spectre.repo.util.UpdateGroup
 import io.github.vudsen.spectre.repo.convert.LabelsConvert
-import jakarta.persistence.*
-import jakarta.validation.constraints.NotNull
-import jakarta.validation.constraints.Null
+import io.github.vudsen.spectre.repo.util.SnowFlake
+import jakarta.persistence.Column
+import jakarta.persistence.Convert
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
+import jakarta.persistence.PrePersist
+import jakarta.persistence.Table
 import org.hibernate.annotations.DynamicUpdate
 import java.sql.Timestamp
-
 
 @Entity
 @DynamicUpdate
 @Table(name = "user")
 class UserPO {
-
     @Id
     var id: Long = 0
 
@@ -42,7 +44,7 @@ class UserPO {
     @JoinTable(
         name = "user_role",
         joinColumns = [JoinColumn(name = "user_id")],
-        inverseJoinColumns = [JoinColumn(name = "role_id")]
+        inverseJoinColumns = [JoinColumn(name = "role_id")],
     )
     var roles: MutableList<RolePO> = mutableListOf()
 
@@ -52,5 +54,4 @@ class UserPO {
             id = SnowFlake.nextId()
         }
     }
-
 }

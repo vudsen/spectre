@@ -7,10 +7,7 @@ package io.github.vudsen.spectre.common
  *
  */
 interface RuntimeNodeConfig {
-
-
     override fun equals(other: Any?): Boolean
 
     override fun hashCode(): Int
-
 }

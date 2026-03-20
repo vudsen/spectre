@@ -10,8 +10,9 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
-interface SysConfigRepository : JpaRepository<SysConfigPO, Long>, QueryByExampleExecutor<SysConfigPO> {
-
+interface SysConfigRepository :
+    JpaRepository<SysConfigPO, Long>,
+    QueryByExampleExecutor<SysConfigPO> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query(
@@ -20,7 +21,7 @@ interface SysConfigRepository : JpaRepository<SysConfigPO, Long>, QueryByExample
         SET s.value = :newValue
         WHERE s.id = :id
           AND ((:expectedOldValue IS NULL AND s.value IS NULL) OR s.value = :expectedOldValue)
-        """
+        """,
     )
     fun updateValueByIdWithOptimisticCheck(
         @Param("id") id: Long,
@@ -30,6 +31,8 @@ interface SysConfigRepository : JpaRepository<SysConfigPO, Long>, QueryByExample
 
     @Modifying
     @Query("UPDATE SysConfigPO s SET s.value = :value WHERE s.id = :id")
-    fun updateValueById(@Param("id") id: Long, @Param("value") value: String)
-
+    fun updateValueById(
+        @Param("id") id: Long,
+        @Param("value") value: String,
+    )
 }

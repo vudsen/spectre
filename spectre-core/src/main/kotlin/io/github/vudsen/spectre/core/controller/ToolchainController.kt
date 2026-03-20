@@ -1,0 +1,79 @@
+package io.github.vudsen.spectre.core.controller
+
+import io.github.vudsen.spectre.api.dto.CreateToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
+import io.github.vudsen.spectre.api.dto.UpdateToolchainBundleDTO
+import io.github.vudsen.spectre.api.exception.BusinessException
+import io.github.vudsen.spectre.api.service.ToolchainService
+import io.github.vudsen.spectre.repo.entity.ToolchainType
+import io.github.vudsen.spectre.repo.po.ToolchainItemId
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
+
+@RestController()
+@RequestMapping("toolchain")
+@PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_READ)")
+class ToolchainController(
+    private val toolchainService: ToolchainService,
+) {
+    @PostMapping("upload")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_UPDATE)")
+    fun upload(
+        file: MultipartFile,
+        @RequestParam type: ToolchainType,
+        @RequestParam tag: String,
+        @RequestParam isArm: Boolean,
+    ) {
+        if (file.isEmpty) {
+            throw BusinessException("error.file.empty")
+        }
+        if (file.size > 1024 * 1024 * 20) {
+            // unreachable.
+            throw BusinessException("file is too big.")
+        }
+        toolchainService.cachePackageToLocal(type, tag, isArm, file)
+    }
+
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_DELETE)")
+    @PostMapping("item/delete")
+    fun deleteToolchainItem(
+        @Validated @RequestBody id: ToolchainItemId,
+    ) {
+        toolchainService.deleteToolchainItemById(id)
+    }
+
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_BUNDLE_DELETE)")
+    @PostMapping("bundle/delete")
+    fun deleteToolchainBundle(id: String) {
+        toolchainService.deleteToolchainBundleById(id.toLong())
+    }
+
+    @PostMapping("bundle/update")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_BUNDLE_UPDATE)")
+    fun updateToolchainBundle(
+        @Validated @RequestBody dto: UpdateToolchainBundleDTO,
+    ) {
+        toolchainService.updateToolchainBundle(dto)
+    }
+
+    @PostMapping("bundle/create")
+    @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).TOOL_CHAIN_BUNDLE_CREATE)")
+    fun createToolchainBundle(
+        @Validated @RequestBody dto: CreateToolchainBundleDTO,
+    ) {
+        toolchainService.createToolchainBundle(dto)
+    }
+
+    @PostMapping("item/save")
+    fun saveToolchainItem(
+        @Validated @RequestBody dto: ToolchainItemDTO,
+    ) {
+        toolchainService.updateOrCreateToolchainItem(dto)
+    }
+}

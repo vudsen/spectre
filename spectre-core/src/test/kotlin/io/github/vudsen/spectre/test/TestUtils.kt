@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Assertions
  * @param times 要循环多少次，如果循环完毕后还没有退出，则会报错
  * @param fn 要执行的代码，返回任意非空值将会中断循环
  */
-fun <T> loop(times: Int, fn: () -> T?): T {
+fun <T> loop(
+    times: Int,
+    fn: () -> T?,
+): T {
     for (i in 0..times) {
         fn() ?.let {
             return it

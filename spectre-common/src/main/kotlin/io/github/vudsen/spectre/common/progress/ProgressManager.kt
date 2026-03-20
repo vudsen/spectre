@@ -3,11 +3,12 @@ package io.github.vudsen.spectre.common.progress
 import java.util.Stack
 
 class ProgressManager {
-
     private val states = Stack<CurrentProgress>()
 
-
-    fun pushState(title: String, message: String? = null) {
+    fun pushState(
+        title: String,
+        message: String? = null,
+    ) {
         states.push(CurrentProgress(title, message))
     }
 
@@ -21,5 +22,4 @@ class ProgressManager {
     fun popState() {
         states.pop()
     }
-
 }

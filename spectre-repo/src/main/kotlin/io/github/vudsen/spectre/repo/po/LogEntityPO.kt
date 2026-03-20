@@ -1,17 +1,16 @@
 package io.github.vudsen.spectre.repo.po
 
 import io.github.vudsen.spectre.repo.util.SnowFlake
-import java.sql.Timestamp
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.PrePersist
 import jakarta.persistence.Table
+import java.sql.Timestamp
 
 @Entity
 @Table(name = "log_entity")
 class LogEntityPO {
-
     @Id
     var id: Long = 0
 
@@ -49,5 +48,4 @@ class LogEntityPO {
             id = SnowFlake.nextId()
         }
     }
-
 }

@@ -23,7 +23,6 @@ import java.sql.Timestamp
 @DynamicUpdate
 @Table(name = "policy_permission")
 class PolicyPermissionPO {
-
     @Id
     @Null(groups = [CreateGroup::class])
     @NotNull(groups = [UpdateGroup::class])
@@ -69,5 +68,4 @@ class PolicyPermissionPO {
             id = SnowFlake.nextId()
         }
     }
-
 }

@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page
  * 策略权限服务
  */
 interface PolicyPermissionService {
-
     /**
      * 保存策略
      */
@@ -30,7 +29,6 @@ interface PolicyPermissionService {
      */
     fun findById(id: Long): PolicyPermissionDTO?
 
-
     /**
      * 根据权限名称获取权限
      */
@@ -40,6 +38,7 @@ interface PolicyPermissionService {
      * 列出权限类型名称
      */
     fun listPermissionResources(): List<PermissionResourceDTO>
+
     /**
      * 删除权限
      */
@@ -52,7 +51,7 @@ interface PolicyPermissionService {
         subjectId: Long,
         type: SubjectType,
         page: Int,
-        size: Int
+        size: Int,
     ): Page<PolicyPermissionDTO>
 
     /**

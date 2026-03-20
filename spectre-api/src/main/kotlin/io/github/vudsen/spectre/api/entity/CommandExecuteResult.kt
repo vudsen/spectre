@@ -5,16 +5,15 @@ package io.github.vudsen.spectre.api.entity
  */
 data class CommandExecuteResult(
     var stdout: String,
-    var exitCode: Int
+    var exitCode: Int,
 ) {
-
     /**
      * 断言执行结果成功
      * @return [CommandExecuteResult.stdout]
      */
     fun ok(): String {
         if (exitCode != 0) {
-            throw IllegalStateException("Command execution failed, exitCode ${exitCode}, stdout:\n ${stdout}")
+            throw IllegalStateException("Command execution failed, exitCode $exitCode, stdout:\n $stdout")
         }
         return stdout
     }
@@ -31,7 +30,5 @@ data class CommandExecuteResult(
         }
     }
 
-    fun isFailed(): Boolean {
-        return exitCode != 0
-    }
+    fun isFailed(): Boolean = exitCode != 0
 }

@@ -13,9 +13,8 @@ import org.slf4j.LoggerFactory
 abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode>(
     protected val runtimeNode: T,
     protected val jvm: Jvm,
-    protected val bundles: ToolchainBundleDTO
+    protected val bundles: ToolchainBundleDTO,
 ) : JvmAttachHandler {
-
     companion object {
         private val logger = LoggerFactory.getLogger(AbstractShellAvailableAttachHandler::class.java)
     }
@@ -24,18 +23,26 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
      * @param paths 目标宿主机/容器上的工具链路径
      * @see [attach]
      */
-    protected abstract fun doAttach(port: Int?, password: String, paths: ToolchainPaths): ArthasHttpClient
+    protected abstract fun doAttach(
+        port: Int?,
+        password: String,
+        paths: ToolchainPaths,
+    ): ArthasHttpClient
 
-    private fun attachInternal(port: Int?, password: String): ArthasHttpClient {
+    private fun attachInternal(
+        port: Int?,
+        password: String,
+    ): ArthasHttpClient {
         val local = runtimeNode.getHomePath()
         val downloadDirectory = "$local/downloads"
         runtimeNode.mkdirs(downloadDirectory)
 
-        val paths = ToolchainPaths(
-            prepareJattach(downloadDirectory, local),
-            prepareArthas(downloadDirectory, local),
-            prepareHttpClient(downloadDirectory, local),
-        )
+        val paths =
+            ToolchainPaths(
+                prepareJattach(downloadDirectory, local),
+                prepareArthas(downloadDirectory, local),
+                prepareHttpClient(downloadDirectory, local),
+            )
         val client = doAttach(port, password, paths)
         try {
             // TODO handle port in use.
@@ -51,19 +58,25 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         }
     }
 
-    override fun attach(port: Int?, password: String): ArthasHttpClient {
-        return attachInternal(port, password)
-    }
-
+    override fun attach(
+        port: Int?,
+        password: String,
+    ): ArthasHttpClient = attachInternal(port, password)
 
     /**
      * 主动 attach 失败时(jattach 加载 jar 包成功，但是端口实际未绑定，此时说明 jvm 已经被 attach 了)，尝试寻找已经绑定的端口.
      *
      * 对于容器环境，可以尝试每次都绑定固定的端口
      */
-    protected abstract fun tryFindClient(password: String, paths: ToolchainPaths): ArthasHttpClient?
+    protected abstract fun tryFindClient(
+        password: String,
+        paths: ToolchainPaths,
+    ): ArthasHttpClient?
 
-    private fun prepareBundle(baseDirectory: String, item: ToolchainItemDTO): String {
+    private fun prepareBundle(
+        baseDirectory: String,
+        item: ToolchainItemDTO,
+    ): String {
         val armUrl = item.armUrl
         var isArm: Boolean
         var downloadUrl: String
@@ -89,7 +102,7 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
 
     protected fun prepareHttpClient(
         downloadDirectory: String,
-        spectreHome: String
+        spectreHome: String,
     ): String {
         val httpClient = LocalPackageManager.resolveBundledHttpClient()
 
@@ -110,7 +123,7 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
 
     protected fun prepareArthas(
         downloadDirectory: String,
-        spectreHome: String
+        spectreHome: String,
     ): String {
         val arthasBundle = prepareBundle(downloadDirectory, bundles.arthas)
         val packageDirectory = "$spectreHome/packages/arthas/${bundles.arthas.tag}"
@@ -121,7 +134,7 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
 
     protected fun prepareJattach(
         downloadDirectory: String,
-        spectreHome: String
+        spectreHome: String,
     ): String {
         val jattachBundle = prepareBundle(downloadDirectory, bundles.jattach)
         val packageDirectory = "$spectreHome/packages/jattach/${bundles.jattach.tag}"
@@ -129,6 +142,4 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         runtimeNode.execute("tar -xvf $jattachBundle -C $packageDirectory").ok()
         return "$packageDirectory/jattach"
     }
-
-
 }

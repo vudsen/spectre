@@ -14,8 +14,6 @@ import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
  * 但如果没有增强逻辑，是一定会调用的
  */
 interface PolicyAuthenticationProvider {
-
-
     /**
      * 将上下文转换成 Map.
      */
@@ -37,5 +35,4 @@ interface PolicyAuthenticationProvider {
      * @return 自定义错误，如果返回空，则会使用系统默认实现
      */
     fun customiseErrorException(): BusinessException?
-
 }

@@ -1,0 +1,13 @@
+package io.github.vudsen.spectre.core.plugin.test
+
+import io.github.vudsen.spectre.common.RuntimeNodeConfig
+
+class TestRuntimeNodeConfig : RuntimeNodeConfig {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return true
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+}

@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
 object RuntimeNodeResourcesPoolRegister {
-
     private class ResourcesPoolHolder(
         val pool: ResourcesPool,
         var lastUsed: Long,
@@ -29,7 +28,10 @@ object RuntimeNodeResourcesPoolRegister {
         }, 2, 2, TimeUnit.MINUTES)
     }
 
-    fun getPool(config: RuntimeNodeConfig, factory: RuntimeNodeFactory): ResourcesPool {
+    fun getPool(
+        config: RuntimeNodeConfig,
+        factory: RuntimeNodeFactory,
+    ): ResourcesPool {
         val pool = poolMap[config]
         if (pool != null) {
             pool.lastUsed = System.currentTimeMillis()
@@ -51,6 +53,4 @@ object RuntimeNodeResourcesPoolRegister {
     fun reportInUsing(config: RuntimeNodeConfig) {
         poolMap[config]?.lastUsed = System.currentTimeMillis()
     }
-
-
 }

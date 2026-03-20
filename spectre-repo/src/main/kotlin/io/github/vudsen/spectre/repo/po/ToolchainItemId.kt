@@ -11,7 +11,7 @@ data class ToolchainItemId(
     @Enumerated(EnumType.STRING)
     var type: ToolchainType,
     @field:NotEmpty
-    var tag: String
+    var tag: String,
 ) {
     constructor() : this(ToolchainType.ARTHAS, "")
 }

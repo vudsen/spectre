@@ -1,10 +1,8 @@
 package io.github.vudsen.spectre.api.perm
 
 import io.github.vudsen.spectre.api.dto.PermissionResourceDTO
-import io.github.vudsen.spectre.api.exception.BusinessException
 
 open class BasePermissionsHolder {
-
     /**
      * [PermissionEntity.resource] => [PermissionEntity]
      */
@@ -12,46 +10,44 @@ open class BasePermissionsHolder {
 
     protected val nameMap: MutableMap<String, String> = mutableMapOf()
 
-
-    protected open fun registerPermission(
-        entity: PermissionEntity
-    ) {
+    protected open fun registerPermission(entity: PermissionEntity) {
         permissionMap.compute(entity.resource) { k, list ->
             if (list == null) {
                 return@compute mutableSetOf(entity)
             }
             if (!list.add(entity)) {
-                throw IllegalStateException("Permission ${entity.resource}:${entity.action}(name: ${entity.name}) has already been registered.")
+                throw IllegalStateException(
+                    "Permission ${entity.resource}:${entity.action}(name: ${entity.name}) has already been registered.",
+                )
             }
             return@compute list
         }
     }
 
-    protected fun registerName(resource: String, name: String) {
+    protected fun registerName(
+        resource: String,
+        name: String,
+    ) {
         nameMap[resource] = name
     }
 
-    protected fun resolveName(resource: String): String {
-        return nameMap[resource] ?: resource
-    }
+    protected fun resolveName(resource: String): String = nameMap[resource] ?: resource
 
-
-    fun listPermissionResources(): List<PermissionResourceDTO> {
-        return permissionMap.entries.map { entry ->
+    fun listPermissionResources(): List<PermissionResourceDTO> =
+        permissionMap.entries.map { entry ->
             PermissionResourceDTO(
                 resolveName(entry.key),
-                entry.key
+                entry.key,
             )
         }
-    }
 
-    fun findPermissionsByResourceName(resource: String): Set<PermissionEntity> {
-        return permissionMap[resource] ?: emptySet()
-    }
+    fun findPermissionsByResourceName(resource: String): Set<PermissionEntity> = permissionMap[resource] ?: emptySet()
 
-    fun findByResourceAndActions(resource: String, action: String): PermissionEntity? {
+    fun findByResourceAndActions(
+        resource: String,
+        action: String,
+    ): PermissionEntity? {
         val res = permissionMap[resource] ?: return null
-        return res.find { permissionEntity -> permissionEntity.resource == resource && permissionEntity.action == action}
+        return res.find { permissionEntity -> permissionEntity.resource == resource && permissionEntity.action == action }
     }
-
 }

@@ -9,15 +9,19 @@ import org.springframework.data.repository.query.QueryByExampleExecutor
 import org.springframework.stereotype.Repository
 
 @Repository
-interface PolicyPermissionRepository : JpaRepository<PolicyPermissionPO, Long>, QueryByExampleExecutor<PolicyPermissionPO> {
-
+interface PolicyPermissionRepository :
+    JpaRepository<PolicyPermissionPO, Long>,
+    QueryByExampleExecutor<PolicyPermissionPO> {
     fun findAllBySubjectTypeAndSubjectIdAndResourceAndAction(
         subjectType: SubjectType,
         subjectId: Long,
         resource: String,
-        action: String
+        action: String,
     ): List<PolicyPermissionPO>
 
-    fun findAllBySubjectTypeAndSubjectId(subjectType: SubjectType, subjectId: Long, page: Pageable): Page<PolicyPermissionPO>
-
+    fun findAllBySubjectTypeAndSubjectId(
+        subjectType: SubjectType,
+        subjectId: Long,
+        page: Pageable,
+    ): Page<PolicyPermissionPO>
 }

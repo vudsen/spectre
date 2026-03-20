@@ -7,7 +7,7 @@ import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
  * 管理所有的扩展
  */
 class RuntimeNodeExtManager(
-    extPoints: List<RuntimeNodeExtensionPoint>
+    extPoints: List<RuntimeNodeExtensionPoint>,
 ) {
     private val extPointMap: Map<String, RuntimeNodeExtensionPoint>
 
@@ -19,13 +19,7 @@ class RuntimeNodeExtManager(
         this.extPointMap = points
     }
 
+    fun findById(extPointId: String): RuntimeNodeExtensionPoint = extPointMap[extPointId] ?: throw BusinessException("插件不存在: $extPointId")
 
-    fun findById(extPointId: String): RuntimeNodeExtensionPoint {
-        return extPointMap[extPointId] ?: throw BusinessException("插件不存在: $extPointId")
-    }
-
-    fun listPlugins(): Collection<RuntimeNodeExtensionPoint> {
-        return extPointMap.values
-    }
-
+    fun listPlugins(): Collection<RuntimeNodeExtensionPoint> = extPointMap.values
 }

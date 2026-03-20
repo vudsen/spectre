@@ -17,7 +17,6 @@ import org.testcontainers.utility.DockerImageName
 import kotlin.test.Test
 
 class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
-
     @set:Autowired
     lateinit var runtimeNodeService: RuntimeNodeService
 
@@ -27,11 +26,9 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     @set:Autowired
     lateinit var arthasInstanceService: ArthasInstanceService
 
-
     companion object {
         const val MATH_GAME = "math-game"
     }
-
 
     @Test
     fun testDockerAttach() {
@@ -49,10 +46,11 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     }
 
     private fun setupDockerAttachContainer(): Long {
-        val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSHD_WITH_DOCKER)).apply {
-            withExposedPorts(22)
-            withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
-        }
+        val container =
+            GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSHD_WITH_DOCKER)).apply {
+                withExposedPorts(22)
+                withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
+            }
         container.start()
 
         val result =
@@ -66,30 +64,32 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
         }
 
         val objectMapper = ObjectMapper()
-        val conf = SshRuntimeNodeConfig(
-            SshRuntimeNodeConfig.Docker(true, "docker", null, null),
-            null,
-            container.host,
-            container.firstMappedPort,
-            "root",
-            SshRuntimeNodeConfig.LoginPrincipal(
-                SshRuntimeNodeConfig.LoginType.PASSWORD,
-                "P@ssw0rd",
+        val conf =
+            SshRuntimeNodeConfig(
+                SshRuntimeNodeConfig.Docker(true, "docker", null, null),
                 null,
-                null
-            ),
-            "/opt/spectre"
-        )
-        val runtimeNodeId = runtimeNodeService.createRuntimeNode(
-            CreateRuntimeNodeDTO().apply {
-                name = "Test Node"
-                pluginId = SshRuntimeNodeExtension.ID
-                configuration = objectMapper.writeValueAsString(conf)
-            }
-        ).id
+                container.host,
+                container.firstMappedPort,
+                "root",
+                SshRuntimeNodeConfig.LoginPrincipal(
+                    SshRuntimeNodeConfig.LoginType.PASSWORD,
+                    "P@ssw0rd",
+                    null,
+                    null,
+                ),
+                "/opt/spectre",
+            )
+        val runtimeNodeId =
+            runtimeNodeService
+                .createRuntimeNode(
+                    CreateRuntimeNodeDTO().apply {
+                        name = "Test Node"
+                        pluginId = SshRuntimeNodeExtension.ID
+                        configuration = objectMapper.writeValueAsString(conf)
+                    },
+                ).id
         return runtimeNodeId
     }
-
 
     @Test
     fun testLocalAttach() {
@@ -143,38 +143,40 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     }
 
     private fun setupContainerForLocal(): Pair<GenericContainer<*>, Long> {
-        val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
-            withExposedPorts(22)
-        }
-        container.start();
+        val container =
+            GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
+                withExposedPorts(22)
+            }
+        container.start()
         GlobalDisposer.registerDispose {
             container.close()
         }
 
         val objectMapper = ObjectMapper()
-        val conf = SshRuntimeNodeConfig(
-            null,
-            SshRuntimeNodeConfig.Local(true, "/opt/java"),
-            container.host,
-            container.firstMappedPort,
-            "root",
-            SshRuntimeNodeConfig.LoginPrincipal(
-                SshRuntimeNodeConfig.LoginType.PASSWORD,
-                "root",
+        val conf =
+            SshRuntimeNodeConfig(
                 null,
-                null
-            ),
-            "/opt/spectre"
-        )
-        val runtimeNodeId = runtimeNodeService.createRuntimeNode(
-            CreateRuntimeNodeDTO().apply {
-                name = "Test Node"
-                pluginId = SshRuntimeNodeExtension.ID
-                configuration = objectMapper.writeValueAsString(conf)
-            }
-        ).id
-        return Pair(container,runtimeNodeId)
+                SshRuntimeNodeConfig.Local(true, "/opt/java"),
+                container.host,
+                container.firstMappedPort,
+                "root",
+                SshRuntimeNodeConfig.LoginPrincipal(
+                    SshRuntimeNodeConfig.LoginType.PASSWORD,
+                    "root",
+                    null,
+                    null,
+                ),
+                "/opt/spectre",
+            )
+        val runtimeNodeId =
+            runtimeNodeService
+                .createRuntimeNode(
+                    CreateRuntimeNodeDTO().apply {
+                        name = "Test Node"
+                        pluginId = SshRuntimeNodeExtension.ID
+                        configuration = objectMapper.writeValueAsString(conf)
+                    },
+                ).id
+        return Pair(container, runtimeNodeId)
     }
-
-
 }

@@ -6,4 +6,6 @@ import org.springframework.data.repository.query.QueryByExampleExecutor
 import org.springframework.stereotype.Repository
 
 @Repository
-interface RuntimeNodeRepository : JpaRepository<RuntimeNodePO, Long>, QueryByExampleExecutor<RuntimeNodePO>
+interface RuntimeNodeRepository :
+    JpaRepository<RuntimeNodePO, Long>,
+    QueryByExampleExecutor<RuntimeNodePO>

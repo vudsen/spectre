@@ -5,9 +5,9 @@ import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
-import io.github.vudsen.spectre.support.BoundedInputStreamSourceEntity
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeConfig
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeExtension
+import io.github.vudsen.spectre.support.BoundedInputStreamSourceEntity
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
@@ -25,7 +25,6 @@ import tools.jackson.databind.node.ObjectNode
 
 @Component
 class AttachTester {
-
     companion object {
         private val logger = LoggerFactory.getLogger(AttachTester::class.java)
     }
@@ -39,7 +38,10 @@ class AttachTester {
     @set:Autowired
     lateinit var arthasInstanceService: ArthasInstanceService
 
-    fun testAttach(runtimeNodeId: Long, jvmNode: JvmTreeNodeDTO) {
+    fun testAttach(
+        runtimeNodeId: Long,
+        jvmNode: JvmTreeNodeDTO,
+    ) {
         val channelId = attachSync(runtimeNodeId, jvmNode)
         val sessionDTO = arthasExecutionService.joinChannel(channelId, "test")
         arthasExecutionService.execAsync(channelId, "sc demo.*")
@@ -52,13 +54,20 @@ class AttachTester {
     /**
      * 测试服务重启，缓存清空
      */
-    private fun testRestart(prevChannelId: String, runtimeNodeId: Long, jvmNode: JvmTreeNodeDTO) {
+    private fun testRestart(
+        prevChannelId: String,
+        runtimeNodeId: Long,
+        jvmNode: JvmTreeNodeDTO,
+    ) {
         arthasInstanceService.clearCachedClient(false)
         val channelId = attachSync(runtimeNodeId, jvmNode)
         assertEquals(prevChannelId, channelId)
     }
 
-    fun pullResultSync(channelId: String, consumerId: String): ArrayNode {
+    fun pullResultSync(
+        channelId: String,
+        consumerId: String,
+    ): ArrayNode {
         var r: ArrayNode? = null
         loop(5) {
             val result = arthasExecutionService.pullResults(channelId, consumerId)
@@ -80,22 +89,24 @@ class AttachTester {
      */
     fun attachSync(
         runtimeNodeId: Long,
-        jvmNode: JvmTreeNodeDTO
+        jvmNode: JvmTreeNodeDTO,
     ): String {
-        val status = loop(20) {
-            val attachStatus = arthasExecutionService.requireAttach(
-                runtimeNodeId,
-                jvmNode.id,
-                TestConstant.TOOLCHAIN_BUNDLE_LATEST_ID
-            )
-            attachStatus.error?.let {
-                Assertions.fail<Unit>("Failed to attach: ${it.message}")
+        val status =
+            loop(20) {
+                val attachStatus =
+                    arthasExecutionService.requireAttach(
+                        runtimeNodeId,
+                        jvmNode.id,
+                        TestConstant.TOOLCHAIN_BUNDLE_LATEST_ID,
+                    )
+                attachStatus.error?.let {
+                    Assertions.fail<Unit>("Failed to attach: ${it.message}")
+                }
+                if (attachStatus.isReady) {
+                    return@loop attachStatus
+                }
+                return@loop null
             }
-            if (attachStatus.isReady) {
-                return@loop attachStatus
-            }
-            return@loop null
-        }
 
         Assertions.assertTrue(status.isReady, "Attach timeout!")
         Assertions.assertNotNull(status.channelId, "Attach timeout!")
@@ -113,11 +124,15 @@ class AttachTester {
         Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.map { node -> node.asString() })
     }
 
-    private fun testRetransform(channelId: String, consumerId: String) {
+    private fun testRetransform(
+        channelId: String,
+        consumerId: String,
+    ) {
         val file = ResourceUtils.getFile("classpath:MathGame.class")
-        val result = file.inputStream().use { input ->
-            arthasExecutionService.retransform(channelId, BoundedInputStreamSourceEntity(file.length(), input))
-        } as ArrayNode
+        val result =
+            file.inputStream().use { input ->
+                arthasExecutionService.retransform(channelId, BoundedInputStreamSourceEntity(file.length(), input))
+            } as ArrayNode
         val target = result.find { item -> item.get("type").textValue() == "retransform" }!!
 
         val jobId = target.get("jobId").numberValue().toInt()
@@ -138,7 +153,7 @@ class AttachTester {
                 val value = node.get("value").textValue()
                 val matchResult = exactNumberRegx.find(value)
                 if (matchResult == null) {
-                    Assertions.fail("Can't parse number from '${value}'")
+                    Assertions.fail("Can't parse number from '$value'")
                 } else {
                     record[rp] = matchResult.groupValues[1].toInt()
                     rp++
@@ -153,34 +168,37 @@ class AttachTester {
     }
 
     val commonRuntimeNodeId: Long by lazy {
-        val container = GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
-            withExposedPorts(22)
-        }
-        container.start();
+        val container =
+            GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
+                withExposedPorts(22)
+            }
+        container.start()
 
         val objectMapper = ObjectMapper()
-        val conf = SshRuntimeNodeConfig(
-            null,
-            SshRuntimeNodeConfig.Local(true, "/opt/java"),
-            container.host,
-            container.firstMappedPort,
-            "root",
-            SshRuntimeNodeConfig.LoginPrincipal(
-                SshRuntimeNodeConfig.LoginType.PASSWORD,
-                "root",
+        val conf =
+            SshRuntimeNodeConfig(
                 null,
-                null
-            ),
-            "/opt/spectre"
-        )
-        runtimeNodeService.createRuntimeNode(
-            CreateRuntimeNodeDTO().apply {
-                name = "Test Node"
-                pluginId = SshRuntimeNodeExtension.ID
-                configuration = objectMapper.writeValueAsString(conf)
-                restrictedMode = true
-            }
-        ).id
+                SshRuntimeNodeConfig.Local(true, "/opt/java"),
+                container.host,
+                container.firstMappedPort,
+                "root",
+                SshRuntimeNodeConfig.LoginPrincipal(
+                    SshRuntimeNodeConfig.LoginType.PASSWORD,
+                    "root",
+                    null,
+                    null,
+                ),
+                "/opt/spectre",
+            )
+        runtimeNodeService
+            .createRuntimeNode(
+                CreateRuntimeNodeDTO().apply {
+                    name = "Test Node"
+                    pluginId = SshRuntimeNodeExtension.ID
+                    configuration = objectMapper.writeValueAsString(conf)
+                    restrictedMode = true
+                },
+            ).id
     }
 
     fun resolveDefaultJvm(): JvmTreeNodeDTO {
@@ -199,8 +217,5 @@ class AttachTester {
      * 获取一个通用的 channel
      * @return channelId
      */
-    fun resolveDefaultChannel(): String {
-        return attachSync(commonRuntimeNodeId, resolveDefaultJvm())
-    }
-
+    fun resolveDefaultChannel(): String = attachSync(commonRuntimeNodeId, resolveDefaultJvm())
 }

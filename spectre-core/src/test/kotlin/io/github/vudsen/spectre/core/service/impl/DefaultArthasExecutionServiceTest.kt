@@ -4,13 +4,12 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.test.AbstractSpectreTest
 import io.github.vudsen.spectre.test.plugin.AttachTester
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
-
     @set:Autowired
     lateinit var arthasExecutionService: ArthasExecutionService
 
@@ -36,53 +35,53 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
             return
         }
         // 样例 1: 基础引号包裹
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("hello", "\"wo rld\"", "'!! !!'"),
-            testSplit("""hello "wo rld" '!! !!'""")
+            testSplit("""hello "wo rld" '!! !!'"""),
         )
 
         // 样例 2: 转义字符
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("hello", "\"\\\"wo \\\"rld\"", "'\\\\!!\\'!!'"),
-            testSplit("""hello "\"wo \"rld" '\\!!\'!!'""")
+            testSplit("""hello "\"wo \"rld" '\\!!\'!!'"""),
         )
 
         // 样例 3: 嵌套引号处理
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("I", "\"love 'you'\""),
-            testSplit("""I "love 'you'"""")
+            testSplit("""I "love 'you'""""),
         )
 
         // 样例 4: 多个连续空格
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("hello", "world"),
-            testSplit("""    hello     world     """)
+            testSplit("""    hello     world     """),
         )
 
         // 样例 5: 未闭合的引号
-        assertArrayEquals(
+        Assertions.assertArrayEquals(
             arrayOf("hello", "'my beautiful \"world"),
-            testSplit("""hello 'my beautiful "world""")
+            testSplit("""hello 'my beautiful "world"""),
         )
     }
 
     @Test
     fun checkOgnlExpression() {
         val defaultChannel = attachTester.resolveDefaultChannel()
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl \"T(java.lang.Runtime).getRuntime().exec('touch ~/hacked.txt')\"")
         }
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl \"''.getClass().forName('java.lang.Runtime')\"")
         }
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl \"(#root.class.forName('java.lang.Runtime'))\"")
         }
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             // test prase failed.
             arthasExecutionService.execAsync(defaultChannel, "ognl \"exawxe-=-+\"")
         }
-        assertThrows(BusinessException::class.java) {
+        Assertions.assertThrows(BusinessException::class.java) {
             arthasExecutionService.execAsync(defaultChannel, "ognl '#root.toString()'")
         }
 
@@ -92,5 +91,4 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
         arthasExecutionService.execAsync(defaultChannel, "watch demo.MathGame primeFactors \"{params,returnObj}\" -x 2 -b")
         arthasExecutionService.interruptCommand(defaultChannel)
     }
-
 }

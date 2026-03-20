@@ -19,24 +19,21 @@ class PolicyPermissionDTO(
     /**
      * @see [io.github.vudsen.spectre.api.plugin.EnhancePolicyAuthenticationExtensionPoint]
      */
-    var enhancePlugins: List<PolicyPermissionEnhancePlugin> = emptyList()
+    var enhancePlugins: List<PolicyPermissionEnhancePlugin> = emptyList(),
 ) {
-
     companion object {
-        fun PolicyPermissionPO.toDTO(): PolicyPermissionDTO {
-            return PolicyPermissionDTO(
-                id!!,
-                subjectType!!,
-                subjectId!!,
-                resource!!,
-                action!!,
+        fun PolicyPermissionPO.toDTO(): PolicyPermissionDTO =
+            PolicyPermissionDTO(
+                id,
+                subjectType,
+                subjectId,
+                resource,
+                action,
                 conditionExpression!!,
                 description,
                 createdAt!!,
-                AppPermissions.findByResourceAndActions(resource!!, action!!)!!.name,
-                enhancePlugins
+                AppPermissions.findByResourceAndActions(resource, action)!!.name,
+                enhancePlugins,
             )
-        }
     }
 }
-

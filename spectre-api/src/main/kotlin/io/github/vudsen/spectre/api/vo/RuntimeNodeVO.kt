@@ -1,6 +1,5 @@
 package io.github.vudsen.spectre.api.vo
 
-import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import java.sql.Timestamp
 
 class RuntimeNodeVO(

@@ -6,7 +6,7 @@ import io.github.vudsen.spectre.api.perm.PolicyPermissionContext
 import io.github.vudsen.spectre.api.plugin.policy.PolicyAuthenticationProvider
 
 class PolicyAuthenticationProviderManager(
-    providers: List<PolicyAuthenticationProvider>
+    providers: List<PolicyAuthenticationProvider>,
 ) {
     private val providerMap = mutableMapOf<PermissionEntity, PolicyAuthenticationProvider>()
 
@@ -20,12 +20,8 @@ class PolicyAuthenticationProviderManager(
         }
     }
 
-    fun findByContext(context: PolicyPermissionContext): PolicyAuthenticationProvider {
-        return providerMap[context.resource] ?: throw BusinessException("Permission not found")
-    }
+    fun findByContext(context: PolicyPermissionContext): PolicyAuthenticationProvider =
+        providerMap[context.resource] ?: throw BusinessException("Permission not found")
 
-    fun findByPermissionEntity(entity: PermissionEntity): PolicyAuthenticationProvider? {
-        return providerMap[entity]
-    }
-
+    fun findByPermissionEntity(entity: PermissionEntity): PolicyAuthenticationProvider? = providerMap[entity]
 }

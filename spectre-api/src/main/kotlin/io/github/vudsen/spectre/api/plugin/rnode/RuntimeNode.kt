@@ -4,7 +4,6 @@ import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
 import io.github.vudsen.spectre.common.RuntimeNodeConfig
 
 interface RuntimeNode {
-
     /**
      * 确保 Attach 环境准备好了。
      *
@@ -21,5 +20,4 @@ interface RuntimeNode {
      * 获取当前拓展点
      */
     fun getExtPoint(): RuntimeNodeExtensionPoint
-
 }

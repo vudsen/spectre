@@ -5,8 +5,9 @@ import org.slf4j.LoggerFactory
 import java.io.Closeable
 import java.util.LinkedList
 
-class Disposer : Closeable, Extension {
-
+class Disposer :
+    Closeable,
+    Extension {
     companion object {
         @JvmStatic
         private val logger = LoggerFactory.getLogger(Disposer::class.java)
@@ -22,9 +23,8 @@ class Disposer : Closeable, Extension {
         for (runnable in resources) {
             try {
                 runnable.run()
-            } catch (_: Exception) { }
+            } catch (_: Exception) {
+            }
         }
     }
-
-
 }

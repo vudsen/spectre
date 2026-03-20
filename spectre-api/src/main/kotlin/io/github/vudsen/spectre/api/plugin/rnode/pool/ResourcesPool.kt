@@ -1,17 +1,17 @@
 package io.github.vudsen.spectre.api.plugin.rnode.pool
 
 import io.github.vudsen.spectre.api.exception.BusinessException
-import org.slf4j.LoggerFactory
 import io.github.vudsen.spectre.api.plugin.rnode.CloseableRuntimeNode
+import org.slf4j.LoggerFactory
 import java.io.Closeable
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedTransferQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 
-class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
-
+class ResourcesPool(
+    private val factory: RuntimeNodeFactory,
+) : Closeable {
     companion object {
         private val logger = LoggerFactory.getLogger(ResourcesPool::class.java)
         private const val QUEUE_SIZE = 3
@@ -87,5 +87,4 @@ class ResourcesPool(private val factory: RuntimeNodeFactory) : Closeable {
     override fun close() {
         TODO("Not yet implemented")
     }
-
 }

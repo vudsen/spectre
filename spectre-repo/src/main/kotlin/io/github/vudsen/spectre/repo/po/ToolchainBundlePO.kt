@@ -25,9 +25,8 @@ data class ToolchainBundlePO(
     var arthasTag: String = "",
     @Deprecated("Unused field. This tag is bundled in the server")
     @Column(updatable = false, insertable = false)
-    var httpClientTag: String = ""
+    var httpClientTag: String = "",
 ) {
-
     @PrePersist
     fun prePersist() {
         if (id == RepoConstant.EMPTY_ID) {
@@ -35,5 +34,4 @@ data class ToolchainBundlePO(
             createdAt = Timestamp(System.currentTimeMillis())
         }
     }
-
 }

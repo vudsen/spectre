@@ -13,5 +13,5 @@ class ToolchainItemResponseVO(
     @field:JsonProperty("isX86Cached")
     var isX86Cached: Boolean,
     @field:JsonProperty("isArmCached")
-    var isArmCached: Boolean
+    var isArmCached: Boolean,
 )

@@ -5,7 +5,6 @@ import io.github.vudsen.spectre.repo.entity.SubjectType
 import jakarta.validation.constraints.NotEmpty
 
 class CreatePolicyPermissionDTO {
-
     var subjectType: SubjectType = SubjectType.ROLE
 
     var subjectId: Long = 0
@@ -21,5 +20,4 @@ class CreatePolicyPermissionDTO {
     var description: String? = null
 
     var enhancePlugins: List<PolicyPermissionEnhancePlugin> = emptyList()
-
 }

@@ -10,11 +10,14 @@ import org.springframework.data.repository.query.QueryByExampleExecutor
 import org.springframework.stereotype.Repository
 
 @Repository
-interface ToolchainItemRepository : JpaRepository<ToolchainItemPO, ToolchainItemId>, QueryByExampleExecutor<ToolchainItemPO> {
-
+interface ToolchainItemRepository :
+    JpaRepository<ToolchainItemPO, ToolchainItemId>,
+    QueryByExampleExecutor<ToolchainItemPO> {
     /**
      * 根据类型查询所有工具
      */
-    fun findByIdTypeOrderByIdTagDesc(type: ToolchainType, pageable: Pageable): Page<ToolchainItemPO>
-
+    fun findByIdTypeOrderByIdTagDesc(
+        type: ToolchainType,
+        pageable: Pageable,
+    ): Page<ToolchainItemPO>
 }

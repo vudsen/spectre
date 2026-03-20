@@ -29,13 +29,11 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
 import java.util.function.Consumer
 
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @AutoConfigureWebTestClient
 @AutoConfigureHttpGraphQlTester
 @SpringBootTest(classes = [SpectreApplication::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractSpectreIntegrationTest {
-
     protected val objectMapper = ObjectMapper()
 
     @Autowired
@@ -47,7 +45,9 @@ abstract class AbstractSpectreIntegrationTest {
     var cookiesConsumer: Consumer<MultiValueMap<String, String>> = {}
 
     @BeforeEach
-    fun beforeAll(@Autowired applicationContext: ApplicationContext) {
+    fun beforeAll(
+        @Autowired applicationContext: ApplicationContext,
+    ) {
         ApplicationContextHolder.applicationContext = applicationContext
     }
 
@@ -56,19 +56,24 @@ abstract class AbstractSpectreIntegrationTest {
         GlobalDisposer.destroy()
     }
 
-    protected fun setupCookies(username: String, password: String) {
-        val responseCookies = client.post().uri("spectre-api/auth/login")
-            .bodyValue(
-                mutableMapOf(
-                    "username" to username,
-                    "password" to password
-                )
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult()
-            .responseCookies
+    protected fun setupCookies(
+        username: String,
+        password: String,
+    ) {
+        val responseCookies =
+            client
+                .post()
+                .uri("spectre-api/auth/login")
+                .bodyValue(
+                    mutableMapOf(
+                        "username" to username,
+                        "password" to password,
+                    ),
+                ).exchange()
+                .expectStatus()
+                .isOk
+                .returnResult()
+                .responseCookies
 
         val valueMap = MultiValueMap.fromSingleValue<String, String>(mutableMapOf())
         for (entry in responseCookies) {
@@ -79,55 +84,64 @@ abstract class AbstractSpectreIntegrationTest {
         cookiesConsumer = { cookies -> cookies.addAll(valueMap) }
     }
 
-
-    protected fun findLatestBundleId(): String {
-        return graphQlTester
+    protected fun findLatestBundleId(): String =
+        graphQlTester
             .mutate()
             .webTestClient { client -> client.defaultCookies(cookiesConsumer) }
-            .build().document(
-                """query ListToolchainBundles {
-                        toolchain {
-                            toolchainBundles(page: 0, size: 10) {
-                                result {
-                                    id
-                                }
+            .build()
+            .document(
+                """
+                query ListToolchainBundles {
+                    toolchain {
+                        toolchainBundles(page: 0, size: 10) {
+                            result {
+                                id
                             }
                         }
                     }
-                """.trimIndent()
-            )
-            .execute()
+                }
+                """.trimIndent(),
+            ).execute()
             .returnResponse()
             .field("toolchain.toolchainBundles.result[0].id")
             .getValue()!!
-    }
 
     protected abstract fun findJvmTreeNode(runtimeNodeId: String): JvmTreeNodeDTO
 
-    protected fun prepareChannel(runtimeNodeId: String, treeNode: JvmTreeNodeDTO): ChannelTestContext {
+    protected fun prepareChannel(
+        runtimeNodeId: String,
+        treeNode: JvmTreeNodeDTO,
+    ): ChannelTestContext {
         val bundleId = findLatestBundleId()
 
-        val channelId: String = loop(30) {
-            val attachStatus = client.post().uri("spectre-api/arthas/create-channel")
-                .cookies(cookiesConsumer)
-                .bodyValue(
-                    mutableMapOf(
-                        "bundleId" to bundleId,
-                        "runtimeNodeId" to runtimeNodeId,
-                        "treeNodeId" to treeNode.id
-                    )
-                ).exchange()
-                .expectBody<AttachStatus>()
-                .returnResult().responseBody!!
-            attachStatus.channelId?.let {
-                if (attachStatus.isReady) {
-                    return@loop it
+        val channelId: String =
+            loop(30) {
+                val attachStatus =
+                    client
+                        .post()
+                        .uri("spectre-api/arthas/create-channel")
+                        .cookies(cookiesConsumer)
+                        .bodyValue(
+                            mutableMapOf(
+                                "bundleId" to bundleId,
+                                "runtimeNodeId" to runtimeNodeId,
+                                "treeNodeId" to treeNode.id,
+                            ),
+                        ).exchange()
+                        .expectBody<AttachStatus>()
+                        .returnResult()
+                        .responseBody!!
+                attachStatus.channelId?.let {
+                    if (attachStatus.isReady) {
+                        return@loop it
+                    }
                 }
+                return@loop null
             }
-            return@loop null
-        }
 
-        client.post().uri("spectre-api/arthas/channel/$channelId/join")
+        client
+            .post()
+            .uri("spectre-api/arthas/channel/$channelId/join")
             .cookies(cookiesConsumer)
             .exchange()
             .expectStatus()
@@ -138,13 +152,19 @@ abstract class AbstractSpectreIntegrationTest {
         return ChannelTestContext(channelId, runtimeNodeId)
     }
 
-    private fun executeArthasCommand(channelId: String, command: String) {
-        client.post().uri("spectre-api/arthas/channel/$channelId/execute")
+    private fun executeArthasCommand(
+        channelId: String,
+        command: String,
+    ) {
+        client
+            .post()
+            .uri("spectre-api/arthas/channel/$channelId/execute")
             .cookies(cookiesConsumer)
-            .bodyValue(mutableMapOf(
-                "command" to command
-            ))
-            .exchange()
+            .bodyValue(
+                mutableMapOf(
+                    "command" to command,
+                ),
+            ).exchange()
             .expectStatus()
             .isOk
     }
@@ -152,14 +172,17 @@ abstract class AbstractSpectreIntegrationTest {
     private fun pullResultSync(channelId: String): ArrayNode {
         var r: ArrayNode? = null
         loop(5) {
-            val raw = client.get().uri("spectre-api/arthas/channel/${channelId}/pull-result")
-                .cookies(cookiesConsumer)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody<String>()
-                .returnResult()
-                .responseBody
+            val raw =
+                client
+                    .get()
+                    .uri("spectre-api/arthas/channel/$channelId/pull-result")
+                    .cookies(cookiesConsumer)
+                    .exchange()
+                    .expectStatus()
+                    .isOk
+                    .expectBody<String>()
+                    .returnResult()
+                    .responseBody
             val result = objectMapper.readTree(raw)
             if (result is ArrayNode) {
                 if (result.isEmpty) {
@@ -192,14 +215,17 @@ abstract class AbstractSpectreIntegrationTest {
     }
 
     private fun testChannel0(context: ChannelTestContext) {
-        val bytes = client.get().uri("spectre-api/arthas/channel/${context.channelId}/pull-result")
-            .cookies(cookiesConsumer)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .returnResult()
-            .responseBody
+        val bytes =
+            client
+                .get()
+                .uri("spectre-api/arthas/channel/${context.channelId}/pull-result")
+                .cookies(cookiesConsumer)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .returnResult()
+                .responseBody
 
         val jsonNodes = objectMapper.readTree(bytes)
 
@@ -213,7 +239,9 @@ abstract class AbstractSpectreIntegrationTest {
      * 测试服务重启，缓存清空
      */
     private fun testRestart(context: ChannelTestContext) {
-        client.post().uri("spectre-api/admin-tools/clear-arthas-instance?cleanAll=false")
+        client
+            .post()
+            .uri("spectre-api/admin-tools/clear-arthas-instance?cleanAll=false")
             .cookies(cookiesConsumer)
             .exchange()
             .expectStatus()
@@ -228,7 +256,9 @@ abstract class AbstractSpectreIntegrationTest {
      * 测试服务缓存的 arthasInstance 被删除
      */
     private fun testInstanceDeleted(context: ChannelTestContext) {
-        client.post().uri("spectre-api/admin-tools/clear-arthas-instance?cleanAll=true")
+        client
+            .post()
+            .uri("spectre-api/admin-tools/clear-arthas-instance?cleanAll=true")
             .cookies(cookiesConsumer)
             .exchange()
             .expectStatus()
@@ -245,15 +275,18 @@ abstract class AbstractSpectreIntegrationTest {
 
         builder.part("file", ClassPathResource("MathGame.class"))
 
-        val raw = client.post().uri("spectre-api/arthas/channel/${info.channelId}/retransform")
-            .cookies(cookiesConsumer)
-            .body(BodyInserters.fromMultipartData(builder.build()))
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody<String>()
-            .returnResult()
-            .responseBody!!
+        val raw =
+            client
+                .post()
+                .uri("spectre-api/arthas/channel/${info.channelId}/retransform")
+                .cookies(cookiesConsumer)
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody<String>()
+                .returnResult()
+                .responseBody!!
         val result = objectMapper.readTree(raw)
 
         val target = result.find { item -> item.get("type").textValue() == "retransform" }!!
@@ -275,7 +308,7 @@ abstract class AbstractSpectreIntegrationTest {
                 val value = node.get("value").textValue()
                 val matchResult = exactNumberRegx.find(value)
                 if (matchResult == null) {
-                    Assertions.fail("Can't parse number from '${value}'")
+                    Assertions.fail("Can't parse number from '$value'")
                 } else {
                     record[rp] = matchResult.groupValues[1].toInt()
                     rp++
@@ -288,5 +321,4 @@ abstract class AbstractSpectreIntegrationTest {
         }
         assertTrue(record[0] > record[1])
     }
-
 }

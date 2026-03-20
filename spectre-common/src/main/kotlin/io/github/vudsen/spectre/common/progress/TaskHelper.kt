@@ -5,4 +5,3 @@ fun checkCanceled() {
         throw InterruptedException("Task was cancelled")
     }
 }
-

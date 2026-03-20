@@ -3,9 +3,8 @@ package io.github.vudsen.spectre.api.perm
 class PermissionEntity(
     val resource: String,
     val action: String,
-    val name: String
+    val name: String,
 ) {
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
