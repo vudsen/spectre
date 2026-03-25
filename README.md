@@ -97,8 +97,8 @@ services:
   web:
     environment:
       SPECTRE_HOME: '/home/spectre/data'
-      ENCRYPTOR_KEY: '<可选，base64 字符串>'
-      ENCRYPTOR_SALT: '<可选，base64 字符串，可以只提供 key，不给 salt>'
+      ENCRYPTOR_KEY: '<Optional，base64 str>'
+      ENCRYPTOR_SALT: '<Optional，base64 str>'
     ports:
       - "80:8080"
     volumes:
@@ -114,11 +114,6 @@ services:
       - spectre.jar
 ```
 
-**For mounted files/folders, manual authorization is required**:
-```shell
-chown -R 10001:10001 application.yaml ./data ./logs
-```
-
 Configuration File:
 
 ```yaml
@@ -127,7 +122,7 @@ spring:
   profiles:
     active: prod
   datasource:
-    # 也可以使用 Postgresql，已经内置了对应驱动
+    # Postgresql is available too, the driver has builtin
     url: jdbc:sqlite:data/identifier.sqlite
   jpa:
     properties:

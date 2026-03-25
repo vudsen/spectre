@@ -100,7 +100,7 @@ services:
     environment:
       SPECTRE_HOME: '/home/spectre/data'
       ENCRYPTOR_KEY: '<可选，base64 字符串>'
-      ENCRYPTOR_SALT: '<可选，base64 字符串，可以只提供 key，不给 salt>'
+      ENCRYPTOR_SALT: '<可选，base64 字符串>'
     ports:
       - "80:8080"
     volumes:
@@ -114,11 +114,6 @@ services:
       - -Xmx1g
       - -jar
       - spectre.jar
-```
-
-**对于被挂载的文件/文件夹，需要手动进行授权**：
-```shell
-chown -R 10001:10001 application.yaml ./data ./logs
 ```
 
 配置文件:
