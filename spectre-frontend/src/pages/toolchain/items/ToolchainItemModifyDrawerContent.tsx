@@ -15,6 +15,7 @@ import type { SharedSelection } from '@heroui/system'
 import { handleError } from '@/common/util.ts'
 import toolchainTypes, { type ToolchainItemType } from './ToolchainItemType.ts'
 import { saveToolchainItem } from '@/api/impl/toolchain.ts'
+import i18n from '@/i18n'
 
 interface ToolchainItemModifyDrawerContentProps {
   onClose: () => void
@@ -54,7 +55,7 @@ const ToolchainItemModifyDrawerContent: React.FC<
       const values = getValues()
       saveToolchainItem(values)
       addToast({
-        title: '保存成功',
+        title: i18n.t('hardcoded.msg_pages_settings_llmform_001'),
         color: 'success',
       })
       props.onClose()
@@ -67,7 +68,11 @@ const ToolchainItemModifyDrawerContent: React.FC<
   }
   return (
     <>
-      <DrawerHeader>新增工具</DrawerHeader>
+      <DrawerHeader>
+        {i18n.t(
+          'hardcoded.msg_pages_toolchain_items_toolchainitemmodifydrawercontent_001',
+        )}
+      </DrawerHeader>
       <DrawerBody>
         <ControlledSelect
           control={control}
@@ -75,7 +80,7 @@ const ToolchainItemModifyDrawerContent: React.FC<
           rules={{ required: true }}
           selectProps={{
             isRequired: true,
-            label: '类型',
+            label: i18n.t('hardcoded.msg_ext_view_k8sview_003'),
             onSelectionChange,
             defaultSelectedKeys: [props.type],
           }}
@@ -90,7 +95,10 @@ const ToolchainItemModifyDrawerContent: React.FC<
           control={control}
           rules={{ required: true }}
           name="tag"
-          inputProps={{ isRequired: true, label: '标签' }}
+          inputProps={{
+            isRequired: true,
+            label: i18n.t('hardcoded.msg_components_labeleditor_index_001'),
+          }}
         />
         <ControlledInput
           control={control}
@@ -100,13 +108,18 @@ const ToolchainItemModifyDrawerContent: React.FC<
             isRequired: true,
             description: selectedType ? (
               <div>
-                {selectedType.urlGuide}; 详见:{' '}
+                {selectedType.urlGuide}
+                {i18n.t(
+                  'hardcoded.msg_pages_toolchain_items_toolchainitemmodifydrawercontent_002',
+                )}{' '}
                 <Link size="sm" isExternal href={selectedType.url}>
                   Release
                 </Link>
               </div>
             ) : null,
-            label: '下载链接',
+            label: i18n.t(
+              'hardcoded.msg_pages_toolchain_items_toolchainitemmodifydrawercontent_003',
+            ),
           }}
         />
         {selectedType && selectedType.hasMultiplatformBundle ? (
@@ -114,16 +127,23 @@ const ToolchainItemModifyDrawerContent: React.FC<
             control={control}
             name="armUrl"
             rules={{ required: true }}
-            inputProps={{ isRequired: true, label: 'ARM 版本下载链接' }}
+            inputProps={{
+              isRequired: true,
+              label: i18n.t(
+                'hardcoded.msg_pages_toolchain_items_toolchainitemmodifydrawercontent_004',
+              ),
+            }}
           />
         ) : null}
       </DrawerBody>
       <DrawerFooter>
         <Button color="danger" variant="light" onPress={props.onClose}>
-          关闭
+          {i18n.t(
+            'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+          )}
         </Button>
         <Button color="primary" onPress={onSubmit} isLoading={isLoading}>
-          保存
+          {i18n.t('common.save')}
         </Button>
       </DrawerFooter>
     </>

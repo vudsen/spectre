@@ -2,6 +2,7 @@ import React from 'react'
 import { Button } from '@heroui/react'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
+import i18n from '@/i18n'
 import type {
   AiCardToolSegment,
   AiToolEvent,
@@ -21,13 +22,13 @@ interface AiMessageListProps {
 function getToolStatusLabel(segment: AiCardToolSegment): string {
   switch (segment.status) {
     case 'running':
-      return '进行中'
+      return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_001')
     case 'pending_confirm':
-      return '等待确认'
+      return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_002')
     case 'ask_human':
-      return '等待输入'
+      return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_003')
     case 'completed':
-      return '已完成'
+      return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_004')
   }
 }
 
@@ -114,18 +115,26 @@ const ToolEventLine: React.FC<{
       {event.type === 'PENDING_CONFIRM' ? (
         <div className="text-warning-700 mt-1 space-y-1 text-xs">
           <div>
-            工具 {event.data} 等待确认
+            {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_005')}{' '}
+            {event.data}{' '}
+            {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_002')}
             {event.parameter ? ` (${event.parameter})` : ''}
           </div>
           {pendingConfirm?.toolName === event.data ? (
-            <div>请在底部确认区选择 YES 或 NO</div>
+            <div>
+              {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_006')}
+            </div>
           ) : null}
         </div>
       ) : null}
       {event.type === 'ASK_HUMAN' ? (
         <div className="text-primary-700 mt-1 space-y-1 text-xs">
           <div>{event.askHuman?.question || event.data}</div>
-          {pendingAskHuman ? <div>请在底部输入区继续</div> : null}
+          {pendingAskHuman ? (
+            <div>
+              {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_007')}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -222,11 +231,15 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
         {pendingConfirm ? (
           <div className="border-warning-200 bg-warning-50 mx-8 rounded-lg border p-3">
             <div className="text-warning-700 text-sm">
-              工具调用待确认: {pendingConfirm.toolName}
+              {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_008')}{' '}
+              {pendingConfirm.toolName}
             </div>
             {pendingConfirm.parameter ? (
               <div className="text-warning-700 mt-1 text-xs break-all">
-                参数: {pendingConfirm.parameter}
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_ai_aimessagelist_009',
+                )}{' '}
+                {pendingConfirm.parameter}
               </div>
             ) : null}
             <div className="mt-2 flex gap-2">
@@ -235,7 +248,9 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
                 color="primary"
                 onPress={() => onQuickSubmit('YES')}
               >
-                批准
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_ai_aimessagelist_010',
+                )}
               </Button>
               <Button
                 size="sm"
@@ -243,7 +258,9 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
                 variant="flat"
                 onPress={() => onQuickSubmit('NO')}
               >
-                拒绝
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_ai_aimessagelist_011',
+                )}
               </Button>
             </div>
           </div>
@@ -252,17 +269,20 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
         {pendingAskHuman ? (
           <div className="border-primary-200 bg-primary-50 mx-8 rounded-lg border p-3">
             <div className="text-primary-700 text-sm">
-              {pendingAskHuman.question || '请提供额外信息'}
+              {pendingAskHuman.question ||
+                i18n.t(
+                  'hardcoded.msg_pages_channel_param_ai_aimessagelist_012',
+                )}
             </div>
             <div className="text-primary-600 mt-1 text-xs">
-              请直接在底部输入框输入回复并发送。
+              {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_013')}
             </div>
           </div>
         ) : null}
 
         {isLoading ? (
           <div className="bg-default-100 text-default-500 mr-8 rounded-lg px-3 py-2 text-xs">
-            AI 正在思考...
+            {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_014')}
           </div>
         ) : null}
       </div>

@@ -14,6 +14,7 @@ import {
   type ToolchainItemsContextType,
 } from '@/pages/toolchain/items/context.ts'
 import { updateTourStep } from '@/api/impl/sys-conf.ts'
+import i18n from '@/i18n'
 
 const tabs = toolchainTypes.map((it) => ({
   name: it.name,
@@ -50,29 +51,23 @@ const ToolChainPage: React.FC = () => {
       })
       tour.addStep({
         id: 'tc-types',
-        title: '工具类型',
-        text: `<div>Spectre 需要使用三种工具来和 Arthas 集成：
-        <ul class="list-disc ml-5">
-        <li>Arthas: 核心工具</li>
-        <li>jattach: 用于加载 arthas-agent 到 JVM 中</li>
-        <li>HttpClient: 一个简单的 Http CLI 工具，用于和 Arthas 交互</li>
-        </ul>
-          </div>`,
+        title: i18n.t('hardcoded.msg_pages_toolchain_items_index_001'),
+        text: i18n.t('hardcoded.msg_pages_toolchain_items_index_002'),
         attachTo: {
           element: '#toolchain-tab',
           on: 'bottom-start',
         },
         buttons: [
           {
-            text: '下一步',
+            text: i18n.t('common.next'),
             action: tour.next,
           },
         ],
       })
       tour.addStep({
         id: 'builtin-data',
-        title: '内置数据',
-        text: '<div><div>我们已经内置了一些数据以便于快速使用。</div><div>你可能需要在稍后更新一下各个工具的版本，没有具体版本要求，但肯定是越新越好。</div></div>',
+        title: i18n.t('hardcoded.msg_pages_toolchain_items_index_003'),
+        text: i18n.t('hardcoded.msg_pages_toolchain_items_index_004'),
         attachTo: {
           element: '#ARTHAS',
           on: 'bottom',
@@ -86,8 +81,8 @@ const ToolChainPage: React.FC = () => {
       })
       tour.addStep({
         id: 'view-toolchain',
-        title: '查看详情',
-        text: '点击此处查看详情',
+        title: i18n.t('hardcoded.msg_pages_permission_role_index_005'),
+        text: i18n.t('hardcoded.msg_pages_toolchain_items_index_005'),
         canClickTarget: true,
         attachTo: {
           element: '#view-arthas',
@@ -99,25 +94,27 @@ const ToolChainPage: React.FC = () => {
       })
       tour.addStep({
         id: 'details',
-        title: '手动上传',
-        text: '<div><div>如果你在较差的网络环境/离线环境下，可以手动上传工具包，点击 `false` 即可手动上传。</div><div>当然，Spectre 也会在使用到时自动下载并缓存。</div></div>',
+        title: i18n.t('hardcoded.msg_pages_toolchain_items_index_006'),
+        text: i18n.t('hardcoded.msg_pages_toolchain_items_index_007'),
         attachTo: {
           element: '#cache-status',
           on: 'bottom',
         },
         buttons: [
           {
-            text: '完成教程',
+            text: i18n.t('hardcoded.msg_pages_toolchain_items_index_008'),
             action: tour.complete,
           },
         ],
       })
 
       showDialog({
-        title: '欢迎使用 Spectre',
-        message: '在该界面中，我们将介绍工具包的使用。',
-        cancelBtnText: '跳过',
-        confirmBtnText: '开始',
+        title: i18n.t('hardcoded.msg_pages_home_index_001'),
+        message: i18n.t('hardcoded.msg_pages_toolchain_items_index_009'),
+        cancelBtnText: i18n.t('hardcoded.msg_pages_toolchain_items_index_010'),
+        confirmBtnText: i18n.t(
+          'hardcoded.msg_pages_runtime_node_list_index_008',
+        ),
         hideCancel: true,
         color: 'primary',
         isDismissable: false,
@@ -138,7 +135,9 @@ const ToolChainPage: React.FC = () => {
   return (
     <ToolchainItemsContext value={context}>
       <div className="px-6">
-        <div className="mb-3 text-xl font-semibold">工具设置</div>
+        <div className="mb-3 text-xl font-semibold">
+          {i18n.t('hardcoded.msg_pages_toolchain_items_index_011')}
+        </div>
         <Tabs
           aria-label="Toolchain"
           color="primary"

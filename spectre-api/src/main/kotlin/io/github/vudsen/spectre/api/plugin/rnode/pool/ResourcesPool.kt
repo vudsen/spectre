@@ -27,7 +27,7 @@ class ResourcesPool(
     private fun waitForResource(): CloseableRuntimeNode {
         val res = pool.poll(3, TimeUnit.SECONDS)
         if (res == null) {
-            throw BusinessException("系统繁忙，请稍后再试")
+            throw BusinessException("error.system.busy")
         }
         return res
     }

@@ -6,6 +6,7 @@ import ThreadTable from '@/pages/channel/[channelId]/_tabs/_dashboard/ThreadTabl
 import React from 'react'
 import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
 import StackTrace from '@/pages/channel/[channelId]/_message_view/_component/_common/StackTrace.tsx'
+import i18n from '@/i18n'
 
 type Thread = {
   cpu: number
@@ -146,7 +147,11 @@ const ThreadMessageDetail: React.FC<DetailComponentProps<ThreadMessage>> = ({
       <div className="space-y-3">
         <Card>
           <CardBody>
-            <div className="header-2">线程统计</div>
+            <div className="header-2">
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_threadmessagedetail_001',
+              )}
+            </div>
             <KVGird>
               {Object.entries(msg.threadStateCount).map((cnt) => (
                 <KVGridItem name={cnt[0]} key={cnt[0]}>

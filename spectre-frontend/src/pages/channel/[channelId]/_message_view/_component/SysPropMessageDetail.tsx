@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@heroui/react'
 import CopyableValue from '@/components/CopyableValue.tsx'
+import i18n from '@/i18n'
 
 type SysPropsMessage = {
   jobId: number
@@ -21,8 +22,12 @@ const SysEnvMessageDetail: React.FC<DetailComponentProps<SysPropsMessage>> = ({
   return (
     <Table aria-label="Sys props">
       <TableHeader>
-        <TableColumn>名称</TableColumn>
-        <TableColumn>值</TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+        </TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_components_labeleditor_index_005')}
+        </TableColumn>
       </TableHeader>
       <TableBody items={Object.entries(msg.props)}>
         {([key, value]) => (

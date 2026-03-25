@@ -1,6 +1,7 @@
 import { Code, Link } from '@heroui/react'
 import type React from 'react'
 import type { DetailComponentProps } from '../factory.ts'
+import i18n from '@/i18n'
 
 type WelcomeMessage = {
   type: 'welcome'
@@ -18,19 +19,31 @@ const WelcomeMessageDetail: React.FC<DetailComponentProps<WelcomeMessage>> = (
 ) => {
   return (
     <div className="space-y-3 text-sm">
-      <div className="text-primary font-bold">欢迎使用 Arthas!</div>
-      <div>
-        版本: <Code>{props.msg.version}</Code>
+      <div className="text-primary font-bold">
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_welcomemessagedetail_001',
+        )}
       </div>
       <div>
-        主类: <Code style={{ textWrap: 'wrap' }}>{props.msg.mainClass}</Code>
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_welcomemessagedetail_002',
+        )}{' '}
+        <Code>{props.msg.version}</Code>
+      </div>
+      <div>
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_welcomemessagedetail_003',
+        )}{' '}
+        <Code style={{ textWrap: 'wrap' }}>{props.msg.mainClass}</Code>
       </div>
       <div className="flex">
         <Link href={props.msg.wiki} isExternal size="sm">
           Wiki
         </Link>
         <Link href={props.msg.tutorials} isExternal className="ml-2" size="sm">
-          教程
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_message_view_component_welcomemessagedetail_004',
+          )}
         </Link>
       </div>
     </div>

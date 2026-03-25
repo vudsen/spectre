@@ -65,7 +65,7 @@ class DefaultToolchainService(
     override fun saveToolchainBundle(po: ToolchainBundlePO): ToolchainBundlePO = toolchainBundleRepository.save(po)
 
     override fun updateToolchainBundle(dto: UpdateToolchainBundleDTO) {
-        val po = toolchainBundleRepository.findById(dto.id).getOrNull() ?: throw BusinessException("bundle 不存在")
+        val po = toolchainBundleRepository.findById(dto.id).getOrNull() ?: throw BusinessException("error.bundle.not.exist")
         dto.name?.let {
             po.name = it
         }

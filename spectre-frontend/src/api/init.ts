@@ -4,7 +4,7 @@ import { handleError, showDialog } from '@/common/util.ts'
 import { isErrorResponse, isValidationError } from '@/api/types.ts'
 import { store } from '@/store'
 import { clearUserInfo } from '@/store/sessionSlice'
-import i18n from '@/i18n'
+import i18n, { getCurrentLocale } from '@/i18n'
 
 type ErrorInfo = {
   title: string
@@ -28,15 +28,15 @@ function handleResponse0(
         location.replace(`${import.meta.env.VITE_BASE_PATH}/login`)
       },
     })
-    return Promise.reject(new Error('会话失效'))
+    return Promise.reject(new Error(i18n.t('hardcoded.msg_api_init_001')))
   }
   if (isErrorResponse(body)) {
     errorInfo = {
-      title: '请求失败',
+      title: i18n.t('hardcoded.msg_api_init_002'),
       message: body.message,
     }
   } else if (isValidationError(body)) {
-    const msg = ['表单校验失败']
+    const msg = [i18n.t('hardcoded.msg_api_init_003')]
     for (const va of body.errors) {
       if (va.fieldName) {
         msg.push(`[${va.fieldName}]${va.message}`)
@@ -45,12 +45,12 @@ function handleResponse0(
       }
     }
     errorInfo = {
-      title: '表单校验失败',
+      title: i18n.t('hardcoded.msg_api_init_003'),
       message: msg.join(';'),
     }
   } else if (errorMessage) {
     errorInfo = {
-      title: '请求失败',
+      title: i18n.t('hardcoded.msg_api_init_002'),
       message: errorMessage,
     }
   }
@@ -64,6 +64,10 @@ function handleResponse0(
 }
 
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_PATH
+axios.interceptors.request.use((conf) => {
+  conf.headers['Accept-Language'] = getCurrentLocale()
+  return conf
+})
 axios.interceptors.response.use(
   (response) => {
     return handleResponse0(

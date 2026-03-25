@@ -172,7 +172,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
         try {
             node.ensureAttachEnvironmentReady()
         } catch (e: SshException) {
-            throw BusinessException("测试连接失败: " + e.message)
+            throw BusinessException("error.connection.test.failed", arrayOf(e.message ?: "<Unknown>"))
         } finally {
             try {
                 node.close()

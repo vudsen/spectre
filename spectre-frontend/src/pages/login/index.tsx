@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router'
 import { showDialog } from '@/common/util.ts'
 import { useDispatch } from 'react-redux'
 import { saveUserInfo } from '@/store/sessionSlice'
+import i18n from '@/i18n'
 
 type values = {
   username: string
@@ -30,7 +31,7 @@ const LoginPage: React.FC = () => {
       const values = getValues()
       const user = await login(values.username, values.password)
       addToast({
-        title: '登录成功!',
+        title: i18n.t('hardcoded.msg_pages_login_index_001'),
         color: 'success',
       })
       dispatch(
@@ -43,7 +44,7 @@ const LoginPage: React.FC = () => {
       nav('/')
     } catch (e: unknown) {
       showDialog({
-        title: '登录失败',
+        title: i18n.t('hardcoded.msg_pages_login_index_002'),
         color: 'danger',
         message: (e as Error).message,
       })
@@ -55,7 +56,9 @@ const LoginPage: React.FC = () => {
     <div className="flex h-screen items-center justify-center">
       <Card classNames={{ base: 'w-128 p-6' }}>
         <CardHeader className="justify-center">
-          <div className="spectre-heading">登录</div>
+          <div className="spectre-heading">
+            {i18n.t('hardcoded.msg_pages_login_index_003')}
+          </div>
         </CardHeader>
         <CardBody>
           <form className="space-y-3" onSubmit={onLogin}>
@@ -66,7 +69,7 @@ const LoginPage: React.FC = () => {
               inputProps={{
                 size: 'sm',
                 isRequired: true,
-                label: '用户名',
+                label: i18n.t('common.username'),
               }}
             />
             <ControlledInput
@@ -77,7 +80,7 @@ const LoginPage: React.FC = () => {
                 size: 'sm',
                 isRequired: true,
                 type: 'password',
-                label: '密码',
+                label: i18n.t('hardcoded.msg_ext_form_sshconfform_015'),
               }}
             />
             <Button
@@ -87,7 +90,7 @@ const LoginPage: React.FC = () => {
               type="submit"
               isLoading={isLoading}
             >
-              登录
+              {i18n.t('hardcoded.msg_pages_login_index_003')}
             </Button>
           </form>
         </CardBody>

@@ -20,6 +20,7 @@ import LogDetailDrawerContent from '@/pages/audit/LogDetailDrawerContent.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import Time from '@/components/Time.tsx'
 import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 
 const LogEntityQuery = graphql(`
   query LogEntityQuery($page: Int!, $size: Int!) {
@@ -82,7 +83,9 @@ const AuditPage: React.FC = () => {
         }
       >
         <TableHeader>
-          <TableColumn>操作名称</TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_pages_audit_index_001')}
+          </TableColumn>
           <TableColumn>{t('common.username')}</TableColumn>
           <TableColumn>IP</TableColumn>
           <TableColumn>{t('common.opTime')}</TableColumn>
@@ -106,9 +109,13 @@ const AuditPage: React.FC = () => {
               </TableCell>
               <TableCell>
                 {log.isSuccess ? (
-                  <div className="text-success">成功</div>
+                  <div className="text-success">
+                    {i18n.t('hardcoded.msg_pages_audit_index_002')}
+                  </div>
                 ) : (
-                  <div className="text-danger">失败</div>
+                  <div className="text-danger">
+                    {i18n.t('hardcoded.msg_pages_audit_index_003')}
+                  </div>
                 )}
               </TableCell>
               <TableCell>
@@ -117,7 +124,7 @@ const AuditPage: React.FC = () => {
                   color="primary"
                   onPress={() => viewLog(log)}
                 >
-                  查看
+                  {i18n.t('hardcoded.msg_pages_audit_index_004')}
                 </Button>
               </TableCell>
             </TableRow>

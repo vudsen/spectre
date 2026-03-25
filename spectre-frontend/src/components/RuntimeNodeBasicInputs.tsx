@@ -6,6 +6,7 @@ import { Card, CardBody, Tooltip } from '@heroui/react'
 import ControlledCheckBox from '@/components/validation/ControlledCheckbox.tsx'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
+import i18n from '@/i18n'
 
 type Values = {
   name: string
@@ -27,12 +28,14 @@ const RuntimeNodeBasicInputs: React.FC<RuntimeNodeBasicInputsProps> = ({
     <>
       <Card>
         <CardBody className="space-y-3">
-          <div className="header-2">基础配置</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_components_runtimenodebasicinputs_001')}
+          </div>
           <ControlledInput
             control={control}
             name="name"
             inputProps={{
-              label: '名称',
+              label: i18n.t('hardcoded.msg_components_labeleditor_index_004'),
               isRequired: true,
             }}
           />
@@ -44,13 +47,15 @@ const RuntimeNodeBasicInputs: React.FC<RuntimeNodeBasicInputsProps> = ({
                 className: 'mr-0.5',
               }}
             >
-              限制模式
+              {i18n.t('hardcoded.msg_components_runtimenodebasicinputs_002')}
             </ControlledCheckBox>
             <Tooltip
               classNames={{
                 content: 'max-w-96',
               }}
-              content="在限制模式下，Arthas 命令中的表达式将只能使用基础的运算符、逻辑判断以及属性访问表达式。方法调用，类引用等其它所有表达式将会完全禁用"
+              content={i18n.t(
+                'hardcoded.msg_components_runtimenodebasicinputs_003',
+              )}
             >
               <SvgIcon icon={Icon.QUESTION} size={20} />
             </Tooltip>

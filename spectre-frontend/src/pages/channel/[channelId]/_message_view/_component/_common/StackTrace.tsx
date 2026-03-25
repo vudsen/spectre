@@ -13,6 +13,7 @@ import Icon from '@/components/icon/icon.ts'
 import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 import PackageHider from '@/pages/channel/[channelId]/_message_view/_component/_common/PackageHider.tsx'
+import i18n from '@/i18n'
 
 export type Trace = {
   fileName: string
@@ -109,7 +110,11 @@ const StackTrace: React.FC<StackTraceProps> = ({ traces, onDirty }) => {
         ))}
       </div>
       <RightClickMenu {...menuProps} onAction={onAction}>
-        <ListboxItem key={Actions.JAD}>反编译</ListboxItem>
+        <ListboxItem key={Actions.JAD}>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_component_quickcommand_index_002',
+          )}
+        </ListboxItem>
         <ListboxItem key={Actions.WATCH}>Watch</ListboxItem>
         <ListboxItem key={Actions.STACK}>Stack</ListboxItem>
         <ListboxItem key={Actions.TRACE}>Trace</ListboxItem>
@@ -117,7 +122,13 @@ const StackTrace: React.FC<StackTraceProps> = ({ traces, onDirty }) => {
           key={Actions.FLAG}
           startContent={<SvgIcon icon={Icon.BOOKMARK} size={18} />}
         >
-          {markedLines.has(selectedIndex.current) ? '取消标记' : '标记'}
+          {markedLines.has(selectedIndex.current)
+            ? i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_common_stacktrace_001',
+              )
+            : i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_common_stacktrace_002',
+              )}
         </ListboxItem>
       </RightClickMenu>
     </div>

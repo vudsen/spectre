@@ -9,6 +9,7 @@ import {
 } from '@heroui/react'
 import React from 'react'
 import CopyableValue from '@/components/CopyableValue.tsx'
+import i18n from '@/i18n'
 
 type SysEnvMessage = {
   env: Record<string, string>
@@ -22,8 +23,12 @@ const SysEnvMessageDetail: React.FC<DetailComponentProps<SysEnvMessage>> = ({
   return (
     <Table aria-label="Sys env">
       <TableHeader>
-        <TableColumn>名称</TableColumn>
-        <TableColumn>值</TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+        </TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_components_labeleditor_index_005')}
+        </TableColumn>
       </TableHeader>
       <TableBody items={Object.entries(msg.env)}>
         {([key, value]) => (

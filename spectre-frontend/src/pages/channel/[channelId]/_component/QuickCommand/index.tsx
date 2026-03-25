@@ -12,6 +12,7 @@ import React, { useImperativeHandle, useState } from 'react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import CommandFormContent, { type FormHandle } from './CommandFormContent'
+import i18n from '@/i18n'
 import {
   quickCommandHandles,
   type QuickCommandKeys,
@@ -110,7 +111,11 @@ const QuickCommand: React.FC<QuickCommandProps> = (props) => {
       <Popover isOpen={isListOpen} onOpenChange={(o) => setListOpen(o)}>
         <PopoverTrigger className="mr-5 text-sm">
           <div className="text-primary flex cursor-pointer items-center">
-            <div>🪄快捷指令</div>
+            <div>
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_component_quickcommand_index_001',
+              )}
+            </div>
             <SvgIcon icon={Icon.RIGHT_ARROW} className="rotate-90" />
           </div>
         </PopoverTrigger>
@@ -123,7 +128,11 @@ const QuickCommand: React.FC<QuickCommandProps> = (props) => {
             <ListboxItem key="watch">Watch</ListboxItem>
             <ListboxItem key="trace">Trace</ListboxItem>
             <ListboxItem key="stack">Stack</ListboxItem>
-            <ListboxItem key="jad">反编译</ListboxItem>
+            <ListboxItem key="jad">
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_component_quickcommand_index_002',
+              )}
+            </ListboxItem>
           </Listbox>
         </PopoverContent>
       </Popover>

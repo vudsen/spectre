@@ -24,6 +24,7 @@ import { unbindRole } from '@/api/impl/role.ts'
 import { showDialog } from '@/common/util.ts'
 import SelectRoleDrawerContent from './SelectRoleDrawerContent.tsx'
 import { useNavigate } from 'react-router'
+import i18n from '@/i18n'
 
 const UserRoleQuery = graphql(`
   query UserRoleQuery($uid: Long!) {
@@ -50,13 +51,20 @@ const UserRoleList: React.FC<UserRoleListProps> = (props) => {
 
   const removeRole = (roleId: string, roleName: string) => {
     showDialog({
-      title: `解绑角色 ${roleName}`,
-      message: '确定要解绑吗?',
+      title: i18n.t(
+        'hardcoded.msg_pages_permission_user_param_userrolelist_001',
+        { roleName },
+      ),
+      message: i18n.t(
+        'hardcoded.msg_pages_permission_user_param_userrolelist_002',
+      ),
       color: 'danger',
       onConfirm() {
         unbindRole(props.uid, roleId).then(() => {
           addToast({
-            title: '解绑成功',
+            title: i18n.t(
+              'hardcoded.msg_pages_permission_user_param_userrolelist_003',
+            ),
             color: 'success',
           })
           onModified()
@@ -81,29 +89,45 @@ const UserRoleList: React.FC<UserRoleListProps> = (props) => {
       <Card>
         <CardBody className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="header-2">已绑定的角色</div>
+            <div className="header-2">
+              {i18n.t(
+                'hardcoded.msg_pages_permission_user_param_userrolelist_004',
+              )}
+            </div>
             <Button
               variant="flat"
               color="primary"
               onPress={roleModifyDrawerClosure.onOpen}
             >
-              绑定新角色
+              {i18n.t(
+                'hardcoded.msg_pages_permission_user_param_userrolelist_005',
+              )}
             </Button>
           </div>
           <div className="text-sm">
-            用户角色，用于权限的分配与管理。目前暂不支持单独绑定权限到用户上。
+            {i18n.t(
+              'hardcoded.msg_pages_permission_user_param_userrolelist_006',
+            )}
           </div>
           <Table removeWrapper>
             <TableHeader>
-              <TableColumn>名称</TableColumn>
-              <TableColumn>描述</TableColumn>
-              <TableColumn>操作</TableColumn>
+              <TableColumn>
+                {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+              </TableColumn>
+              <TableColumn>
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_007',
+                )}
+              </TableColumn>
+              <TableColumn>{i18n.t('common.action')}</TableColumn>
             </TableHeader>
             <TableBody
               items={roles}
               isLoading={isLoading}
               loadingContent={<TableLoadingMask />}
-              emptyContent="没有绑定任何角色"
+              emptyContent={i18n.t(
+                'hardcoded.msg_pages_permission_user_param_userrolelist_007',
+              )}
             >
               {(role) => (
                 <TableRow key={role.id}>

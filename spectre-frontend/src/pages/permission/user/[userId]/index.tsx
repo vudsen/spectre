@@ -10,6 +10,7 @@ import SpectreTabs, { type TabContent } from '@/components/SpectreTabs'
 import UserRoleList from './UserRoleList.tsx'
 import LabelList from './LabelList.tsx'
 import { useNavigate, useParams } from 'react-router'
+import i18n from '@/i18n'
 
 const UserDetailQuery = graphql(`
   query UserDetailQuery($userId: Long!) {
@@ -50,11 +51,13 @@ const UserDetail: React.FC = () => {
   const crumbs: Crumb[] = useMemo(() => {
     return [
       {
-        name: '用户',
+        name: i18n.t('hardcoded.msg_pages_permission_role_param_index_002'),
         href: '/permission/user',
       },
       {
-        name: user ? (user.displayName ?? user.username) : '详情',
+        name: user
+          ? (user.displayName ?? user.username)
+          : i18n.t('hardcoded.msg_pages_permission_role_param_index_001'),
       },
     ]
   }, [user])
@@ -63,12 +66,12 @@ const UserDetail: React.FC = () => {
   const tabs: TabContent[] = useMemo(() => {
     return [
       {
-        name: '角色',
+        name: i18n.t('hardcoded.msg_pages_permission_role_index_001'),
         key: 'User',
         content: <UserRoleList uid={params.userId} />,
       },
       {
-        name: '标签',
+        name: i18n.t('hardcoded.msg_components_labeleditor_index_001'),
         key: 'Labels',
         content: <LabelList labels={user?.labels} />,
       },
@@ -87,7 +90,9 @@ const UserDetail: React.FC = () => {
     )
   }
   if (!user) {
-    return <div>角色不存在</div>
+    return (
+      <div>{i18n.t('hardcoded.msg_pages_permission_role_param_index_003')}</div>
+    )
   }
   return (
     <div className="mx-6 space-y-3">
@@ -95,23 +100,29 @@ const UserDetail: React.FC = () => {
       <Card>
         <CardBody>
           <div className="flex items-center justify-between">
-            <div className="header-2 mb-3">基础信息</div>
+            <div className="header-2 mb-3">
+              {i18n.t('hardcoded.msg_ext_view_k8sview_001')}
+            </div>
             <Button color="primary" variant="flat" onPress={updateUser}>
-              更新用户
+              {i18n.t('hardcoded.msg_pages_permission_user_modify_index_001')}
             </Button>
           </div>
           <DetailGrid
             details={[
               {
-                name: '用户名',
+                name: i18n.t('common.username'),
                 value: user.username,
               },
               {
-                name: '昵称',
+                name: i18n.t(
+                  'hardcoded.msg_pages_permission_role_param_roleuserlist_004',
+                ),
                 value: user.displayName ?? '-',
               },
               {
-                name: '创建时间',
+                name: i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_010',
+                ),
                 value: formatTime(user.createdAt),
               },
             ]}

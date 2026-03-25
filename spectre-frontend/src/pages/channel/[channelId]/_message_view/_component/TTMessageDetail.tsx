@@ -14,6 +14,7 @@ import RightClickMenu from '@/components/RightClickMenu/RightClickMenu.tsx'
 import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
 import React, { useContext, useRef } from 'react'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import i18n from '@/i18n'
 
 type TimeFragment = {
   className: string
@@ -93,10 +94,16 @@ const TimeFragmentListDisplay: React.FC<{
         </TableBody>
       </Table>
       <div className="text-default-500 my-3 text-right text-sm">
-        提示: 右键可以进行额外操作
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_ttmessagedetail_001',
+        )}
       </div>
       <RightClickMenu {...menuProps} onAction={onAction}>
-        <ListboxItem key="tt">执行表达式</ListboxItem>
+        <ListboxItem key="tt">
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_message_view_component_ttmessagedetail_002',
+          )}
+        </ListboxItem>
       </RightClickMenu>
     </div>
   )

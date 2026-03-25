@@ -61,7 +61,7 @@ class SshAttachHandler(
     ): ShellBasedArthasHttpClient {
         val dockerCnf = runtimeNode.nodeConfig.docker
         if (dockerCnf == null || !dockerCnf.enabled) {
-            throw BusinessException("未提供 Docker 相关配置")
+            throw BusinessException("error.docker.config.missing")
         }
 
         val containerHomePath = dockerCnf.spectreHome ?: runtimeNode.nodeConfig.spectreHome
@@ -124,7 +124,7 @@ class SshAttachHandler(
     ): ShellBasedArthasHttpClient {
         val localConf = runtimeNode.nodeConfig.local
         if (localConf == null || !localConf.enabled) {
-            throw BusinessException("未提供本地 JVM 相关配置")
+            throw BusinessException("error.local.jvm.config.missing")
         }
 
         if (expectBound) {

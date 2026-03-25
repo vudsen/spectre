@@ -15,6 +15,7 @@ import ExtensionPageManager from '@/ext/manager.ts'
 import { useTranslation } from 'react-i18next'
 import 'shepherd.js/dist/css/shepherd.css'
 import Shepherd, { type Tour } from 'shepherd.js'
+import i18n from '@/i18n'
 import {
   appendShepherdStepsBeforeShow,
   shepherdOffset,
@@ -74,7 +75,9 @@ const JvmSourceModifyPage: React.FC = () => {
     }
     if (tourRef.current) {
       if (TEST_RUNTIME_NODE_ID !== evt.target.value) {
-        setPluginErrorMsg('请选中 Test 以继续教程')
+        setPluginErrorMsg(
+          i18n.t('hardcoded.msg_pages_runtime_node_modify_index_001'),
+        )
         return
       }
     }
@@ -82,13 +85,17 @@ const JvmSourceModifyPage: React.FC = () => {
     const plugin = plugins.find((plugin) => plugin.id == evt.target.value)
 
     if (!plugin) {
-      setPluginErrorMsg('无法找到对应插件, id = ' + evt.target.value)
+      setPluginErrorMsg(
+        i18n.t('hardcoded.msg_pages_runtime_node_modify_index_002') +
+          evt.target.value,
+      )
       return
     }
     const pg = ExtensionPageManager.getFormPage(plugin.page.pageName)
     if (!pg) {
       setPluginErrorMsg(
-        '前端扩展页面不存在, pageName = ' + plugin.page.pageName,
+        i18n.t('hardcoded.msg_pages_runtime_node_modify_index_003') +
+          plugin.page.pageName,
       )
       return
     }
@@ -130,38 +137,38 @@ const JvmSourceModifyPage: React.FC = () => {
 
     tour.addStep({
       id: 'select-type',
-      title: '展开类型',
-      text: 'Spectre 支持多种方式来连接 JVM，点击这里可以查看支持的类型。请选择 `Test` 以继续教程',
+      title: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_004'),
+      text: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_005'),
       attachTo: {
         element: '#select-type',
         on: 'bottom',
       },
       buttons: [
         {
-          text: '了解',
+          text: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_006'),
           action: tour.hide,
         },
       ],
     })
     tour.addStep({
       id: 'description',
-      title: '类型信息',
-      text: '此处将显示具体的类型信息',
+      title: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_007'),
+      text: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_008'),
       attachTo: {
         element: '#extension-description',
         on: 'bottom',
       },
       buttons: [
         {
-          text: '下一步',
+          text: i18n.t('common.next'),
           action: tour.next,
         },
       ],
     })
     tour.addStep({
       id: 'confirm',
-      title: '进入配置界面',
-      text: '点击此处进入配置界面',
+      title: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_009'),
+      text: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_010'),
       canClickTarget: true,
       attachTo: {
         element: '#runtime-node-next-btn',
@@ -183,12 +190,13 @@ const JvmSourceModifyPage: React.FC = () => {
     })
 
     showDialog({
-      title: '教程',
-      message:
-        '在本教程中，将会创建一个测试节点，该节点仅用于测试功能，不会产生实际连接',
+      title: i18n.t(
+        'hardcoded.msg_pages_channel_param_message_view_component_welcomemessagedetail_004',
+      ),
+      message: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_011'),
       hideCancel: true,
       isDismissable: false,
-      confirmBtnText: '开始',
+      confirmBtnText: i18n.t('hardcoded.msg_pages_runtime_node_list_index_008'),
       color: 'primary',
       onConfirm() {
         tour.start()

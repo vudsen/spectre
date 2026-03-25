@@ -19,6 +19,7 @@ import { logout } from '@/api/impl/auth.ts'
 import { useNavigate } from 'react-router'
 import { showDialog } from '@/common/util.ts'
 import { modifyPassword } from '@/api/impl/user.ts'
+import i18n from '@/i18n'
 import ModifyPasswordModalContent, {
   type ModifyPasswordData,
 } from '@/components/ModifyPasswordModalContent.tsx'
@@ -32,13 +33,13 @@ const UserDisplay: React.FC = () => {
   const nav = useNavigate()
   const doLogout = () => {
     showDialog({
-      title: '登出',
-      message: '确认登出吗?',
+      title: i18n.t('hardcoded.msg_pages_userdisplay_001'),
+      message: i18n.t('hardcoded.msg_pages_userdisplay_002'),
       color: 'danger',
       onConfirm: async () => {
         await logout()
         addToast({
-          title: '登出成功',
+          title: i18n.t('hardcoded.msg_pages_userdisplay_003'),
           color: 'success',
         })
         dispatch(clearUserInfo())
@@ -50,7 +51,7 @@ const UserDisplay: React.FC = () => {
   const onModify = async () => {
     await logout()
     addToast({
-      title: '登出成功',
+      title: i18n.t('hardcoded.msg_pages_userdisplay_003'),
       color: 'success',
     })
     dispatch(clearUserInfo())
@@ -88,7 +89,7 @@ const UserDisplay: React.FC = () => {
         </DropdownTrigger>
         <DropdownMenu aria-label="User session selections">
           <DropdownItem key="modify-password" onPress={onOpen}>
-            修改密码
+            {i18n.t('hardcoded.msg_components_modifypasswordmodalcontent_003')}
           </DropdownItem>
           <DropdownItem
             key="logout"
@@ -96,7 +97,7 @@ const UserDisplay: React.FC = () => {
             className="text-danger"
             onPress={doLogout}
           >
-            登出
+            {i18n.t('hardcoded.msg_pages_userdisplay_001')}
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>

@@ -17,6 +17,7 @@ import {
 } from '@/api/impl/ai.ts'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import { formatTime } from '@/common/util.ts'
+import i18n from '@/i18n'
 
 type Values = Omit<LLMConfigurationModifyVO, 'maxTokenPerHour'> & {
   maxTokenPerHour: string
@@ -132,10 +133,18 @@ const LLMForm: React.FC = () => {
     })
       .then((_) => {
         setErrorText(undefined)
-        addToast({ title: t('保存成功'), color: 'success' })
+        addToast({
+          title: t(i18n.t('hardcoded.msg_pages_settings_llmform_001')),
+          color: 'success',
+        })
       })
       .catch((error) => {
-        setErrorText(resolveLlmErrorText(error, '保存失败'))
+        setErrorText(
+          resolveLlmErrorText(
+            error,
+            i18n.t('hardcoded.msg_pages_settings_llmform_002'),
+          ),
+        )
       })
       .finally(() => {
         setSaving(false)
@@ -147,7 +156,7 @@ const LLMForm: React.FC = () => {
       <CardBody className="space-y-3">
         <div className="header-2">{t('settings.llm.title')}</div>
         <div className="text-sm">
-          开启 LLM 后，将能够借助 AI 进行 arthas 诊断。
+          {i18n.t('hardcoded.msg_pages_settings_llmform_003')}
         </div>
         {loading ? (
           <div className="text-default-500 flex items-center gap-2">
@@ -241,9 +250,9 @@ const LLMForm: React.FC = () => {
                     className="max-w-xl"
                     label={
                       <div>
-                        当前剩余用量 (已使用{usage.used}) (
-                        {formatTime(usage.nextRefresh)}
-                        后使用后刷新)
+                        {i18n.t('hardcoded.msg_pages_settings_llmform_004')}
+                        {usage.used}) ({formatTime(usage.nextRefresh)}
+                        {i18n.t('hardcoded.msg_pages_settings_llmform_005')}
                       </div>
                     }
                     value={

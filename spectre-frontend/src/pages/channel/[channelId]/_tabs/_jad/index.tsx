@@ -4,6 +4,7 @@ import { store } from '@/store'
 import { addToast } from '@heroui/react'
 import Code from '@/components/Code.tsx'
 import type { JadMessage } from '../../_message_view/_component/JadMessageDetail'
+import i18n from '@/i18n'
 
 export interface JadPageProps {
   /**
@@ -35,7 +36,9 @@ const JadPage: React.FC<JadPageProps> = (props) => {
         }
         if (!jadMsg) {
           addToast({
-            title: '反编译失败',
+            title: i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_jad_index_001',
+            ),
             color: 'danger',
           })
           // TODO setErrorMessage
@@ -46,7 +49,13 @@ const JadPage: React.FC<JadPageProps> = (props) => {
         setLoading(false)
       })
       .catch((e) => {
-        setErrorMessage(`反编译失败: ${e.message ?? '未知原因'}`)
+        setErrorMessage(
+          i18n.t('hardcoded.msg_pages_channel_param_tabs_jad_index_002', {
+            reason:
+              e.message ??
+              i18n.t('hardcoded.msg_pages_channel_param_tabs_jad_index_003'),
+          }),
+        )
       })
   }, [code, props.classname])
 
@@ -60,7 +69,9 @@ const JadPage: React.FC<JadPageProps> = (props) => {
   if (loading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <span className="animate-pulse">加载中</span>
+        <span className="animate-pulse">
+          {i18n.t('hardcoded.msg_components_tableloadingmask_001')}
+        </span>
       </div>
     )
   }

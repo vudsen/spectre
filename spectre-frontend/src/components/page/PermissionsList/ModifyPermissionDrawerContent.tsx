@@ -22,6 +22,7 @@ import ExtensionPageManager from '@/ext/manager.ts'
 import type { FormComponentRef, FormPage } from '@/ext/type.ts'
 import { graphql } from '@/graphql/generated'
 import { execute } from '@/graphql/execute.ts'
+import i18n from '@/i18n'
 
 export type PermissionEntityWithState = {
   resource: string
@@ -154,7 +155,7 @@ const ModifyPermissionDrawerContent: React.FC<
       const oldId = props.oldPermission?.id
       let successMsg: string
       if (oldId) {
-        successMsg = '更新成功'
+        successMsg = i18n.t('common.updateSuccess')
         await updatePolicyPermission({
           id: oldId,
           conditionExpression: values.expression,
@@ -162,7 +163,9 @@ const ModifyPermissionDrawerContent: React.FC<
           enhancePlugins,
         })
       } else {
-        successMsg = '添加成功'
+        successMsg = i18n.t(
+          'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_001',
+        )
         await createPolicyPermission({
           subjectId: props.subjectId,
           resource: props.permission!.resource,
@@ -185,12 +188,22 @@ const ModifyPermissionDrawerContent: React.FC<
   }
   return (
     <>
-      <DrawerHeader>添加'{props.permissionName}'权限</DrawerHeader>
+      <DrawerHeader>
+        {i18n.t(
+          'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_002',
+        )}
+        {props.permissionName}
+        {i18n.t(
+          'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_003',
+        )}
+      </DrawerHeader>
       <DrawerBody>
         <div>
           <Alert
             color="warning"
-            title="目前没有限制表达式的使用，用户可以使用 T(...) 等操作新建任意的类，请严格限制相关创建权限的分配"
+            title={i18n.t(
+              'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_004',
+            )}
           ></Alert>
         </div>
         <ControlledInput
@@ -198,8 +211,12 @@ const ModifyPermissionDrawerContent: React.FC<
           name="expression"
           rules={{ required: true }}
           inputProps={{
-            label: 'SpEL 表达式',
-            placeholder: '请输入表达式',
+            label: i18n.t(
+              'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_005',
+            ),
+            placeholder: i18n.t(
+              'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_006',
+            ),
             isRequired: true,
             spellCheck: 'false',
           }}
@@ -208,8 +225,12 @@ const ModifyPermissionDrawerContent: React.FC<
           control={control}
           name="description"
           inputProps={{
-            label: '描述',
-            placeholder: '请输入描述',
+            label: i18n.t(
+              'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_007',
+            ),
+            placeholder: i18n.t(
+              'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_008',
+            ),
           }}
         />
         {enhanceForms.map((form, index) => (
@@ -224,7 +245,11 @@ const ModifyPermissionDrawerContent: React.FC<
         ))}
         {examples.length > 0 ? (
           <div className="space-y-3">
-            <div>SpEL 上下文示例</div>
+            <div>
+              {i18n.t(
+                'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_009',
+              )}
+            </div>
             {examples.map((example) => (
               <div key={example.name}>
                 <div className="my-3 text-sm">{example.name}</div>
@@ -243,10 +268,12 @@ const ModifyPermissionDrawerContent: React.FC<
           onPress={props.onClose}
           disabled={isLoading}
         >
-          关闭
+          {i18n.t(
+            'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+          )}
         </Button>
         <Button color="primary" onPress={onSave} isLoading={isLoading}>
-          保存
+          {i18n.t('common.save')}
         </Button>
       </DrawerFooter>
     </>

@@ -165,9 +165,9 @@ class DefaultArthasExecutionService(
     ) {
         val treeNode =
             runtimeNodeService.findTreeNode(treeNodeId)
-                ?: throw BusinessException("节点不存在")
+                ?: throw BusinessException("error.node.not.exist")
         val node =
-            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("运行节点不存在")
+            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.runtime.node.not.exist")
         val ctx = AttachNodePolicyPermissionContext(AppPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
         appAccessControlService.checkPolicyPermission(ctx)
     }
@@ -183,7 +183,7 @@ class DefaultArthasExecutionService(
             arthasInstanceService.findInstanceByChannelId(channelId)
                 ?: throw BusinessException("error.channel.not.exist")
         val runtimeNodeDTO =
-            runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("节点不存在")
+            runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("error.node.not.exist")
 
         appAccessControlService.checkPolicyPermission(
             ArthasExecutionPolicyPermissionContext(
@@ -307,7 +307,7 @@ class DefaultArthasExecutionService(
         checkTreeNodePermission(channelId)
         val arthasInstanceDTO =
             arthasInstanceService.findInstanceByChannelId(channelId)
-                ?: throw BusinessException("Channel 不存在，请重新在列表中连接")
+                ?: throw BusinessException("error.channel.reconnect.required")
         val distributedLockKey = "arthas:channel:join-lock:$ownerIdentifier"
 
         val consumerCacheKey = "channel:consumer:$channelId:$ownerIdentifier"
@@ -487,7 +487,7 @@ class DefaultArthasExecutionService(
     private fun tryResolveClient(channelId: String): Pair<ArthasHttpClient, ArthasInstanceDTO> {
         val pair =
             arthasInstanceService.resolveCachedClientByChannelId(channelId)
-                ?: throw BusinessException("节点已过期，请刷新页面")
+                ?: throw BusinessException("error.runtime.node.expired")
         pair.first?.let {
             return Pair(it, pair.second)
         }
@@ -531,7 +531,7 @@ class DefaultArthasExecutionService(
                 for (i in 0 until end) {
                     val filename = "$channelId-${sortedBy[i].timestamp}.${sortedBy[i].extension}"
                     if (SecureUtils.isNotPureFilename(filename)) {
-                        throw BusinessException("无效的文件名称")
+                        throw BusinessException("error.file.name.invalid")
                     }
                     client.deleteProfilerFile(filename)
                 }
@@ -563,7 +563,7 @@ class DefaultArthasExecutionService(
                 "execute" -> {
                     // TODO 替换输出文件路径
                     if (instance.restrictedMode) {
-                        throw BusinessException("限制模式下不允许执行 profiler execute 命令")
+                        throw BusinessException("error.profiler.execute.not.allowed.in.restricted.mode")
                     }
                 }
             }
@@ -793,7 +793,7 @@ class DefaultArthasExecutionService(
 
         val filename = "${file.channelId}-${file.timestamp}.${file.extension}"
         if (SecureUtils.isNotPureFilename(filename)) {
-            throw BusinessException("无效的文件名称")
+            throw BusinessException("error.file.name.invalid")
         }
         return pair.first.readProfilerFile(filename)
     }

@@ -65,7 +65,7 @@ class RuntimeNodeController(
     fun expandRuntimeNodeTree(
         @RequestBody vo: RuntimeNodeExpandRequestVO,
     ): List<JvmTreeNodeDTO> {
-        val node = service.getRuntimeNode(vo.runtimeNodeId) ?: throw BusinessException("节点不存在")
+        val node = service.getRuntimeNode(vo.runtimeNodeId) ?: throw BusinessException("error.node.not.exist")
         val ctx = RuntimeNodePolicyPermissionContext(node, AppPermissions.RUNTIME_NODE_TREE_EXPAND)
         appAccessControlService.checkPolicyPermission(ctx)
 

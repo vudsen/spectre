@@ -84,11 +84,11 @@ open class SshRuntimeNode :
                     if (it.hasNext()) {
                         return it.next()
                     } else {
-                        throw BusinessException("无法解析 OpenSSH 私钥")
+                        throw BusinessException("error.openssh.private.key.parse.unable")
                     }
                 }
             } catch (ex: Exception) {
-                throw BusinessException("解析 OpenSSH 私钥失败: ${ex.message}")
+                throw BusinessException("error.openssh.private.key.parse.failed", arrayOf(ex.message ?: "<Unknown>"))
             }
         }
 
@@ -111,9 +111,9 @@ open class SshRuntimeNode :
                                 val publicKey = kf.generatePublic(pubSpec)
                                 return KeyPair(publicKey, privateKey)
                             }
-                            throw BusinessException("无法从私钥推导出公钥，请提供公钥")
+                            throw BusinessException("error.public.key.derive.failed")
                         }
-                        else -> throw BusinessException("不支持的 PEM 对象: ${obj?.javaClass?.name}")
+                        else -> throw BusinessException("error.pem.object.unsupported", arrayOf(obj?.javaClass?.name ?: "<Unknown>"))
                     }
                 }
             }
@@ -147,7 +147,7 @@ open class SshRuntimeNode :
             if (it.loginType == SshRuntimeNodeConfig.LoginType.KEY) {
                 session.addPublicKeyIdentity(
                     loadKeyPairAllowEmptyPublic(
-                        it.secretKey ?: throw BusinessException("未配置私钥"),
+                        it.secretKey ?: throw BusinessException("error.private.key.not.configured"),
                         it.secretKeyPassword,
                         session,
                     ),

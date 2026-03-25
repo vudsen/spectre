@@ -2,6 +2,7 @@ import { type DetailComponentProps, registerMessageView } from '../factory.ts'
 import OgnlCommonMessageDetail from '../_component/OgnlCommonMessageDetail.tsx'
 import React from 'react'
 import type { PureArthasResponse } from '@/api/impl/arthas.ts'
+import i18n from '@/i18n'
 
 function createComponent<T extends PureArthasResponse>(
   ognlResultGetter: (r: T) => string,
@@ -46,7 +47,12 @@ type GetStaticMessage = {
 registerMessageView({
   type: 'getstatic',
   display: (message) => ({
-    name: `查看静态属性: ${message.value.fieldName}`,
+    name: i18n.t(
+      'hardcoded.msg_pages_channel_param_message_view_register_ognl_common_001',
+      {
+        fieldName: message.value.fieldName,
+      },
+    ),
     color: 'default',
     tag: 'getstatic',
   }),
@@ -62,7 +68,9 @@ type OgnlMessage = {
 registerMessageView({
   type: 'ognl',
   display: (_) => ({
-    name: `执行 Ognl 表达式`,
+    name: i18n.t(
+      'hardcoded.msg_pages_channel_param_message_view_register_ognl_common_002',
+    ),
     color: 'default',
     tag: 'ognl',
   }),

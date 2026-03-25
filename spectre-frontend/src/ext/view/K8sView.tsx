@@ -4,6 +4,7 @@ import { Card, CardBody } from '@heroui/react'
 import { formatTime } from '@/common/util.ts'
 import DetailGrid from '@/components/DetailGrid.tsx'
 import ReadonlyLabelsTable from '@/components/ReadonlyLabelsTable.tsx'
+import i18n from '@/i18n'
 
 type K8sRuntimeNodeConfig = {
   apiServerEndpoint: string
@@ -19,25 +20,33 @@ const K8sView: ViewComponent = (props) => {
       <div className="header-1">{data.name}</div>
       <Card>
         <CardBody className="space-y-3">
-          <div className="header-2">基础信息</div>
-          <div className="text-sm">该节点为 Kubernetes 节点。</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_ext_view_k8sview_001')}
+          </div>
+          <div className="text-sm">
+            {i18n.t('hardcoded.msg_ext_view_k8sview_002')}
+          </div>
           <DetailGrid
             details={[
               {
-                name: '名称',
+                name: i18n.t('hardcoded.msg_components_labeleditor_index_004'),
                 value: data.name,
               },
               {
-                name: '类型',
+                name: i18n.t('hardcoded.msg_ext_view_k8sview_003'),
                 value: 'Kubernetes',
               },
               {
-                name: '创建时间',
+                name: i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_010',
+                ),
                 value: formatTime(data.createdAt),
               },
             ]}
           />
-          <div className="header-2">连接信息</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_ext_view_k8sview_004')}
+          </div>
           <DetailGrid
             details={[
               {
@@ -45,7 +54,7 @@ const K8sView: ViewComponent = (props) => {
                 value: configuration.apiServerEndpoint,
               },
               {
-                name: '忽略 SSL',
+                name: i18n.t('hardcoded.msg_ext_view_k8sview_005'),
                 value: configuration.insecure.toString(),
               },
               {
@@ -58,7 +67,9 @@ const K8sView: ViewComponent = (props) => {
       </Card>
       <Card>
         <CardBody className="space-y-3">
-          <div className="header-2">标签</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
+          </div>
           <ReadonlyLabelsTable labels={data.labels} />
         </CardBody>
       </Card>

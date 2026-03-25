@@ -14,6 +14,14 @@ const resources = {
 
 export const LANGUAGE_CACHE_KEY = 'locale'
 
+export const getCurrentLocale = () => {
+  const locale = localStorage.getItem(LANGUAGE_CACHE_KEY)
+  if (locale != null) {
+    return locale
+  }
+  return navigator.language
+}
+
 let lng: string
 const cachedLng = localStorage.getItem(LANGUAGE_CACHE_KEY)
 if (cachedLng) {

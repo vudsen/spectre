@@ -3,6 +3,7 @@ import { Card, CardBody, Link } from '@heroui/react'
 import clsx from 'clsx'
 import { queryCurrentInitStep } from '@/api/impl/sys-conf.ts'
 import { useNavigate } from 'react-router'
+import i18n from '@/i18n'
 
 interface StepProps {
   number: number
@@ -32,24 +33,21 @@ type MyStep = {
 
 const steps: MyStep[] = [
   {
-    title: '了解工具包',
-    message:
-      'Spectre 需要借助外部工具才能正常使用，而并非单独完成了整个流程，只是利用这些工具将其组合了起来。在该任务中，你将了解到工具包的基础维护流程。',
-    goal: '为 Arthas 手动上传工具包',
+    title: i18n.t('hardcoded.msg_pages_home_guide_001'),
+    message: i18n.t('hardcoded.msg_pages_home_guide_002'),
+    goal: i18n.t('hardcoded.msg_pages_home_guide_003'),
     to: '/toolchain/items?guide=true',
   },
   {
-    title: '创建运行节点',
-    message:
-      '运行节点是一个抽象概念，任何可以运行 JVM 的东西都可以是一个"运行节点"，例如 一个 SSH 远程服务器、Docker 以及 Kubernetes。通过运行节点，Spectre 将为你过滤出所有可用的 JVM 以便进行进一步操作',
-    goal: '创建一个测试节点',
+    title: i18n.t('hardcoded.msg_pages_home_guide_004'),
+    message: i18n.t('hardcoded.msg_pages_home_guide_005'),
+    goal: i18n.t('hardcoded.msg_pages_home_guide_006'),
     to: '/runtime-node/modify?guide=true',
   },
   {
-    title: '连接到 JVM',
-    message:
-      '你已经完成了所有内容，欢迎使用 Spectre! 此外，所有教程均可重复体验。',
-    goal: '连接到任意 JVM',
+    title: i18n.t('hardcoded.msg_pages_home_guide_007'),
+    message: i18n.t('hardcoded.msg_pages_home_guide_008'),
+    goal: i18n.t('hardcoded.msg_pages_home_guide_009'),
     to: '/runtime-node/list?guide=true',
   },
 ]
@@ -76,8 +74,10 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
         )}
       >
         <Step number={index} currentStep={currentStep} /> {step.title}
-        {isFinished ? ' (已完成)' : null}
-        {currentStep === index ? ' (进行中)' : null}
+        {isFinished ? i18n.t('hardcoded.msg_pages_home_guide_010') : null}
+        {currentStep === index
+          ? i18n.t('hardcoded.msg_pages_home_guide_011')
+          : null}
       </div>
       <div
         className={clsx(
@@ -91,7 +91,8 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
           <>
             <div>{step.message}</div>
             <div className="mt-4">
-              任务目标: {isFinished ? '✅' : null}
+              {i18n.t('hardcoded.msg_pages_home_guide_012')}{' '}
+              {isFinished ? '✅' : null}
               <Link
                 onPress={() => nav(step.to)}
                 underline="always"
@@ -123,7 +124,9 @@ const Guide: React.FC = () => {
   return (
     <Card className="mt-5">
       <CardBody>
-        <div className="header-2">第一次使用？</div>
+        <div className="header-2">
+          {i18n.t('hardcoded.msg_pages_home_guide_013')}
+        </div>
         <div className="mt-3 flex flex-col">
           {steps.map((step, index) => (
             <StepDisplay step={step} index={index} currentStep={currentStep} />

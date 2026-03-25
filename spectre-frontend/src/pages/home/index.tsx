@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import Guide from '@/pages/home/Guide.tsx'
+import i18n from '@/i18n'
 
 const ListRuntimeNodesSimpleQuery = graphql(`
   query ListRuntimeNodesSimpleQuery($page: Int!, $size: Int!) {
@@ -59,12 +60,18 @@ const Home: React.FC = () => {
   return (
     <div className="flex flex-col px-5 pb-16">
       <div>
-        <div className="header-1 mb-8">欢迎使用 Spectre</div>
+        <div className="header-1 mb-8">
+          {i18n.t('hardcoded.msg_pages_home_index_001')}
+        </div>
         <div className="grid grid-cols-2 gap-8">
           <Card>
             <CardBody className="overflow-hidden">
-              <div className="header-2">快速开始</div>
-              <div className="my-3 text-sm">选择任意一个运行节点来连接</div>
+              <div className="header-2">
+                {i18n.t('hardcoded.msg_pages_home_index_002')}
+              </div>
+              <div className="my-3 text-sm">
+                {i18n.t('hardcoded.msg_pages_home_index_003')}
+              </div>
               <Table
                 removeWrapper
                 aria-label="Runtime Nodes"
@@ -90,15 +97,22 @@ const Home: React.FC = () => {
                 }
               >
                 <TableHeader>
-                  <TableColumn>名称</TableColumn>
-                  <TableColumn>标签</TableColumn>
-                  <TableColumn align="end">操作</TableColumn>
+                  <TableColumn>
+                    {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+                  </TableColumn>
+                  <TableColumn>
+                    {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
+                  </TableColumn>
+                  <TableColumn align="end">
+                    {i18n.t('common.action')}
+                  </TableColumn>
                 </TableHeader>
                 <TableBody
                   emptyContent={
                     runtimeNodes.errors
-                      ? '加载失败:' + runtimeNodes.errors.join(';')
-                      : '没有任何数据'
+                      ? i18n.t('hardcoded.msg_pages_home_index_004') +
+                        runtimeNodes.errors.join(';')
+                      : i18n.t('hardcoded.msg_pages_home_index_005')
                   }
                   isLoading={runtimeNodes.isLoading}
                   items={
@@ -131,17 +145,24 @@ const Home: React.FC = () => {
           </Card>
           <Card>
             <CardBody className="space-y-3">
-              <div className="header-2">🐞 反馈BUG</div>
-              <div className="text-sm">您可以在 GitHub 上提交 Issue</div>
+              <div className="header-2">
+                {i18n.t('hardcoded.msg_pages_home_index_006')}
+              </div>
+              <div className="text-sm">
+                {i18n.t('hardcoded.msg_pages_home_index_007')}
+              </div>
               <div className="text-default-500 text-sm">
-                版本: {import.meta.env.VITE_APP_VERSION ?? 'Unknown'}
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_message_view_component_welcomemessagedetail_002',
+                )}{' '}
+                {import.meta.env.VITE_APP_VERSION ?? 'Unknown'}
               </div>
               <Link
                 isExternal
                 showAnchorIcon
                 href="https://github.com/vudsen/spectre/issues/new"
               >
-                提交 BUG
+                {i18n.t('hardcoded.msg_pages_home_index_008')}
               </Link>
             </CardBody>
           </Card>

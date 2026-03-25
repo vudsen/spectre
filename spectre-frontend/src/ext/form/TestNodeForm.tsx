@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form'
 import { addToast, Button } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
+import i18n from '@/i18n'
 
 type Values = {
   name: string
@@ -62,7 +63,10 @@ const TestNodeForm: React.FC<FormComponentProps> = ({
   return (
     <div className="spectre-container">
       <div className="spectre-heading">
-        {oldState ? '更新' : '新建'}测试节点
+        {oldState
+          ? i18n.t('hardcoded.msg_ext_form_k8sconfform_005')
+          : i18n.t('hardcoded.msg_ext_form_testnodeform_001')}
+        {i18n.t('hardcoded.msg_ext_form_testnodeform_002')}
       </div>
       <RuntimeNodeBasicInputs control={control} />
       <div className="flex flex-row-reverse">

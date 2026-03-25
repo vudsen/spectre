@@ -20,6 +20,7 @@ import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import { bindRoleToUser } from '@/api/impl/role.ts'
+import i18n from '@/i18n'
 
 const ListRoleWithNameQuery = graphql(`
   query ListRoleWithNameQuery($name: String!) {
@@ -73,7 +74,9 @@ const SelectRoleDrawerContent: React.FC<SelectRoleDrawerContentProps> = (
         })
       } else if (selectedKeys.size == 0) {
         addToast({
-          title: '请选择用户',
+          title: i18n.t(
+            'hardcoded.msg_pages_permission_role_param_selectuserdrawercontent_001',
+          ),
           color: 'danger',
         })
       } else {
@@ -87,7 +90,9 @@ const SelectRoleDrawerContent: React.FC<SelectRoleDrawerContentProps> = (
         })
       }
       addToast({
-        title: '绑定成功',
+        title: i18n.t(
+          'hardcoded.msg_pages_permission_role_param_selectuserdrawercontent_002',
+        ),
         color: 'success',
       })
       props.onSave()
@@ -99,13 +104,21 @@ const SelectRoleDrawerContent: React.FC<SelectRoleDrawerContentProps> = (
 
   return (
     <>
-      <DrawerHeader>绑定角色</DrawerHeader>
+      <DrawerHeader>
+        {i18n.t(
+          'hardcoded.msg_pages_permission_user_param_selectroledrawercontent_001',
+        )}
+      </DrawerHeader>
       <DrawerBody>
         <Input
           size="sm"
           labelPlacement="outside"
-          label="搜索"
-          placeholder="搜索角色"
+          label={i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_006',
+          )}
+          placeholder={i18n.t(
+            'hardcoded.msg_pages_permission_user_param_selectroledrawercontent_002',
+          )}
           onChange={onChange}
           startContent={<SvgIcon icon={Icon.SEARCH} />}
         />
@@ -118,14 +131,24 @@ const SelectRoleDrawerContent: React.FC<SelectRoleDrawerContentProps> = (
           color="primary"
         >
           <TableHeader>
-            <TableColumn>角色名称</TableColumn>
-            <TableColumn>描述</TableColumn>
+            <TableColumn>
+              {i18n.t(
+                'hardcoded.msg_pages_permission_role_rolemodifydrawercontent_003',
+              )}
+            </TableColumn>
+            <TableColumn>
+              {i18n.t(
+                'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_007',
+              )}
+            </TableColumn>
           </TableHeader>
           <TableBody
             isLoading={isLoading}
             loadingContent={<TableLoadingMask />}
             items={result?.role.searchRoleByName.result ?? []}
-            emptyContent={'没有匹配的角色'}
+            emptyContent={i18n.t(
+              'hardcoded.msg_pages_permission_user_param_selectroledrawercontent_003',
+            )}
           >
             {(role) => (
               <TableRow key={role.id}>
@@ -146,7 +169,7 @@ const SelectRoleDrawerContent: React.FC<SelectRoleDrawerContentProps> = (
           Close
         </Button>
         <Button color="primary" isLoading={isSubmitting} onPress={onSave}>
-          保存
+          {i18n.t('common.save')}
         </Button>
       </DrawerFooter>
     </>

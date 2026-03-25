@@ -20,6 +20,7 @@ import clsx from 'clsx'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import { graphql } from '@/graphql/generated'
 import { execute } from '@/graphql/execute.ts'
+import i18n from '@/i18n'
 
 const PermissionsBindQuery = graphql(`
   query PermissionsBindQuery($resource: String!) {
@@ -103,7 +104,11 @@ const PermissionsDrawerContent: React.FC<
 
   return (
     <>
-      <DrawerHeader>绑定权限</DrawerHeader>
+      <DrawerHeader>
+        {i18n.t(
+          'hardcoded.msg_components_page_permissionslist_permissionsdrawercontent_001',
+        )}
+      </DrawerHeader>
       <DrawerBody className="h-full">
         <div className="border-t-divider flex h-full overflow-hidden border-t-1 pt-2">
           <div className="border-r-divider text-small w-40 border-r-1">
@@ -124,10 +129,20 @@ const PermissionsDrawerContent: React.FC<
           </div>
           <Table removeWrapper className="mx-3" aria-label="Permissions Table">
             <TableHeader>
-              <TableColumn>名称</TableColumn>
-              <TableColumn>代码</TableColumn>
-              <TableColumn>已绑定数量</TableColumn>
-              <TableColumn align="end">操作</TableColumn>
+              <TableColumn>
+                {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+              </TableColumn>
+              <TableColumn>
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_008',
+                )}
+              </TableColumn>
+              <TableColumn>
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_permissionsdrawercontent_002',
+                )}
+              </TableColumn>
+              <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
             </TableHeader>
             <TableBody
               items={permissions}
@@ -148,7 +163,9 @@ const PermissionsDrawerContent: React.FC<
                       variant="light"
                       onPress={() => onBind(item)}
                     >
-                      添加
+                      {i18n.t(
+                        'hardcoded.msg_components_page_permissionslist_permissionsdrawercontent_003',
+                      )}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -160,11 +177,15 @@ const PermissionsDrawerContent: React.FC<
       <DrawerFooter className="border-divider border-t-1">
         <div className="flex w-full items-center justify-between">
           <div className="text-foreground text-sm">
-            Tips: 点击预览可以查看当前的修改
+            {i18n.t(
+              'hardcoded.msg_components_page_permissionslist_permissionsdrawercontent_004',
+            )}
           </div>
           <div>
             <Button color="danger" variant="light" onPress={props.onClose}>
-              关闭
+              {i18n.t(
+                'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+              )}
             </Button>
           </div>
         </div>

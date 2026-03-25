@@ -24,6 +24,7 @@ import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import { deleteToolchainBundle } from '@/api/impl/toolchain.ts'
 import Time from '@/components/Time.tsx'
+import i18n from '@/i18n'
 
 const ToolchainBundleQuery = graphql(`
   query ToolchainBundleQuery($page: Int!, $size: Int!) {
@@ -55,13 +56,22 @@ const ToolchainBundle: React.FC = () => {
 
   const deleteBundle = useCallback((r: ToolchainBundleResp) => {
     showDialog({
-      title: '删除工具包',
-      message: `确定删除工具包 ${r.name} 吗?`,
+      title: i18n.t(
+        'hardcoded.msg_pages_toolchain_bundles_toolchainbundle_001',
+      ),
+      message: i18n.t(
+        'hardcoded.msg_pages_toolchain_bundles_toolchainbundle_002',
+        {
+          name: r.name,
+        },
+      ),
       color: 'danger',
       onConfirm: async () => {
         await deleteToolchainBundle(r.id)
         addToast({
-          title: '删除成功',
+          title: i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_003',
+          ),
           color: 'success',
         })
         setQlArgs((prev) => ({ ...prev }))
@@ -91,7 +101,9 @@ const ToolchainBundle: React.FC = () => {
         <Input
           size="sm"
           labelPlacement="outside"
-          label="搜索"
+          label={i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_006',
+          )}
           startContent={<SvgIcon icon={Icon.SEARCH} />}
         />
         <Button
@@ -101,20 +113,30 @@ const ToolchainBundle: React.FC = () => {
           size="sm"
           onPress={createNew}
         >
-          + 新增
+          {i18n.t('hardcoded.msg_pages_permission_role_index_003')}
         </Button>
       </div>
       <Table removeWrapper aria-label="Toolchain bundle">
         <TableHeader>
-          <TableColumn>名称</TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+          </TableColumn>
           <TableColumn>Arthas</TableColumn>
           <TableColumn>Jattach</TableColumn>
-          <TableColumn>创建时间</TableColumn>
-          <TableColumn align="end">操作</TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_page_permissionslist_index_010')}
+          </TableColumn>
+          <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
         </TableHeader>
         <TableBody
           isLoading={isLoading}
-          emptyContent={<div>没有可用数据</div>}
+          emptyContent={
+            <div>
+              {i18n.t(
+                'hardcoded.msg_pages_toolchain_bundles_toolchainbundle_003',
+              )}
+            </div>
+          }
           loadingContent={<TableLoadingMask />}
         >
           {bundles.map((bundle) => (

@@ -22,6 +22,7 @@ import {
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import LabelModifyModalContent from '@/components/LabelEditor/LabelModifyModalContent.tsx'
+import i18n from '@/i18n'
 
 interface LabelEditorProps<
   Values extends FieldValues,
@@ -124,23 +125,33 @@ function LabelEditor<Values extends FieldValues>(
     <Card>
       <CardBody>
         <div className="mb-3 flex items-center justify-between">
-          <div className="header-2">标签</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
+          </div>
           <div>
             <Button variant="flat" color="primary" onPress={onCreate}>
-              新增标签
+              {i18n.t('hardcoded.msg_components_labeleditor_index_002')}
             </Button>
           </div>
         </div>
         <div className="mb-3 text-sm">
-          标签可以协助您在策略权限中进行更加精细的判断
+          {i18n.t('hardcoded.msg_components_labeleditor_index_003')}
         </div>
         <Table removeWrapper>
           <TableHeader>
-            <TableColumn>名称</TableColumn>
-            <TableColumn>值</TableColumn>
-            <TableColumn align="end">操作</TableColumn>
+            <TableColumn>
+              {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+            </TableColumn>
+            <TableColumn>
+              {i18n.t('hardcoded.msg_components_labeleditor_index_005')}
+            </TableColumn>
+            <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
           </TableHeader>
-          <TableBody emptyContent="没有任何标签">
+          <TableBody
+            emptyContent={i18n.t(
+              'hardcoded.msg_components_labeleditor_index_006',
+            )}
+          >
             {labels.map((attr) => (
               <TableRow key={attr.key}>
                 <TableCell>{attr.key}</TableCell>

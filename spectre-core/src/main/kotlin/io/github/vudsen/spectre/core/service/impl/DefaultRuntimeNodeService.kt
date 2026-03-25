@@ -100,7 +100,7 @@ class DefaultRuntimeNodeService(
         if (runtimeNodeId == null) {
             plugin.test(conf)
         } else {
-            val runtimeNodeDTO = findPureRuntimeNodeById(runtimeNodeId.toLong()) ?: throw BusinessException("运行节点不存在")
+            val runtimeNodeDTO = findPureRuntimeNodeById(runtimeNodeId.toLong()) ?: throw BusinessException("error.runtime.node.not.exist")
             plugin.test(
                 plugin.fillSensitiveConfiguration(
                     conf,
@@ -123,7 +123,7 @@ class DefaultRuntimeNodeService(
         runtimeNodeId: Long,
         parentNodeId: String?,
     ): List<JvmTreeNodeDTO> {
-        val runtimeNode = findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("节点不存在")
+        val runtimeNode = findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.node.not.exist")
         val ext =
             findPluginById(runtimeNode.pluginId)
         val searcher = ext.createSearcher()
@@ -184,13 +184,14 @@ class DefaultRuntimeNodeService(
     }
 
     override fun connect(runtimeNodeId: Long): RuntimeNode {
-        val runtimeNodeDTO = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("节点不存在")
+        val runtimeNodeDTO =
+            runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO() ?: throw BusinessException("error.node.not.exist")
         val extPoint = findPluginById(runtimeNodeDTO.pluginId)
         return extPoint.connect(runtimeNodeDTO.configuration)
     }
 
     override fun resolveViewPage(runtimeNodeId: Long): PageDescriptor {
-        val dto = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: throw BusinessException("节点不存在")
+        val dto = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: throw BusinessException("error.node.not.exist")
         val ext = extManager.findById(dto.pluginId)
         return ext.getViewPage(dto, dto.configuration)
     }

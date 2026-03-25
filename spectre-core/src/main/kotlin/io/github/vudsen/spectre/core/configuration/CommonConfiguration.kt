@@ -3,6 +3,8 @@ package io.github.vudsen.spectre.core.configuration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.support.ResourceBundleMessageSource
+import org.springframework.web.servlet.LocaleResolver
+import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver
 import tools.jackson.core.JsonParser
 import tools.jackson.databind.DeserializationContext
 import tools.jackson.databind.ValueDeserializer
@@ -65,5 +67,18 @@ class CommonConfiguration {
         // 设置字符编码
         source.setDefaultEncoding("UTF-8")
         return source
+    }
+
+    @Bean
+    fun localeResolver(): LocaleResolver {
+        val resolver = AcceptHeaderLocaleResolver()
+        resolver.setDefaultLocale(Locale.SIMPLIFIED_CHINESE)
+        resolver.supportedLocales =
+            listOf(
+                Locale.SIMPLIFIED_CHINESE, // zh_CN
+                Locale.US, // en_US
+                Locale.ENGLISH, // en
+            )
+        return resolver
     }
 }

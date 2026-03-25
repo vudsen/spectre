@@ -1,4 +1,5 @@
 import type { FormHandle } from './CommandFormContent.tsx'
+import i18n from '@/i18n'
 
 type WatchValues = {
   classname: string
@@ -19,13 +20,39 @@ const watch: FormHandle<WatchValues> = {
   },
   items: [
     { name: 'classname', isRequired: true, label: 'Classname' },
-    { name: 'methodName', isRequired: true, label: '方法名' },
+    {
+      name: 'methodName',
+      isRequired: true,
+      label: i18n.t(
+        'hardcoded.msg_pages_channel_param_component_quickcommand_commands_001',
+      ),
+    },
     [
-      { name: 'count', label: '监听数量', type: 'number' },
-      { name: 'depth', label: '递归深度', type: 'number' },
+      {
+        name: 'count',
+        label: i18n.t(
+          'hardcoded.msg_pages_channel_param_component_quickcommand_commands_002',
+        ),
+        type: 'number',
+      },
+      {
+        name: 'depth',
+        label: i18n.t(
+          'hardcoded.msg_pages_channel_param_component_quickcommand_commands_003',
+        ),
+        type: 'number',
+      },
     ],
-    { name: 'expression', label: '表达式' },
-    { name: 'extraArgs', label: '额外参数' },
+    {
+      name: 'expression',
+      label: i18n.t('hardcoded.msg_components_page_permissionslist_index_009'),
+    },
+    {
+      name: 'extraArgs',
+      label: i18n.t(
+        'hardcoded.msg_pages_channel_param_component_quickcommand_commands_004',
+      ),
+    },
   ],
   buildCommand(values) {
     const commands: string[] = ['watch', values.classname, values.methodName]
@@ -61,12 +88,35 @@ const trace: FormHandle<TraceValues> = {
   },
   items: [
     { name: 'classname', isRequired: true, label: 'Classname' },
-    { name: 'methodName', isRequired: true, label: '方法名' },
+    {
+      name: 'methodName',
+      isRequired: true,
+      label: i18n.t(
+        'hardcoded.msg_pages_channel_param_component_quickcommand_commands_001',
+      ),
+    },
     [
-      { name: 'count', label: '监听数量', type: 'number' },
-      { name: 'minCostMs', label: '最低耗时(ms)', type: 'number' },
+      {
+        name: 'count',
+        label: i18n.t(
+          'hardcoded.msg_pages_channel_param_component_quickcommand_commands_002',
+        ),
+        type: 'number',
+      },
+      {
+        name: 'minCostMs',
+        label: i18n.t(
+          'hardcoded.msg_pages_channel_param_component_quickcommand_commands_005',
+        ),
+        type: 'number',
+      },
     ],
-    { name: 'extraArgs', label: '额外参数' },
+    {
+      name: 'extraArgs',
+      label: i18n.t(
+        'hardcoded.msg_pages_channel_param_component_quickcommand_commands_004',
+      ),
+    },
   ],
   buildCommand(values) {
     const commands: string[] = ['trace', values.classname, values.methodName]
@@ -97,9 +147,26 @@ const stack: FormHandle<StackValues> = {
   },
   items: [
     { name: 'classname', isRequired: true, label: 'Classname' },
-    { name: 'methodName', isRequired: true, label: '方法名' },
-    { name: 'count', label: '监听数量', type: 'number' },
-    { name: 'extraArgs', label: '额外参数' },
+    {
+      name: 'methodName',
+      isRequired: true,
+      label: i18n.t(
+        'hardcoded.msg_pages_channel_param_component_quickcommand_commands_001',
+      ),
+    },
+    {
+      name: 'count',
+      label: i18n.t(
+        'hardcoded.msg_pages_channel_param_component_quickcommand_commands_002',
+      ),
+      type: 'number',
+    },
+    {
+      name: 'extraArgs',
+      label: i18n.t(
+        'hardcoded.msg_pages_channel_param_component_quickcommand_commands_004',
+      ),
+    },
   ],
   buildCommand(values) {
     const commands: string[] = ['stack', values.classname, values.methodName]
@@ -119,7 +186,9 @@ type JadValues = {
 }
 
 const jad: FormHandle<JadValues> = {
-  name: '反编译(jad)',
+  name: i18n.t(
+    'hardcoded.msg_pages_channel_param_component_quickcommand_commands_006',
+  ),
   buildCommand(values) {
     return `jad ${values.classname}`
   },
@@ -158,11 +227,31 @@ const tt: FormHandle<TTValues> = {
   items: [
     { name: 'index', isRequired: true, label: 'Index', type: 'number' },
     [
-      { name: 'count', label: '监听数量', type: 'number' },
-      { name: 'depth', label: '递归深度', type: 'number' },
+      {
+        name: 'count',
+        label: i18n.t(
+          'hardcoded.msg_pages_channel_param_component_quickcommand_commands_002',
+        ),
+        type: 'number',
+      },
+      {
+        name: 'depth',
+        label: i18n.t(
+          'hardcoded.msg_pages_channel_param_component_quickcommand_commands_003',
+        ),
+        type: 'number',
+      },
     ],
-    { name: 'expression', label: '表达式' },
-    { name: 'extraArgs', label: '额外参数' },
+    {
+      name: 'expression',
+      label: i18n.t('hardcoded.msg_components_page_permissionslist_index_009'),
+    },
+    {
+      name: 'extraArgs',
+      label: i18n.t(
+        'hardcoded.msg_pages_channel_param_component_quickcommand_commands_004',
+      ),
+    },
   ],
 }
 

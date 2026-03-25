@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { createChannel } from '@/api/impl/arthas.ts'
 import { Button, Spinner } from '@heroui/react'
+import i18n from '@/i18n'
 
 type PollState = {
   lastId?: number
@@ -53,18 +54,22 @@ const ErrorCountdown: React.FC<ErrorCountdownProps> = ({
 
   return (
     <div className="space-y-2">
-      <div className="text-danger text-lg font-bold">连接到 JVM 失败</div>
+      <div className="text-danger text-lg font-bold">
+        {i18n.t('hardcoded.msg_pages_channel_index_001')}
+      </div>
       <div className="text-danger">{message}</div>
       {countdown >= 0 ? (
         <div>
-          <div className="text-secondary">{countdown} 秒后自动重试</div>
+          <div className="text-secondary">
+            {countdown} {i18n.t('hardcoded.msg_pages_channel_index_002')}
+          </div>
           <Button color="danger" variant="flat" onPress={cancelRetry}>
-            取消重试
+            {i18n.t('hardcoded.msg_pages_channel_index_003')}
           </Button>
         </div>
       ) : (
         <Button color="danger" variant="flat" onPress={reload}>
-          刷新
+          {i18n.t('hardcoded.msg_pages_channel_index_004')}
         </Button>
       )}
     </div>
@@ -83,8 +88,8 @@ const AttachPage = () => {
   const location = useLocation()
   const [errorInfo, setErrorInfo] = useState<ErrorInfo>()
   const [progressInfo, setProgressInfo] = useState({
-    title: '正在连接中',
-    message: '连接中',
+    title: i18n.t('hardcoded.msg_pages_channel_index_005'),
+    message: i18n.t('hardcoded.msg_pages_channel_index_006'),
   })
   const pollState = useRef<PollState>({
     isStopped: false,
@@ -147,7 +152,7 @@ const AttachPage = () => {
   }, [runtimeNodeId, treeNodeId, tryCreateChannel])
 
   if (!treeNodeId) {
-    return <div>Jvm 参数为空</div>
+    return <div>{i18n.t('hardcoded.msg_pages_channel_index_007')}</div>
   }
   return (
     <div className="-mt-navbar flex h-screen w-full items-center text-center">

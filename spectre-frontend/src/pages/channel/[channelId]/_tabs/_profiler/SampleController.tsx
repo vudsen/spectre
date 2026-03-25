@@ -20,6 +20,7 @@ import { useForm } from 'react-hook-form'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import type { StatusMessage } from '@/pages/channel/[channelId]/_message_view/_component/StatusMessageDetail.tsx'
 import type { ProfilerMessage } from '@/pages/channel/[channelId]/_message_view/_component/ProfilerMessageDetail.tsx'
+import i18n from '@/i18n'
 
 interface StartNewSampleModalContentProps {
   onClose: () => void
@@ -44,7 +45,11 @@ const StartNewSampleModalContent: React.FC<StartNewSampleModalContentProps> = (
     }
     const values = getValues()
     if (!values.command.startsWith('profiler')) {
-      setError('command', { message: '只能执行 profiler 命令' })
+      setError('command', {
+        message: i18n.t(
+          'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_001',
+        ),
+      })
       return
     }
     setLoading(true)
@@ -56,7 +61,9 @@ const StartNewSampleModalContent: React.FC<StartNewSampleModalContentProps> = (
       const status = r.find((r) => r.type === `status`)
       if (!status) {
         addToast({
-          title: '开启采样失败, 请稍后重试',
+          title: i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_002',
+          ),
           color: 'danger',
         })
         return
@@ -64,14 +71,18 @@ const StartNewSampleModalContent: React.FC<StartNewSampleModalContentProps> = (
       const s = status as StatusMessage
       if (s.statusCode === 0) {
         addToast({
-          title: '开启采样成功',
+          title: i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_003',
+          ),
           color: 'success',
         })
         props.onClose()
         props.onStart()
       } else {
         addToast({
-          title: '开启采样失败',
+          title: i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_004',
+          ),
           description: s.message,
           color: 'danger',
         })
@@ -84,20 +95,26 @@ const StartNewSampleModalContent: React.FC<StartNewSampleModalContentProps> = (
   return (
     <>
       <ModalHeader>
-        <div>开启新的采样</div>
+        <div>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_005',
+          )}
+        </div>
       </ModalHeader>
       <ModalBody>
         <ControlledInput
           control={control}
           name="command"
           inputProps={{
-            label: '命令',
+            label: i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_006',
+            ),
           }}
         />
       </ModalBody>
       <ModalFooter>
         <Button variant="light" color="danger" isDisabled={isLoading}>
-          取消
+          {i18n.t('common.cancel')}
         </Button>
         <Button
           variant="solid"
@@ -105,7 +122,9 @@ const StartNewSampleModalContent: React.FC<StartNewSampleModalContentProps> = (
           onPress={onSubmit}
           isLoading={isLoading}
         >
-          开启
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_007',
+          )}
         </Button>
       </ModalFooter>
     </>
@@ -138,7 +157,9 @@ const StopSampleModalContent: React.FC<StopSampleModalContentProps> = ({
     const values = getValues()
     if (!values.command.startsWith('profiler stop')) {
       setError('command', {
-        message: '只能执行 profiler stop 命令',
+        message: i18n.t(
+          'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_008',
+        ),
       })
       return
     }
@@ -156,13 +177,19 @@ const StopSampleModalContent: React.FC<StopSampleModalContentProps> = ({
   }
   return (
     <>
-      <ModalHeader>停止采样</ModalHeader>
+      <ModalHeader>
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_009',
+        )}
+      </ModalHeader>
       <ModalBody>
         <ControlledInput
           control={control}
           name="command"
           inputProps={{
-            label: '命令',
+            label: i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_006',
+            ),
           }}
         />
       </ModalBody>
@@ -173,7 +200,7 @@ const StopSampleModalContent: React.FC<StopSampleModalContentProps> = ({
           isDisabled={isLoading}
           onPress={onClose}
         >
-          取消
+          {i18n.t('common.cancel')}
         </Button>
         <Button
           variant="solid"
@@ -181,7 +208,9 @@ const StopSampleModalContent: React.FC<StopSampleModalContentProps> = ({
           onPress={onSubmit}
           isLoading={isLoading}
         >
-          停止
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_010',
+          )}
         </Button>
       </ModalFooter>
     </>
@@ -277,16 +306,32 @@ const SampleController: React.FC<SampleControllerProps> = ({
   return (
     <Card>
       <CardBody className="space-y-3">
-        <div className="header-2">开始新的采样</div>
+        <div className="header-2">
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_011',
+          )}
+        </div>
         <div className="flex items-center">
           <span>
-            当前状态：
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_012',
+            )}
             {profilerActiveTime > 0 ? (
               <span className="text-success">
-                已运行 {profilerActiveTime} 秒
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_013',
+                )}{' '}
+                {profilerActiveTime}{' '}
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_014',
+                )}
               </span>
             ) : (
-              <span className="text-warning">已停止</span>
+              <span className="text-warning">
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_015',
+                )}
+              </span>
             )}{' '}
           </span>
           <Button size="sm" isIconOnly variant="light" onPress={refreshStatus}>
@@ -306,14 +351,18 @@ const SampleController: React.FC<SampleControllerProps> = ({
             color="primary"
             onPress={startProfilerDisclosure.onOpen}
           >
-            开始新的采样
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_011',
+            )}
           </Button>
           <Button
             isDisabled={profilerActiveTime < 0}
             color="danger"
             onPress={stopProfilerDisclosure.onOpen}
           >
-            终止采样
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_profiler_samplecontroller_016',
+            )}
           </Button>
         </div>
       </CardBody>

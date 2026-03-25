@@ -1,6 +1,7 @@
 import type React from 'react'
 import { Spinner } from '@heroui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import i18n from '@/i18n'
 
 const TableLoadingMask: React.FC = () => {
   return (
@@ -14,7 +15,7 @@ const TableLoadingMask: React.FC = () => {
         className="text-primary z-20 mt-[100px] box-border flex h-full w-full flex-col items-center justify-center space-y-3 bg-white text-sm"
       >
         <Spinner variant="wave" size="sm" />
-        <div>加载中</div>
+        <div>{i18n.t('hardcoded.msg_components_tableloadingmask_001')}</div>
       </motion.div>
     </AnimatePresence>
   )

@@ -15,6 +15,7 @@ import {
 import { type RootState, store } from '@/store'
 import { useSelector } from 'react-redux'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import i18n from '@/i18n'
 
 type FromState = {
   command: string
@@ -53,7 +54,9 @@ const CommandExecuteBlock: React.FC = () => {
     return interruptCommand(store.getState().channel.context.channelId)
       .then(() => {
         addToast({
-          title: '中断前台任务成功',
+          title: i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_commandexecuteblock_001',
+          ),
           color: 'success',
         })
       })
@@ -99,15 +102,25 @@ const CommandExecuteBlock: React.FC = () => {
         inputProps={{
           onKeyDown: onKeyDown,
           spellCheck: 'false',
-          placeholder: '请输入命令, 使用`回车`执行，`alt + 回车`换行',
+          placeholder: i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_commandexecuteblock_002',
+          ),
           maxRows: 16,
         }}
       />
       <div className="my-2 flex items-center justify-between">
         <div className="text-sm">
-          <span>任务状态:&nbsp;</span>
+          <span>
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_console_commandexecuteblock_003',
+            )}
+          </span>
           {inputStatus === 'ALLOW_INPUT' ? (
-            <span className="text-success">空闲</span>
+            <span className="text-success">
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_tabs_console_commandexecuteblock_004',
+              )}
+            </span>
           ) : undefined}
           {inputStatus === 'ALLOW_INTERRUPT' ? (
             <span className="text-warning">{runningCommand}</span>
@@ -121,9 +134,15 @@ const CommandExecuteBlock: React.FC = () => {
             className="ml-3"
             isLoading={loading && inputStatus === 'ALLOW_INPUT'}
           >
-            执行
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_console_commandexecuteblock_005',
+            )}
           </Button>
-          <Tooltip content="中断当前的前台任务(例如 watch 等命令)">
+          <Tooltip
+            content={i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_console_commandexecuteblock_006',
+            )}
+          >
             <Button
               onPress={interrupt}
               variant="flat"
@@ -134,7 +153,9 @@ const CommandExecuteBlock: React.FC = () => {
               }
               isDisabled={!isDebugMode && inputStatus !== 'ALLOW_INTERRUPT'}
             >
-              中断前台任务
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_tabs_console_commandexecuteblock_007',
+              )}
             </Button>
           </Tooltip>
         </div>

@@ -17,6 +17,7 @@ import RightClickMenu from '@/components/RightClickMenu/RightClickMenu.tsx'
 import { ListboxItem } from '@heroui/react'
 import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
 import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
+import i18n from '@/i18n'
 
 type TabInfo = {
   node: React.ReactNode
@@ -160,9 +161,17 @@ const TabsController: React.FC<TabsControllerProps> = (props) => {
   return (
     <>
       <RightClickMenu onAction={onAction} {...menuProps}>
-        <ListboxItem key="close">关闭</ListboxItem>
-        <ListboxItem key="closeAll">关闭全部</ListboxItem>
-        <ListboxItem key="closeOther">关闭其它</ListboxItem>
+        <ListboxItem key="close">
+          {i18n.t(
+            'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+          )}
+        </ListboxItem>
+        <ListboxItem key="closeAll">
+          {i18n.t('hardcoded.msg_pages_channel_param_tabs_tabscontroller_001')}
+        </ListboxItem>
+        <ListboxItem key="closeOther">
+          {i18n.t('hardcoded.msg_pages_channel_param_tabs_tabscontroller_002')}
+        </ListboxItem>
       </RightClickMenu>
       <div className="flex w-0 grow flex-col">
         <div className="border-b-divider flex flex-wrap border-b-1 select-none">

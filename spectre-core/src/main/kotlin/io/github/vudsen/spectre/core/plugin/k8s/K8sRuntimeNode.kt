@@ -85,7 +85,7 @@ class K8sRuntimeNode(
         try {
             return spec.body<String>()
         } catch (_: HttpClientErrorException.Forbidden) {
-            throw BusinessException("权限不足，请确认您已为服务账号分配 `$permission` 权限")
+            throw BusinessException("error.k8s.permission.missing", arrayOf(permission))
         }
     }
 
@@ -101,7 +101,7 @@ class K8sRuntimeNode(
                 "tokenreviews",
             )
         } catch (e: Exception) {
-            throw BusinessException("测试失败: ${e.message}")
+            throw BusinessException("error.test.failed", arrayOf(e.message ?: "<Unknown>"))
         }
         // TODO 校验权限和用户名
     }

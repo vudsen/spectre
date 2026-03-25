@@ -6,6 +6,7 @@ import KVGridItem from '@/components/KVGird/KVGridItem.tsx'
 import { useDispatch } from 'react-redux'
 import { updateChannelContext } from '@/store/channelSlice.ts'
 import SimpleList from '@/components/SimpleList.tsx'
+import i18n from '@/i18n'
 
 type MethodInfo = {
   constructor: boolean
@@ -48,13 +49,38 @@ const SmWithDetail: React.FC<{ detail: MethodDetail }> = ({ detail }) => {
       </div>
       <Card>
         <CardBody className="space-y-3">
-          <div className="header-2">基础信息</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_ext_view_k8sview_001')}
+          </div>
           <KVGird>
-            <KVGridItem name="方法名称">{detail.methodName}</KVGridItem>
-            <KVGridItem name="修饰符">{detail.modifier}</KVGridItem>
-            <KVGridItem name="返回类型">{detail.returnType}</KVGridItem>
+            <KVGridItem
+              name={i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_smmessagedetail_001',
+              )}
+            >
+              {detail.methodName}
+            </KVGridItem>
+            <KVGridItem
+              name={i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_001',
+              )}
+            >
+              {detail.modifier}
+            </KVGridItem>
+            <KVGridItem
+              name={i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_smmessagedetail_002',
+              )}
+            >
+              {detail.returnType}
+            </KVGridItem>
             <KVGridItem name="Classloader Hash">
-              <Tooltip content="应用到默认 Classloader" placement="bottom">
+              <Tooltip
+                content={i18n.t(
+                  'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_002',
+                )}
+                placement="bottom"
+              >
                 <Link
                   size="sm"
                   onPress={applyClassloader}
@@ -67,12 +93,16 @@ const SmWithDetail: React.FC<{ detail: MethodDetail }> = ({ detail }) => {
             </KVGridItem>
           </KVGird>
           <SimpleList
-            name="参数"
+            name={i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_smmessagedetail_003',
+            )}
             color="warning"
             entities={detail.parameters}
           />
           <SimpleList
-            name="注解"
+            name={i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_003',
+            )}
             color="warning"
             entities={detail.annotations}
           />
@@ -95,7 +125,11 @@ const SmMessageDetail: React.FC<DetailComponentProps<ScMessage>> = ({
   } else if (msg.methodInfo) {
     return (
       <div className="space-y-3 text-sm">
-        <div>搜索到以下方法名称:</div>
+        <div>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_message_view_component_smmessagedetail_004',
+          )}
+        </div>
         <Code>{msg.methodInfo.methodName}</Code>
       </div>
     )
