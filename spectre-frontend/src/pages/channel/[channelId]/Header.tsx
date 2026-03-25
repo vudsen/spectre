@@ -17,6 +17,7 @@ import { showDialog } from '@/common/util.ts'
 import { disconnectSession } from '@/api/impl/arthas.ts'
 import { useNavigate } from 'react-router'
 import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
+import i18n from '@/i18n'
 import QuickCommand, {
   type QuickCommandRef,
 } from '@/pages/channel/[channelId]/_component/QuickCommand'
@@ -53,8 +54,8 @@ const Header: React.FC<ToolbarProps> = (props) => {
 
   const disconnect = useCallback(() => {
     showDialog({
-      title: '断开连接',
-      message: '您可能会丢失所有的消息，确定断开连接吗?',
+      title: i18n.t('hardcoded.msg_pages_channel_param_header_001'),
+      message: i18n.t('hardcoded.msg_pages_channel_param_header_002'),
       color: 'danger',
       onConfirm() {
         // TODO fullscreen mask.
@@ -86,7 +87,9 @@ const Header: React.FC<ToolbarProps> = (props) => {
   return (
     <div className="border-b-divider mx-3 flex items-center justify-between border-b-1">
       <div className="flex max-w-1/2 items-center">
-        <span className="font-bold text-nowrap">&gt; 已连接到:&nbsp;</span>
+        <span className="font-bold text-nowrap">
+          {i18n.t('hardcoded.msg_pages_channel_param_header_003')}
+        </span>
         <Tooltip
           content={props.appName}
           isOpen={isClassloaderSetterOpen}
@@ -122,22 +125,28 @@ const Header: React.FC<ToolbarProps> = (props) => {
                 variant="light"
                 className="mt-2 self-end"
               >
-                保存
+                {i18n.t('common.save')}
               </Button>
             </form>
           </PopoverContent>
         </Popover>
-        <Tooltip content="回到首页">
+        <Tooltip
+          content={i18n.t('hardcoded.msg_pages_channel_param_header_004')}
+        >
           <Button isIconOnly variant="light" onPress={toHome}>
             <SvgIcon icon={Icon.HOME} size={22} />
           </Button>
         </Tooltip>
-        <Tooltip content="AI 助手">
+        <Tooltip
+          content={i18n.t('hardcoded.msg_pages_channel_param_header_005')}
+        >
           <Button variant="light" isIconOnly onPress={props.onAiConsoleToggle}>
             <SvgIcon size={23} icon={ChannelIcon.AI}></SvgIcon>
           </Button>
         </Tooltip>
-        <Tooltip content="显示所有消息">
+        <Tooltip
+          content={i18n.t('hardcoded.msg_pages_channel_param_header_006')}
+        >
           <Button
             isIconOnly
             variant="light"
@@ -147,7 +156,9 @@ const Header: React.FC<ToolbarProps> = (props) => {
             <SvgIcon icon={Icon.BUG} size={22} />
           </Button>
         </Tooltip>
-        <Tooltip content="断开连接">
+        <Tooltip
+          content={i18n.t('hardcoded.msg_pages_channel_param_header_001')}
+        >
           <Button
             isIconOnly
             variant="light"

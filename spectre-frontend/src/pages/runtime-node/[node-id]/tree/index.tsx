@@ -35,6 +35,7 @@ import {
 import Shepherd from 'shepherd.js'
 import { updateTourStep } from '@/api/impl/sys-conf.ts'
 import 'shepherd.js/dist/css/shepherd.css'
+import i18n from '@/i18n'
 
 const NodeInfoQuery = graphql(`
   query NodeInfoQuery($id: String!) {
@@ -67,23 +68,23 @@ function setupTour() {
     appendShepherdStepsBeforeShow(tour)
 
   tour.addStep({
-    title: '节点树',
-    text: '节点树会为你列出所有可用的 JVM',
+    title: i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_001'),
+    text: i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_002'),
     attachTo: {
       element: '#node-tree',
       on: 'bottom',
     },
     buttons: [
       {
-        text: '下一步',
+        text: i18n.t('common.next'),
         action: tour.next,
       },
     ],
   })
   tour.addStep({
     id: 'expand-tree',
-    title: '展开节点树',
-    text: '双击即可展开节点树',
+    title: i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_003'),
+    text: i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_004'),
     attachTo: {
       element: '#root-tree-0',
       on: 'bottom',
@@ -92,8 +93,8 @@ function setupTour() {
   })
   tour.addStep({
     id: 'jvm-flag',
-    title: 'JVM 节点',
-    text: '当节点的图标为"咖啡"时，代表该节点是一个 JVM 节点',
+    title: i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_005'),
+    text: i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_006'),
     attachTo: {
       element: '#jvm-flag',
       on: 'top',
@@ -103,16 +104,16 @@ function setupTour() {
     },
     buttons: [
       {
-        text: '下一步',
+        text: i18n.t('common.next'),
         action: tour.next,
       },
     ],
   })
   tour.addStep({
     id: 'attach',
-    title: '连接节点',
+    title: i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_007'),
     canClickTarget: true,
-    text: '点击该图标，即可连接到 JVM',
+    text: i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_008'),
     attachTo: {
       element: '#plug-flag',
       on: 'top',
@@ -234,36 +235,50 @@ const RuntimeNodeTreePage: React.FC = () => {
   return (
     <TreeContext value={context}>
       <div className="mx-6 space-y-5">
-        <div className="header-1">连接到节点</div>
+        <div className="header-1">
+          {i18n.t('hardcoded.msg_pages_runtime_node_list_index_004')}
+        </div>
         {import.meta.env.VITE_IS_PREVIEW_ENV === 'true' && isAlertVisible ? (
           <Alert
             isVisible={isAlertVisible}
             onClose={() => setAlertVisible(false)}
             color="warning"
-            title="权限限制"
+            title={i18n.t(
+              'hardcoded.msg_pages_runtime_node_param_tree_index_009',
+            )}
             variant="faded"
-            description="public 用户目前只可以连接 math-game 节点"
+            description={i18n.t(
+              'hardcoded.msg_pages_runtime_node_param_tree_index_010',
+            )}
           />
         ) : null}
 
         <Card>
           <CardBody className="space-y-3">
-            <div className="header-2">节点信息</div>
+            <div className="header-2">
+              {i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_011')}
+            </div>
             {isLoading || !runtimeNode ? (
               <TableLoadingMask />
             ) : (
               <DetailGrid
                 details={[
                   {
-                    name: '名称',
+                    name: i18n.t(
+                      'hardcoded.msg_components_labeleditor_index_004',
+                    ),
                     value: runtimeNode.name,
                   },
                   {
-                    name: '标签',
+                    name: i18n.t(
+                      'hardcoded.msg_components_labeleditor_index_001',
+                    ),
                     value: <LabelsDisplay attributes={runtimeNode.labels} />,
                   },
                   {
-                    name: '创建时间',
+                    name: i18n.t(
+                      'hardcoded.msg_components_page_permissionslist_index_010',
+                    ),
                     value: formatTime(runtimeNode.createdAt),
                   },
                 ]}
@@ -273,20 +288,24 @@ const RuntimeNodeTreePage: React.FC = () => {
         </Card>
         <Card>
           <CardBody id="node-tree">
-            <div className="mb-3 text-xl font-semibold">节点树</div>
+            <div className="mb-3 text-xl font-semibold">
+              {i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_001')}
+            </div>
             <div className="text-sm">
-              该卡片中将为您展示一颗树，树形结构可以双击展开/合并。在展开的过程中，可能会出现带有{' '}
+              {i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_012')}{' '}
               <SvgIcon icon={Icon.COFFEE} className="text-primary inline" />{' '}
-              的节点，您可以将鼠标放置到节点上，点击右侧{' '}
+              {i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_013')}{' '}
               <SvgIcon icon={Icon.PLUG} className="text-primary inline" />{' '}
-              即可尝试 attach 到目标 JVM。
+              {i18n.t('hardcoded.msg_pages_runtime_node_param_tree_index_014')}
             </div>
             <div>
               <div className="sticky top-0 box-border bg-white py-3">
                 <Input
                   size="sm"
                   labelPlacement="outside"
-                  label="搜索"
+                  label={i18n.t(
+                    'hardcoded.msg_components_page_permissionslist_index_006',
+                  )}
                   onInput={onInput}
                   startContent={<SvgIcon icon={Icon.SEARCH} />}
                 />

@@ -3,6 +3,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { type DetailComponentProps, getArthasMessageView } from './factory.ts'
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 import { ErrorBoundary } from 'react-error-boundary'
+import i18n from '@/i18n'
 
 interface ArthasResponseDetailProps {
   message: ArthasMessage
@@ -53,7 +54,9 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
   if (!Component) {
     return (
       <div className="italic">
-        🚧该消息暂不支持预览，请使用`原始内容`查看。我们正在全力开发中，敬请期待🚧
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_arthasresponsedetail_001',
+        )}
       </div>
     )
   }
@@ -71,7 +74,10 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
     <>
       {props.message.context.command ? (
         <div className="bg-primary-50 text-primary-700 px-6 py-3 text-sm">
-          命令: {props.message.context.command}
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_message_view_arthasresponsedetail_002',
+          )}{' '}
+          {props.message.context.command}
         </div>
       ) : null}
       {/* 策略：对于脏组件，我们全部渲染但在 CSS 上隐藏；对于非脏组件，动态切换 */}
@@ -90,7 +96,11 @@ const ArthasResponseDetail: React.FC<ArthasResponseDetailProps> = (props) => {
         <div className="mt-2 px-2 pb-6" key={currentId}>
           <ErrorBoundary
             fallback={
-              <div className="text-danger">显示视图失败，详见 F12 控制台</div>
+              <div className="text-danger">
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_message_view_arthasresponsedetail_003',
+                )}
+              </div>
             }
           >
             {renderDetail(currentId, Component)}

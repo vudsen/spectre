@@ -1,5 +1,6 @@
 import type React from 'react'
 import type { DetailComponentProps } from '../factory.ts'
+import i18n from '@/i18n'
 import {
   Table,
   TableBody,
@@ -36,9 +37,21 @@ const ClassloaderMessageDetail: React.FC<
     return (
       <Table aria-label="Classloaders" removeWrapper>
         <TableHeader>
-          <TableColumn>类加载器</TableColumn>
-          <TableColumn>加载数量</TableColumn>
-          <TableColumn>实例数量</TableColumn>
+          <TableColumn>
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_classloadermessagedetail_001',
+            )}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_classloadermessagedetail_002',
+            )}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_classloadermessagedetail_003',
+            )}
+          </TableColumn>
         </TableHeader>
         <TableBody items={Object.entries(props.msg.classLoaderStats)}>
           {(item) => (
@@ -55,9 +68,17 @@ const ClassloaderMessageDetail: React.FC<
     return (
       <Table aria-label="Classloaders" removeWrapper>
         <TableHeader>
-          <TableColumn>类加载器</TableColumn>
+          <TableColumn>
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_classloadermessagedetail_001',
+            )}
+          </TableColumn>
           <TableColumn>Hash</TableColumn>
-          <TableColumn>加载数量</TableColumn>
+          <TableColumn>
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_classloadermessagedetail_002',
+            )}
+          </TableColumn>
           {/*<TableColumn>父加载器</TableColumn>*/}
         </TableHeader>
         <TableBody items={props.msg.classLoaders}>
@@ -75,7 +96,17 @@ const ClassloaderMessageDetail: React.FC<
   }
   return (
     <div>
-      目前仅支持展示 <code>classloader</code>或<code>classloader -l</code>的响应
+      {i18n.t(
+        'hardcoded.msg_pages_channel_param_message_view_component_classloadermessagedetail_004',
+      )}{' '}
+      <code>classloader</code>
+      {i18n.t(
+        'hardcoded.msg_pages_channel_param_message_view_component_classloadermessagedetail_005',
+      )}
+      <code>classloader -l</code>
+      {i18n.t(
+        'hardcoded.msg_pages_channel_param_message_view_component_classloadermessagedetail_006',
+      )}
     </div>
   )
 }

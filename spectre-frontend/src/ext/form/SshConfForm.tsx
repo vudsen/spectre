@@ -32,6 +32,7 @@ import ControlledCheckbox from '@/components/validation/ControlledCheckbox.tsx'
 import ControlledTextarea from '@/components/validation/ControlledTextarea.tsx'
 import classnames from '@/components/SpectreTabs/styles.ts'
 import RuntimeNodeBasicInputs from '@/components/RuntimeNodeBasicInputs.tsx'
+import i18n from '@/i18n'
 
 type Values = {
   name: string
@@ -128,7 +129,7 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
           configuration,
         })
         addToast({
-          title: '更新成功',
+          title: i18n.t('common.updateSuccess'),
           color: 'success',
         })
       } else {
@@ -138,13 +139,13 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
           configuration,
         })
         addToast({
-          title: '创建成功',
+          title: i18n.t('common.createSuccess'),
           color: 'success',
         })
       }
       nav('/runtime-node/list')
     } catch (e) {
-      handleError(e, '修改失败')
+      handleError(e, i18n.t('hardcoded.msg_ext_form_sshconfform_001'))
     } finally {
       setLoading(false)
     }
@@ -153,12 +154,20 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
   return (
     <div>
       <div className="space-y-5">
-        <div className="header-1">SSH-高级配置</div>
+        <div className="header-1">
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_002')}
+        </div>
         <Card>
           <CardBody className="space-y-3">
-            <div className="header-2">Spectre 设置</div>
-            <div className="text-sm">该板块允许你配置 Spectre 的具体特性。</div>
-            <div className="text-xl font-semibold">本地</div>
+            <div className="header-2">
+              {i18n.t('hardcoded.msg_ext_form_sshconfform_003')}
+            </div>
+            <div className="text-sm">
+              {i18n.t('hardcoded.msg_ext_form_sshconfform_004')}
+            </div>
+            <div className="text-xl font-semibold">
+              {i18n.t('hardcoded.msg_ext_form_sshconfform_005')}
+            </div>
             <div>
               <div className="flex flex-row items-center">
                 <ControlledCheckbox
@@ -168,9 +177,11 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
                     classNames: { base: 'mr-0.5' },
                   }}
                 >
-                  启用
+                  {i18n.t('hardcoded.msg_ext_form_sshconfform_006')}
                 </ControlledCheckbox>
-                <Tooltip content="是否连接远程服务器本地的 JVM">
+                <Tooltip
+                  content={i18n.t('hardcoded.msg_ext_form_sshconfform_007')}
+                >
                   <SvgIcon icon={Icon.QUESTION} size={24} />
                 </Tooltip>
               </div>
@@ -181,8 +192,9 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
                     name="configuration.local.javaHome"
                     inputProps={{
                       label: 'Java Home',
-                      placeholder:
-                        'Java Home, 不填时默认使用 Path 下的 Java 工具',
+                      placeholder: i18n.t(
+                        'hardcoded.msg_ext_form_sshconfform_008',
+                      ),
                     }}
                   />
                 </div>
@@ -198,9 +210,11 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
                     classNames: { base: 'mr-0.5' },
                   }}
                 >
-                  启用
+                  {i18n.t('hardcoded.msg_ext_form_sshconfform_006')}
                 </ControlledCheckbox>
-                <Tooltip content="是否连接远程服务器 Docker 中的 JVM">
+                <Tooltip
+                  content={i18n.t('hardcoded.msg_ext_form_sshconfform_009')}
+                >
                   <SvgIcon icon={Icon.QUESTION} size={24} />
                 </Tooltip>
               </div>
@@ -221,8 +235,9 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
                     name="configuration.docker.executablePath"
                     inputProps={{
                       label: 'Docker Path',
-                      placeholder:
-                        'Docker 可执行文件的路径， 不填时默认使用 Path 下的 Docker',
+                      placeholder: i18n.t(
+                        'hardcoded.msg_ext_form_sshconfform_010',
+                      ),
                     }}
                   />
                   <ControlledInput
@@ -230,8 +245,9 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
                     name="configuration.docker.javaHome"
                     inputProps={{
                       label: 'Java Home',
-                      placeholder:
-                        'Java Home, 不填时默认使用 Path 下的 Java 工具',
+                      placeholder: i18n.t(
+                        'hardcoded.msg_ext_form_sshconfform_008',
+                      ),
                     }}
                   />
                 </div>
@@ -246,14 +262,16 @@ const ConfigurationForm2: React.FC<ConfigurationForm2Props> = (props) => {
             onPress={onSubmit}
             isLoading={loading}
           >
-            {props.runtimeNodeId ? '更新' : '创建'}
+            {props.runtimeNodeId
+              ? i18n.t('hardcoded.msg_ext_form_k8sconfform_005')
+              : i18n.t('hardcoded.msg_ext_form_sshconfform_011')}
           </Button>
           <Button
             variant="light"
             onPress={props.toPreviousPage}
             isDisabled={loading}
           >
-            上一步
+            {i18n.t('hardcoded.msg_ext_form_sshconfform_012')}
           </Button>
         </div>
       </div>
@@ -269,13 +287,17 @@ const PasswordLoginForm: React.FC<TabFormProps> = (props) => {
   return (
     <Card>
       <CardBody className="space-y-3">
-        <div className="header-2">密码连接</div>
-        <div className="text-sm">使用密码直接连接。</div>
+        <div className="header-2">
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_013')}
+        </div>
+        <div className="text-sm">
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_014')}
+        </div>
         <ControlledInput
           control={props.control}
           name="configuration.principal.password"
           inputProps={{
-            label: '密码',
+            label: i18n.t('hardcoded.msg_ext_form_sshconfform_015'),
             type: 'password',
             isRequired: true,
           }}
@@ -289,9 +311,11 @@ const SshKeyLoginForm: React.FC<TabFormProps> = (props) => {
   return (
     <Card>
       <CardBody className="space-y-3">
-        <div className="header-2">使用 SSH Key 登录</div>
+        <div className="header-2">
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_016')}
+        </div>
         <div className="text-sm">
-          使用 SSH Key 登录。目前支持 Open SSH 和 RSA 秘钥。
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_017')}
         </div>
         <ControlledTextarea
           control={props.control}
@@ -318,9 +342,11 @@ const NoAuthorizationLoginForm: React.FC = () => {
   return (
     <Card>
       <CardBody>
-        <div className="header-2">无认证</div>
+        <div className="header-2">
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_018')}
+        </div>
         <div className="text-sm">
-          无认证，直接使用用户名登录。如果您配置了 SSH 免密登录，可以使用该选项
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_019')}
         </div>
       </CardBody>
     </Card>
@@ -384,7 +410,7 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
         oldState?.id,
       )
       if (r) {
-        handleError(r, '测试失败')
+        handleError(r, i18n.t('hardcoded.msg_ext_form_sshconfform_020'))
       } else {
         setPage(1)
       }
@@ -408,8 +434,12 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
             <RuntimeNodeBasicInputs control={control} />
             <Card>
               <CardBody className="space-y-3">
-                <div className="header-2 font-semibold">连接设置</div>
-                <div className="text-sm">远程服务器基础设置</div>
+                <div className="header-2 font-semibold">
+                  {i18n.t('hardcoded.msg_ext_form_k8sconfform_001')}
+                </div>
+                <div className="text-sm">
+                  {i18n.t('hardcoded.msg_ext_form_sshconfform_021')}
+                </div>
                 <ControlledInput
                   name="configuration.host"
                   inputProps={{ isRequired: true, label: 'Host' }}
@@ -429,7 +459,10 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
                 />
                 <ControlledInput
                   name="configuration.username"
-                  inputProps={{ isRequired: true, label: '用户名' }}
+                  inputProps={{
+                    isRequired: true,
+                    label: i18n.t('common.username'),
+                  }}
                   control={control}
                   rules={{ required: true }}
                 />
@@ -440,7 +473,7 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
                   inputProps={{
                     isRequired: true,
                     defaultValue: '/opt/spectre',
-                    label: 'Spectre 数据目录',
+                    label: i18n.t('hardcoded.msg_ext_form_sshconfform_022'),
                   }}
                 />
               </CardBody>
@@ -452,13 +485,22 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
               classNames={classnames}
               variant="underlined"
             >
-              <Tab key="PASSWORD" title="密码认证">
+              <Tab
+                key="PASSWORD"
+                title={i18n.t('hardcoded.msg_ext_form_sshconfform_023')}
+              >
                 <PasswordLoginForm control={control} />
               </Tab>
-              <Tab key="KEY" title="SSH Key 认证">
+              <Tab
+                key="KEY"
+                title={i18n.t('hardcoded.msg_ext_form_sshconfform_024')}
+              >
                 <SshKeyLoginForm control={control} />
               </Tab>
-              <Tab key="NONE" title="无认证">
+              <Tab
+                key="NONE"
+                title={i18n.t('hardcoded.msg_ext_form_sshconfform_018')}
+              >
                 <NoAuthorizationLoginForm />
               </Tab>
             </Tabs>
@@ -469,7 +511,7 @@ const SshConfForm: React.FC<FormComponentProps> = (props) => {
                 color="primary"
                 onPress={() => onConnectConfFinish()}
               >
-                下一步
+                {i18n.t('common.next')}
               </Button>
             </div>
           </div>

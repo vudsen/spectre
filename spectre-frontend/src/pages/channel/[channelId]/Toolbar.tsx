@@ -10,6 +10,7 @@ import RetransformModalContent from './_enhance/RetransformModalContent.tsx'
 import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import i18n from '@/i18n'
 
 interface MenuListProps {
   isExpand?: boolean
@@ -98,7 +99,10 @@ const Toolbar: React.FC<MenuListProps> = () => {
       >
         <div className="border-r-divider flex h-full flex-col items-center space-y-3 overflow-hidden px-2 shadow">
           <div className="mt-3">
-            <Tooltip content="增强功能" placement="right">
+            <Tooltip
+              content={i18n.t('hardcoded.msg_pages_channel_param_toolbar_001')}
+              placement="right"
+            >
               ✨
             </Tooltip>
           </div>

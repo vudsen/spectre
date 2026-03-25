@@ -6,6 +6,7 @@ import type { RootState } from '@/store'
 import { Button, Tooltip } from '@heroui/react'
 import { setTipRead } from '@/store/tipSlice'
 import StackTrace from '@/pages/channel/[channelId]/_message_view/_component/_common/StackTrace.tsx'
+import i18n from '@/i18n'
 
 type Trace = {
   fileName: string
@@ -72,7 +73,9 @@ const StackMessageDetail: React.FC<DetailComponentProps<StackMessage>> = ({
         content={
           <div className="flex flex-col">
             <div className="mt-2">
-              Tip: 右键调用栈可以打开菜单。支持进行快速 watch 等操作
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_stackmessagedetail_001',
+              )}
             </div>
             <Button
               className="mt-2 self-end"
@@ -80,7 +83,9 @@ const StackMessageDetail: React.FC<DetailComponentProps<StackMessage>> = ({
               color="primary"
               onPress={hideRightClickTip}
             >
-              不再提醒
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_stackmessagedetail_002',
+              )}
             </Button>
           </div>
         }

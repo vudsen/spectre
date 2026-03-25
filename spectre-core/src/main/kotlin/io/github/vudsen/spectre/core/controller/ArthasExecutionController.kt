@@ -108,7 +108,7 @@ class ArthasExecutionController(
         }
         val channelSession = session.getAttribute(channelSessionDataKey(channelId)) as ArthasConsumerDTO?
         if (channelSession == null) {
-            throw BusinessException("频道不存在!")
+            throw BusinessException("error.channel.not.exist")
         }
         return channelSession
     }
@@ -186,14 +186,14 @@ class ArthasExecutionController(
         response: HttpServletResponse,
     ): String {
         if (file.extension != "html") {
-            throw BusinessException("仅支持预览 html 文件")
+            throw BusinessException("error.profiler.preview.html.only")
         }
         resolveChannelSession(request, channelId)
-        val source = arthasExecutionService.readProfilerFile(file) ?: throw BusinessException("文件不存在")
+        val source = arthasExecutionService.readProfilerFile(file) ?: throw BusinessException("error.file.not.found")
         response.setHeader("Cache-Control", "max-age=10800")
         source.use { source ->
             if (source.size() >= 1024 * 1024 * 16) {
-                throw BusinessException("文件过大，请下载后查看")
+                throw BusinessException("error.file.too.large.for.preview")
             }
             val bytes = source.inputStream.readAllBytes()
             return String(bytes)
@@ -208,7 +208,7 @@ class ArthasExecutionController(
         response: HttpServletResponse,
     ): ResponseEntity<Resource> {
         resolveChannelSession(request, channelId)
-        val source = arthasExecutionService.readProfilerFile(file) ?: throw BusinessException("文件不存在")
+        val source = arthasExecutionService.readProfilerFile(file) ?: throw BusinessException("error.file.not.found")
         val fileName = file.channelId + "-" + file.timestamp + "." + file.extension
         val encodedFileName: String? = UriUtils.encode(fileName, StandardCharsets.UTF_8)
 

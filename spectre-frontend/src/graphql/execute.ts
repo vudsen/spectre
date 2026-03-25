@@ -1,6 +1,6 @@
 import type { TypedDocumentString } from './generated/graphql'
 import { showDialog } from '@/common/util.ts'
-import i18n from '@/i18n'
+import i18n, { getCurrentLocale } from '@/i18n'
 
 type QLError = {
   extensions: {
@@ -46,6 +46,7 @@ export async function execute<TResult, TVariables>(
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/graphql-response+json',
+      'Accept-Language': getCurrentLocale(),
     },
     body: JSON.stringify({
       query: compressGraphQL(query),
@@ -62,7 +63,9 @@ export async function execute<TResult, TVariables>(
         location.replace(`${import.meta.env.VITE_BASE_PATH}/login`)
       },
     })
-    return Promise.reject(new Error('会话过期'))
+    return Promise.reject(
+      new Error(i18n.t('hardcoded.msg_graphql_execute_001')),
+    )
   }
   if (!response.ok) {
     throw new Error('Network response was not ok')

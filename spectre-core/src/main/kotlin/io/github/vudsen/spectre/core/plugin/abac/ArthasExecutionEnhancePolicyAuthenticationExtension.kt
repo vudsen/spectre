@@ -79,7 +79,7 @@ class ArthasExecutionEnhancePolicyAuthenticationExtension : EnhancePolicyAuthent
             for (element in node) {
                 val command = element.asString()
                 if (!arthasCommands.contains(command)) {
-                    throw BusinessException("未知命令: $command")
+                    throw BusinessException("error.command.unknown", arrayOf(command))
                 }
                 values.add(command)
             }

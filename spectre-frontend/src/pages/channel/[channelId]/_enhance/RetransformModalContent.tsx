@@ -6,6 +6,7 @@ import { Button, ModalBody, ModalFooter, ModalHeader } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/store'
+import i18n from '@/i18n'
 
 interface RetransformModalContentProps {
   onClose: () => void
@@ -32,7 +33,9 @@ const RetransformModalContent: React.FC<RetransformModalContentProps> = (
       <ModalHeader>Retransform</ModalHeader>
       <ModalBody>
         <div className="text-sm">
-          上传 class 文件快速替换，文件会在使用完毕后立即删除。
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_enhance_retransformmodalcontent_001',
+          )}
         </div>
         <UploadArea
           onUploadFinished={() => setLoading(false)}

@@ -14,6 +14,7 @@ import { graphql } from '@/graphql/generated'
 import useGraphQL from '@/hook/useGraphQL.ts'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import { handleError } from '@/common/util.ts'
+import i18n from '@/i18n'
 import {
   createToolchainBundle,
   updateToolchainBundle,
@@ -88,20 +89,27 @@ const ToolchainBundleModifyDrawerContent: React.FC<
           ...values,
         })
         addToast({
-          title: '更新成功',
+          title: i18n.t('common.updateSuccess'),
           color: 'success',
         })
       } else {
         await createToolchainBundle(values)
         addToast({
-          title: '添加成功',
+          title: i18n.t(
+            'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_001',
+          ),
           color: 'success',
         })
       }
       props.onClose()
       props.onModified()
     } catch (e) {
-      handleError(e, '创建失败')
+      handleError(
+        e,
+        i18n.t(
+          'hardcoded.msg_pages_toolchain_bundles_toolchainbundlemodifydrawercontent_001',
+        ),
+      )
     } finally {
       setLoading(false)
     }
@@ -109,13 +117,20 @@ const ToolchainBundleModifyDrawerContent: React.FC<
 
   return (
     <>
-      <DrawerHeader>新增工具包</DrawerHeader>
+      <DrawerHeader>
+        {i18n.t(
+          'hardcoded.msg_pages_toolchain_bundles_toolchainbundlemodifydrawercontent_002',
+        )}
+      </DrawerHeader>
       <DrawerBody>
         <ControlledInput
           control={control}
           name="name"
           rules={{ required: true }}
-          inputProps={{ isRequired: true, label: '名称' }}
+          inputProps={{
+            isRequired: true,
+            label: i18n.t('hardcoded.msg_components_labeleditor_index_004'),
+          }}
         />
         <ControlledSelect
           control={control}
@@ -124,7 +139,9 @@ const ToolchainBundleModifyDrawerContent: React.FC<
           selectProps={{
             isRequired: true,
             label: 'Arthas',
-            placeholder: '请选择标签',
+            placeholder: i18n.t(
+              'hardcoded.msg_pages_toolchain_bundles_toolchainbundlemodifydrawercontent_003',
+            ),
             isLoading: isVersionsLoading,
           }}
         >
@@ -141,7 +158,9 @@ const ToolchainBundleModifyDrawerContent: React.FC<
           selectProps={{
             isRequired: true,
             label: 'Jattach',
-            placeholder: '请选择标签',
+            placeholder: i18n.t(
+              'hardcoded.msg_pages_toolchain_bundles_toolchainbundlemodifydrawercontent_003',
+            ),
             isLoading: isVersionsLoading,
           }}
         >
@@ -151,7 +170,9 @@ const ToolchainBundleModifyDrawerContent: React.FC<
         </ControlledSelect>
         <div>
           <Alert
-            title="仅显示最新的 10 个标签"
+            title={i18n.t(
+              'hardcoded.msg_pages_toolchain_bundles_toolchainbundlemodifydrawercontent_004',
+            )}
             color="primary"
             variant="flat"
           />
@@ -159,10 +180,12 @@ const ToolchainBundleModifyDrawerContent: React.FC<
       </DrawerBody>
       <DrawerFooter>
         <Button color="danger" variant="light" onPress={props.onClose}>
-          关闭
+          {i18n.t(
+            'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+          )}
         </Button>
         <Button color="primary" onPress={onSubmit} isLoading={isLoading}>
-          保存
+          {i18n.t('common.save')}
         </Button>
       </DrawerFooter>
     </>

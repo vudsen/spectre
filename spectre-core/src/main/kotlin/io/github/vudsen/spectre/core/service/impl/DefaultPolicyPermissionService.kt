@@ -55,14 +55,15 @@ class DefaultPolicyPermissionService(
             try {
                 objectMapper.readValue(plugin.configuration, clazz)
             } catch (_: Exception) {
-                throw BusinessException("无效的配置, 插件 id: ${extPoint.getId()}")
+                throw BusinessException("error.plugin.config.invalid", arrayOf(extPoint.getId()))
             }
         return objectMapper.writeValueAsString(obj)
     }
 
     @Transactional
     override fun updatePolicyPermission(dto: UpdatePolicyPermissionDTO) {
-        val permissionPO = policyPermissionRepository.findById(dto.id).getOrNull() ?: throw BusinessException("策略权限不存在")
+        val permissionPO =
+            policyPermissionRepository.findById(dto.id).getOrNull() ?: throw BusinessException("error.policy.permission.not.exist")
         permissionPO.conditionExpression = dto.conditionExpression
         permissionPO.description = dto.description
         for (plugin in dto.enhancePlugins) {

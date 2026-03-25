@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { type ChannelSessionDTO, joinChannel } from '@/api/impl/arthas.ts'
 import ChannelLayout from '@/pages/channel/[channelId]/ChannelLayout.tsx'
+import i18n from '@/i18n'
 
 const ChannelPage: React.FC = () => {
   const params = useParams()
@@ -23,7 +24,7 @@ const ChannelPage: React.FC = () => {
         }
       })
       .catch((_) => {
-        setChannelJoinMsg('连接到频道失败.')
+        setChannelJoinMsg(i18n.t('hardcoded.msg_pages_channel_param_index_001'))
       })
       .finally(() => {
         setLoading(false)

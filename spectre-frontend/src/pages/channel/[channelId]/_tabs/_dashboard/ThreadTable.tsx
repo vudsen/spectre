@@ -9,6 +9,7 @@ import {
 import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
 import React from 'react'
 import type { DashboardMessage } from '@/pages/channel/[channelId]/_message_view/_component/DashboardMessageDetail.tsx'
+import i18n from '@/i18n'
 
 interface ThreadTableProps {
   threads: DashboardMessage['threads']
@@ -19,12 +20,26 @@ const ThreadTable: React.FC<ThreadTableProps> = ({ threads }) => {
     <Table aria-label="Threads">
       <TableHeader>
         <TableColumn>ID</TableColumn>
-        <TableColumn>名称</TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+        </TableColumn>
         <TableColumn>CPU</TableColumn>
-        <TableColumn>优先级</TableColumn>
-        <TableColumn>状态</TableColumn>
-        <TableColumn>中断</TableColumn>
-        <TableColumn>组</TableColumn>
+        <TableColumn>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_dashboard_threadtable_001',
+          )}
+        </TableColumn>
+        <TableColumn>{i18n.t('common.status')}</TableColumn>
+        <TableColumn>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_dashboard_threadtable_002',
+          )}
+        </TableColumn>
+        <TableColumn>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_dashboard_threadtable_003',
+          )}
+        </TableColumn>
       </TableHeader>
       <TableBody items={threads}>
         {(thread) => (

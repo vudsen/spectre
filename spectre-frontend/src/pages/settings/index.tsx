@@ -44,7 +44,7 @@ const Settings: React.FC = () => {
               labelPlacement="outside"
               defaultSelectedKeys={localeDefaultKeys}
             >
-              <SelectItem key="zh-CN">{'简体中文 (zh-CN)'}</SelectItem>
+              <SelectItem key="zh-CN">简体中文 (zh-CN)</SelectItem>
               <SelectItem key="en">English (en) (Incomplete)</SelectItem>
             </Select>
           </CardBody>

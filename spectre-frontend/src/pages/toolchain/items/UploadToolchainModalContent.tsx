@@ -6,6 +6,7 @@ import {
   ModalFooter,
   ModalHeader,
 } from '@heroui/react'
+import i18n from '@/i18n'
 import UploadArea, {
   type UploadAreaRef,
 } from '@/components/validation/UploadArea.tsx'
@@ -36,7 +37,9 @@ const UploadToolchainModalContent: React.FC<
 
   return (
     <>
-      <ModalHeader>上传 {props.type}</ModalHeader>
+      <ModalHeader>
+        {i18n.t('common.upload')} {props.type}
+      </ModalHeader>
       <ModalBody>
         <div className="relative w-full max-w-lg">
           <UploadArea
@@ -53,7 +56,9 @@ const UploadToolchainModalContent: React.FC<
             href={props.downloadUrl}
             className="cursor-pointer"
           >
-            点击此处下载对应工具包
+            {i18n.t(
+              'hardcoded.msg_pages_toolchain_items_uploadtoolchainmodalcontent_001',
+            )}
           </Link>
         </div>
       </ModalBody>
@@ -65,10 +70,10 @@ const UploadToolchainModalContent: React.FC<
             isDisabled={uploading}
             onPress={props.onClose}
           >
-            取消
+            {i18n.t('common.cancel')}
           </Button>
           <Button color="primary" onPress={doUpload} isLoading={uploading}>
-            上传
+            {i18n.t('common.upload')}
           </Button>
         </div>
       </ModalFooter>

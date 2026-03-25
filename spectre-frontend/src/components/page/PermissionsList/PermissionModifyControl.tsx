@@ -4,6 +4,7 @@ import PermissionsDrawerContent, {
 } from '@/components/page/PermissionsList/PermissionsDrawerContent.tsx'
 import ModifyPermissionDrawerContent from '@/components/page/PermissionsList/ModifyPermissionDrawerContent.tsx'
 import React, { useImperativeHandle, useState } from 'react'
+import i18n from '@/i18n'
 
 interface PermissionModifyControlProps {
   subjectId: string
@@ -59,7 +60,9 @@ const PermissionModifyControl: React.FC<PermissionModifyControlProps> = (
         size="sm"
         onPress={permissionBindDrawerClosure.onOpen}
       >
-        新增
+        {i18n.t(
+          'hardcoded.msg_components_page_permissionslist_permissionmodifycontrol_001',
+        )}
       </Button>
       <Drawer
         size="5xl"

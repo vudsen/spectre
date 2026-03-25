@@ -9,6 +9,7 @@ import {
 import { useForm } from 'react-hook-form'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import { createRole, type RoleModifyVO, updateRole } from '@/api/impl/role.ts'
+import i18n from '@/i18n'
 
 interface RoleModifyDrawerContentProps {
   oldEntity?: RoleModifyVO
@@ -38,10 +39,10 @@ const RoleModifyDrawerContent: React.FC<RoleModifyDrawerContentProps> = (
           name: values.name,
           description: values.description,
         })
-        addToast({ title: '更新成功', color: 'success' })
+        addToast({ title: i18n.t('common.updateSuccess'), color: 'success' })
       } else {
         await createRole(values)
-        addToast({ title: '创建成功', color: 'success' })
+        addToast({ title: i18n.t('common.createSuccess'), color: 'success' })
       }
       props.onSave({
         id: values.id,
@@ -55,19 +56,34 @@ const RoleModifyDrawerContent: React.FC<RoleModifyDrawerContentProps> = (
   }
   return (
     <>
-      <DrawerHeader>{isUpdate ? '更新角色' : '新增角色'}</DrawerHeader>
+      <DrawerHeader>
+        {isUpdate
+          ? i18n.t(
+              'hardcoded.msg_pages_permission_role_rolemodifydrawercontent_001',
+            )
+          : i18n.t(
+              'hardcoded.msg_pages_permission_role_rolemodifydrawercontent_002',
+            )}
+      </DrawerHeader>
       <DrawerBody>
         <ControlledInput
           control={control}
           name="name"
           rules={{ required: !isUpdate }}
-          inputProps={{ label: '角色名称', isRequired: !isUpdate }}
+          inputProps={{
+            label: i18n.t(
+              'hardcoded.msg_pages_permission_role_rolemodifydrawercontent_003',
+            ),
+            isRequired: !isUpdate,
+          }}
         />
         <ControlledInput
           control={control}
           name="description"
           inputProps={{
-            label: '描述',
+            label: i18n.t(
+              'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_007',
+            ),
           }}
         />
       </DrawerBody>
@@ -81,7 +97,7 @@ const RoleModifyDrawerContent: React.FC<RoleModifyDrawerContentProps> = (
           Close
         </Button>
         <Button color="primary" isLoading={loading} onPress={onSave}>
-          保存
+          {i18n.t('common.save')}
         </Button>
       </DrawerFooter>
     </>

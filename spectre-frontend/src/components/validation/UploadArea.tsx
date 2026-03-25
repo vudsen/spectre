@@ -3,6 +3,7 @@ import axios from 'axios'
 import { addToast, Button, Progress, Tooltip } from '@heroui/react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
+import i18n from '@/i18n'
 
 interface UploadAreaProps {
   url: string
@@ -58,7 +59,7 @@ const UploadArea: React.FC<UploadAreaProps> = (props) => {
     const file = fileStatus
     if (!file) {
       addToast({
-        title: '请选择文件',
+        title: i18n.t('hardcoded.msg_components_validation_uploadarea_001'),
         color: 'danger',
       })
       return
@@ -91,7 +92,7 @@ const UploadArea: React.FC<UploadAreaProps> = (props) => {
       },
     })
     addToast({
-      title: '上传成功',
+      title: i18n.t('hardcoded.msg_components_validation_uploadarea_002'),
       color: 'success',
     })
     props.onClose()
@@ -125,10 +126,19 @@ const UploadArea: React.FC<UploadAreaProps> = (props) => {
           </div>
           {uploadStatus ? (
             <Progress
-              aria-label="上传中..."
+              aria-label={i18n.t(
+                'hardcoded.msg_components_validation_uploadarea_003',
+              )}
               className="max-w-md"
               color="success"
-              label={`上传中 (${uploadStatus.uploaded}${unit.toUpperCase()}/${uploadStatus.total}${unit.toUpperCase()})`}
+              label={i18n.t(
+                'hardcoded.msg_components_validation_uploadarea_004',
+                {
+                  uploaded: uploadStatus.uploaded,
+                  total: uploadStatus.total,
+                  unit: unit.toUpperCase(),
+                },
+              )}
               showValueLabel={true}
               size="md"
               value={uploadStatus.progress}
@@ -157,11 +167,18 @@ const UploadArea: React.FC<UploadAreaProps> = (props) => {
               />
             </svg>
             <p className="text-sm text-gray-600">
-              <span className="font-semibold text-blue-600">点击上传</span>{' '}
-              或拖放文件到此区域
+              <span className="font-semibold text-blue-600">
+                {i18n.t('hardcoded.msg_components_validation_uploadarea_005')}
+              </span>{' '}
+              {i18n.t('hardcoded.msg_components_validation_uploadarea_006')}
             </p>
             <p className="text-xs text-gray-400">
-              支持文件类型: {accept ?? '不限'} (最大 20MB)
+              {i18n.t('hardcoded.msg_components_validation_uploadarea_007')}{' '}
+              {accept ??
+                i18n.t(
+                  'hardcoded.msg_components_validation_uploadarea_008',
+                )}{' '}
+              {i18n.t('hardcoded.msg_components_validation_uploadarea_009')}
             </p>
           </div>
         </div>

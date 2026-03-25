@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateChannelContext } from '@/store/channelSlice.ts'
 import type { RootState } from '@/store'
 import clsx from 'clsx'
+import i18n from '@/i18n'
 
 interface SkillSelectModalContentProps {
   onClose: () => void
@@ -43,7 +44,13 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
       const data = await listSkills()
       setSkills(data || [])
     } catch (e) {
-      setError(e instanceof Error ? e.message : '技能加载失败')
+      setError(
+        e instanceof Error
+          ? e.message
+          : i18n.t(
+              'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_001',
+            ),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -69,7 +76,11 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
 
   return (
     <>
-      <ModalHeader>可用技能</ModalHeader>
+      <ModalHeader>
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_002',
+        )}
+      </ModalHeader>
       <ModalBody className="min-h-74 pb-4">
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -81,13 +92,19 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
           <div className="space-y-2 py-2">
             <div className="text-danger text-sm">{error}</div>
             <Button size="sm" variant="flat" onPress={loadSkills}>
-              重试
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_003',
+              )}
             </Button>
           </div>
         ) : null}
 
         {!isLoading && !error && skills.length === 0 ? (
-          <div className="text-default-500 py-2 text-sm">暂无可用技能</div>
+          <div className="text-default-500 py-2 text-sm">
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_004',
+            )}
+          </div>
         ) : null}
 
         {!isLoading && !error ? (
@@ -124,7 +141,9 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
       </ModalBody>
       <ModalFooter>
         <Button variant="light" onPress={onClose} color="danger">
-          关闭
+          {i18n.t(
+            'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+          )}
         </Button>
       </ModalFooter>
       <Modal
@@ -137,11 +156,18 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
           </ModalHeader>
           <ModalBody>
             <div className="text-sm">
-              <span>创建者</span>:{' '}
+              <span>
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_005',
+                )}
+              </span>
+              :{' '}
               <span className="text-default-500">{previewSkill?.creator}</span>
             </div>
             <div className="text-sm break-words whitespace-pre-wrap">
-              描述:{' '}
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_006',
+              )}{' '}
               <span className="text-default-500">
                 {previewSkill?.description}
               </span>
@@ -149,7 +175,7 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={closePreview} color="danger">
-              取消
+              {i18n.t('common.cancel')}
             </Button>
             <Button
               color="primary"
@@ -157,7 +183,9 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
                 previewSkill ? selectSkill(previewSkill) : undefined
               }
             >
-              选择技能
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_007',
+              )}
             </Button>
           </ModalFooter>
         </ModalContent>

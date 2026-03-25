@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import {
   Table,
   TableBody,
@@ -15,10 +16,16 @@ const ReadonlyLabelsTable: React.FC<ReadonlyLabelsTableProps> = (props) => {
   return (
     <Table removeWrapper>
       <TableHeader>
-        <TableColumn>名称</TableColumn>
-        <TableColumn>值</TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+        </TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_components_labeleditor_index_005')}
+        </TableColumn>
       </TableHeader>
-      <TableBody emptyContent="没有任何标签">
+      <TableBody
+        emptyContent={i18n.t('hardcoded.msg_components_labeleditor_index_006')}
+      >
         {Object.entries(props.labels).map(([k, v]) => (
           <TableRow key={k}>
             <TableCell>{k}</TableCell>

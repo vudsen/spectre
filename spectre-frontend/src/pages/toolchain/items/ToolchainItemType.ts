@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 export type ToolchainItemType = {
   name: string
   type: string
@@ -10,17 +11,25 @@ export type ToolchainItemType = {
 const toolchainTypes: ToolchainItemType[] = [
   {
     name: 'Arthas',
-    description: '基础工具包',
+    description: i18n.t(
+      'hardcoded.msg_pages_toolchain_items_toolchainitemtype_001',
+    ),
     type: 'ARTHAS',
-    urlGuide: '链接应该指向 arthas-bin.zip',
+    urlGuide: i18n.t(
+      'hardcoded.msg_pages_toolchain_items_toolchainitemtype_002',
+    ),
     url: 'https://github.com/alibaba/arthas/releases',
     hasMultiplatformBundle: false,
   },
   {
     name: 'Jattach',
-    description: '用于兼容 jre 环境',
+    description: i18n.t(
+      'hardcoded.msg_pages_toolchain_items_toolchainitemtype_003',
+    ),
     type: 'JATTACH',
-    urlGuide: '链接应该指向对应系统的 jattach 文件',
+    urlGuide: i18n.t(
+      'hardcoded.msg_pages_toolchain_items_toolchainitemtype_004',
+    ),
     url: 'https://github.com/jattach/jattach/releases',
     hasMultiplatformBundle: true,
   },

@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router'
 import ControlledCheckbox from '@/components/validation/ControlledCheckbox.tsx'
 import RuntimeNodeBasicInputs from '@/components/RuntimeNodeBasicInputs.tsx'
+import i18n from '@/i18n'
 
 type K8sRuntimeNodeConfig = {
   apiServerEndpoint: string
@@ -77,7 +78,9 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
         })
       }
       addToast({
-        title: props.oldState ? '更新成功' : '创建成功',
+        title: props.oldState
+          ? i18n.t('common.updateSuccess')
+          : i18n.t('common.createSuccess'),
         color: 'success',
       })
       nav('/runtime-node/list')
@@ -91,16 +94,18 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
       <RuntimeNodeBasicInputs control={control} />
       <Card>
         <CardBody className="space-y-3">
-          <div className="header-2">连接设置</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_ext_form_k8sconfform_001')}
+          </div>
           <Alert color="warning" variant="faded">
-            目前仅支持 Token 认证
+            {i18n.t('hardcoded.msg_ext_form_k8sconfform_002')}
           </Alert>
           <ControlledInput
             name="configuration.apiServerEndpoint"
             inputProps={{
               isRequired: true,
               label: 'Endpoint',
-              placeholder: '请输入 Api Server 端点',
+              placeholder: i18n.t('hardcoded.msg_ext_form_k8sconfform_003'),
               type: 'url',
             }}
             control={control}
@@ -131,7 +136,7 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
             control={control}
             name="configuration.insecure"
           >
-            忽略 SSL 校验
+            {i18n.t('hardcoded.msg_ext_form_k8sconfform_004')}
           </ControlledCheckbox>
         </CardBody>
       </Card>
@@ -142,7 +147,9 @@ const K8sConfForm: React.FC<FormComponentProps> = (props) => {
           isLoading={loading}
           onPress={onSave}
         >
-          {props.oldState ? '更新' : '保存'}
+          {props.oldState
+            ? i18n.t('hardcoded.msg_ext_form_k8sconfform_005')
+            : i18n.t('common.save')}
         </Button>
       </div>
     </div>

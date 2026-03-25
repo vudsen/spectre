@@ -1,6 +1,7 @@
 import type React from 'react'
 import { Code } from '@heroui/react'
 import type { DetailComponentProps } from '../factory.ts'
+import i18n from '@/i18n'
 
 export type StatusMessage = {
   type: 'status'
@@ -16,11 +17,24 @@ const StatusMessageDetail: React.FC<DetailComponentProps<StatusMessage>> = ({
   return (
     <div className="space-y-3 text-sm">
       <div className={isSuccess ? 'text-success' : 'text-danger'}>
-        执行命令{isSuccess ? '成功' : '失败'}, 响应码: {msg.statusCode}
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_statusmessagedetail_001',
+        )}
+        {isSuccess
+          ? i18n.t('hardcoded.msg_pages_audit_index_002')
+          : i18n.t('hardcoded.msg_pages_audit_index_003')}
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_statusmessagedetail_002',
+        )}{' '}
+        {msg.statusCode}
       </div>
       {isSuccess ? null : (
         <>
-          <div>错误信息:</div>
+          <div>
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_statusmessagedetail_003',
+            )}
+          </div>
           <Code>{msg.message}</Code>
         </>
       )}

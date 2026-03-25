@@ -9,6 +9,7 @@ import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/Percent
 import clsx from 'clsx'
 import type { DashboardMessage } from '@/pages/channel/[channelId]/_message_view/_component/DashboardMessageDetail.tsx'
 import type { CommandMessage } from '../../_message_view/_component/CommandMessageDetail'
+import i18n from '@/i18n'
 
 const DashBoardTab: React.FC = () => {
   const context = useContext(ChannelContext)
@@ -56,7 +57,9 @@ const DashBoardTab: React.FC = () => {
   if (!state) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <span className="animate-pulse">加载中</span>
+        <span className="animate-pulse">
+          {i18n.t('hardcoded.msg_components_tableloadingmask_001')}
+        </span>
       </div>
     )
   }
@@ -68,7 +71,9 @@ const DashBoardTab: React.FC = () => {
           stopped ? undefined : 'hidden',
         )}
       >
-        <div>Dashboard 任务已经停止</div>
+        <div>
+          {i18n.t('hardcoded.msg_pages_channel_param_tabs_dashboard_index_001')}
+        </div>
         <Button
           color="warning"
           size="sm"
@@ -76,25 +81,48 @@ const DashBoardTab: React.FC = () => {
           onPress={restartDashboard}
           isLoading={isRestartDashboardLoading}
         >
-          重新开始
+          {i18n.t('hardcoded.msg_pages_channel_param_tabs_dashboard_index_002')}
         </Button>
       </div>
       <div className="spectre-container py-3 pb-16">
         <Card>
           <CardBody>
-            <div className="header-2">系统信息</div>
+            <div className="header-2">
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_tabs_dashboard_index_003',
+              )}
+            </div>
             <KVGird>
-              <KVGridItem name="Java 版本">
+              <KVGridItem
+                name={i18n.t(
+                  'hardcoded.msg_pages_channel_param_tabs_dashboard_index_004',
+                )}
+              >
                 {state.runtimeInfo.javaVersion}
               </KVGridItem>
-              <KVGridItem name="处理器数量">
+              <KVGridItem
+                name={i18n.t(
+                  'hardcoded.msg_pages_channel_param_tabs_dashboard_index_005',
+                )}
+              >
                 {state.runtimeInfo.processors}
               </KVGridItem>
-              <KVGridItem name="系统负载">
+              <KVGridItem
+                name={i18n.t(
+                  'hardcoded.msg_pages_channel_param_tabs_dashboard_index_006',
+                )}
+              >
                 <PercentageData rate={state.runtimeInfo.systemLoadAverage} />
               </KVGridItem>
-              <KVGridItem name="存活时间">
-                {(state.runtimeInfo.uptime / 60).toFixed(0)}分钟
+              <KVGridItem
+                name={i18n.t(
+                  'hardcoded.msg_pages_channel_param_tabs_dashboard_index_007',
+                )}
+              >
+                {(state.runtimeInfo.uptime / 60).toFixed(0)}
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_tabs_dashboard_index_008',
+                )}
               </KVGridItem>
             </KVGird>
           </CardBody>

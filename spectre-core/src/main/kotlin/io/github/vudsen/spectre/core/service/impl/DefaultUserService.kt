@@ -94,10 +94,10 @@ class DefaultUserService(
     ) {
         val user = userRepository.findById(userId).getOrNull() ?: throw BusinessException("error.user.not.exit")
         if (!passwordEncoder.matches(oldPassword, user.password)) {
-            throw BusinessException("原密码不正确")
+            throw BusinessException("error.user.old.password.incorrect")
         }
         if (oldPassword == newPassword) {
-            throw BusinessException("新旧密码不能一样")
+            throw BusinessException("error.user.new.password.same.as.old")
         }
 
         modifyPassword(userId, newPassword)

@@ -21,6 +21,7 @@ import LabelsDisplay from '@/components/LabelsDisplay'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { bindRoleToUser } from '@/api/impl/role.ts'
+import i18n from '@/i18n'
 
 const ListUserWithUsernameQuery = graphql(`
   query ListUserWithUsernameQuery($username: String!) {
@@ -75,7 +76,9 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
         })
       } else if (selectedKeys.size == 0) {
         addToast({
-          title: '请选择用户',
+          title: i18n.t(
+            'hardcoded.msg_pages_permission_role_param_selectuserdrawercontent_001',
+          ),
           color: 'danger',
         })
       } else {
@@ -89,7 +92,9 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
         })
       }
       addToast({
-        title: '绑定成功',
+        title: i18n.t(
+          'hardcoded.msg_pages_permission_role_param_selectuserdrawercontent_002',
+        ),
         color: 'success',
       })
       props.onSave()
@@ -100,14 +105,22 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
   }
   return (
     <>
-      <DrawerHeader>绑定用户</DrawerHeader>
+      <DrawerHeader>
+        {i18n.t(
+          'hardcoded.msg_pages_permission_role_param_selectuserdrawercontent_003',
+        )}
+      </DrawerHeader>
       <DrawerBody>
         <Input
           size="sm"
           labelPlacement="outside"
-          label="搜索"
+          label={i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_006',
+          )}
           onChange={onChange}
-          placeholder="搜索权限"
+          placeholder={i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_007',
+          )}
           startContent={<SvgIcon icon={Icon.SEARCH} />}
         />
         <Table
@@ -119,15 +132,23 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
           disabledKeys={props.boundUserIds}
         >
           <TableHeader>
-            <TableColumn>用户名</TableColumn>
-            <TableColumn>昵称</TableColumn>
-            <TableColumn>标签</TableColumn>
+            <TableColumn>{i18n.t('common.username')}</TableColumn>
+            <TableColumn>
+              {i18n.t(
+                'hardcoded.msg_pages_permission_role_param_roleuserlist_004',
+              )}
+            </TableColumn>
+            <TableColumn>
+              {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
+            </TableColumn>
           </TableHeader>
           <TableBody
             isLoading={isLoading}
             loadingContent={<TableLoadingMask />}
             items={result?.user.searchByUsername.result ?? []}
-            emptyContent={'没有匹配的用户'}
+            emptyContent={i18n.t(
+              'hardcoded.msg_pages_permission_role_param_selectuserdrawercontent_004',
+            )}
           >
             {(user) => (
               <TableRow key={user.id}>
@@ -151,7 +172,7 @@ const SelectUserDrawerContent: React.FC<SelectUserDrawerContentProps> = (
           Close
         </Button>
         <Button color="primary" isLoading={isSubmitting} onPress={onSave}>
-          保存
+          {i18n.t('common.save')}
         </Button>
       </DrawerFooter>
     </>

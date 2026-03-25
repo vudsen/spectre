@@ -8,6 +8,7 @@ import ChannelContext, {
 import { useForm, type Path, type FieldValues } from 'react-hook-form'
 import { Button, ModalBody, ModalFooter, ModalHeader } from '@heroui/react'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
+import i18n from '@/i18n'
 
 type AnyValues = FieldValues
 
@@ -134,15 +135,17 @@ export default function CommandFormContent<T extends AnyValues>({
       <ModalFooter className="flex items-center justify-between text-sm">
         <div className="text-danger w-0 grow">
           {inputStatus === 'ALLOW_INTERRUPT' && !handle.isSync
-            ? '注意: 继续执行将中断当前正在监听的命令'
+            ? i18n.t(
+                'hardcoded.msg_pages_channel_param_component_quickcommand_commandformcontent_001',
+              )
             : ''}
         </div>
         <div>
           <Button color="danger" variant="light" onPress={onClose}>
-            取消
+            {i18n.t('common.cancel')}
           </Button>
           <Button color="primary" onPress={onSubmit}>
-            确定
+            {i18n.t('common.confirm')}
           </Button>
         </div>
       </ModalFooter>

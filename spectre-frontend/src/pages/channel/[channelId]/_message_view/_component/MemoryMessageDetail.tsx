@@ -9,6 +9,7 @@ import {
 import React, { useMemo } from 'react'
 import type { DetailComponentProps } from '../factory.ts'
 import PercentageData from '@/pages/channel/[channelId]/_tabs/_dashboard/PercentageData.tsx'
+import i18n from '@/i18n'
 
 type MemoryInfo = {
   max: number
@@ -35,11 +36,27 @@ const MemoryMessageDetail: React.FC<DetailComponentProps<MemoryMessage>> = ({
   return (
     <Table>
       <TableHeader>
-        <TableColumn>名称</TableColumn>
-        <TableColumn>类型</TableColumn>
-        <TableColumn>总大小</TableColumn>
-        <TableColumn>使用量</TableColumn>
-        <TableColumn>最大</TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+        </TableColumn>
+        <TableColumn>
+          {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
+        </TableColumn>
+        <TableColumn>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_message_view_component_memorymessagedetail_001',
+          )}
+        </TableColumn>
+        <TableColumn>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_message_view_component_memorymessagedetail_002',
+          )}
+        </TableColumn>
+        <TableColumn>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_message_view_component_memorymessagedetail_003',
+          )}
+        </TableColumn>
       </TableHeader>
       <TableBody items={infos}>
         {(info) => (

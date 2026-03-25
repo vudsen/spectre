@@ -1,5 +1,6 @@
 import { Code } from '@heroui/react'
 import type { DetailComponentProps } from '../factory.ts'
+import i18n from '@/i18n'
 
 type EnhancerMessage = {
   effect: {
@@ -18,15 +19,28 @@ const EnhancerMessageDetail: React.FC<DetailComponentProps<EnhancerMessage>> = (
 ) => {
   return (
     <div className="space-y-3 text-sm">
-      <div className="font-bold">Enhancer 影响范围</div>
-      <div>
-        涉及 class 数量: <Code>{props.msg.effect.classCount}</Code>
+      <div className="font-bold">
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_enhancermessagedetail_001',
+        )}
       </div>
       <div>
-        方法数量: <Code>{props.msg.effect.methodCount}</Code>
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_enhancermessagedetail_002',
+        )}{' '}
+        <Code>{props.msg.effect.classCount}</Code>
       </div>
       <div>
-        耗时: <Code>{props.msg.effect.cost}ms</Code>
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_enhancermessagedetail_003',
+        )}{' '}
+        <Code>{props.msg.effect.methodCount}</Code>
+      </div>
+      <div>
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_enhancermessagedetail_004',
+        )}{' '}
+        <Code>{props.msg.effect.cost}ms</Code>
       </div>
     </div>
   )

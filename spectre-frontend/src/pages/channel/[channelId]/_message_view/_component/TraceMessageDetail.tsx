@@ -6,6 +6,7 @@ import type { DetailComponentProps } from '../factory.ts'
 import RightClickMenu from '@/components/RightClickMenu/RightClickMenu.tsx'
 import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import i18n from '@/i18n'
 type Invoke = {
   className: string
   cost: number
@@ -214,7 +215,11 @@ const TraceMessageDetail: React.FC<DetailComponentProps<TraceMessage>> = (
   return (
     <div>
       <RightClickMenu {...menuProps} onAction={onAction}>
-        <ListboxItem key="jad">反编译</ListboxItem>
+        <ListboxItem key="jad">
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_component_quickcommand_index_002',
+          )}
+        </ListboxItem>
         <ListboxItem key="watch">Watch</ListboxItem>
         <ListboxItem key="trace">Trace</ListboxItem>
         <ListboxItem key="stack">Stack</ListboxItem>

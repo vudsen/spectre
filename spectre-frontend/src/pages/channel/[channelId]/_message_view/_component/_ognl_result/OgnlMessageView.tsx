@@ -12,6 +12,7 @@ import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.
 import { Code, Link, Tooltip } from '@heroui/react'
 import Icon from '@/components/icon/icon.ts'
 import { ErrorBoundary } from 'react-error-boundary'
+import i18n from '@/i18n'
 
 const MARGIN_RATE = 24
 
@@ -169,8 +170,18 @@ const OgnlMessageView0: React.FC<OgnlMessageViewProps> = ({ raw }) => {
         size="sm"
         onPress={toggle}
       >
-        {useOriginal ? '显示解析后视图' : '显示原始内容'}
-        <Tooltip content="解析后的视图小概率会出现 BUG(例如字段丢失/错乱)，因此暂时留一个回退按钮">
+        {useOriginal
+          ? i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_001',
+            )
+          : i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_002',
+            )}
+        <Tooltip
+          content={i18n.t(
+            'hardcoded.msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_003',
+          )}
+        >
           <SvgIcon icon={Icon.QUESTION} />
         </Tooltip>
       </Link>
@@ -184,7 +195,9 @@ const OgnlMessageView: React.FC<OgnlMessageViewProps> = ({ raw }) => {
       fallback={
         <div>
           <div className="text-danger mb-2">
-            Ognl 表达式解析失败，详见 F12 控制台，已显示回退视图
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_004',
+            )}
           </div>
           <Code className="w-full whitespace-pre-wrap">{raw}</Code>
         </div>

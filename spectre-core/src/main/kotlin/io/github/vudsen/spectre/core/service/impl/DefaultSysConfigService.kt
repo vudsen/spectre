@@ -15,7 +15,7 @@ class DefaultSysConfigService(
     private val secretEncryptorManager: SecretEncryptorManager,
 ) : SysConfigService {
     override fun findConfigValue(id: Long): String? {
-        val conf = sysConfigRepository.findById(id).getOrNull() ?: throw BusinessException("配置不存在")
+        val conf = sysConfigRepository.findById(id).getOrNull() ?: throw BusinessException("error.config.not.exist")
         val value = conf.value ?: return null
 
         SysConfigIds.encryptedIds[id]?.let {

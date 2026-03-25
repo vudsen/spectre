@@ -17,6 +17,7 @@ import { useDispatch } from 'react-redux'
 import KVGird from '@/components/KVGird'
 import KVGridItem from '@/components/KVGird/KVGridItem.tsx'
 import SimpleList from '@/components/SimpleList.tsx'
+import i18n from '@/i18n'
 
 type Fields = {
   annotations: string[]
@@ -95,12 +96,25 @@ const ClassInfoDisplay: React.FC<{ classInfo: ClassInfo }> = ({
       <div className="header-1">{classInfo.name}</div>
       <Card>
         <CardBody className="space-y-3 text-sm">
-          <div className="header-2">详细信息</div>
+          <div className="header-2">{i18n.t('common.detail')}</div>
           <KVGird>
-            <KVGridItem name="修饰符">{classInfo.modifier}</KVGridItem>
-            <KVGridItem name="类型">{type}</KVGridItem>
+            <KVGridItem
+              name={i18n.t(
+                'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_001',
+              )}
+            >
+              {classInfo.modifier}
+            </KVGridItem>
+            <KVGridItem name={i18n.t('hardcoded.msg_ext_view_k8sview_003')}>
+              {type}
+            </KVGridItem>
             <KVGridItem name="Classloader Hash">
-              <Tooltip content="应用到默认 Classloader" placement="bottom">
+              <Tooltip
+                content={i18n.t(
+                  'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_002',
+                )}
+                placement="bottom"
+              >
                 <Link
                   size="sm"
                   onPress={applyClassloader}
@@ -113,25 +127,45 @@ const ClassInfoDisplay: React.FC<{ classInfo: ClassInfo }> = ({
             </KVGridItem>
           </KVGird>
           <SimpleList
-            name="注解"
+            name={i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_003',
+            )}
             color="warning"
             entities={classInfo.annotations}
           />
           <SimpleList
-            name="接口"
+            name={i18n.t(
+              'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_004',
+            )}
             color="primary"
             entities={classInfo.interfaces}
           />
           <SimpleList name="Classloader" entities={classInfo.classloader} />
           {classInfo.fields ? (
             <>
-              <div className="header-2">字段信息</div>
+              <div className="header-2">
+                {i18n.t(
+                  'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_005',
+                )}
+              </div>
               <Table removeWrapper>
                 <TableHeader>
-                  <TableColumn>名称</TableColumn>
-                  <TableColumn>类型</TableColumn>
-                  <TableColumn>静态</TableColumn>
-                  <TableColumn>修饰符</TableColumn>
+                  <TableColumn>
+                    {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+                  </TableColumn>
+                  <TableColumn>
+                    {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
+                  </TableColumn>
+                  <TableColumn>
+                    {i18n.t(
+                      'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_006',
+                    )}
+                  </TableColumn>
+                  <TableColumn>
+                    {i18n.t(
+                      'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_001',
+                    )}
+                  </TableColumn>
                 </TableHeader>
                 <TableBody items={classInfo.fields}>
                   {(field) => (
@@ -156,7 +190,14 @@ const ScMessageDetail: React.FC<DetailComponentProps<ScMessage>> = ({
   msg,
 }) => {
   if (msg.classNames) {
-    return <SimpleList name="搜索到以下类" entities={msg.classNames} />
+    return (
+      <SimpleList
+        name={i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_007',
+        )}
+        entities={msg.classNames}
+      />
+    )
   } else if (msg.classInfo) {
     return <ClassInfoDisplay classInfo={msg.classInfo} />
   }

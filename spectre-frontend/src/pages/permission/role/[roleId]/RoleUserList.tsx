@@ -24,6 +24,7 @@ import { graphql } from '@/graphql/generated'
 import SelectUserDrawerContent from './SelectUserDrawerContent.tsx'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import { useNavigate } from 'react-router'
+import i18n from '@/i18n'
 
 const RoleBoundUserQuery = graphql(`
   query RoleBoundUserQuery($roleId: Long!, $page: Int!, $size: Int!) {
@@ -79,7 +80,11 @@ const RoleUserList: React.FC<RoleUserListProps> = (props) => {
       <Card>
         <CardBody className="overflow-hidden">
           <div className="flex items-center justify-between">
-            <div className="spectre-heading">角色中的用户</div>
+            <div className="spectre-heading">
+              {i18n.t(
+                'hardcoded.msg_pages_permission_role_param_roleuserlist_001',
+              )}
+            </div>
             <div className="flex items-center">
               <Button
                 isIconOnly
@@ -91,7 +96,9 @@ const RoleUserList: React.FC<RoleUserListProps> = (props) => {
                 <SvgIcon icon={Icon.REFRESH} />
               </Button>
               <Button color="primary" variant="flat" onPress={onOpen}>
-                添加用户
+                {i18n.t(
+                  'hardcoded.msg_pages_permission_role_param_roleuserlist_002',
+                )}
               </Button>
             </div>
           </div>
@@ -100,8 +107,12 @@ const RoleUserList: React.FC<RoleUserListProps> = (props) => {
               className="my-2"
               size="sm"
               labelPlacement="outside"
-              label="搜索"
-              placeholder="搜索用户"
+              label={i18n.t(
+                'hardcoded.msg_components_page_permissionslist_index_006',
+              )}
+              placeholder={i18n.t(
+                'hardcoded.msg_pages_permission_role_param_roleuserlist_003',
+              )}
               startContent={<SvgIcon icon={Icon.SEARCH} />}
             />
             <Table
@@ -126,13 +137,25 @@ const RoleUserList: React.FC<RoleUserListProps> = (props) => {
               }
             >
               <TableHeader>
-                <TableColumn>用户名</TableColumn>
-                <TableColumn>昵称</TableColumn>
-                <TableColumn>标签</TableColumn>
-                <TableColumn>操作</TableColumn>
+                <TableColumn>{i18n.t('common.username')}</TableColumn>
+                <TableColumn>
+                  {i18n.t(
+                    'hardcoded.msg_pages_permission_role_param_roleuserlist_004',
+                  )}
+                </TableColumn>
+                <TableColumn>
+                  {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
+                </TableColumn>
+                <TableColumn>{i18n.t('common.action')}</TableColumn>
               </TableHeader>
               <TableBody
-                emptyContent={<div>没有绑定任何用户</div>}
+                emptyContent={
+                  <div>
+                    {i18n.t(
+                      'hardcoded.msg_pages_permission_role_param_roleuserlist_005',
+                    )}
+                  </div>
+                }
                 isLoading={isLoading}
                 items={users}
                 loadingContent={<TableLoadingMask />}

@@ -48,5 +48,5 @@ class AttachNodeABABAuthProvider : PolicyAuthenticationProvider {
             )
         }
 
-    override fun customiseErrorException(): BusinessException? = BusinessException("您没有 Attach 该 JVM 的权限")
+    override fun customiseErrorException(): BusinessException? = BusinessException("error.jvm.attach.permission.denied")
 }

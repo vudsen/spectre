@@ -15,6 +15,7 @@ import {
 } from '@heroui/react'
 import useCrumb from '@/hook/useCrumb.ts'
 import { useNavigate } from 'react-router'
+import i18n from '@/i18n'
 
 const UserQuery = graphql(`
   query UserQuery($id: Long!) {
@@ -48,13 +49,15 @@ const UserModifyPage0: React.FC<UserModifyPage0Props> = (props) => {
   const [submitting, setSubmitting] = useState(false)
   const nav = useNavigate()
   const isUpdate = !!props.oldUser
-  const header = isUpdate ? '更新用户' : '创建用户'
+  const header = isUpdate
+    ? i18n.t('hardcoded.msg_pages_permission_user_modify_index_001')
+    : i18n.t('hardcoded.msg_pages_permission_user_modify_index_002')
 
   useCrumb(
     useMemo(() => {
       return [
         {
-          name: '用户',
+          name: i18n.t('hardcoded.msg_pages_permission_role_param_index_002'),
           href: '/permission/user',
         },
         {
@@ -70,7 +73,11 @@ const UserModifyPage0: React.FC<UserModifyPage0Props> = (props) => {
     }
     const values = getValues()
     if (values.password !== values.confirmPassword) {
-      setError('confirmPassword', { message: '两次输入的密码不一致' })
+      setError('confirmPassword', {
+        message: i18n.t(
+          'hardcoded.msg_components_modifypasswordmodalcontent_001',
+        ),
+      })
       return
     }
     const oldUser = props.oldUser
@@ -83,7 +90,7 @@ const UserModifyPage0: React.FC<UserModifyPage0Props> = (props) => {
           labels: values.labels,
         })
         addToast({
-          title: '更新成功',
+          title: i18n.t('common.updateSuccess'),
           color: 'success',
         })
       } else {
@@ -94,7 +101,7 @@ const UserModifyPage0: React.FC<UserModifyPage0Props> = (props) => {
           labels: values.labels,
         })
         addToast({
-          title: '创建成功',
+          title: i18n.t('common.createSuccess'),
           color: 'success',
         })
       }
@@ -109,24 +116,34 @@ const UserModifyPage0: React.FC<UserModifyPage0Props> = (props) => {
       <div className="flex items-center justify-between">
         <div className="header-1">{header}</div>
         <Button color="primary" onPress={onSave} isLoading={submitting}>
-          保存
+          {i18n.t('common.save')}
         </Button>
       </div>
       <div className="text-sm">
-        {isUpdate ? '更新用户' : '创建一个可以登录的用户'}
+        {isUpdate
+          ? i18n.t('hardcoded.msg_pages_permission_user_modify_index_001')
+          : i18n.t('hardcoded.msg_pages_permission_user_modify_index_003')}
       </div>
       <Card>
         <CardHeader>
-          <div className="header-2">基础信息</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_ext_view_k8sview_001')}
+          </div>
         </CardHeader>
         <CardBody className="space-y-3">
-          <div className="text-sm">用户基础信息</div>
+          <div className="text-sm">
+            {i18n.t('hardcoded.msg_pages_permission_user_modify_index_004')}
+          </div>
           <ControlledInput
             control={control}
             name="username"
-            rules={{ required: '请输入用户名' }}
+            rules={{
+              required: i18n.t(
+                'hardcoded.msg_pages_permission_user_modify_index_005',
+              ),
+            }}
             inputProps={{
-              label: '用户名',
+              label: i18n.t('common.username'),
               isDisabled: isUpdate,
               isRequired: true,
             }}
@@ -135,7 +152,9 @@ const UserModifyPage0: React.FC<UserModifyPage0Props> = (props) => {
             control={control}
             name="displayName"
             inputProps={{
-              label: '昵称',
+              label: i18n.t(
+                'hardcoded.msg_pages_permission_role_param_roleuserlist_004',
+              ),
             }}
           />
           {isUpdate ? null : (
@@ -143,20 +162,30 @@ const UserModifyPage0: React.FC<UserModifyPage0Props> = (props) => {
               <ControlledInput
                 control={control}
                 name="password"
-                rules={{ required: '请输入密码' }}
+                rules={{
+                  required: i18n.t(
+                    'hardcoded.msg_pages_permission_user_modify_index_006',
+                  ),
+                }}
                 inputProps={{
                   type: 'password',
-                  label: '密码',
+                  label: i18n.t('hardcoded.msg_ext_form_sshconfform_015'),
                   isRequired: true,
                 }}
               />
               <ControlledInput
                 control={control}
                 name="confirmPassword"
-                rules={{ required: '请再输入一次密码' }}
+                rules={{
+                  required: i18n.t(
+                    'hardcoded.msg_pages_permission_user_modify_index_007',
+                  ),
+                }}
                 inputProps={{
                   type: 'password',
-                  label: '确认密码',
+                  label: i18n.t(
+                    'hardcoded.msg_components_modifypasswordmodalcontent_006',
+                  ),
                   isRequired: true,
                 }}
               />
@@ -191,11 +220,15 @@ const UserModifyPage: React.FC = () => {
           if (r.user.user) {
             setUser(r.user.user)
           } else {
-            setErrorInfo('用户不存在')
+            setErrorInfo(
+              i18n.t('hardcoded.msg_pages_permission_user_modify_index_008'),
+            )
           }
         })
         .catch((_) => {
-          setErrorInfo('用户不存在')
+          setErrorInfo(
+            i18n.t('hardcoded.msg_pages_permission_user_modify_index_008'),
+          )
         })
         .finally(() => {
           setLoading(false)

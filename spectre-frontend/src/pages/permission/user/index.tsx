@@ -28,6 +28,7 @@ import ModifyPasswordModalContent, {
 import { modifyUserPassword } from '@/api/impl/user.ts'
 import { useNavigate } from 'react-router'
 import Time from '@/components/Time.tsx'
+import i18n from '@/i18n'
 
 const UserListQuery = graphql(`
   query UserListQuery($page: Int!, $size: Int!) {
@@ -84,13 +85,17 @@ const UserListPage: React.FC = () => {
 
   return (
     <div className="mx-6 space-y-3">
-      <div className="mb-3 text-xl font-semibold">用户列表</div>
+      <div className="mb-3 text-xl font-semibold">
+        {i18n.t('hardcoded.msg_pages_permission_user_index_001')}
+      </div>
       <div className="flex items-center">
         <Input
           size="sm"
           labelPlacement="outside"
-          label="搜索"
-          placeholder="根据用户名搜索"
+          label={i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_006',
+          )}
+          placeholder={i18n.t('hardcoded.msg_pages_permission_user_index_002')}
           startContent={<SvgIcon icon={Icon.SEARCH} />}
         />
         <Button
@@ -100,7 +105,7 @@ const UserListPage: React.FC = () => {
           size="sm"
           onPress={() => nav('/permission/user/modify')}
         >
-          + 新增
+          {i18n.t('hardcoded.msg_pages_permission_role_index_003')}
         </Button>
       </div>
       <Table
@@ -123,14 +128,24 @@ const UserListPage: React.FC = () => {
         }
       >
         <TableHeader>
-          <TableColumn>用户名</TableColumn>
-          <TableColumn>昵称</TableColumn>
-          <TableColumn>属性</TableColumn>
-          <TableColumn>创建时间</TableColumn>
-          <TableColumn align="end">操作</TableColumn>
+          <TableColumn>{i18n.t('common.username')}</TableColumn>
+          <TableColumn>
+            {i18n.t(
+              'hardcoded.msg_pages_permission_role_param_roleuserlist_004',
+            )}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_pages_permission_user_index_003')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_page_permissionslist_index_010')}
+          </TableColumn>
+          <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
         </TableHeader>
         <TableBody
-          emptyContent={<div>没有可用的用户</div>}
+          emptyContent={
+            <div>{i18n.t('hardcoded.msg_pages_permission_user_index_004')}</div>
+          }
           isLoading={isLoading}
           items={result?.user.users.result ?? []}
           loadingContent={
@@ -170,7 +185,11 @@ const UserListPage: React.FC = () => {
                 >
                   <SvgIcon icon={Icon.EDIT} />
                 </Button>
-                <Tooltip content="修改密码">
+                <Tooltip
+                  content={i18n.t(
+                    'hardcoded.msg_components_modifypasswordmodalcontent_003',
+                  )}
+                >
                   <Button
                     isIconOnly
                     variant="light"

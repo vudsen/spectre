@@ -8,6 +8,7 @@ import SpectreTabs, { type TabContent } from '@/components/SpectreTabs'
 import ReadonlyLabelsTable from '@/components/ReadonlyLabelsTable.tsx'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
+import i18n from '@/i18n'
 
 type MyData = RuntimeNodeDTO
 
@@ -42,7 +43,9 @@ const LabelsInfo: React.FC<{ labels: Record<string, string> }> = ({
   return (
     <Card>
       <CardBody className="space-y-3">
-        <div className="header-2">标签</div>
+        <div className="header-2">
+          {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
+        </div>
         <ReadonlyLabelsTable labels={labels} />
       </CardBody>
     </Card>
@@ -53,20 +56,24 @@ const AdvanceInfo: React.FC<{ conf: SshRuntimeNodeConfig }> = ({ conf }) => {
   return (
     <Card>
       <CardBody className="space-y-3">
-        <div className="header-2">高级设置</div>
-        <div className="header-2">本地</div>
+        <div className="header-2">
+          {i18n.t('hardcoded.msg_ext_view_sshview_001')}
+        </div>
+        <div className="header-2">
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_005')}
+        </div>
         <Checkbox
           defaultSelected={conf.local.enabled}
           isDisabled
           className="my-0"
         >
-          启用
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_006')}
         </Checkbox>
         {conf.local.enabled ? (
           <Input
             label="Java Home"
             defaultValue={conf.local.javaHome}
-            placeholder="Java Home, 不填时默认使用 Path 下的 Java 工具"
+            placeholder={i18n.t('hardcoded.msg_ext_form_sshconfform_008')}
           />
         ) : null}
         <div className="header-2">Docker</div>
@@ -75,7 +82,7 @@ const AdvanceInfo: React.FC<{ conf: SshRuntimeNodeConfig }> = ({ conf }) => {
           isDisabled
           className="my-0"
         >
-          启用
+          {i18n.t('hardcoded.msg_ext_form_sshconfform_006')}
         </Checkbox>
         {conf.docker.enabled ? (
           <div className="space-y-3">
@@ -90,7 +97,7 @@ const AdvanceInfo: React.FC<{ conf: SshRuntimeNodeConfig }> = ({ conf }) => {
             <Input
               label="Java Home"
               defaultValue={conf.docker.javaHome}
-              placeholder="Java Home, 不填时默认使用 Path 下的 Java 工具"
+              placeholder={i18n.t('hardcoded.msg_ext_form_sshconfform_008')}
             />
           </div>
         ) : null}
@@ -108,8 +115,8 @@ const SshView: ViewComponent = (props) => {
     if (!p) {
       return [
         {
-          name: '登录方式',
-          value: '无',
+          name: i18n.t('hardcoded.msg_ext_view_sshview_002'),
+          value: i18n.t('hardcoded.msg_components_simplelist_001'),
         },
       ]
     }
@@ -119,24 +126,24 @@ const SshView: ViewComponent = (props) => {
         value: configuration.host + ':' + configuration.port,
       },
       {
-        name: '用户名',
+        name: i18n.t('common.username'),
         value: configuration.username,
       },
     ]
     if (p.loginType === 'KEY') {
       base.push({
-        name: '登录方式',
-        value: '密钥登录',
+        name: i18n.t('hardcoded.msg_ext_view_sshview_002'),
+        value: i18n.t('hardcoded.msg_ext_view_sshview_003'),
       })
     } else if (p.loginType === 'PASSWORD') {
       base.push({
-        name: '登录方式',
-        value: '用户名密码登录',
+        name: i18n.t('hardcoded.msg_ext_view_sshview_002'),
+        value: i18n.t('hardcoded.msg_ext_view_sshview_004'),
       })
     } else {
       base.push({
-        name: '登录方式',
-        value: '无',
+        name: i18n.t('hardcoded.msg_ext_view_sshview_002'),
+        value: i18n.t('hardcoded.msg_components_simplelist_001'),
       })
     }
     return base
@@ -146,11 +153,13 @@ const SshView: ViewComponent = (props) => {
     return [
       {
         key: 'connect',
-        name: '连接信息',
+        name: i18n.t('hardcoded.msg_ext_view_k8sview_004'),
         content: (
           <Card>
             <CardBody>
-              <div className="header-2 mb-3">连接信息</div>
+              <div className="header-2 mb-3">
+                {i18n.t('hardcoded.msg_ext_view_k8sview_004')}
+              </div>
               <DetailGrid details={connectInfo} />
             </CardBody>
           </Card>
@@ -158,12 +167,12 @@ const SshView: ViewComponent = (props) => {
       },
       {
         key: 'advance',
-        name: '高级设置',
+        name: i18n.t('hardcoded.msg_ext_view_sshview_001'),
         content: <AdvanceInfo conf={configuration} />,
       },
       {
         key: 'labels',
-        name: '标签',
+        name: i18n.t('hardcoded.msg_components_labeleditor_index_001'),
         content: <LabelsInfo labels={data.labels} />,
       },
     ]
@@ -177,24 +186,34 @@ const SshView: ViewComponent = (props) => {
       </div>
       <Card>
         <CardBody className="space-y-3">
-          <div className="header-2">基础信息</div>
-          <div className="text-sm">该节点为 SSH 节点。</div>
+          <div className="header-2">
+            {i18n.t('hardcoded.msg_ext_view_k8sview_001')}
+          </div>
+          <div className="text-sm">
+            {i18n.t('hardcoded.msg_ext_view_sshview_005')}
+          </div>
           <DetailGrid
             details={[
               {
-                name: '名称',
+                name: i18n.t('hardcoded.msg_components_labeleditor_index_004'),
                 value: data.name,
               },
               {
-                name: '类型',
+                name: i18n.t('hardcoded.msg_ext_view_k8sview_003'),
                 value: 'SSH',
               },
               {
-                name: '限制模式',
-                value: data.restrictedMode ? '已开启' : '未开启',
+                name: i18n.t(
+                  'hardcoded.msg_components_runtimenodebasicinputs_002',
+                ),
+                value: data.restrictedMode
+                  ? i18n.t('hardcoded.msg_ext_view_sshview_006')
+                  : i18n.t('hardcoded.msg_ext_view_sshview_007'),
               },
               {
-                name: '创建时间',
+                name: i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_010',
+                ),
                 value: formatTime(data.createdAt),
               },
             ]}

@@ -17,6 +17,7 @@ import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import SampleController from '@/pages/channel/[channelId]/_tabs/_profiler/SampleController.tsx'
+import i18n from '@/i18n'
 
 const ProfilerTab: React.FC = () => {
   const [profilerFiles, setProfilerFiles] = useState<ProfilerFile[]>([])
@@ -70,7 +71,11 @@ const ProfilerTab: React.FC = () => {
       <Card>
         <CardBody className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="header-2">当前频道已生成的记录</div>
+            <div className="header-2">
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_tabs_profiler_index_001',
+              )}
+            </div>
             <Button
               color="primary"
               isIconOnly
@@ -88,12 +93,20 @@ const ProfilerTab: React.FC = () => {
           >
             <TableHeader>
               <TableColumn>ChannelId</TableColumn>
-              <TableColumn>创建时间</TableColumn>
-              <TableColumn>类型</TableColumn>
-              <TableColumn align="end">操作</TableColumn>
+              <TableColumn>
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_010',
+                )}
+              </TableColumn>
+              <TableColumn>
+                {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
+              </TableColumn>
+              <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
             </TableHeader>
             <TableBody
-              emptyContent={'没有任何采样'}
+              emptyContent={i18n.t(
+                'hardcoded.msg_pages_channel_param_tabs_profiler_index_002',
+              )}
               items={currentProfilerFiles}
               isLoading={isProfilerTableLoading}
               loadingContent={<TableLoadingMask />}
@@ -134,7 +147,11 @@ const ProfilerTab: React.FC = () => {
       <Card>
         <CardBody className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="header-2">当前节点已生成的记录</div>
+            <div className="header-2">
+              {i18n.t(
+                'hardcoded.msg_pages_channel_param_tabs_profiler_index_003',
+              )}
+            </div>
             <Button
               color="primary"
               isIconOnly
@@ -146,8 +163,9 @@ const ProfilerTab: React.FC = () => {
             </Button>
           </div>
           <div className="text-warning text-sm">
-            注: 当记录超过 10 条将会删除最旧的一条.
-            对于非容器环境，所有的文件共享一个计数。
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_tabs_profiler_index_004',
+            )}
           </div>
           <Table
             removeWrapper
@@ -156,12 +174,20 @@ const ProfilerTab: React.FC = () => {
           >
             <TableHeader>
               <TableColumn>ChannelId</TableColumn>
-              <TableColumn>创建时间</TableColumn>
-              <TableColumn>类型</TableColumn>
-              <TableColumn align="end">操作</TableColumn>
+              <TableColumn>
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_010',
+                )}
+              </TableColumn>
+              <TableColumn>
+                {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
+              </TableColumn>
+              <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
             </TableHeader>
             <TableBody
-              emptyContent={'没有任何采样'}
+              emptyContent={i18n.t(
+                'hardcoded.msg_pages_channel_param_tabs_profiler_index_002',
+              )}
               items={profilerFiles}
               isLoading={isProfilerTableLoading}
               loadingContent={<TableLoadingMask />}

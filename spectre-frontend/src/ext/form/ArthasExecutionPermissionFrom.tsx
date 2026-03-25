@@ -4,6 +4,7 @@ import { Button } from '@heroui/react'
 import ControlledCheckbox from '@/components/validation/ControlledCheckbox.tsx'
 import { useForm } from 'react-hook-form'
 import type { PolicyPermissionEnhancePlugin } from '@/api/impl/permission.ts'
+import i18n from '@/i18n'
 
 const commands = [
   'auth',
@@ -127,14 +128,16 @@ const ArthasExecutionPermissionFrom: React.FC<FormComponentProps> = (props) => {
   return (
     <div className="space-y-3">
       <div>
-        <div className="my-4 text-lg">安全配置</div>
+        <div className="my-4 text-lg">
+          {i18n.t('hardcoded.msg_ext_form_arthasexecutionpermissionfrom_001')}
+        </div>
         <div>
           <ControlledCheckbox
             control={control}
             name="allowUnknownCommand"
             checkboxProps={{}}
           >
-            允许未知命令
+            {i18n.t('hardcoded.msg_ext_form_arthasexecutionpermissionfrom_002')}
           </ControlledCheckbox>
           <ControlledCheckbox
             control={control}
@@ -143,14 +146,16 @@ const ArthasExecutionPermissionFrom: React.FC<FormComponentProps> = (props) => {
               className: 'mx-3',
             }}
           >
-            允许重定向符
+            {i18n.t('hardcoded.msg_ext_form_arthasexecutionpermissionfrom_003')}
           </ControlledCheckbox>
         </div>
       </div>
       <div className="flex items-center justify-between">
-        <div className="text-lg">允许执行的命令</div>
+        <div className="text-lg">
+          {i18n.t('hardcoded.msg_ext_form_arthasexecutionpermissionfrom_004')}
+        </div>
         <Button color="primary" variant="light" onPress={onSelectAll}>
-          全选
+          {i18n.t('hardcoded.msg_ext_form_arthasexecutionpermissionfrom_005')}
         </Button>
       </div>
       <div className="space-y-3 p-3">

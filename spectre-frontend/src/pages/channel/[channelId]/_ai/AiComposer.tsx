@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/store'
 import { updateChannelContext } from '@/store/channelSlice.ts'
 import type { SkillDTO } from '@/api/impl/ai.ts'
+import i18n from '@/i18n'
 
 interface AiComposerProps {
   disabled?: boolean
@@ -63,7 +64,9 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
         disableAutosize
         isDisabled={disabled}
         onValueChange={setValue}
-        placeholder="向 AI 描述你的问题。使用 Enter 发送，Alt + Enter 换行"
+        placeholder={i18n.t(
+          'hardcoded.msg_pages_channel_param_ai_aicomposer_001',
+        )}
       />
       <div className="mt-2 flex justify-between">
         <div className="group relative">
@@ -73,7 +76,9 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
             color={selectedSkill ? 'primary' : 'default'}
           >
             <SvgIcon icon={ChannelIcon.SKILL} />
-            {selectedSkill ? selectedSkill.name : '技能'}
+            {selectedSkill
+              ? selectedSkill.name
+              : i18n.t('hardcoded.msg_pages_channel_param_ai_aicomposer_002')}
           </Button>
           {selectedSkill ? (
             <button
@@ -83,7 +88,9 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
                 e.stopPropagation()
                 clearSelectedSkill()
               }}
-              aria-label="取消技能选择"
+              aria-label={i18n.t(
+                'hardcoded.msg_pages_channel_param_ai_aicomposer_003',
+              )}
             >
               ×
             </button>
@@ -94,7 +101,7 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
           isDisabled={disabled || !value.trim()}
           onPress={submit}
         >
-          发送
+          {i18n.t('hardcoded.msg_pages_channel_param_ai_aicomposer_004')}
         </Button>
       </div>
       <Modal

@@ -9,6 +9,7 @@ import {
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import { useForm } from 'react-hook-form'
 import { tryApplyValidationError } from '@/common/util.ts'
+import i18n from '@/i18n'
 
 interface ModifyPasswordModalContentProps {
   onClose: () => void
@@ -41,7 +42,11 @@ const ModifyPasswordModalContent: React.FC<ModifyPasswordModalContentProps> = (
     }
     const values = getValues()
     if (values.newPassword !== values.newPassword1) {
-      setError('newPassword1', { message: '两次输入的密码不一致' })
+      setError('newPassword1', {
+        message: i18n.t(
+          'hardcoded.msg_components_modifypasswordmodalcontent_001',
+        ),
+      })
       return
     }
     setLoading(true)
@@ -51,7 +56,9 @@ const ModifyPasswordModalContent: React.FC<ModifyPasswordModalContentProps> = (
         newPassword: values.newPassword,
       })
       addToast({
-        title: '修改密码成功',
+        title: i18n.t(
+          'hardcoded.msg_components_modifypasswordmodalcontent_002',
+        ),
         color: 'success',
       })
       props.onModified?.()
@@ -65,7 +72,9 @@ const ModifyPasswordModalContent: React.FC<ModifyPasswordModalContentProps> = (
 
   return (
     <>
-      <ModalHeader>修改密码</ModalHeader>
+      <ModalHeader>
+        {i18n.t('hardcoded.msg_components_modifypasswordmodalcontent_003')}
+      </ModalHeader>
       <ModalBody>
         {props.showOldPasswordInput ? (
           <ControlledInput
@@ -73,7 +82,9 @@ const ModifyPasswordModalContent: React.FC<ModifyPasswordModalContentProps> = (
             name="oldPassword"
             rules={{ required: true }}
             inputProps={{
-              label: '旧密码',
+              label: i18n.t(
+                'hardcoded.msg_components_modifypasswordmodalcontent_004',
+              ),
               type: 'password',
               isRequired: true,
             }}
@@ -84,7 +95,9 @@ const ModifyPasswordModalContent: React.FC<ModifyPasswordModalContentProps> = (
           rules={{ required: true }}
           name="newPassword"
           inputProps={{
-            label: '新密码',
+            label: i18n.t(
+              'hardcoded.msg_components_modifypasswordmodalcontent_005',
+            ),
             type: 'password',
             isRequired: true,
           }}
@@ -94,7 +107,9 @@ const ModifyPasswordModalContent: React.FC<ModifyPasswordModalContentProps> = (
           rules={{ required: true }}
           name="newPassword1"
           inputProps={{
-            label: '确认密码',
+            label: i18n.t(
+              'hardcoded.msg_components_modifypasswordmodalcontent_006',
+            ),
             type: 'password',
             isRequired: true,
           }}
@@ -102,10 +117,12 @@ const ModifyPasswordModalContent: React.FC<ModifyPasswordModalContentProps> = (
       </ModalBody>
       <ModalFooter>
         <Button color="danger" isDisabled={loading} onPress={props.onClose}>
-          关闭
+          {i18n.t(
+            'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+          )}
         </Button>
         <Button color="primary" onPress={onSubmit} isLoading={loading}>
-          修改
+          {i18n.t('hardcoded.msg_components_modifypasswordmodalcontent_007')}
         </Button>
       </ModalFooter>
     </>

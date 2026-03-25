@@ -6,6 +6,7 @@ import Icon from '@/components/icon/icon.ts'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
+import i18n from '@/i18n'
 
 interface ArthasResponseDetailProps {
   entity?: ArthasMessage
@@ -18,9 +19,15 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
   if (!entity) {
     return (
       <div className="m-3 text-sm select-none">
-        <div>点击左侧任意一项查看详细</div>
+        <div>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_arthasresponsedetailtab_001',
+          )}
+        </div>
         <div className="text-secondary">
-          Tips: 拖动中间的竖线可以调整窗口大小!
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_arthasresponsedetailtab_002',
+          )}
         </div>
       </div>
     )
@@ -48,17 +55,29 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
           tabList: ' w-full relative rounded-none p-2 border-b border-divider',
         }}
       >
-        <Tab title="视图">
+        <Tab
+          title={i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_arthasresponsedetailtab_003',
+          )}
+        >
           <ArthasResponseDetail message={entity} />
         </Tab>
-        <Tab title="原始内容">
+        <Tab
+          title={i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_arthasresponsedetailtab_004',
+          )}
+        >
           <div className="text-default-700 bg-default-100 mx-3 box-border rounded-xl p-3 text-sm whitespace-pre-wrap">
             {JSON.stringify(entity, null, 2)}
           </div>
         </Tab>
       </Tabs>
       <div className="absolute top-3.5 right-5">
-        <Tooltip content="新标签页打开">
+        <Tooltip
+          content={i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_arthasresponsedetailtab_005',
+          )}
+        >
           <SvgIcon
             onClick={openInNewTab}
             icon={Icon.EXTERNAL}

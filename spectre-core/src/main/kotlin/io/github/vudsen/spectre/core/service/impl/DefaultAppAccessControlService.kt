@@ -168,7 +168,7 @@ class DefaultAppAccessControlService(
                         return@compute spelParser.parseRaw(expressionString)
                     } catch (e: Exception) {
                         logger.error("", e)
-                        throw BusinessException("解析表达式出错，请联系管理员")
+                        throw BusinessException("error.expression.parse.failed.contact.admin")
                     }
                 }
                 return@compute v
@@ -182,7 +182,7 @@ class DefaultAppAccessControlService(
             expression.getValue(context, Boolean::class.java)
         } catch (e: Exception) {
             logger.error("", e)
-            throw BusinessException("SpEL 脚本执行错误，请联系管理员")
+            throw BusinessException("error.spel.execute.failed.contact.admin")
         } == true
     }
 }

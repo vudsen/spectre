@@ -18,6 +18,7 @@ import type {
   PendingConfirmState,
 } from '@/pages/channel/[channelId]/_ai/types.ts'
 import { store } from '@/store'
+import i18n from '@/i18n'
 
 interface AiPanelProps {
   channelId: string
@@ -35,11 +36,19 @@ function createMessageId(): string {
 function formatAiInlineMessage(msg: AiStreamMessage): string {
   switch (msg.type) {
     case 'TOOL_CALL_START':
-      return `开始调用工具: ${msg.data}${msg.parameter ? ` (${msg.parameter})` : ''}`
+      return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_001', {
+        tool: msg.data,
+        parameter: msg.parameter ? ` (${msg.parameter})` : '',
+      })
     case 'TOOL_CALL_END':
-      return `工具调用结束: ${msg.data}${msg.parameter ? ` (${msg.parameter})` : ''}`
+      return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_002', {
+        tool: msg.data,
+        parameter: msg.parameter ? ` (${msg.parameter})` : '',
+      })
     case 'PENDING_CONFIRM':
-      return `工具 ${msg.data} 等待确认，请在底部批准。`
+      return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_003', {
+        tool: msg.data,
+      })
     case 'ASK_HUMAN':
       return msg.askHuman?.question || msg.data
     default:
@@ -327,7 +336,10 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
         }
         pushEvent({
           type: 'ERROR',
-          data: e instanceof Error ? e.message : 'AI 请求失败',
+          data:
+            e instanceof Error
+              ? e.message
+              : i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_004'),
         })
       } finally {
         setIsLoading(false)
@@ -351,7 +363,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     setPendingConfirm(undefined)
     setPendingAskHuman(undefined)
     addToast({
-      title: '已清空 AI 会话',
+      title: i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_005'),
       color: 'success',
     })
   }
@@ -367,13 +379,17 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
       {isOpen ? (
         <>
           <div className="border-b-divider flex items-center justify-between border-b px-3 py-2">
-            <div className="text-sm font-bold">AI 助手</div>
+            <div className="text-sm font-bold">
+              {i18n.t('hardcoded.msg_pages_channel_param_header_005')}
+            </div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="flat" onPress={clearConversation}>
-                清空会话
+                {i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_006')}
               </Button>
               <Button size="sm" variant="light" onPress={onClose}>
-                关闭
+                {i18n.t(
+                  'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+                )}
               </Button>
             </div>
           </div>

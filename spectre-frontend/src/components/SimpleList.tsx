@@ -1,4 +1,5 @@
 import { Code } from '@heroui/react'
+import i18n from '@/i18n'
 
 interface SimpleListProps {
   entities: string[]
@@ -18,7 +19,9 @@ const SimpleList: React.FC<SimpleListProps> = ({ entities, color, name }) => {
           ))}
         </ul>
       ) : (
-        <span className="ml-2">无</span>
+        <span className="ml-2">
+          {i18n.t('hardcoded.msg_components_simplelist_001')}
+        </span>
       )}
     </div>
   )

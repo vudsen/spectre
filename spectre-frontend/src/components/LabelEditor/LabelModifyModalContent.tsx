@@ -2,6 +2,7 @@ import React from 'react'
 import { Button, ModalBody, ModalFooter, ModalHeader } from '@heroui/react'
 import { useForm } from 'react-hook-form'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
+import i18n from '@/i18n'
 
 type MyLabel = {
   key: string
@@ -32,7 +33,13 @@ const LabelModifyModalContent: React.FC<LabelModifyModalContentProps> = (
   }
   return (
     <>
-      <ModalHeader>{isUpdate ? '更新标签' : '新增标签'}</ModalHeader>
+      <ModalHeader>
+        {isUpdate
+          ? i18n.t(
+              'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_001',
+            )
+          : i18n.t('hardcoded.msg_components_labeleditor_index_002')}
+      </ModalHeader>
       <ModalBody>
         <ControlledInput
           control={control}
@@ -40,7 +47,7 @@ const LabelModifyModalContent: React.FC<LabelModifyModalContentProps> = (
           rules={{ required: true }}
           inputProps={{
             isDisabled: isUpdate,
-            label: '名称',
+            label: i18n.t('hardcoded.msg_components_labeleditor_index_004'),
             required: true,
           }}
         />
@@ -49,17 +56,19 @@ const LabelModifyModalContent: React.FC<LabelModifyModalContentProps> = (
           rules={{ required: true }}
           name="value"
           inputProps={{
-            label: '值',
+            label: i18n.t('hardcoded.msg_components_labeleditor_index_005'),
             required: true,
           }}
         />
       </ModalBody>
       <ModalFooter>
         <Button color="danger" variant="flat" onPress={props.onClose}>
-          关闭
+          {i18n.t(
+            'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+          )}
         </Button>
         <Button color="primary" onPress={onSave}>
-          保存
+          {i18n.t('common.save')}
         </Button>
       </ModalFooter>
     </>

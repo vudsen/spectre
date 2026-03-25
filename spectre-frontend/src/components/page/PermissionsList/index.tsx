@@ -26,6 +26,7 @@ import PermissionModifyControl, {
 import Time from '@/components/Time.tsx'
 import type { DocumentResult } from '@/graphql/execute.ts'
 import { deletePermissionPolicy } from '@/api/impl/permission.ts'
+import i18n from '@/i18n'
 
 interface StaticPermissionListProps {
   subjectId: string
@@ -92,13 +93,20 @@ const PermissionsList: React.FC<StaticPermissionListProps> = (props) => {
 
   const deletePermissionInner = (permission: PermissionQlResult) => {
     showDialog({
-      title: '删除权限',
-      message: `确定删除权限 '${permission.name}' 吗?`,
+      title: i18n.t('hardcoded.msg_components_page_permissionslist_index_001'),
+      message: i18n.t(
+        'hardcoded.msg_components_page_permissionslist_index_002',
+        {
+          name: permission.name,
+        },
+      ),
       color: 'danger',
       onConfirm: async () => {
         await deletePermissionPolicy(permission.id)
         addToast({
-          title: '删除成功',
+          title: i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_003',
+          ),
           color: 'success',
         })
         setQlArgs({ ...qlArgs })
@@ -116,7 +124,11 @@ const PermissionsList: React.FC<StaticPermissionListProps> = (props) => {
       <Card>
         <CardBody className="overflow-hidden">
           <div className="flex items-center justify-between">
-            <div className="spectre-heading">权限</div>
+            <div className="spectre-heading">
+              {i18n.t(
+                'hardcoded.msg_components_page_permissionslist_index_004',
+              )}
+            </div>
             <PermissionModifyControl
               {...props}
               ref={permissionModifyRef}
@@ -124,14 +136,18 @@ const PermissionsList: React.FC<StaticPermissionListProps> = (props) => {
             />
           </div>
           <div className="my-2 text-sm">
-            赋予主体权限，支持通过 SpEL 表达式进行更加精确的判断
+            {i18n.t('hardcoded.msg_components_page_permissionslist_index_005')}
           </div>
           <Input
             size="sm"
             className="my-2"
             labelPlacement="outside"
-            label="搜索"
-            placeholder="搜索权限"
+            label={i18n.t(
+              'hardcoded.msg_components_page_permissionslist_index_006',
+            )}
+            placeholder={i18n.t(
+              'hardcoded.msg_components_page_permissionslist_index_007',
+            )}
             startContent={<SvgIcon icon={Icon.SEARCH} />}
           />
           <Table
@@ -154,17 +170,37 @@ const PermissionsList: React.FC<StaticPermissionListProps> = (props) => {
             }
           >
             <TableHeader>
-              <TableColumn>名称</TableColumn>
-              <TableColumn>代码</TableColumn>
-              <TableColumn>表达式</TableColumn>
-              <TableColumn>创建时间</TableColumn>
-              <TableColumn align="end">操作</TableColumn>
+              <TableColumn>
+                {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+              </TableColumn>
+              <TableColumn>
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_008',
+                )}
+              </TableColumn>
+              <TableColumn>
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_009',
+                )}
+              </TableColumn>
+              <TableColumn>
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_010',
+                )}
+              </TableColumn>
+              <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
             </TableHeader>
             <TableBody
               isLoading={isLoading}
               loadingContent={<TableLoadingMask />}
               items={result?.permission.permissions.result ?? []}
-              emptyContent={<div>没有任何权限</div>}
+              emptyContent={
+                <div>
+                  {i18n.t(
+                    'hardcoded.msg_components_page_permissionslist_index_011',
+                  )}
+                </div>
+              }
             >
               {(permission) => (
                 <TableRow key={`${permission.resource}:${permission.action}`}>

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react'
 import { Link } from '@heroui/react'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
+import i18n from '@/i18n'
 
 type GcInfo = {
   collectionCount: number
@@ -59,7 +60,11 @@ export const DashboardMessageDetail: React.FC = () => {
   }
   return (
     <div>
-      <div className="text-warning">Dashboard 仅支持在标签页中查看</div>
+      <div className="text-warning">
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_dashboardmessagedetail_001',
+        )}
+      </div>
       <Link
         size="sm"
         className="cursor-pointer"
@@ -67,7 +72,9 @@ export const DashboardMessageDetail: React.FC = () => {
         underline="always"
         onPress={openDashboard}
       >
-        立即前往
+        {i18n.t(
+          'hardcoded.msg_pages_channel_param_message_view_component_dashboardmessagedetail_002',
+        )}
       </Link>
     </div>
   )

@@ -55,7 +55,7 @@ class DefaultAiService(
             30,
             TimeUnit.MINUTES,
             ArrayBlockingQueue(32),
-        ) { _, _ -> throw BusinessException("服务繁忙，请稍后再试") }
+        ) { _, _ -> throw BusinessException("error.system.busy") }
 
     data class FunctionToolCall(
         val id: String,
@@ -182,7 +182,7 @@ class DefaultAiService(
         enableSkill: Boolean,
         selectedSkillId: String?,
     ) {
-        val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("LLM 未开启")
+        val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("error.llm.not.enabled")
         val securityContext = SecurityContextHolder.getContext()
 
         executor.execute {
@@ -840,7 +840,7 @@ If the target cannot be found, report that it may not exist or may be misspelled
                     0L
                 }
             if (usedInCurrentHour >= maxTokenPerHour) {
-                throw BusinessException("LLM token 已超每小时上限")
+                throw BusinessException("error.llm.token.hourly.limit.exceeded")
             }
         }
     }
@@ -873,7 +873,7 @@ If the target cannot be found, report that it may not exist or may be misspelled
                     return
                 }
             }
-            throw BusinessException("更新 LLM token 使用量失败，请稍后重试")
+            throw BusinessException("error.llm.token.usage.update.failed")
         }
     }
 

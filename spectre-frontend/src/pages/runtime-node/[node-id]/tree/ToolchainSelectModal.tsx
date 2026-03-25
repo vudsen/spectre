@@ -14,6 +14,7 @@ import { graphql } from '@/graphql/generated'
 import type { JvmTreeNodeDTO } from '@/api/impl/runtime-node.ts'
 import { type DocumentResult, execute } from '@/graphql/execute.ts'
 import { handleError } from '@/common/util.ts'
+import i18n from '@/i18n'
 
 interface ToolchainSelectModalProps {
   isOpen: boolean
@@ -70,7 +71,11 @@ const MyModalContent: React.FC<MyModalContentProps> = (props) => {
 
   const onConfirm = () => {
     if (bundleId.length === 0) {
-      setErrorMsg('请选择一个工具包')
+      setErrorMsg(
+        i18n.t(
+          'hardcoded.msg_pages_runtime_node_param_tree_toolchainselectmodal_001',
+        ),
+      )
       return
     }
     props.onSelect(bundleId[0])
@@ -80,12 +85,17 @@ const MyModalContent: React.FC<MyModalContentProps> = (props) => {
     <>
       <ModalHeader className="w-9/12">
         <span className="truncate">
-          连接到 {props.currentNode?.name ?? 'JVM'}
+          {i18n.t(
+            'hardcoded.msg_pages_runtime_node_param_tree_toolchainselectmodal_002',
+          )}{' '}
+          {props.currentNode?.name ?? 'JVM'}
         </span>
       </ModalHeader>
       <ModalBody>
         <Select
-          label="工具包"
+          label={i18n.t(
+            'hardcoded.msg_pages_runtime_node_param_tree_toolchainselectmodal_003',
+          )}
           isLoading={isLoading}
           onChange={onChange}
           selectedKeys={bundleId}
@@ -99,10 +109,12 @@ const MyModalContent: React.FC<MyModalContentProps> = (props) => {
       </ModalBody>
       <ModalFooter>
         <Button color="danger" variant="light" onPress={props.onClose}>
-          关闭
+          {i18n.t(
+            'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
+          )}
         </Button>
         <Button color="primary" onPress={onConfirm}>
-          确定
+          {i18n.t('common.confirm')}
         </Button>
       </ModalFooter>
     </>

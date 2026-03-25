@@ -35,6 +35,7 @@ import UploadToolchainModalContent from './UploadToolchainModalContent.tsx'
 import { deleteToolchainItem } from '@/api/impl/toolchain.ts'
 import Time from '@/components/Time.tsx'
 import { ToolchainItemsContext } from '@/pages/toolchain/items/context.ts'
+import i18n from '@/i18n'
 
 const ToolchainItemsQuery = graphql(`
   query ToolchainItemsQuery($type: ToolchainType!, $page: Int!, $size: Int!) {
@@ -87,7 +88,9 @@ const ToolchainCacheStatusLink: React.FC<ToolchainCacheStatusLinkProps> = (
     <div className="flex items-center">
       <Tooltip
         classNames={{ content: 'max-w-48 break-all' }}
-        content="服务器本地未缓存该包，可以手动上传，也可以在后续连接 JVM 时，由服务器自动下载"
+        content={i18n.t(
+          'hardcoded.msg_pages_toolchain_items_toolchainitems_001',
+        )}
       >
         <SvgIcon icon={Icon.NOTE} className="text-warning" />
       </Tooltip>
@@ -154,13 +157,20 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
 
   const deleteItem = useCallback((r: ToolchainItemResponseVO) => {
     showDialog({
-      title: '删除工具',
-      message: `确定删除 ${r.type} ${r.tag} 吗?`,
+      title: i18n.t('hardcoded.msg_pages_toolchain_items_toolchainitems_002'),
+      message: i18n.t(
+        'hardcoded.msg_pages_toolchain_items_toolchainitems_003',
+        {
+          name: `${r.type}:${r.tag}`,
+        },
+      ),
       color: 'danger',
       onConfirm() {
         deleteToolchainItem(r).then(() => {
           addToast({
-            title: '删除成功',
+            title: i18n.t(
+              'hardcoded.msg_components_page_permissionslist_index_003',
+            ),
             color: 'success',
           })
           setArgs((prev) => ({ ...prev }))
@@ -199,7 +209,9 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
         <Input
           size="sm"
           labelPlacement="outside"
-          label="搜索"
+          label={i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_006',
+          )}
           startContent={<SvgIcon icon={Icon.SEARCH} />}
         />
         <Button
@@ -209,7 +221,7 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
           variant="flat"
           onPress={onOpen}
         >
-          + 新增
+          {i18n.t('hardcoded.msg_pages_permission_role_index_003')}
         </Button>
       </div>
       <Table
@@ -232,15 +244,29 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
         }
       >
         <TableHeader>
-          <TableColumn>标签</TableColumn>
-          <TableColumn>创建时间</TableColumn>
-          <TableColumn>x86 包缓存状态</TableColumn>
-          <TableColumn>ARM 包缓存状态</TableColumn>
-          <TableColumn align="end">操作</TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_page_permissionslist_index_010')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_pages_toolchain_items_toolchainitems_004')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_pages_toolchain_items_toolchainitems_005')}
+          </TableColumn>
+          <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
         </TableHeader>
         <TableBody
           isLoading={isLoading}
-          emptyContent={<div>没有可用数据</div>}
+          emptyContent={
+            <div>
+              {i18n.t(
+                'hardcoded.msg_pages_toolchain_bundles_toolchainbundle_003',
+              )}
+            </div>
+          }
           loadingContent={<TableLoadingMask />}
           id={props.type.type}
         >
@@ -334,16 +360,28 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader>工具详情</ModalHeader>
+              <ModalHeader>
+                {i18n.t(
+                  'hardcoded.msg_pages_toolchain_items_toolchainitems_006',
+                )}
+              </ModalHeader>
               <ModalBody className="break-all">
                 <div>
-                  <span>标签: </span>
+                  <span>
+                    {i18n.t(
+                      'hardcoded.msg_pages_toolchain_items_toolchainitems_007',
+                    )}{' '}
+                  </span>
                   <span className="text-default-500 text-sm">
                     {selectedItem?.tag}
                   </span>
                 </div>
                 <div>
-                  <span>x86下载地址: </span>
+                  <span>
+                    {i18n.t(
+                      'hardcoded.msg_pages_toolchain_items_toolchainitems_008',
+                    )}{' '}
+                  </span>
                   <Link
                     href={selectedItem?.url}
                     isExternal
@@ -354,7 +392,11 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
                   </Link>
                 </div>
                 <div>
-                  <span>arm下载地址: </span>
+                  <span>
+                    {i18n.t(
+                      'hardcoded.msg_pages_toolchain_items_toolchainitems_009',
+                    )}{' '}
+                  </span>
                   {selectedItem && selectedItem.armUrl ? (
                     <Link
                       href={selectedItem.armUrl}
@@ -374,7 +416,7 @@ const ToolChainItems: React.FC<ToolChainItemsProps> = (props) => {
               <ModalFooter>
                 <div>
                   <Button color="primary" onPress={onClose}>
-                    确定
+                    {i18n.t('common.confirm')}
                   </Button>
                 </div>
               </ModalFooter>

@@ -26,6 +26,7 @@ import useGraphQL from '@/hook/useGraphQL.ts'
 import { useNavigate } from 'react-router'
 import TableLoadingMask from '@/components/TableLoadingMask.tsx'
 import Time from '@/components/Time.tsx'
+import i18n from '@/i18n'
 
 const ListRoleQuery = graphql(`
   query ListRoleQuery($page: Int!, $size: Int!) {
@@ -62,13 +63,17 @@ const RolePage: React.FC = () => {
 
   return (
     <div className="mx-6 space-y-3">
-      <div className="spectre-heading">角色</div>
+      <div className="spectre-heading">
+        {i18n.t('hardcoded.msg_pages_permission_role_index_001')}
+      </div>
       <div className="flex items-center">
         <Input
           size="sm"
           labelPlacement="outside"
-          label="搜索"
-          placeholder="根据角色名称搜索"
+          label={i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_006',
+          )}
+          placeholder={i18n.t('hardcoded.msg_pages_permission_role_index_002')}
           startContent={<SvgIcon icon={Icon.SEARCH} />}
         />
         <Button
@@ -78,7 +83,7 @@ const RolePage: React.FC = () => {
           size="sm"
           onPress={roleModifyDrawerClosure.onOpen}
         >
-          + 新增
+          {i18n.t('hardcoded.msg_pages_permission_role_index_003')}
         </Button>
       </div>
       <Table
@@ -100,13 +105,23 @@ const RolePage: React.FC = () => {
         }
       >
         <TableHeader>
-          <TableColumn>名称</TableColumn>
-          <TableColumn>创建时间</TableColumn>
-          <TableColumn>描述</TableColumn>
-          <TableColumn align="end">操作</TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_page_permissionslist_index_010')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t(
+              'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_007',
+            )}
+          </TableColumn>
+          <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
         </TableHeader>
         <TableBody
-          emptyContent={<div>没有可用的角色</div>}
+          emptyContent={
+            <div>{i18n.t('hardcoded.msg_pages_permission_role_index_004')}</div>
+          }
           items={result?.role.roles.result ?? []}
           isLoading={isLoading}
           loadingContent={<TableLoadingMask />}
@@ -140,7 +155,7 @@ const RolePage: React.FC = () => {
                       key="bind-menu-role"
                       onPress={() => toRoleDetail(role.id)}
                     >
-                      查看详情
+                      {i18n.t('hardcoded.msg_pages_permission_role_index_005')}
                     </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>

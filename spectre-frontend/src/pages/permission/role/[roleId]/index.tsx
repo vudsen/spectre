@@ -18,6 +18,7 @@ import RoleModifyDrawerContent from '@/pages/permission/role/RoleModifyDrawerCon
 import { type DocumentResult, execute } from '@/graphql/execute.ts'
 import type { RoleModifyVO } from '@/api/impl/role.ts'
 import { useParams } from 'react-router'
+import i18n from '@/i18n'
 
 const RolePermissionDetailQuery = graphql(`
   query RolePermissionDetailQuery($roleId: Long!) {
@@ -61,11 +62,13 @@ const RolePermissionDetailPage: React.FC = () => {
   const crumbs: Crumb[] = useMemo(() => {
     return [
       {
-        name: '角色',
+        name: i18n.t('hardcoded.msg_pages_permission_role_index_001'),
         href: '/permission/role',
       },
       {
-        name: role ? role.name : '详情',
+        name: role
+          ? role.name
+          : i18n.t('hardcoded.msg_pages_permission_role_param_index_001'),
       },
     ]
   }, [role])
@@ -74,12 +77,12 @@ const RolePermissionDetailPage: React.FC = () => {
   const tabs: TabContent[] = useMemo(() => {
     return [
       {
-        name: '用户',
+        name: i18n.t('hardcoded.msg_pages_permission_role_param_index_002'),
         key: 'User',
         content: <RoleUserList roleId={params.roleId} />,
       },
       {
-        name: '权限',
+        name: i18n.t('hardcoded.msg_components_page_permissionslist_index_004'),
         key: 'StaticPermission',
         content: (
           <PermissionsList subjectId={params.roleId} subjectType="ROLE" />
@@ -108,7 +111,9 @@ const RolePermissionDetailPage: React.FC = () => {
     )
   }
   if (!role) {
-    return <div>角色不存在</div>
+    return (
+      <div>{i18n.t('hardcoded.msg_pages_permission_role_param_index_003')}</div>
+    )
   }
   return (
     <div className="px-6">
@@ -116,26 +121,38 @@ const RolePermissionDetailPage: React.FC = () => {
       <Card>
         <CardBody>
           <div className="mb-3 flex items-center justify-between">
-            <div className="header-2">详细信息</div>
+            <div className="header-2">{i18n.t('common.detail')}</div>
             <Button
               color="primary"
               variant="flat"
               onPress={roleModifyDrawerClosure.onOpen}
             >
-              编辑
+              {i18n.t('hardcoded.msg_pages_permission_role_param_index_004')}
             </Button>
           </div>
           <div className="grid grid-cols-3 text-sm">
             <div>
-              <div className="font-bold">角色名称</div>
+              <div className="font-bold">
+                {i18n.t(
+                  'hardcoded.msg_pages_permission_role_rolemodifydrawercontent_003',
+                )}
+              </div>
               <div>{role.name}</div>
             </div>
             <div className="border-x-divider border-x-1 px-3">
-              <div className="font-bold">创建时间</div>
+              <div className="font-bold">
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_index_010',
+                )}
+              </div>
               <div>{formatTime(role.createdAt)}</div>
             </div>
             <div className="px-3">
-              <div className="font-bold">描述</div>
+              <div className="font-bold">
+                {i18n.t(
+                  'hardcoded.msg_components_page_permissionslist_modifypermissiondrawercontent_007',
+                )}
+              </div>
               <div>{role.description}</div>
             </div>
           </div>

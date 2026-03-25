@@ -31,6 +31,7 @@ import LabelsDisplay from '@/components/LabelsDisplay'
 import Time from '@/components/Time.tsx'
 import 'shepherd.js/dist/css/shepherd.css'
 import Shepherd, { type Tour } from 'shepherd.js'
+import i18n from '@/i18n'
 
 const ListJvmSource = graphql(`
   query ListJvmSource($page: Int!, $size: Int!) {
@@ -112,9 +113,8 @@ const JvmSourcePage: React.FC = () => {
     }
     if (testNodeIndex < 0) {
       showDialog({
-        title: '教程：连接到 JVM',
-        message:
-          '你进入了教程模式，但是你似乎并没有创建任何的测试节点，教程将会被跳过。',
+        title: i18n.t('hardcoded.msg_pages_runtime_node_list_index_001'),
+        message: i18n.t('hardcoded.msg_pages_runtime_node_list_index_002'),
         color: 'danger',
       })
       return
@@ -135,23 +135,23 @@ const JvmSourcePage: React.FC = () => {
     tourRef.current = tour
     tour.addStep({
       id: 'show-row',
-      title: '测试节点',
-      text: '找到我们刚才创建的测试节点',
+      title: i18n.t('hardcoded.msg_ext_form_testnodeform_002'),
+      text: i18n.t('hardcoded.msg_pages_runtime_node_list_index_003'),
       attachTo: {
         element: '#test-node-row',
         on: 'bottom',
       },
       buttons: [
         {
-          text: '下一步',
+          text: i18n.t('common.next'),
           action: tour.next,
         },
       ],
     })
     tour.addStep({
       id: 'attach',
-      title: '连接到节点',
-      text: '点击该按钮连接到节点',
+      title: i18n.t('hardcoded.msg_pages_runtime_node_list_index_004'),
+      text: i18n.t('hardcoded.msg_pages_runtime_node_list_index_005'),
       floatingUIOptions: {
         middleware: [shepherdOffset(-30, -30)],
       },
@@ -162,9 +162,9 @@ const JvmSourcePage: React.FC = () => {
       canClickTarget: true,
     })
     showDialog({
-      title: '教程: 连接到 JVM',
-      message: '在该教程中，我们将引导你连接至 JVM',
-      confirmBtnText: '开始',
+      title: i18n.t('hardcoded.msg_pages_runtime_node_list_index_006'),
+      message: i18n.t('hardcoded.msg_pages_runtime_node_list_index_007'),
+      confirmBtnText: i18n.t('hardcoded.msg_pages_runtime_node_list_index_008'),
       color: 'primary',
       hideCancel: true,
       isDismissable: false,
@@ -195,12 +195,19 @@ const JvmSourcePage: React.FC = () => {
 
   const deleteNode = (node: NodeType) => {
     showDialog({
-      title: '删除节点',
-      message: `确定删除节点 ${node.name} 吗?`,
+      title: i18n.t('hardcoded.msg_pages_runtime_node_list_index_009'),
+      message: i18n.t(
+        'hardcoded.msg_pages_toolchain_items_toolchainitems_003',
+        {
+          name: node.name,
+        },
+      ),
       onConfirm: async () => {
         await deleteRuntimeNode(node.id)
         addToast({
-          title: '删除成功',
+          title: i18n.t(
+            'hardcoded.msg_components_page_permissionslist_index_003',
+          ),
           color: 'success',
         })
         setPage({ ...page })
@@ -216,9 +223,11 @@ const JvmSourcePage: React.FC = () => {
   return (
     <div className="mx-6">
       <div className="mb-3 flex flex-row items-center justify-between">
-        <div className="mb-3 text-xl font-semibold">节点列表</div>
+        <div className="mb-3 text-xl font-semibold">
+          {i18n.t('hardcoded.msg_pages_runtime_node_list_index_011')}
+        </div>
         <Button variant="flat" color="primary" onPress={onCreate}>
-          + 新建
+          {i18n.t('hardcoded.msg_pages_runtime_node_list_index_012')}
         </Button>
       </div>
       <Table
@@ -241,14 +250,24 @@ const JvmSourcePage: React.FC = () => {
         }
       >
         <TableHeader>
-          <TableColumn>名称</TableColumn>
-          <TableColumn>类型</TableColumn>
-          <TableColumn>标签</TableColumn>
-          <TableColumn>创建时间</TableColumn>
-          <TableColumn align="end">操作</TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
+          </TableColumn>
+          <TableColumn>
+            {i18n.t('hardcoded.msg_components_page_permissionslist_index_010')}
+          </TableColumn>
+          <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
         </TableHeader>
         <TableBody
-          emptyContent="没有任何数据源"
+          emptyContent={i18n.t(
+            'hardcoded.msg_pages_runtime_node_list_index_013',
+          )}
           isLoading={isLoading}
           items={nodes}
           loadingContent={<TableLoadingMask />}
@@ -260,7 +279,12 @@ const JvmSourcePage: React.FC = () => {
             >
               <TableCell className="flex items-center">
                 {item.restrictedMode ? (
-                  <Tooltip content="处于限制模式中" className="outline-0">
+                  <Tooltip
+                    content={i18n.t(
+                      'hardcoded.msg_pages_runtime_node_list_index_014',
+                    )}
+                    className="outline-0"
+                  >
                     <SvgIcon
                       icon={Icon.SHIELD}
                       size={22}
@@ -289,7 +313,11 @@ const JvmSourcePage: React.FC = () => {
               </TableCell>
               <TableCell>
                 <div className="relative flex items-center justify-end gap-2">
-                  <Tooltip content="连接该节点">
+                  <Tooltip
+                    content={i18n.t(
+                      'hardcoded.msg_pages_runtime_node_list_index_015',
+                    )}
+                  >
                     <Button
                       id={
                         item === nodes[testNodeIndex]
