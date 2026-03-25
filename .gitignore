@@ -44,3 +44,4 @@ deploy/image/*.jar
 ### Custom ###
 spectre-core/src/main/resources/static/
 logs/
+.codex/
