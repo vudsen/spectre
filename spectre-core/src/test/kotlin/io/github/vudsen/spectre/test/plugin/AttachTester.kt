@@ -121,7 +121,7 @@ class AttachTester {
         val scResult = node.get(6) as ObjectNode
         val classes = scResult.get("classNames") as ArrayNode
 
-        Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.map { node -> node.asString() })
+        Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.mapIndexed { _, node -> node.asString() })
     }
 
     private fun testRetransform(
