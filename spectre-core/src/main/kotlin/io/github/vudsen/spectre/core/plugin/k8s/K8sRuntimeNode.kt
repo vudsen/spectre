@@ -74,8 +74,19 @@ class K8sRuntimeNode(
 
         val root = objectMapper.readTree(body)
 
-        val items = root.get("items") ?: return emptyList()
-        return items.map { node -> node.get("metadata").get("name").asString() }.filter { s -> !ignoredNamespaces.contains(s) }
+        val items = root.get("items")
+        if (!items.isArray) {
+            return emptyList()
+        }
+        return buildList {
+            for (node in items) {
+                val ns = node.get("metadata").get("name").asString()
+                if (ignoredNamespaces.contains(ns)) {
+                    continue
+                }
+                add(ns)
+            }
+        }
     }
 
     private fun doRequest(
