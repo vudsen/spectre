@@ -71,7 +71,7 @@ dependencies {
     implementation("jakarta.xml.bind:jakarta.xml.bind-api")
     implementation("org.glassfish.jaxb:jaxb-runtime")
     implementation("com.esotericsoftware:kryo:5.6.2")
-    implementation("com.openai:openai-java:4.30.0")
+    implementation("com.openai:openai-java:4.31.0")
 }
 
 fun Copy.configureTokenReplace() {
