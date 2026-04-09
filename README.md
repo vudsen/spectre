@@ -83,8 +83,8 @@ The initial username and password are: `admin`/`P@ssw0rd`
 ### Start Directly Using Docker
 
 ```shell
-# prod 环境下不会往 stdout 输出日志
-docker run -t vudsen/spectre:latest java -Dspring.profiles.active=dev -jar spectre.jar
+# No stdout under prod profiles. 
+docker run -t --rm -p 8080:8080 vudsen/spectre:latest java -Dspring.profiles.active=dev -jar spectre.jar
 ```
 
 ### docker-compose
