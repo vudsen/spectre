@@ -86,7 +86,7 @@ Retransform 可以直接在 web 界面上传 class 文件替换字节码，文�
 
 ```shell
 # prod 环境下不会往 stdout 输出日志
-docker run -t vudsen/spectre:latest java -Dspring.profiles.active=dev -jar spectre.jar
+docker run -t --rm -p 8080:8080 vudsen/spectre:latest java -Dspring.profiles.active=dev -jar spectre.jar
 ```
 
 ### docker-compose
