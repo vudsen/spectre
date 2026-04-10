@@ -29,6 +29,8 @@ import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.cache.CacheManager
+import org.springframework.context.MessageSource
+import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.core.task.TaskExecutor
 import org.springframework.expression.spel.SpelNode
 import org.springframework.expression.spel.ast.CompoundExpression
@@ -103,6 +105,7 @@ class DefaultArthasExecutionService(
     private val toolchainService: ToolchainService,
     private val appAccessControlService: AppAccessControlService,
     private val arthasInstanceService: ArthasInstanceService,
+    private val messageSource: MessageSource,
 ) : ArthasExecutionService {
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
@@ -402,6 +405,7 @@ class DefaultArthasExecutionService(
         bundleId: Long,
         treeNodeId: String,
     ) {
+        val locale = LocaleContextHolder.getLocale()
         executor.execute {
             val lockKey = arthasInitDistributedLockKey(runtimeNodeDto.id)
             if (!joinLock.tryLock(lockKey)) {
@@ -470,8 +474,20 @@ class DefaultArthasExecutionService(
                     } else {
                         e
                     }
-                holder.error =
-                    AttachStatus.ErrorInfo(ex.message ?: "<Unknown>", System.currentTimeMillis() + 5000)
+                if (ex is BusinessException) {
+                    holder.error =
+                        AttachStatus.ErrorInfo(
+                            messageSource.getMessage(
+                                ex.messageKey,
+                                ex.messageArgs as Array<Any>?,
+                                locale,
+                            ),
+                            System.currentTimeMillis() + 5000,
+                        )
+                } else {
+                    holder.error =
+                        AttachStatus.ErrorInfo(ex.message ?: "<Unknown>", System.currentTimeMillis() + 5000)
+                }
                 logger.debug("Failed to attach", e)
             } finally {
                 joinLock.unlock(lockKey)
