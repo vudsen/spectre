@@ -105,7 +105,7 @@ class DefaultArthasExecutionService(
     private val toolchainService: ToolchainService,
     private val appAccessControlService: AppAccessControlService,
     private val arthasInstanceService: ArthasInstanceService,
-    private val messageSource: MessageSource
+    private val messageSource: MessageSource,
 ) : ArthasExecutionService {
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
@@ -476,11 +476,14 @@ class DefaultArthasExecutionService(
                     }
                 if (ex is BusinessException) {
                     holder.error =
-                        AttachStatus.ErrorInfo(messageSource.getMessage(
-                            ex.messageKey,
-                            ex.messageArgs as Array<Any>?,
-                            locale
-                        ), System.currentTimeMillis() + 5000)
+                        AttachStatus.ErrorInfo(
+                            messageSource.getMessage(
+                                ex.messageKey,
+                                ex.messageArgs as Array<Any>?,
+                                locale,
+                            ),
+                            System.currentTimeMillis() + 5000,
+                        )
                 } else {
                     holder.error =
                         AttachStatus.ErrorInfo(ex.message ?: "<Unknown>", System.currentTimeMillis() + 5000)
