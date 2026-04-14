@@ -1,13 +1,13 @@
-name: Cleanup old ECR images
+name: Cleanup old ECR Public images
 
 on:
   schedule:
-    - cron: '15 2 * * *'
-  workflow_dispatch:
+    - cron: '15 2 * * *'  # 每天 02:15 UTC 执行
+  workflow_dispatch:  # 允许手动触发工作流
 
 permissions:
-  id-token: write
-  contents: read
+  id-token: write  # 需要 write 权限来触发 OIDC 身份验证
+  contents: read  # 读取 GitHub 仓库内容的权限
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
@@ -25,31 +25,26 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
 
-      - name: Delete images older than 3 days
+      - name: Delete ECR Public images older than 3 days
         shell: bash
         run: |
           set -Eeuo pipefail
 
           : "${AWS_REGION:?AWS_REGION is empty}"
           : "${ECR_REPOSITORY:?ECR_REPOSITORY is empty}"
-
-          EXTRA_ARGS=()
-          if [[ -n "${ECR_REGISTRY_ID:-}" ]]; then
-            EXTRA_ARGS+=(--registry-id "${ECR_REGISTRY_ID}")
-          fi
+          : "${ECR_REGISTRY_ID:?ECR_REGISTRY_ID is empty}"
 
           CUTOFF="$(date -u -d '3 days ago' +%s)"
-
           TMP_JSON="$(mktemp)"
           TMP_DIGESTS="$(mktemp)"
 
-          aws ecr describe-images \
+          aws ecr-public describe-images \
+            --region "${AWS_REGION}" \
+            --registry-id "${ECR_REGISTRY_ID}" \
             --repository-name "${ECR_REPOSITORY}" \
-            --filter tagStatus=ANY \
-            --output json \
-            "${EXTRA_ARGS[@]}" > "${TMP_JSON}"
+            --output json > "${TMP_JSON}"
 
-          jq -r '.imageDetails[] | select(.imagePushedAt != null and .imageDigest != null) | [.imagePushedAt, .imageDigest] | @tsv' "${TMP_JSON}" |
+          jq -r '.imageDetails[]? | select(.imagePushedAt != null and .imageDigest != null) | [.imagePushedAt, .imageDigest] | @tsv' "${TMP_JSON}" |
           while IFS=$'\t' read -r pushed_at digest; do
             pushed_ts="$(date -u -d "${pushed_at}" +%s)"
             if [[ "${pushed_ts}" -lt "${CUTOFF}" ]]; then
@@ -63,6 +58,8 @@ jobs:
             exit 0
           fi
 
+          echo "Deleting ${COUNT} image digests..."
+
           split -l 100 "${TMP_DIGESTS}" chunk_
 
           for file in chunk_*; do
@@ -74,9 +71,12 @@ jobs:
             done < "$file"
 
             if [[ "${#IMAGE_IDS[@]}" -gt 0 ]]; then
-              aws ecr batch-delete-image \
+              aws ecr-public batch-delete-image \
+                --region "${AWS_REGION}" \
+                --registry-id "${ECR_REGISTRY_ID}" \
                 --repository-name "${ECR_REPOSITORY}" \
-                --image-ids "${IMAGE_IDS[@]}" \
-                "${EXTRA_ARGS[@]}"
+                --image-ids "${IMAGE_IDS[@]}"
             fi
           done
+
+          echo "Cleanup completed."
