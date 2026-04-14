@@ -68,6 +68,10 @@
       "forbidden": "您没有访问 LLM 配置的权限"
     }
   },
+  "channel": {
+    "autoConfirm": "自动批准",
+    "autoConfirmDesc": "自动批准大模型工具调用"
+  },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",
     "msg_pages_toolchain_bundles_toolchainbundle_002": "确定删除工具包 '{{name}}' 吗?",

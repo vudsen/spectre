@@ -1,9 +1,11 @@
 import React, { type KeyboardEvent, useState } from 'react'
 import {
   Button,
+  Checkbox,
   Modal,
   ModalContent,
   Textarea,
+  Tooltip,
   useDisclosure,
 } from '@heroui/react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
@@ -26,6 +28,9 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
   const dispatch = useDispatch()
   const selectedSkill = useSelector<RootState, SkillDTO | undefined>(
     (state) => state.channel.context.selectedSkill,
+  )
+  const autoConfirm = useSelector<RootState, boolean | undefined>(
+    (state) => state.channel.context.autoConfirm,
   )
 
   const submit = async () => {
@@ -56,6 +61,14 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
     )
   }
 
+  const onAutoConfirmChange = (v: boolean) => {
+    dispatch(
+      updateChannelContext({
+        autoConfirm: v,
+      }),
+    )
+  }
+
   return (
     <div className="border-t-divider border-t p-3">
       <Textarea
@@ -69,32 +82,43 @@ const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
         )}
       />
       <div className="mt-2 flex justify-between">
-        <div className="group relative">
-          <Button
-            variant="light"
-            onPress={onOpen}
-            color={selectedSkill ? 'primary' : 'default'}
-          >
-            <SvgIcon icon={ChannelIcon.SKILL} />
-            {selectedSkill
-              ? selectedSkill.name
-              : i18n.t('hardcoded.msg_pages_channel_param_ai_aicomposer_002')}
-          </Button>
-          {selectedSkill ? (
-            <button
-              type="button"
-              className="bg-danger text-danger-foreground pointer-events-none absolute -top-1 -right-1 flex h-4 w-4 scale-90 cursor-pointer items-center justify-center rounded-full text-xs leading-none opacity-0 transition-all duration-200 ease-out group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100"
-              onClick={(e) => {
-                e.stopPropagation()
-                clearSelectedSkill()
-              }}
-              aria-label={i18n.t(
-                'hardcoded.msg_pages_channel_param_ai_aicomposer_003',
-              )}
+        <div className="group relative flex items-center">
+          <Tooltip content={i18n.t('channel.autoConfirmDesc')}>
+            <Checkbox
+              size="sm"
+              isSelected={autoConfirm}
+              onValueChange={onAutoConfirmChange}
             >
-              ×
-            </button>
-          ) : null}
+              {i18n.t('channel.autoConfirm')}
+            </Checkbox>
+          </Tooltip>
+          <div className="ml-2">
+            <Button
+              variant="light"
+              onPress={onOpen}
+              color={selectedSkill ? 'primary' : 'default'}
+            >
+              <SvgIcon icon={ChannelIcon.SKILL} />
+              {selectedSkill
+                ? selectedSkill.name
+                : i18n.t('hardcoded.msg_pages_channel_param_ai_aicomposer_002')}
+            </Button>
+            {selectedSkill ? (
+              <button
+                type="button"
+                className="bg-danger text-danger-foreground pointer-events-none absolute -top-1 -right-1 flex h-4 w-4 scale-90 cursor-pointer items-center justify-center rounded-full text-xs leading-none opacity-0 transition-all duration-200 ease-out group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  clearSelectedSkill()
+                }}
+                aria-label={i18n.t(
+                  'hardcoded.msg_pages_channel_param_ai_aicomposer_003',
+                )}
+              >
+                ×
+              </button>
+            ) : null}
+          </div>
         </div>
         <Button
           color="primary"

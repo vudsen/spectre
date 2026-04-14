@@ -8,6 +8,10 @@ type ChannelContext = {
   classloaderHash?: string
   inputStatus: InputStatusResponse['inputStatus']
   selectedSkill?: SkillDTO
+  /**
+   * 自动执行 LLM 工具执行请求
+   */
+  autoConfirm?: boolean
 }
 
 interface ChannelState {
