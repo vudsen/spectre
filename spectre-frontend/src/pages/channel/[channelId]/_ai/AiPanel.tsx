@@ -17,7 +17,8 @@ import type {
   PendingAskHumanState,
   PendingConfirmState,
 } from '@/pages/channel/[channelId]/_ai/types.ts'
-import { store } from '@/store'
+import { store, type RootState } from '@/store'
+import { useSelector } from 'react-redux'
 import i18n from '@/i18n'
 
 interface AiPanelProps {
@@ -214,6 +215,9 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
   const [pendingAskHuman, setPendingAskHuman] = useState<
     PendingAskHumanState | undefined
   >(undefined)
+  const autoConfirm = useSelector<RootState, boolean | undefined>(
+    (state) => state.channel.context.autoConfirm,
+  )
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -397,6 +401,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
             cards={cards}
             pendingConfirm={pendingConfirm}
             pendingAskHuman={pendingAskHuman}
+            autoConfirm={autoConfirm}
             isLoading={isLoading}
             onQuickSubmit={(value) => {
               void submitQuery(value)

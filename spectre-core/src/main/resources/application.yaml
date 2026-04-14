@@ -27,6 +27,6 @@ spring:
   web:
     error:
       path: /spectre-api/error
-#logging.level.org.hibernate.SQL: debug
-#logging.level.org.hibernate.type.descriptor.sql.BasicBinder: trace
+  profiles:
+    active: dev
 

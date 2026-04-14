@@ -12,6 +12,12 @@ import { store, persistor } from '@/store'
 import { PersistGate } from 'redux-persist/integration/react'
 import '@/i18n'
 
+if (import.meta.env.DEV) {
+  if (location.pathname === '/') {
+    location.href = '/spectre'
+  }
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>

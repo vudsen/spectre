@@ -71,9 +71,6 @@ Retransform allows you to upload class files directly through the web interface 
 
 ## Local Deployment
 
-> [!CAUTION]
-> The project has not been extensively validated and may contain security vulnerabilities. **Please do not connect to production environment servers for now**!!!
-
 Database Requirements:
 - SQLite
 - Postgresql

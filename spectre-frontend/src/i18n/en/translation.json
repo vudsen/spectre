@@ -77,6 +77,10 @@
       "forbidden": "You do not have access to LLM configuration"
     }
   },
+  "channel": {
+    "autoConfirm": "Automatic Approval",
+    "autoConfirmDesc": "Automatic approval of large model tool calls"
+  },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",
     "msg_pages_toolchain_bundles_toolchainbundle_002": "Delete toolchain bundle {{name}}?",

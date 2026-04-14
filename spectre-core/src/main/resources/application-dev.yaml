@@ -5,3 +5,5 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.community.dialect.SQLiteDialect
+#logging.level.org.hibernate.SQL: debug
+#logging.level.org.hibernate.type.descriptor.sql.BasicBinder: trace

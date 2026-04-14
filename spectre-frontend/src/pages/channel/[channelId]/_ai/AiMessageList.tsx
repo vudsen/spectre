@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Button } from '@heroui/react'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
@@ -15,6 +15,7 @@ interface AiMessageListProps {
   cards: ConversationCard[]
   pendingConfirm?: PendingConfirmState
   pendingAskHuman?: PendingAskHumanState
+  autoConfirm?: boolean
   isLoading?: boolean
   onQuickSubmit: (value: string) => void
 }
@@ -145,9 +146,41 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
   cards,
   pendingConfirm,
   pendingAskHuman,
+  autoConfirm,
   isLoading,
   onQuickSubmit,
 }) => {
+  const [autoConfirmCountdown, setAutoConfirmCountdown] = useState<
+    number | null
+  >(null)
+  const quickSubmitRef = useRef(onQuickSubmit)
+
+  useEffect(() => {
+    quickSubmitRef.current = onQuickSubmit
+  }, [onQuickSubmit])
+
+  useEffect(() => {
+    if (!pendingConfirm || !autoConfirm) {
+      setAutoConfirmCountdown(null)
+      return
+    }
+
+    let remainSeconds = 3
+    setAutoConfirmCountdown(remainSeconds)
+    const intervalId = window.setInterval(() => {
+      remainSeconds -= 1
+      setAutoConfirmCountdown(Math.max(remainSeconds, 0))
+    }, 1000)
+    const timeoutId = window.setTimeout(() => {
+      quickSubmitRef.current('YES')
+    }, 3000)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
+    }
+  }, [autoConfirm, pendingConfirm])
+
   return (
     <div className="h-0 grow overflow-y-auto px-3 py-2">
       <div className="space-y-3">
@@ -251,6 +284,9 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
                 {i18n.t(
                   'hardcoded.msg_pages_channel_param_ai_aimessagelist_010',
                 )}
+                {autoConfirm && autoConfirmCountdown !== null
+                  ? ` (${autoConfirmCountdown}s)`
+                  : ''}
               </Button>
               <Button
                 size="sm"
