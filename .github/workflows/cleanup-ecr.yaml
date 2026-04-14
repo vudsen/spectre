@@ -1,0 +1,82 @@
+name: Cleanup old ECR images
+
+on:
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  ECR_REGISTRY_ID: ${{ vars.ECR_REGISTRY_ID }}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+
+      - name: Delete images older than 3 days
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          : "${AWS_REGION:?AWS_REGION is empty}"
+          : "${ECR_REPOSITORY:?ECR_REPOSITORY is empty}"
+
+          EXTRA_ARGS=()
+          if [[ -n "${ECR_REGISTRY_ID:-}" ]]; then
+            EXTRA_ARGS+=(--registry-id "${ECR_REGISTRY_ID}")
+          fi
+
+          CUTOFF="$(date -u -d '3 days ago' +%s)"
+
+          TMP_JSON="$(mktemp)"
+          TMP_DIGESTS="$(mktemp)"
+
+          aws ecr describe-images \
+            --repository-name "${ECR_REPOSITORY}" \
+            --filter tagStatus=ANY \
+            --output json \
+            "${EXTRA_ARGS[@]}" > "${TMP_JSON}"
+
+          jq -r '.imageDetails[] | select(.imagePushedAt != null and .imageDigest != null) | [.imagePushedAt, .imageDigest] | @tsv' "${TMP_JSON}" |
+          while IFS=$'\t' read -r pushed_at digest; do
+            pushed_ts="$(date -u -d "${pushed_at}" +%s)"
+            if [[ "${pushed_ts}" -lt "${CUTOFF}" ]]; then
+              echo "${digest}"
+            fi
+          done | sort -u > "${TMP_DIGESTS}"
+
+          COUNT="$(wc -l < "${TMP_DIGESTS}" | tr -d ' ')"
+          if [[ "${COUNT}" == "0" ]]; then
+            echo "No images to delete."
+            exit 0
+          fi
+
+          split -l 100 "${TMP_DIGESTS}" chunk_
+
+          for file in chunk_*; do
+            [[ -f "$file" ]] || continue
+
+            IMAGE_IDS=()
+            while IFS= read -r digest; do
+              [[ -n "$digest" ]] && IMAGE_IDS+=("imageDigest=${digest}")
+            done < "$file"
+
+            if [[ "${#IMAGE_IDS[@]}" -gt 0 ]]; then
+              aws ecr batch-delete-image \
+                --repository-name "${ECR_REPOSITORY}" \
+                --image-ids "${IMAGE_IDS[@]}" \
+                "${EXTRA_ARGS[@]}"
+            fi
+          done
