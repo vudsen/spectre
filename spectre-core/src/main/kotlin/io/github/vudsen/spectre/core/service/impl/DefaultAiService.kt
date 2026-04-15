@@ -26,6 +26,7 @@ import io.github.vudsen.spectre.core.service.ai.AiToolExecutionResult
 import io.github.vudsen.spectre.core.service.ai.OpenAiToolRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.context.MessageSource
+import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -55,6 +56,7 @@ class DefaultAiService(
             30,
             TimeUnit.MINUTES,
             ArrayBlockingQueue(32),
+            { r -> Thread(r, "AI-SSE ${System.currentTimeMillis()}") },
         ) { _, _ -> throw BusinessException("error.system.busy") }
 
     data class FunctionToolCall(
@@ -185,6 +187,7 @@ class DefaultAiService(
         val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("error.llm.not.enabled")
         val securityContext = SecurityContextHolder.getContext()
 
+        val locale = LocaleContextHolder.getLocale()
         executor.execute {
             val client = buildOpenAiClient(llmConfig)
             val queryContext =
@@ -227,9 +230,15 @@ class DefaultAiService(
             } catch (e: Exception) {
                 logger.error("AI query failed", e)
                 runCatching {
+                    val msg: String =
+                        if (e is BusinessException) {
+                            e.toI18nMessage(locale)
+                        } else {
+                            e.message ?: "AI query failed(Internal Error)"
+                        }
                     sendMessage(
                         queryContext,
-                        AiMessageDTO(AiMessageDTO.MessageType.ERROR, e.message ?: "AI query failed"),
+                        AiMessageDTO(AiMessageDTO.MessageType.ERROR, msg),
                     )
                 }
             } finally {
