@@ -113,7 +113,7 @@ const CommandExecuteBlock: React.FC = () => {
           <span>
             {i18n.t(
               'hardcoded.msg_pages_channel_param_tabs_console_commandexecuteblock_003',
-            )}
+            )}&nbsp;
           </span>
           {inputStatus === 'ALLOW_INPUT' ? (
             <span className="text-success">
