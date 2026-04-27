@@ -2,7 +2,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     kotlin("jvm")
-    kotlin("plugin.spring") version "2.3.20"
+    kotlin("plugin.spring") version "2.3.21"
     alias(libs.plugins.springBoot)
     alias(libs.plugins.springDependencyManagement)
 }
