@@ -7,7 +7,6 @@ import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
-import io.github.vudsen.spectre.core.service.ai.AiToolExecutionResult
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -19,7 +18,7 @@ class AiToolsConfigurationTest {
     @Test
     fun executeArthasCommand_shouldBeConfirmRequiredAndExecutable() {
         val arthasExecutionService = FakeArthasExecutionService()
-        val registry = AiToolsConfiguration(arthasExecutionService).openAiToolRegistry()
+        val registry = AiToolsConfiguration(arthasExecutionService).aiToolRegistry()
 
         assertTrue(registry.requiresConfirm(AiTools.EXECUTE_ARTHAS_COMMAND))
         assertFalse(registry.requiresConfirm(AiTools.ASK_HUMAN))
@@ -36,15 +35,13 @@ class AiToolsConfigurationTest {
                 argumentsJson = "{\"command\":\"thread -n 1\"}",
             )
 
-        assertTrue(result is AiToolExecutionResult.Success)
         assertEquals(1, arthasExecutionService.execSyncCallCount)
-        result as AiToolExecutionResult.Success
         assertEquals("thread -n 1", result.parameter)
     }
 
     @Test
-    fun askHuman_shouldReturnAskHumanResultWithJsonPayload() {
-        val registry = AiToolsConfiguration(FakeArthasExecutionService()).openAiToolRegistry()
+    fun askHuman_shouldReturnSuccessResultWithJsonPayload() {
+        val registry = AiToolsConfiguration(FakeArthasExecutionService()).aiToolRegistry()
 
         val result =
             registry.execute(
@@ -58,11 +55,9 @@ class AiToolsConfigurationTest {
                 argumentsJson = "{\"question\":\"confirm?\",\"options\":[\"YES\",\"NO\"]}",
             )
 
-        assertTrue(result is AiToolExecutionResult.AskHuman)
-        result as AiToolExecutionResult.AskHuman
-        assertTrue(result.requestJson.contains("confirm?"))
-        assertTrue(result.requestJson.contains("YES"))
-        assertTrue(result.requestJson.contains("NO"))
+        assertTrue(result.output.contains("confirm?"))
+        assertTrue(result.output.contains("YES"))
+        assertTrue(result.output.contains("NO"))
     }
 
     private class FakeArthasExecutionService : ArthasExecutionService {

@@ -2,7 +2,7 @@
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 
-class LLMConfigurationDTO(
+data class LLMConfigurationDTO(
     var provider: String = "OPENAI",
     var model: String,
     var baseUrl: String,
