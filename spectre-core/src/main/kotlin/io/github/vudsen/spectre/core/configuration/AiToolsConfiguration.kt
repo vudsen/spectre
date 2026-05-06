@@ -1,13 +1,13 @@
-﻿package io.github.vudsen.spectre.core.configuration
+package io.github.vudsen.spectre.core.configuration
 
 import io.github.vudsen.spectre.api.AiTools
 import io.github.vudsen.spectre.api.entity.AskHumanRequest
 import io.github.vudsen.spectre.api.entity.ExecuteArthasCommandRequest
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
+import io.github.vudsen.spectre.core.service.ai.AiToolDefinition
 import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
 import io.github.vudsen.spectre.core.service.ai.AiToolExecutionResult
-import io.github.vudsen.spectre.core.service.ai.OpenAiToolDefinition
-import io.github.vudsen.spectre.core.service.ai.OpenAiToolRegistry
+import io.github.vudsen.spectre.core.service.ai.AiToolRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.core.context.SecurityContextHolder
@@ -20,70 +20,38 @@ class AiToolsConfiguration(
     private val objectMapper = ObjectMapper()
 
     @Bean
-    fun openAiToolRegistry(): OpenAiToolRegistry =
-        OpenAiToolRegistry(
+    fun aiToolRegistry(): AiToolRegistry =
+        AiToolRegistry(
             listOf(
                 executeArthasCommandDefinition(),
                 askHumanDefinition(),
             ),
         )
 
-    private fun executeArthasCommandDefinition(): OpenAiToolDefinition =
-        OpenAiToolDefinition(
+    private fun executeArthasCommandDefinition(): AiToolDefinition =
+        AiToolDefinition(
             name = AiTools.EXECUTE_ARTHAS_COMMAND,
             description = "Execute arthas command",
-            parametersSchema =
-                mapOf(
-                    "type" to "object",
-                    "properties" to
-                        mapOf(
-                            "command" to
-                                mapOf(
-                                    "type" to "string",
-                                    "description" to "Arthas command to execute",
-                                ),
-                        ),
-                    "required" to listOf("command"),
-                    "additionalProperties" to false,
-                ),
             requiresConfirm = true,
             parameterResolver = { argumentsJson ->
                 parseExecuteArthasCommandRequest(argumentsJson).command.trim()
             },
+            callback = AiToolRegistry.executeArthasToolCallback("Execute arthas command"),
             executor = { context, argumentsJson ->
                 executeArthasCommand(context, argumentsJson)
             },
         )
 
-    private fun askHumanDefinition(): OpenAiToolDefinition =
-        OpenAiToolDefinition(
+    private fun askHumanDefinition(): AiToolDefinition =
+        AiToolDefinition(
             name = AiTools.ASK_HUMAN,
             description = "Ask user to provide missing information",
-            parametersSchema =
-                mapOf(
-                    "type" to "object",
-                    "properties" to
-                        mapOf(
-                            "question" to
-                                mapOf(
-                                    "type" to "string",
-                                    "description" to "Question shown to user",
-                                ),
-                            "options" to
-                                mapOf(
-                                    "type" to "array",
-                                    "description" to "Candidate options for user",
-                                    "items" to mapOf("type" to "string"),
-                                ),
-                        ),
-                    "required" to listOf("question"),
-                    "additionalProperties" to false,
-                ),
             parameterResolver = { argumentsJson ->
                 normalizeAskHumanRequestJson(argumentsJson)
             },
+            callback = AiToolRegistry.askHumanToolCallback("Ask user to provide missing information"),
             executor = { _, argumentsJson ->
-                AiToolExecutionResult.AskHuman(normalizeAskHumanRequestJson(argumentsJson))
+                AiToolExecutionResult(output = normalizeAskHumanRequestJson(argumentsJson))
             },
         )
 
@@ -98,7 +66,7 @@ class AiToolsConfiguration(
         return try {
             context.securityContext?.let { SecurityContextHolder.setContext(it) }
             val result = arthasExecutionService.execSync(context.channelId, command)
-            AiToolExecutionResult.Success(
+            AiToolExecutionResult(
                 output = result.toString(),
                 parameter = command,
             )
