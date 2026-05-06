@@ -21,16 +21,20 @@ import i18n from '@/i18n'
 
 interface SkillSelectModalContentProps {
   onClose: () => void
+  onSkillSelected?: (skill: SkillDTO) => void
 }
 
 const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
   onClose,
+  onSkillSelected,
 }) => {
   const dispatch = useDispatch()
   const selectedSkill = useSelector<RootState, string | undefined>(
     (state) => state.channel.context.selectedSkill?.id,
   )
-  const [skills, setSkills] = useState<SkillDTO[]>([])
+  const skills = useSelector<RootState, SkillDTO[] | undefined>(
+    (state) => state.channel.context.availableSkills,
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | undefined>(undefined)
   const [previewSkill, setPreviewSkill] = useState<SkillDTO | undefined>(
@@ -38,11 +42,20 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
   )
 
   const loadSkills = useCallback(async () => {
+    if (skills !== undefined) {
+      setIsLoading(false)
+      setError(undefined)
+      return
+    }
     setIsLoading(true)
     setError(undefined)
     try {
       const data = await listSkills()
-      setSkills(data || [])
+      dispatch(
+        updateChannelContext({
+          availableSkills: data || [],
+        }),
+      )
     } catch (e) {
       setError(
         e instanceof Error
@@ -54,7 +67,7 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [dispatch, skills])
 
   useEffect(() => {
     loadSkills().then()
@@ -66,6 +79,7 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
         selectedSkill: skill,
       }),
     )
+    onSkillSelected?.(skill)
     setPreviewSkill(undefined)
     onClose()
   }
@@ -99,7 +113,7 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
           </div>
         ) : null}
 
-        {!isLoading && !error && skills.length === 0 ? (
+        {!isLoading && !error && (skills?.length ?? 0) === 0 ? (
           <div className="text-default-500 py-2 text-sm">
             {i18n.t(
               'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_004',
@@ -109,7 +123,7 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
 
         {!isLoading && !error ? (
           <div className="flex flex-wrap justify-center">
-            {skills.map((skill) => (
+            {(skills ?? []).map((skill) => (
               <Card
                 key={skill.id}
                 isPressable

@@ -8,6 +8,7 @@ type ChannelContext = {
   classloaderHash?: string
   inputStatus: InputStatusResponse['inputStatus']
   selectedSkill?: SkillDTO
+  availableSkills?: SkillDTO[]
   /**
    * 自动执行 LLM 工具执行请求
    */

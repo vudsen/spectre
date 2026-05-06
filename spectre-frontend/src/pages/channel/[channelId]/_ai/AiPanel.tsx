@@ -18,13 +18,21 @@ import type {
   PendingConfirmState,
 } from '@/pages/channel/[channelId]/_ai/types.ts'
 import { store, type RootState } from '@/store'
-import { useSelector } from 'react-redux'
+import { updateChannelContext } from '@/store/channelSlice.ts'
+import { useDispatch, useSelector } from 'react-redux'
 import i18n from '@/i18n'
 
 interface AiPanelProps {
   channelId: string
   isOpen: boolean
   onClose: () => void
+}
+
+function formatUserMessage(query: string, skillName?: string): string {
+  if (!skillName) {
+    return query
+  }
+  return `\`$${skillName}\` ${query}`
 }
 
 function createMessageId(): string {
@@ -215,6 +223,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
   const [pendingAskHuman, setPendingAskHuman] = useState<
     PendingAskHumanState | undefined
   >(undefined)
+  const dispatch = useDispatch()
   const autoConfirm = useSelector<RootState, boolean | undefined>(
     (state) => state.channel.context.autoConfirm,
   )
@@ -309,6 +318,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
       if (isLoading || !conversationId) {
         return
       }
+      const activeSkill = store.getState().channel.context.selectedSkill
       abortRef.current?.abort()
       abortRef.current = new AbortController()
       const shouldRenderUserInput = !pendingConfirm
@@ -317,8 +327,15 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
       if (shouldRenderUserInput) {
         pushEvent({
           type: 'USER',
-          data: query,
+          data: formatUserMessage(query, activeSkill?.name),
         })
+      }
+      if (activeSkill) {
+        dispatch(
+          updateChannelContext({
+            selectedSkill: undefined,
+          }),
+        )
       }
       setIsLoading(true)
       try {
@@ -327,7 +344,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
             query,
             channelId,
             conversationId,
-            skillId: store.getState().channel.context.selectedSkill?.id,
+            skillId: activeSkill?.id,
           },
           {
             signal: abortRef.current.signal,
@@ -352,6 +369,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     [
       channelId,
       conversationId,
+      dispatch,
       handleAiMessage,
       isLoading,
       pendingConfirm,
@@ -407,7 +425,11 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
               void submitQuery(value)
             }}
           />
-          <AiComposer disabled={isLoading} onSubmit={submitQuery} />
+          <AiComposer
+            disabled={isLoading}
+            onSubmit={submitQuery}
+            skillSelectionDisabled={events.length > 0}
+          />
         </>
       ) : null}
     </div>
