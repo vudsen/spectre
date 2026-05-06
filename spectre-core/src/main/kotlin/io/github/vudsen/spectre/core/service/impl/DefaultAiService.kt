@@ -1,10 +1,10 @@
 package io.github.vudsen.spectre.core.service.impl
 
+import io.github.vudsen.spectre.api.AiTools
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
-import io.github.vudsen.spectre.api.AiTools
 import io.github.vudsen.spectre.api.entity.Skill
 import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.exception.AppException
@@ -18,9 +18,9 @@ import io.github.vudsen.spectre.core.service.ai.AiToolCall
 import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
 import io.github.vudsen.spectre.core.service.ai.AiToolRegistry
 import org.slf4j.LoggerFactory
-import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
+import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.messages.AssistantMessage
 import org.springframework.ai.chat.messages.Message
 import org.springframework.ai.chat.messages.SystemMessage
@@ -90,6 +90,7 @@ class DefaultAiService(
 
     @Volatile
     private var cachedChatClient: ChatClient? = null
+
     @Volatile
     private var cachedLlmConfigHash: Int? = null
 
@@ -158,11 +159,12 @@ class DefaultAiService(
                 val systemMessage =
                     if (shouldInitializeSystemMessage) {
                         if (enableSkill) {
-                            val systemMessageWithSkill = buildSystemMessageWithSkill(
-                                context = queryContext,
-                                questionForSkillSelection = question,
-                                selectedSkillId = selectedSkillId,
-                            )
+                            val systemMessageWithSkill =
+                                buildSystemMessageWithSkill(
+                                    context = queryContext,
+                                    questionForSkillSelection = question,
+                                    selectedSkillId = selectedSkillId,
+                                )
                             systemMessageWithSkill
                         } else {
                             buildSystemMessageWithoutSkill()
@@ -305,14 +307,16 @@ class DefaultAiService(
         ensureNotExceededTokenLimit(context.llmConfig.maxTokenPerHour)
 
         val chatClient = getOrCreateChatClient(context.llmConfig)
-        val options = buildLlmOptions(context) {
-            internalToolExecutionEnabled(false)
-            toolCallbacks(*aiToolRegistry.toolCallbacks())
-        }
+        val options =
+            buildLlmOptions(context) {
+                internalToolExecutionEnabled(false)
+                toolCallbacks(*aiToolRegistry.toolCallbacks())
+            }
 
         var latest: ChatResponse? = null
         val assistantMessageBuilder = StringBuilder()
-        chatClient.prompt()
+        chatClient
+            .prompt()
             .options(options)
             .messages(inputMessage)
             .advisors { spec ->
@@ -321,7 +325,11 @@ class DefaultAiService(
             .chatResponse()
             .doOnNext { response ->
                 latest = response
-                val delta = response.result?.output?.text.orEmpty()
+                val delta =
+                    response.result
+                        ?.output
+                        ?.text
+                        .orEmpty()
                 if (delta.isNotEmpty()) {
                     assistantMessageBuilder.append(delta)
                     sendMessage(context, AiMessageDTO(AiMessageDTO.MessageType.TOKEN, delta))
@@ -340,7 +348,9 @@ class DefaultAiService(
                 )
             }
 
-        val usedTokens = finalResponse.metadata.usage.totalTokens.toLong()
+        val usedTokens =
+            finalResponse.metadata.usage.totalTokens
+                .toLong()
         recordTokenUsage(usedTokens)
 
         return AssistantTurn(assistantMessageBuilder.toString(), toolCalls, usedTokens)
@@ -492,22 +502,22 @@ class DefaultAiService(
 
         val selectedSkillContent = AiSkillsLoader.loadSkill(selectedSkillName)
         return """
-                You are a Java troubleshooting assistant responsible for diagnosing runtime problems in Java applications.
+            You are a Java troubleshooting assistant responsible for diagnosing runtime problems in Java applications.
 
-                You are allowed to run Arthas commands to collect runtime information and help the user analyze the issue.
+            You are allowed to run Arthas commands to collect runtime information and help the user analyze the issue.
 
-                Use the following skill instructions:
+            Use the following skill instructions:
 
-                $selectedSkillContent
-                """.trimIndent()
+            $selectedSkillContent
+            """.trimIndent()
     }
 
     private fun buildSystemMessageWithoutSkill(): String =
         """
-                You are a helpful Java troubleshooting assistant.
-                You are allowed to run Arthas commands to collect runtime information.
-                If required context is missing, use askHuman tool.
-                """.trimIndent()
+        You are a helpful Java troubleshooting assistant.
+        You are allowed to run Arthas commands to collect runtime information.
+        If required context is missing, use askHuman tool.
+        """.trimIndent()
 
     private fun resolveSelectedSkill(
         context: AiQueryContext,
@@ -547,13 +557,20 @@ class DefaultAiService(
         val options =
             buildLlmOptions(context)
 
-        val response = buildChatModel(context.llmConfig)
-            .call(Prompt(listOf(SystemMessage(selectionPrompt), UserMessage(question)), options))
+        val response =
+            buildChatModel(context.llmConfig)
+                .call(Prompt(listOf(SystemMessage(selectionPrompt), UserMessage(question)), options))
 
-        val content = response.result?.output?.text.orEmpty().trim()
+        val content =
+            response.result
+                ?.output
+                ?.text
+                .orEmpty()
+                .trim()
 
         val usedTokens =
-            response.metadata.usage.totalTokens.toLong()
+            response.metadata.usage.totalTokens
+                .toLong()
                 ?: estimateTokens(selectionPrompt.length + question.length + content.length)
 
         recordTokenUsage(usedTokens)
@@ -565,16 +582,22 @@ class DefaultAiService(
         return skills.firstOrNull { it.name.equals(normalized, ignoreCase = true) }?.name
     }
 
-    private fun buildLlmOptions(context: AiQueryContext, customise: (OpenAiChatOptions.Builder.() -> Unit)? = null): OpenAiChatOptions {
+    private fun buildLlmOptions(
+        context: AiQueryContext,
+        customise: (OpenAiChatOptions.Builder.() -> Unit)? = null,
+    ): OpenAiChatOptions {
         // Disable thinking.
-        val extraBody: Map<String, Any>? = when (context.llmConfig.model) {
-            "deepseek-v4-flash", "deepseek-v4-pro" -> mapOf(
-                "thinking" to mapOf(
-                    "type" to "disabled"
-                )
-            )
-            else -> null
-        }
+        val extraBody: Map<String, Any>? =
+            when (context.llmConfig.model) {
+                "deepseek-v4-flash", "deepseek-v4-pro" ->
+                    mapOf(
+                        "thinking" to
+                            mapOf(
+                                "type" to "disabled",
+                            ),
+                    )
+                else -> null
+            }
         val optionsBuilder =
             OpenAiChatOptions
                 .builder()
