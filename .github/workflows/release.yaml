@@ -35,10 +35,10 @@ jobs:
         with:
           version: latest
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: 'pnpm'
           cache-dependency-path: spectre-frontend/pnpm-lock.yaml
 
