@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import React, { useMemo } from 'react'
+import React, { type MouseEventHandler, useMemo } from 'react'
 import './listStyle.css'
 import ArthasResponsePreview from '@/pages/channel/[channelId]/_message_view/ArthasResponsePreview.tsx'
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
@@ -14,6 +14,7 @@ interface ArthasResponseItemProps {
   index: number
   onEntitySelect: (index: number) => void
   isSelected: boolean
+  onContextMenu?: MouseEventHandler
 }
 
 type MyColors = {
@@ -26,6 +27,7 @@ const ArthasResponseItem: React.FC<ArthasResponseItemProps> = ({
   index,
   item,
   onEntitySelect,
+  onContextMenu,
 }) => {
   const colors = useMemo<MyColors>(() => {
     if (item.colorFlag !== undefined) {
@@ -58,6 +60,7 @@ const ArthasResponseItem: React.FC<ArthasResponseItemProps> = ({
   return (
     <div
       key={item.entity.id}
+      onContextMenu={onContextMenu}
       className={clsx(
         isSelected ? colors.selected : colors.normal,
         'cursor-pointer px-3 py-3 select-none',

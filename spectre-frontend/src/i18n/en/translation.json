@@ -29,7 +29,9 @@
     "updateSuccess": "Update successful",
     "save": "Save",
     "update": "Update",
-    "upload": "Upload"
+    "upload": "Upload",
+    "delete": "Delete",
+    "deleteAll": "Delete All"
   },
   "router": {
     "home": "Home",
@@ -79,7 +81,11 @@
   },
   "channel": {
     "autoConfirm": "Automatic Approval",
-    "autoConfirmDesc": "Automatic approval of large model tool calls"
+    "autoConfirmDesc": "Automatic approval of large model tool calls",
+    "openInNewTab": "Open In New Tab",
+    "mark": "Mark",
+    "unmark": "Unmark",
+    "decompile": "Decompile"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",
@@ -262,7 +268,6 @@
     "msg_pages_channel_param_component_quickcommand_commands_005": "Minimum duration (ms)",
     "msg_pages_channel_param_component_quickcommand_commands_006": "Decompile (jad)",
     "msg_pages_channel_param_component_quickcommand_index_001": "🪄Quick commands",
-    "msg_pages_channel_param_component_quickcommand_index_002": "Decompile",
     "msg_pages_channel_param_enhance_retransformmodalcontent_001": "Upload a class file for quick replacement. The file will be deleted immediately after use",
     "msg_pages_channel_param_message_view_arthasresponsedetail_001": "🚧Preview is not supported for this message yet. Please use `Raw Content`. We are actively working on it🚧",
     "msg_pages_channel_param_message_view_arthasresponsedetail_002": "Command:",
@@ -314,8 +319,6 @@
     "msg_pages_channel_param_message_view_component_welcomemessagedetail_002": "Version:",
     "msg_pages_channel_param_message_view_component_welcomemessagedetail_003": "Main class:",
     "msg_pages_channel_param_message_view_component_welcomemessagedetail_004": "Tutorial",
-    "msg_pages_channel_param_message_view_component_common_stacktrace_001": "Unmark",
-    "msg_pages_channel_param_message_view_component_common_stacktrace_002": "Mark",
     "msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_001": "Show parsed view",
     "msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_002": "Show raw content",
     "msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_003": "The parsed view may occasionally have bugs (for example, missing or misordered fields), so a fallback button is temporarily provided",
@@ -343,7 +346,6 @@
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_002": "Tips: Drag the middle divider to resize the window!",
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_003": "View",
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_004": "Raw content",
-    "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_005": "Open in new tab",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_001": "Foreground task interrupted successfully",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_002": "Please enter a command. Press `Enter` to execute, `Alt + Enter` for newline",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_003": "Task status:",

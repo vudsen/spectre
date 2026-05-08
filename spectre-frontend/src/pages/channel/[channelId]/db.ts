@@ -254,6 +254,12 @@ async function setupDB() {
     close() {
       db.close()
     },
+    async deleteAllMessage(channelId: string) {
+      await doClear(channelId)
+    },
+    async deleteMessage(message: ArthasMessage) {
+      await db.delete('messages', message.id)
+    },
   }
 }
 

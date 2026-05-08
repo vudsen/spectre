@@ -22,7 +22,9 @@
     "upload": "上传",
     "save": "保存",
     "createSuccess": "创建成功",
-    "updateSuccess": "更新成功"
+    "updateSuccess": "更新成功",
+    "delete": "删除",
+    "deleteAll": "删除全部"
   },
   "router": {
     "home": "首页",
@@ -70,7 +72,11 @@
   },
   "channel": {
     "autoConfirm": "自动批准",
-    "autoConfirmDesc": "自动批准大模型工具调用"
+    "autoConfirmDesc": "自动批准大模型工具调用",
+    "openInNewTab": "新标签页打开",
+    "mark": "标记",
+    "unmark": "取消标记",
+    "decompile": "反编译"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",
@@ -253,7 +259,6 @@
     "msg_pages_channel_param_component_quickcommand_commands_005": "最低耗时(ms)",
     "msg_pages_channel_param_component_quickcommand_commands_006": "反编译(jad)",
     "msg_pages_channel_param_component_quickcommand_index_001": "🪄快捷指令",
-    "msg_pages_channel_param_component_quickcommand_index_002": "反编译",
     "msg_pages_channel_param_enhance_retransformmodalcontent_001": "上传 class 文件快速替换，文件会在使用完毕后立即删除。",
     "msg_pages_channel_param_message_view_arthasresponsedetail_001": "🚧该消息暂不支持预览，请使用`原始内容`查看。我们正在全力开发中，敬请期待🚧",
     "msg_pages_channel_param_message_view_arthasresponsedetail_002": "命令:",
@@ -305,8 +310,6 @@
     "msg_pages_channel_param_message_view_component_welcomemessagedetail_002": "版本:",
     "msg_pages_channel_param_message_view_component_welcomemessagedetail_003": "主类:",
     "msg_pages_channel_param_message_view_component_welcomemessagedetail_004": "教程",
-    "msg_pages_channel_param_message_view_component_common_stacktrace_001": "取消标记",
-    "msg_pages_channel_param_message_view_component_common_stacktrace_002": "标记",
     "msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_001": "显示解析后视图",
     "msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_002": "显示原始内容",
     "msg_pages_channel_param_message_view_component_ognl_result_ognlmessageview_003": "解析后的视图小概率会出现 BUG(例如字段丢失/错乱)，因此暂时留一个回退按钮",
@@ -334,7 +337,6 @@
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_002": "Tips: 拖动中间的竖线可以调整窗口大小!",
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_003": "视图",
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_004": "原始内容",
-    "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_005": "新标签页打开",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_001": "中断前台任务成功",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_002": "请输入命令, 使用`回车`执行，`alt + 回车`换行",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_003": "任务状态:",
