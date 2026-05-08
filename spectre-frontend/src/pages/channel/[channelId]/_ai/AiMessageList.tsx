@@ -192,8 +192,8 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
                 className="bg-primary-100 text-primary-900 ml-10 rounded-lg px-3 py-2 text-sm"
               >
                 <div className="text-xs font-semibold">User</div>
-                <div className="mt-1 break-words whitespace-pre-wrap">
-                  {card.text}
+                <div className="mt-1 break-words">
+                  <MarkdownText text={card.text} />
                 </div>
               </div>
             )
