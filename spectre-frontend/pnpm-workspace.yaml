@@ -1,0 +1,14 @@
+packages:
+  - .
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - esbuild
+
+allowBuilds:
+  - '@swc/core'
+  - esbuild
+  - '@tailwindcss/oxide'
+  - '@parcel/watcher'
