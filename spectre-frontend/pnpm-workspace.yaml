@@ -1,14 +1,18 @@
 packages:
   - .
 
-onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - '@swc/core'
-  - '@tailwindcss/oxide'
-  - esbuild
-
 allowBuilds:
-  - '@swc/core'
-  - esbuild
-  - '@tailwindcss/oxide'
-  - '@parcel/watcher'
+  '@heroui/shared-utils': true
+  '@parcel/watcher': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  '@tailwindcss/oxide': true
+  esbuild: true
+
+onlyBuiltDependencies:
+  - '@heroui/shared-utils@2.1.10'
+  - '@parcel/watcher@2.5.1'
+  - '@scarf/scarf@1.4.0'
+  - '@swc/core@1.15.3'
+  - '@tailwindcss/oxide@4.1.11'
+  - 'sbuild@0.25.8'
