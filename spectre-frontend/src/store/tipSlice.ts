@@ -5,6 +5,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
  */
 type TipState = {
   channelRightClickMenuTip?: boolean
+  channelAiTip?: boolean
 }
 
 const initialState: TipState = {}

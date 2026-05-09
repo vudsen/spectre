@@ -31,7 +31,8 @@
     "update": "Update",
     "upload": "Upload",
     "delete": "Delete",
-    "deleteAll": "Delete All"
+    "deleteAll": "Delete All",
+    "neverRemind": "Never Remind"
   },
   "router": {
     "home": "Home",
@@ -85,7 +86,9 @@
     "openInNewTab": "Open In New Tab",
     "mark": "Mark",
     "unmark": "Unmark",
-    "decompile": "Decompile"
+    "decompile": "Decompile",
+    "tryAiTip": "Try AI to address problems",
+    "ai": "AI Assistant"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",
@@ -228,7 +231,6 @@
     "msg_pages_channel_param_header_002": "You may lose all messages. Are you sure you want to disconnect?",
     "msg_pages_channel_param_header_003": "> Connected to: ",
     "msg_pages_channel_param_header_004": "Back to home",
-    "msg_pages_channel_param_header_005": "AI Assistant",
     "msg_pages_channel_param_header_006": "Show all messages",
     "msg_pages_channel_param_index_001": "Failed to connect to channel.",
     "msg_pages_channel_param_toolbar_001": "Enhancements",
@@ -307,7 +309,6 @@
     "msg_pages_channel_param_message_view_component_smmessagedetail_003": "Parameters",
     "msg_pages_channel_param_message_view_component_smmessagedetail_004": "Found the following method names:",
     "msg_pages_channel_param_message_view_component_stackmessagedetail_001": "Tip: Right-click the call stack to open the menu. Quick operations such as watch are supported",
-    "msg_pages_channel_param_message_view_component_stackmessagedetail_002": "Don't remind again",
     "msg_pages_channel_param_message_view_component_statusmessagedetail_001": "Execute command",
     "msg_pages_channel_param_message_view_component_statusmessagedetail_002": ", status code:",
     "msg_pages_channel_param_message_view_component_statusmessagedetail_003": "Error message:",
@@ -347,7 +348,7 @@
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_003": "View",
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_004": "Raw content",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_001": "Foreground task interrupted successfully",
-    "msg_pages_channel_param_tabs_console_commandexecuteblock_002": "Please enter a command. Press `Enter` to execute, `Alt + Enter` for newline",
+    "msg_pages_channel_param_tabs_console_commandexecuteblock_002": "Please enter Arthas command. Press `Enter` to execute, `Alt + Enter` for newline",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_003": "Task status:",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_004": "Idle",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_005": "Running",

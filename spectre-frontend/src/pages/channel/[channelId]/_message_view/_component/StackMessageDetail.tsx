@@ -83,9 +83,7 @@ const StackMessageDetail: React.FC<DetailComponentProps<StackMessage>> = ({
               color="primary"
               onPress={hideRightClickTip}
             >
-              {i18n.t(
-                'hardcoded.msg_pages_channel_param_message_view_component_stackmessagedetail_002',
-              )}
+              {i18n.t('common.neverRemind')}
             </Button>
           </div>
         }

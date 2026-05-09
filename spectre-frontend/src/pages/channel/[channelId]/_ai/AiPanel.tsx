@@ -401,9 +401,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
       {isOpen ? (
         <>
           <div className="border-b-divider flex items-center justify-between border-b px-3 py-2">
-            <div className="text-sm font-bold">
-              {i18n.t('hardcoded.msg_pages_channel_param_header_005')}
-            </div>
+            <div className="text-sm font-bold">{i18n.t('channel.ai')}</div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="flat" onPress={clearConversation}>
                 {i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_006')}
