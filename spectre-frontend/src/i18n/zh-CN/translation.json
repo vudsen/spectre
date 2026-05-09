@@ -24,7 +24,8 @@
     "createSuccess": "创建成功",
     "updateSuccess": "更新成功",
     "delete": "删除",
-    "deleteAll": "删除全部"
+    "deleteAll": "删除全部",
+    "neverRemind": "不再提醒"
   },
   "router": {
     "home": "首页",
@@ -76,7 +77,9 @@
     "openInNewTab": "新标签页打开",
     "mark": "标记",
     "unmark": "取消标记",
-    "decompile": "反编译"
+    "decompile": "反编译",
+    "tryAiTip": "尝试使用 AI 解决线上环境问题",
+    "ai": "AI 助手"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",
@@ -219,7 +222,6 @@
     "msg_pages_channel_param_header_002": "您可能会丢失所有的消息，确定断开连接吗?",
     "msg_pages_channel_param_header_003": "> 已连接到: ",
     "msg_pages_channel_param_header_004": "回到首页",
-    "msg_pages_channel_param_header_005": "AI 助手",
     "msg_pages_channel_param_header_006": "显示所有消息",
     "msg_pages_channel_param_index_001": "连接到频道失败.",
     "msg_pages_channel_param_toolbar_001": "增强功能",
@@ -298,7 +300,6 @@
     "msg_pages_channel_param_message_view_component_smmessagedetail_003": "参数",
     "msg_pages_channel_param_message_view_component_smmessagedetail_004": "搜索到以下方法名称:",
     "msg_pages_channel_param_message_view_component_stackmessagedetail_001": "Tip: 右键调用栈可以打开菜单。支持进行快速 watch 等操作",
-    "msg_pages_channel_param_message_view_component_stackmessagedetail_002": "不再提醒",
     "msg_pages_channel_param_message_view_component_statusmessagedetail_001": "执行命令",
     "msg_pages_channel_param_message_view_component_statusmessagedetail_002": ", 响应码:",
     "msg_pages_channel_param_message_view_component_statusmessagedetail_003": "错误信息:",
@@ -338,7 +339,7 @@
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_003": "视图",
     "msg_pages_channel_param_tabs_console_arthasresponsedetailtab_004": "原始内容",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_001": "中断前台任务成功",
-    "msg_pages_channel_param_tabs_console_commandexecuteblock_002": "请输入命令, 使用`回车`执行，`alt + 回车`换行",
+    "msg_pages_channel_param_tabs_console_commandexecuteblock_002": "请输入 Arthas 命令, 使用`回车`执行，`alt + 回车`换行",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_003": "任务状态:",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_004": "空闲",
     "msg_pages_channel_param_tabs_console_commandexecuteblock_005": "执行",

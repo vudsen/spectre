@@ -21,6 +21,7 @@ import i18n from '@/i18n'
 import QuickCommand, {
   type QuickCommandRef,
 } from '@/pages/channel/[channelId]/_component/QuickCommand'
+import { setTipRead } from '@/store/tipSlice.ts'
 
 interface ToolbarProps {
   appName: string
@@ -36,6 +37,9 @@ const Header: React.FC<ToolbarProps> = (props) => {
   )
   const classloaderHash = useSelector<RootState, string | undefined>(
     (state) => state.channel.context.classloaderHash,
+  )
+  const isTryAiTipRead = useSelector<RootState, boolean | undefined>(
+    (state) => state.tip.channelAiTip,
   )
   const [isClassloaderSetterOpen, setClassloaderStterOpen] = useState(false)
   const dispatch = useDispatch()
@@ -82,6 +86,25 @@ const Header: React.FC<ToolbarProps> = (props) => {
       }),
     )
     setClassloaderStterOpen(false)
+  }
+
+  const markAiTipRead = () => {
+    dispatch(
+      setTipRead({
+        channelAiTip: true,
+      }),
+    )
+  }
+
+  const onAiConsoleToggle = () => {
+    props.onAiConsoleToggle()
+    if (!isTryAiTipRead) {
+      dispatch(
+        setTipRead({
+          channelAiTip: true,
+        }),
+      )
+    }
   }
 
   return (
@@ -138,9 +161,28 @@ const Header: React.FC<ToolbarProps> = (props) => {
           </Button>
         </Tooltip>
         <Tooltip
-          content={i18n.t('hardcoded.msg_pages_channel_param_header_005')}
+          color={isTryAiTipRead ? undefined : 'primary'}
+          content={
+            isTryAiTipRead ? (
+              i18n.t('channel.ai')
+            ) : (
+              <div className="flex flex-col">
+                <div className="mt-2">{i18n.t('channel.tryAiTip')}</div>
+                <Button
+                  onPress={markAiTipRead}
+                  className="mt-2 self-end text-white"
+                  variant="light"
+                >
+                  {i18n.t('common.neverRemind')}
+                </Button>
+              </div>
+            )
+          }
+          showArrow
+          placement="bottom"
+          isOpen={isTryAiTipRead === undefined ? true : undefined}
         >
-          <Button variant="light" isIconOnly onPress={props.onAiConsoleToggle}>
+          <Button variant="light" isIconOnly onPress={onAiConsoleToggle}>
             <SvgIcon size={23} icon={ChannelIcon.AI}></SvgIcon>
           </Button>
         </Tooltip>
