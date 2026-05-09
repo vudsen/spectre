@@ -38,6 +38,14 @@ export type ArthasMessageBus = {
    * 当前 channel 上的消息. 不一定是全部消息
    */
   messages: ArthasMessage[]
+  /**
+   * 删除所有消息
+   */
+  clearAllMessage(): Promise<void>
+  /**
+   * 删除指定消息
+   */
+  deleteMessage(message: ArthasMessage): Promise<void>
 }
 
 let globalId = Date.now()
@@ -229,6 +237,21 @@ const createArthasMessageBusInternal = async (
     })
   }
 
+  async function clearAllMessage() {
+    await db.deleteAllMessage(channelId)
+    messages.splice(0, messages.length)
+  }
+
+  async function deleteMessage(message: ArthasMessage) {
+    const idx = messages.findIndex((msg) => msg.id === message.id)
+    if (idx < 0) {
+      console.error('Can not find message: ', message)
+      return
+    }
+    await db.deleteMessage(messages[idx])
+    messages.splice(idx, 1)
+  }
+
   return {
     launchPullResultTask,
     pullNow,
@@ -238,6 +261,8 @@ const createArthasMessageBusInternal = async (
     messages,
     close,
     cleanExpiredMessage,
+    clearAllMessage,
+    deleteMessage,
   }
 }
 

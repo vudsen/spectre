@@ -128,11 +128,7 @@ const QuickCommand: React.FC<QuickCommandProps> = (props) => {
             <ListboxItem key="watch">Watch</ListboxItem>
             <ListboxItem key="trace">Trace</ListboxItem>
             <ListboxItem key="stack">Stack</ListboxItem>
-            <ListboxItem key="jad">
-              {i18n.t(
-                'hardcoded.msg_pages_channel_param_component_quickcommand_index_002',
-              )}
-            </ListboxItem>
+            <ListboxItem key="jad">{i18n.t('channel.decompile')}</ListboxItem>
           </Listbox>
         </PopoverContent>
       </Popover>

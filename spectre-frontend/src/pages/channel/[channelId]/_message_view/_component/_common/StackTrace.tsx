@@ -2,12 +2,14 @@ import React, {
   type MouseEvent,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from 'react'
 import clsx from 'clsx'
-import RightClickMenu from '@/components/RightClickMenu/RightClickMenu.tsx'
-import { ListboxItem } from '@heroui/react'
+import RightClickMenu, {
+  type RightClickMenuItem,
+} from '@/components/RightClickMenu/RightClickMenu.tsx'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
@@ -87,6 +89,35 @@ const StackTrace: React.FC<StackTraceProps> = ({ traces, onDirty }) => {
     [changeFlag, context, traces],
   )
 
+  const items = useMemo<RightClickMenuItem[]>(
+    () => [
+      {
+        name: i18n.t('channel.decompile'),
+        key: Actions.JAD,
+      },
+      {
+        name: 'Watch',
+        key: Actions.WATCH,
+      },
+      {
+        name: 'Stack',
+        key: Actions.STACK,
+      },
+      {
+        name: 'Trace',
+        key: Actions.TRACE,
+      },
+      {
+        name: markedLines.has(selectedIndex.current)
+          ? i18n.t('channel.unmark')
+          : i18n.t('channel.mark'),
+        key: Actions.FLAG,
+        icon: <SvgIcon icon={Icon.BOOKMARK} size={18} />,
+      },
+    ],
+    [markedLines],
+  )
+
   return (
     <div>
       <div className="text-default-600 ml-4 flex w-auto flex-col text-sm">
@@ -109,28 +140,7 @@ const StackTrace: React.FC<StackTraceProps> = ({ traces, onDirty }) => {
           </div>
         ))}
       </div>
-      <RightClickMenu {...menuProps} onAction={onAction}>
-        <ListboxItem key={Actions.JAD}>
-          {i18n.t(
-            'hardcoded.msg_pages_channel_param_component_quickcommand_index_002',
-          )}
-        </ListboxItem>
-        <ListboxItem key={Actions.WATCH}>Watch</ListboxItem>
-        <ListboxItem key={Actions.STACK}>Stack</ListboxItem>
-        <ListboxItem key={Actions.TRACE}>Trace</ListboxItem>
-        <ListboxItem
-          key={Actions.FLAG}
-          startContent={<SvgIcon icon={Icon.BOOKMARK} size={18} />}
-        >
-          {markedLines.has(selectedIndex.current)
-            ? i18n.t(
-                'hardcoded.msg_pages_channel_param_message_view_component_common_stacktrace_001',
-              )
-            : i18n.t(
-                'hardcoded.msg_pages_channel_param_message_view_component_common_stacktrace_002',
-              )}
-        </ListboxItem>
-      </RightClickMenu>
+      <RightClickMenu {...menuProps} onAction={onAction} items={items} />
     </div>
   )
 }

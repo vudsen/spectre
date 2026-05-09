@@ -215,11 +215,7 @@ const TraceMessageDetail: React.FC<DetailComponentProps<TraceMessage>> = (
   return (
     <div>
       <RightClickMenu {...menuProps} onAction={onAction}>
-        <ListboxItem key="jad">
-          {i18n.t(
-            'hardcoded.msg_pages_channel_param_component_quickcommand_index_002',
-          )}
-        </ListboxItem>
+        <ListboxItem key="jad">{i18n.t('channel.decompile')}</ListboxItem>
         <ListboxItem key="watch">Watch</ListboxItem>
         <ListboxItem key="trace">Trace</ListboxItem>
         <ListboxItem key="stack">Stack</ListboxItem>

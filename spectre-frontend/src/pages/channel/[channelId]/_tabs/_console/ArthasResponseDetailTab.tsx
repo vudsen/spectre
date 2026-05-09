@@ -73,11 +73,7 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
         </Tab>
       </Tabs>
       <div className="absolute top-3.5 right-5">
-        <Tooltip
-          content={i18n.t(
-            'hardcoded.msg_pages_channel_param_tabs_console_arthasresponsedetailtab_005',
-          )}
-        >
+        <Tooltip content={i18n.t('channel.openInNewTab')}>
           <SvgIcon
             onClick={openInNewTab}
             icon={Icon.EXTERNAL}
