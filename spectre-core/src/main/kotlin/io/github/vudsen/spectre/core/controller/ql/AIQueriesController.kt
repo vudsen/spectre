@@ -11,17 +11,13 @@ import org.springframework.stereotype.Controller
 @SchemaMapping(typeName = "AIQueries")
 @PreAuthorize("hasPermission(0, T(io.github.vudsen.spectre.api.perm.AppPermissions).LLM_READ)")
 class AIQueriesController(
-    private val aiService: AiService
+    private val aiService: AiService,
 ) {
-
-
     object AIQueries
 
     @QueryMapping(name = "ai")
     fun ai(): AIQueries = AIQueries
 
-
     @SchemaMapping
     fun config(): LLMConfigurationVO = aiService.getCurrentLLMConfiguration()
-
 }
