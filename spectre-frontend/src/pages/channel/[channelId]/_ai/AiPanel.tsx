@@ -1,19 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { addToast, Button } from '@heroui/react'
+import { addToast, Button, Tooltip } from '@heroui/react'
 import clsx from 'clsx'
+import { Rnd } from 'react-rnd'
 import { type AiMessageDTO, chatByAiStream } from '@/api/impl/ai.ts'
-import AiComposer from '@/pages/channel/[channelId]/_ai/AiComposer.tsx'
-import AiMessageList from '@/pages/channel/[channelId]/_ai/AiMessageList.tsx'
 import {
   getOrCreateConversationId,
   parseAskHumanRequest,
   resetConversationId,
 } from '@/pages/channel/[channelId]/_ai/sse.ts'
 import type {
-  AiCardToolSegment,
   AiStreamMessage,
-  AiToolEventType,
-  ConversationCard,
   PendingAskHumanState,
   PendingConfirmState,
 } from '@/pages/channel/[channelId]/_ai/types.ts'
@@ -21,8 +17,23 @@ import { store, type RootState } from '@/store'
 import { updateChannelContext } from '@/store/channelSlice.ts'
 import { useDispatch, useSelector } from 'react-redux'
 import i18n from '@/i18n'
+import SvgIcon from '@/components/icon/SvgIcon.tsx'
+import Icon from '@/components/icon/icon.ts'
+import {
+  aiPanelLayoutConstants,
+  loadLayout,
+  normalizeLayout,
+  persistLayout,
+  type AiPanelLayoutState,
+} from '@/pages/channel/[channelId]/_ai/aiPanelLayout.ts'
+import {
+  buildConversationCards,
+  createAiMessageId,
+} from '@/pages/channel/[channelId]/_ai/aiConversationCards.ts'
+import useAiPanelAvailability from '@/pages/channel/[channelId]/_ai/useAiPanelAvailability.ts'
+import AiPanelContent from '@/pages/channel/[channelId]/_ai/AiPanelContent.tsx'
 
-interface AiPanelProps {
+export interface AiPanelProps {
   channelId: string
   isOpen: boolean
   onClose: () => void
@@ -35,185 +46,8 @@ function formatUserMessage(query: string, skillName?: string): string {
   return `\`$${skillName}\` ${query}`
 }
 
-function createMessageId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
-}
-
-function formatAiInlineMessage(msg: AiStreamMessage): string {
-  switch (msg.type) {
-    case 'TOOL_CALL_START':
-      return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_001', {
-        tool: msg.data,
-        parameter: msg.parameter ? ` (${msg.parameter})` : '',
-      })
-    case 'TOOL_CALL_END':
-      return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_002', {
-        tool: msg.data,
-        parameter: msg.parameter ? ` (${msg.parameter})` : '',
-      })
-    case 'PENDING_CONFIRM':
-      return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_003', {
-        tool: msg.data,
-      })
-    case 'ASK_HUMAN':
-      return msg.askHuman?.question || msg.data
-    default:
-      return msg.data
-  }
-}
-
-function buildConversationCards(events: AiStreamMessage[]): ConversationCard[] {
-  const cards: ConversationCard[] = []
-  let currentAiCard: Extract<ConversationCard, { type: 'ai' }> | undefined
-  let currentErrorCard: Extract<ConversationCard, { type: 'error' }> | undefined
-  let activeToolSegment: AiCardToolSegment | undefined
-
-  const ensureAiCard = (): Extract<ConversationCard, { type: 'ai' }> => {
-    if (currentAiCard) {
-      return currentAiCard
-    }
-    const card: Extract<ConversationCard, { type: 'ai' }> = {
-      id: createMessageId(),
-      type: 'ai',
-      segments: [],
-    }
-    cards.push(card)
-    currentAiCard = card
-    return card
-  }
-
-  const appendTextSegment = (text: string): void => {
-    if (!text) {
-      return
-    }
-    const aiCard = ensureAiCard()
-    const lastSegment = aiCard.segments.at(-1)
-    if (lastSegment?.kind === 'text') {
-      lastSegment.markdown += text
-      return
-    }
-    aiCard.segments.push({
-      id: createMessageId(),
-      kind: 'text',
-      markdown: text,
-    })
-  }
-
-  const appendToolEvent = (event: AiStreamMessage): void => {
-    if (!activeToolSegment) {
-      if (event.type === 'TOOL_CALL_END') {
-        appendTextSegment(formatAiInlineMessage(event))
-        return
-      }
-      if (event.type === 'TOOL_CALL_START') {
-        const toolSegment: AiCardToolSegment = {
-          id: createMessageId(),
-          kind: 'tool',
-          toolName: event.data,
-          status: 'running',
-          events: [],
-        }
-        ensureAiCard().segments.push(toolSegment)
-        activeToolSegment = toolSegment
-      } else {
-        const toolSegment: AiCardToolSegment = {
-          id: createMessageId(),
-          kind: 'tool',
-          toolName: event.data,
-          status:
-            event.type === 'PENDING_CONFIRM' ? 'pending_confirm' : 'ask_human',
-          events: [],
-        }
-        ensureAiCard().segments.push(toolSegment)
-        activeToolSegment = toolSegment
-      }
-    } else if (event.type === 'TOOL_CALL_START') {
-      activeToolSegment.status =
-        activeToolSegment.status === 'completed'
-          ? 'completed'
-          : activeToolSegment.status
-      const toolSegment: AiCardToolSegment = {
-        id: createMessageId(),
-        kind: 'tool',
-        toolName: event.data,
-        status: 'running',
-        events: [],
-      }
-      ensureAiCard().segments.push(toolSegment)
-      activeToolSegment = toolSegment
-    }
-
-    activeToolSegment.events.push({
-      id: event.id,
-      type: event.type as AiToolEventType,
-      data: event.data,
-      parameter: event.parameter,
-      askHuman: event.askHuman,
-    })
-
-    if (event.type === 'PENDING_CONFIRM') {
-      activeToolSegment.status = 'pending_confirm'
-    }
-    if (event.type === 'ASK_HUMAN') {
-      activeToolSegment.status = 'ask_human'
-    }
-    if (event.type === 'TOOL_CALL_END') {
-      activeToolSegment.status = 'completed'
-      activeToolSegment = undefined
-    }
-  }
-
-  for (const event of events) {
-    if (event.type === 'USER') {
-      currentAiCard = undefined
-      currentErrorCard = undefined
-      activeToolSegment = undefined
-      cards.push({
-        id: event.id,
-        type: 'user',
-        text: event.data,
-      })
-      continue
-    }
-
-    if (event.type === 'ERROR') {
-      currentAiCard = undefined
-      activeToolSegment = undefined
-      if (!currentErrorCard) {
-        currentErrorCard = {
-          id: createMessageId(),
-          type: 'error',
-          messages: [event.data],
-        }
-        cards.push(currentErrorCard)
-      } else {
-        currentErrorCard.messages.push(event.data)
-      }
-      continue
-    }
-
-    currentErrorCard = undefined
-    if (event.type === 'TOKEN') {
-      if (activeToolSegment) {
-        appendToolEvent(event)
-      } else {
-        appendTextSegment(event.data)
-      }
-      continue
-    }
-
-    appendToolEvent(event)
-  }
-
-  return cards
-}
-
-const AI_PANEL_WIDTH = 620
-
 const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
+  const { enabled } = useAiPanelAvailability()
   const [events, setEvents] = useState<AiStreamMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [conversationId, setConversationId] = useState('')
@@ -224,6 +58,21 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     PendingAskHumanState | undefined
   >(undefined)
   const dispatch = useDispatch()
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== 'undefined'
+      ? window.innerWidth < aiPanelLayoutConstants.mobileBreakpoint
+      : false,
+  )
+  const [layout, setLayout] = useState<AiPanelLayoutState>(() =>
+    typeof window !== 'undefined'
+      ? loadLayout(channelId)
+      : {
+          x: aiPanelLayoutConstants.margin,
+          y: aiPanelLayoutConstants.margin,
+          width: aiPanelLayoutConstants.panelWidth,
+          height: aiPanelLayoutConstants.panelHeight,
+        },
+  )
   const autoConfirm = useSelector<RootState, boolean | undefined>(
     (state) => state.channel.context.autoConfirm,
   )
@@ -234,6 +83,9 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     setEvents([])
     setPendingConfirm(undefined)
     setPendingAskHuman(undefined)
+    if (typeof window !== 'undefined') {
+      setLayout(loadLayout(channelId))
+    }
   }, [channelId])
 
   useEffect(() => {
@@ -242,10 +94,23 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     }
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    const onResize = () => {
+      setIsMobile(window.innerWidth < aiPanelLayoutConstants.mobileBreakpoint)
+      setLayout((prev) => normalizeLayout(prev))
+    }
+    window.addEventListener('resize', onResize)
+    onResize()
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   const cards = useMemo(() => buildConversationCards(events), [events])
 
   const pushEvent = useCallback((next: Omit<AiStreamMessage, 'id'>) => {
-    setEvents((prev) => [...prev, { ...next, id: createMessageId() }])
+    setEvents((prev) => [...prev, { ...next, id: createAiMessageId() }])
   }, [])
 
   const handleAiMessage = useCallback(
@@ -315,7 +180,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
 
   const submitQuery = useCallback(
     async (query: string) => {
-      if (isLoading || !conversationId) {
+      if (!enabled || isLoading || !conversationId) {
         return
       }
       const activeSkill = store.getState().channel.context.selectedSkill
@@ -370,6 +235,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
       channelId,
       conversationId,
       dispatch,
+      enabled,
       handleAiMessage,
       isLoading,
       pendingConfirm,
@@ -390,47 +256,107 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     })
   }
 
+  const handleDesktopLayoutChange = useCallback(
+    (nextLayout: AiPanelLayoutState) => {
+      const normalized = normalizeLayout(nextLayout)
+      setLayout(normalized)
+      persistLayout(channelId, normalized)
+    },
+    [channelId],
+  )
+
+  if (!isOpen) {
+    return null
+  }
+
   return (
-    <div
+    <Rnd
+      disableDragging={isMobile}
+      enableResizing={!isMobile}
+      bounds="window"
+      dragHandleClassName="ai-panel-drag-handle"
+      minWidth={aiPanelLayoutConstants.minWidth}
+      minHeight={aiPanelLayoutConstants.minHeight}
+      maxWidth="90vw"
+      maxHeight="85vh"
+      size={
+        isMobile
+          ? {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            }
+          : { width: layout.width, height: layout.height }
+      }
+      position={isMobile ? { x: 0, y: 0 } : { x: layout.x, y: layout.y }}
+      onDragStop={(_e, data) => {
+        if (isMobile) {
+          return
+        }
+        handleDesktopLayoutChange({
+          ...layout,
+          x: data.x,
+          y: data.y,
+        })
+      }}
+      onResizeStop={(_e, _direction, ref, _delta, position) => {
+        if (isMobile) {
+          return
+        }
+        handleDesktopLayoutChange({
+          x: position.x,
+          y: position.y,
+          width: parseInt(ref.style.width, 10),
+          height: parseInt(ref.style.height, 10),
+        })
+      }}
       className={clsx(
-        'bg-content1 border-l-divider flex h-screen flex-col overflow-hidden transition-[width] duration-200',
-        isOpen ? 'border-l' : 'border-l-0',
+        'z-50 overflow-hidden rounded-xl border shadow-lg',
+        'bg-content1 border-default-200',
+        isMobile ? 'rounded-none border-0 shadow-none' : '',
       )}
-      style={{ width: isOpen ? AI_PANEL_WIDTH : 0 }}
+      style={{ position: 'fixed' }}
     >
-      {isOpen ? (
-        <>
-          <div className="border-b-divider flex items-center justify-between border-b px-3 py-2">
-            <div className="text-sm font-bold">{i18n.t('channel.ai')}</div>
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="flat" onPress={clearConversation}>
-                {i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_006')}
-              </Button>
-              <Button size="sm" variant="light" onPress={onClose}>
-                {i18n.t(
-                  'hardcoded.msg_components_labeleditor_labelmodifymodalcontent_002',
-                )}
+      <div className="flex h-full flex-col overflow-hidden">
+        <div
+          className={clsx(
+            'ai-panel-drag-handle flex items-center justify-between px-3 py-2',
+            isMobile ? 'cursor-default' : 'cursor-move',
+          )}
+        >
+          <div className="flex w-full items-center justify-between">
+            <div className="grow opacity-0 transition-opacity hover:opacity-100!">
+              <SvgIcon icon={Icon.GRIP}></SvgIcon>
+            </div>
+            <div>
+              <Tooltip content={i18n.t('channel.resetSession')}>
+                <Button
+                  size="sm"
+                  variant="light"
+                  onPress={clearConversation}
+                  isIconOnly
+                  isDisabled={!enabled || isLoading}
+                >
+                  <SvgIcon icon={Icon.TRASH} />
+                </Button>
+              </Tooltip>
+              <Button size="sm" variant="light" onPress={onClose} isIconOnly>
+                <SvgIcon icon={Icon.CLOSE} />
               </Button>
             </div>
           </div>
-          <AiMessageList
-            cards={cards}
-            pendingConfirm={pendingConfirm}
-            pendingAskHuman={pendingAskHuman}
-            autoConfirm={autoConfirm}
-            isLoading={isLoading}
-            onQuickSubmit={(value) => {
-              void submitQuery(value)
-            }}
-          />
-          <AiComposer
-            disabled={isLoading}
-            onSubmit={submitQuery}
-            skillSelectionDisabled={events.length > 0}
-          />
-        </>
-      ) : null}
-    </div>
+        </div>
+        <AiPanelContent
+          enabled={enabled}
+          cards={cards}
+          pendingConfirm={pendingConfirm}
+          pendingAskHuman={pendingAskHuman}
+          autoConfirm={autoConfirm}
+          isLoading={isLoading}
+          eventsLength={events.length}
+          onSubmit={submitQuery}
+        />
+      </div>
+    </Rnd>
   )
 }
 

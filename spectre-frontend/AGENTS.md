@@ -74,3 +74,55 @@ const MyForm: React.FC = () => {
 ```
 
 必须参考这个示例编写，不能丢掉例如 `表单校验`、`loading` 以及 `toast` 提示。
+
+## 关于 graphql
+
+schema 路径: `spectre-frontend/src/graphql/generated/schema.graphql`
+
+查询示例:
+
+```typescript
+import { graphql } from '@/graphql/generated'
+import { execute } from '@/graphql/execute.ts'
+import useGraphQL from '@/hook/useGraphQL.ts'
+
+// 1. 先声明查询语句
+const PermissionsBindQuery = graphql(`
+  query PermissionsBindQuery($resource: String!) {
+    permission {
+      listPermissionsByResource(resource: $resource) {
+        action
+        name
+      }
+    }
+  }
+`)
+
+execute(PermissionsBindQuery, {
+  subjectId: "foo",
+  subjectType: "bar",
+  resource: "...",
+})
+  .then((r) => {
+    // ...
+  })
+
+// or use hook
+const { result, isLoading } = useGraphQL(ListJvmSource, page)
+```
+
+当你需要获取结果的类型时:
+
+```typescript
+import type { DocumentResult } from '@/graphql/execute.ts'
+
+type PermissionResult = DocumentResult<
+  typeof PermissionsBindQuery
+>['permission']['listPermissionsByResource'][number]
+```
+
+## 国际化
+
+禁止直接在代码中硬编码文字(专有名词除外)，你必须在 `spectre-frontend/src/i18n` 中提前准备好占位符，然后在代码中使用。
+
+你可以只提供一种翻译，例如仅提供中文翻译，英文翻译提供对应占位符，让用户自己翻译。

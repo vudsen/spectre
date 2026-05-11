@@ -16,5 +16,6 @@ type Query {
     role: RoleQueries!
     permission: PolicyPermissionQueries!
     log: LogEntityQueries!
+    ai: AIQueries!
 }
 

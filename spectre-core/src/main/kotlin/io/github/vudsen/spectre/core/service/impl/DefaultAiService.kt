@@ -716,8 +716,8 @@ class DefaultAiService(
         return HourlyTokenUsage(epochHour = hour, used = used)
     }
 
-    override fun getCurrentLLMConfiguration(): LLMConfigurationVO? {
-        val llmConfig = getCurrentLLMConfigurationDTO() ?: return null
+    override fun getCurrentLLMConfiguration(): LLMConfigurationVO {
+        val llmConfig = getCurrentLLMConfigurationDTO() ?: return LLMConfigurationVO("", "", 0, false, 0, Instant.now())
         val hourlyUsage = parseHourlyTokenUsage(sysConfigService.findConfigValue(SysConfigIds.LLM_USED))
         val currentUsed = hourlyUsage.used
         val nextRefresh = Instant.ofEpochMilli((hourlyUsage.epochHour + 1) * MILLIS_PER_HOUR)

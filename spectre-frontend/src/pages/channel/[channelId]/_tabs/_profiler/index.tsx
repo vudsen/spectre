@@ -51,7 +51,7 @@ const ProfilerTab: React.FC = () => {
 
   useEffect(() => {
     onRefresh()
-  }, [])
+  }, [onRefresh])
 
   const viewHtml = (file: ProfilerFile) => {
     window.open(

@@ -15,6 +15,10 @@ This directive disables error propagation when a non nullable field returns null
 """
 directive @experimental_disableErrorPropagation on MUTATION | QUERY | SUBSCRIPTION
 
+type AIQueries {
+  config: LLMConfigurationVO!
+}
+
 type BasePermissionEntity {
   action: String!
   name: String!
@@ -23,6 +27,15 @@ type BasePermissionEntity {
 
 """Dynamic JSON Type"""
 scalar JSON
+
+type LLMConfigurationVO {
+  baseUrl: String!
+  currentUsed: Long!
+  enabled: Boolean!
+  maxTokenPerHour: Long!
+  model: String!
+  nextRefresh: String!
+}
 
 """Labels"""
 scalar Labels
@@ -89,6 +102,7 @@ type PolicyPermissionQueries {
 }
 
 type Query {
+  ai: AIQueries!
   log: LogEntityQueries!
   permission: PolicyPermissionQueries!
   role: RoleQueries!

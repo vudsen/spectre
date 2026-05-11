@@ -1,0 +1,12 @@
+type AIQueries {
+    config: LLMConfigurationVO!
+}
+
+type LLMConfigurationVO {
+    baseUrl: String!
+    model: String!
+    maxTokenPerHour: Long!
+    enabled: Boolean!
+    currentUsed: Long!
+    nextRefresh: String!
+}
