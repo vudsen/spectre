@@ -28,7 +28,7 @@ interface AiService {
         selectedSkillId: String?,
     )
 
-    fun getCurrentLLMConfiguration(): LLMConfigurationVO?
+    fun getCurrentLLMConfiguration(): LLMConfigurationVO
 
     fun updateLLMConfiguration(configuration: UpdateLLMConfigurationDTO)
 

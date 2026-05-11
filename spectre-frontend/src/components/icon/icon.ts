@@ -32,6 +32,7 @@ const Icon = {
   COPY: 'fc-copy',
   CHECK: 'fc-check',
   DOWNLOAD: 'fc-download',
+  CLOSE: 'fc-close',
 } as const
 
 export type Icons = (typeof Icon)[keyof typeof Icon]

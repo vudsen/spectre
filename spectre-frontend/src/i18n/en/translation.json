@@ -88,7 +88,12 @@
     "unmark": "Unmark",
     "decompile": "Decompile",
     "tryAiTip": "Try AI to address problems",
-    "ai": "AI Assistant"
+    "ai": "AI Assistant",
+    "resetSession": "Reset Session",
+    "skillSelectTip": "Use $ to quickly select skills",
+    "aiWelcomeMessage": "Start a talk with AI!",
+    "llmDisabled": "Agent is disabled.",
+    "goOpen": "Go Open"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",
@@ -254,7 +259,6 @@
     "msg_pages_channel_param_ai_aimessagelist_014": "AI is thinking...",
     "msg_pages_channel_param_ai_aipanel_004": "AI request failed",
     "msg_pages_channel_param_ai_aipanel_005": "AI session cleared",
-    "msg_pages_channel_param_ai_aipanel_006": "Clear session",
     "msg_pages_channel_param_ai_skillselectmodalcontent_001": "Failed to load skills",
     "msg_pages_channel_param_ai_skillselectmodalcontent_002": "Available skills",
     "msg_pages_channel_param_ai_skillselectmodalcontent_003": "Retry",

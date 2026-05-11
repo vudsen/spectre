@@ -79,7 +79,12 @@
     "unmark": "取消标记",
     "decompile": "反编译",
     "tryAiTip": "尝试使用 AI 解决线上环境问题",
-    "ai": "AI 助手"
+    "ai": "AI 助手",
+    "resetSession": "重置会话",
+    "skillSelectTip": "使用 $ 可以快速选择技能",
+    "aiWelcomeMessage": "开始与 AI 对话吧",
+    "llmDisabled": "智能体已被禁用",
+    "goOpen": "前往开启"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",
@@ -245,7 +250,6 @@
     "msg_pages_channel_param_ai_aimessagelist_014": "AI 正在思考...",
     "msg_pages_channel_param_ai_aipanel_004": "AI 请求失败",
     "msg_pages_channel_param_ai_aipanel_005": "已清空 AI 会话",
-    "msg_pages_channel_param_ai_aipanel_006": "清空会话",
     "msg_pages_channel_param_ai_skillselectmodalcontent_001": "技能加载失败",
     "msg_pages_channel_param_ai_skillselectmodalcontent_002": "可用技能",
     "msg_pages_channel_param_ai_skillselectmodalcontent_003": "重试",

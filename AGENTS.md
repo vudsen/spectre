@@ -30,7 +30,8 @@
 - 后端命名沿用现有后缀：`*DTO`、`*VO`、`*PO`、`*Service`，不要新造命名体系。
 - 前端优先复用现有技术栈与约定：`@heroui/react`、Redux Toolkit、`@/` 路径别名、既有表单/校验组件。
 - 修改完后端代码后，必须执行 `./gradlew ktlintFormat` 来格式化项目
- 
+- 涉及 spectre-frontend/** 修改时，必须严格遵守 spectre-frontend/AGENTS.md
+
 ## 4. 修改边界（避免大规模改动）
 
 - 优先做“最小闭环改动”：只改与需求直接相关的模块和文件。

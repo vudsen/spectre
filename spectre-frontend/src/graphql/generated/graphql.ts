@@ -26,11 +26,26 @@ export type Scalars = {
   ToolchainType: { input: any; output: any; }
 };
 
+export type AiQueries = {
+  __typename?: 'AIQueries';
+  config: LlmConfigurationVo;
+};
+
 export type BasePermissionEntity = {
   __typename?: 'BasePermissionEntity';
   action: Scalars['String']['output'];
   name: Scalars['String']['output'];
   resource: Scalars['String']['output'];
+};
+
+export type LlmConfigurationVo = {
+  __typename?: 'LLMConfigurationVO';
+  baseUrl: Scalars['String']['output'];
+  currentUsed: Scalars['Long']['output'];
+  enabled: Scalars['Boolean']['output'];
+  maxTokenPerHour: Scalars['Long']['output'];
+  model: Scalars['String']['output'];
+  nextRefresh: Scalars['String']['output'];
 };
 
 /**  只有查询，先直接用 PO */
@@ -130,6 +145,7 @@ export type PolicyPermissionQueriesPermissionsArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  ai: AiQueries;
   log: LogEntityQueries;
   permission: PolicyPermissionQueries;
   role: RoleQueries;
