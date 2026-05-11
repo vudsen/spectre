@@ -571,7 +571,6 @@ class DefaultAiService(
         val usedTokens =
             response.metadata.usage.totalTokens
                 .toLong()
-                ?: estimateTokens(selectionPrompt.length + question.length + content.length)
 
         recordTokenUsage(usedTokens)
         val normalized = normalizeSkillSelection(content)
