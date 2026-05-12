@@ -42,7 +42,6 @@ export const updateToolchainItem = (dto: ToolchainItemDTO) => {
   return axios.post('toolchain/item/update', dto)
 }
 
-
 type CreateToolchainBundleDTO = {
   name: string
   jattachTag: string

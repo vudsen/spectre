@@ -14,7 +14,10 @@ import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import type { SharedSelection } from '@heroui/system'
 import { handleError } from '@/common/util.ts'
 import toolchainTypes, { type ToolchainItemType } from './ToolchainItemType.ts'
-import { createToolchainItem, updateToolchainItem } from '@/api/impl/toolchain.ts'
+import {
+  createToolchainItem,
+  updateToolchainItem,
+} from '@/api/impl/toolchain.ts'
 import i18n from '@/i18n'
 
 interface ToolchainItemModifyDrawerContentProps {
