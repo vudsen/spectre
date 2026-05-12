@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.core.service.ai
+package io.github.vudsen.spectre.core.integrate.ai
 
 import io.github.vudsen.spectre.api.entity.Skill
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver

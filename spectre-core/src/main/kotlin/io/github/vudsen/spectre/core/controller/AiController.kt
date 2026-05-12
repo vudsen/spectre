@@ -4,6 +4,7 @@ import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.service.AiService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
+import io.github.vudsen.spectre.core.integrate.ai.DefaultAgentEventPublisher
 import io.github.vudsen.spectre.core.vo.AiChatRequestVO
 import org.springframework.http.CacheControl
 import org.springframework.http.HttpHeaders
@@ -29,7 +30,13 @@ class AiController(
         @Validated @RequestBody request: AiChatRequestVO,
     ): ResponseEntity<SseEmitter> {
         val emitter = SseEmitter(0L)
-        aiService.query(request.conversationId, request.channelId, request.query, emitter)
+        aiService.chat(
+            request.conversationId,
+            request.channelId,
+            request.query,
+            DefaultAgentEventPublisher(emitter),
+            null,
+        )
         return streamResponse(emitter)
     }
 
@@ -38,7 +45,13 @@ class AiController(
         @Validated @RequestBody request: AiChatRequestVO,
     ): ResponseEntity<SseEmitter> {
         val emitter = SseEmitter(0L)
-        aiService.queryWithSkill(request.conversationId, request.channelId, request.query, emitter, request.skillId)
+        aiService.chat(
+            request.conversationId,
+            request.channelId,
+            request.query,
+            DefaultAgentEventPublisher(emitter),
+            request.skillId,
+        )
         return streamResponse(emitter)
     }
 

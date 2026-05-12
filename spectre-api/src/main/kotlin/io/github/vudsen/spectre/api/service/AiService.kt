@@ -1,30 +1,24 @@
 package io.github.vudsen.spectre.api.service
 
+import io.github.vudsen.spectre.api.AgentEventPublisher
 import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 interface AiService {
     /**
      * 询问 AI
+     * @param conversationId 对话 id
+     * @param channelId arthas channel id
+     * @param message 用户消息
+     * @param publisher AI 事件发布者
+     * @param selectedSkillId 选中的技能 id
      */
-    fun query(
+    fun chat(
         conversationId: String,
         channelId: String,
-        question: String,
-        emitter: SseEmitter,
-    )
-
-    /**
-     * 询问 AI（启用 Skill）
-     * @param selectedSkillId 已选的技能id，如果为空，则调用 LLM 自己选择
-     */
-    fun queryWithSkill(
-        conversationId: String,
-        channelId: String,
-        question: String,
-        emitter: SseEmitter,
+        message: String,
+        publisher: AgentEventPublisher,
         selectedSkillId: String?,
     )
 

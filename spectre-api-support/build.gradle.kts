@@ -18,6 +18,7 @@ dependencies {
     implementation("tools.jackson.core:jackson-core")
     implementation("tools.jackson.core:jackson-databind")
     implementation("org.springframework.boot:spring-boot")
+    implementation("org.springframework.security:spring-security-core")
 }
 
 tasks.test {

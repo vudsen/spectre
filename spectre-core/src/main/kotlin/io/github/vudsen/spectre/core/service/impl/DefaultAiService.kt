@@ -1,7 +1,6 @@
 package io.github.vudsen.spectre.core.service.impl
 
-import io.github.vudsen.spectre.api.AiTools
-import io.github.vudsen.spectre.api.dto.AiMessageDTO
+import io.github.vudsen.spectre.api.AgentEventPublisher
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
@@ -12,11 +11,11 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.AiService
 import io.github.vudsen.spectre.api.service.SysConfigService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
-import io.github.vudsen.spectre.core.service.ai.AiQueryContext
-import io.github.vudsen.spectre.core.service.ai.AiSkillsLoader
-import io.github.vudsen.spectre.core.service.ai.AiToolCall
-import io.github.vudsen.spectre.core.service.ai.AiToolExecutionContext
-import io.github.vudsen.spectre.core.service.ai.AiToolRegistry
+import io.github.vudsen.spectre.core.integrate.ai.AgentToolsManager
+import io.github.vudsen.spectre.core.integrate.ai.AiQueryContext
+import io.github.vudsen.spectre.core.integrate.ai.AiSkillsLoader
+import io.github.vudsen.spectre.core.integrate.ai.currentNotRespondedTool
+import io.github.vudsen.spectre.core.integrate.ai.tool.AskHumanTool
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
@@ -27,17 +26,13 @@ import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.ToolResponseMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.chat.model.ChatResponse
-import org.springframework.ai.chat.prompt.Prompt
 import org.springframework.ai.openai.OpenAiChatModel
 import org.springframework.ai.openai.OpenAiChatOptions
-import org.springframework.ai.openai.api.OpenAiApi
 import org.springframework.context.MessageSource
 import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.reactive.function.client.WebClientResponseException
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.time.Instant
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Executor
@@ -50,7 +45,7 @@ import kotlin.math.min
 @Service
 class DefaultAiService(
     private val sysConfigService: SysConfigService,
-    private val aiToolRegistry: AiToolRegistry,
+    private val agentToolsManager: AgentToolsManager,
     private val chatMemory: ChatMemory,
     private val messageSource: MessageSource,
 ) : AiService {
@@ -63,16 +58,6 @@ class DefaultAiService(
             ArrayBlockingQueue(32),
             { r -> Thread(r, "AI-SSE ${System.currentTimeMillis()}") },
         ) { _, _ -> throw BusinessException("error.system.busy") }
-
-    private data class AssistantTurn(
-        val text: String,
-        val toolCalls: List<AiToolCall>,
-        val usageTokens: Long,
-    )
-
-    private data class RecoverResult(
-        val nextMessage: Message,
-    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultAiService::class.java)
@@ -94,122 +79,6 @@ class DefaultAiService(
     @Volatile
     private var cachedLlmConfigHash: Int? = null
 
-    override fun query(
-        conversationId: String,
-        channelId: String,
-        question: String,
-        emitter: SseEmitter,
-    ) {
-        queryInternal(
-            conversationId = conversationId,
-            channelId = channelId,
-            question = question,
-            emitter = emitter,
-            enableSkill = false,
-            null,
-        )
-    }
-
-    override fun queryWithSkill(
-        conversationId: String,
-        channelId: String,
-        question: String,
-        emitter: SseEmitter,
-        selectedSkillId: String?,
-    ) {
-        queryInternal(
-            conversationId = conversationId,
-            channelId = channelId,
-            question = question,
-            emitter = emitter,
-            enableSkill = true,
-            selectedSkillId,
-        )
-    }
-
-    private fun queryInternal(
-        conversationId: String,
-        channelId: String,
-        question: String,
-        emitter: SseEmitter,
-        enableSkill: Boolean,
-        selectedSkillId: String?,
-    ) {
-        val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("error.llm.not.enabled")
-        val securityContext = SecurityContextHolder.getContext()
-
-        val locale = LocaleContextHolder.getLocale()
-        executor.execute {
-            val queryContext =
-                AiQueryContext(
-                    conversationId = conversationId,
-                    channelId = channelId,
-                    emitter = emitter,
-                    securityContext = securityContext,
-                    llmConfig = llmConfig,
-                )
-            try {
-                val recoverResult =
-                    recoverPendingState(
-                        context = queryContext,
-                        question = question,
-                    )
-
-                val shouldInitializeSystemMessage = chatMemory.get(conversationId).isEmpty()
-                val systemMessage =
-                    if (shouldInitializeSystemMessage) {
-                        if (enableSkill) {
-                            val systemMessageWithSkill =
-                                buildSystemMessageWithSkill(
-                                    context = queryContext,
-                                    questionForSkillSelection = question,
-                                    selectedSkillId = selectedSkillId,
-                                )
-                            systemMessageWithSkill
-                        } else {
-                            buildSystemMessageWithoutSkill()
-                        }
-                    } else {
-                        null
-                    }
-                if (shouldInitializeSystemMessage) {
-                    if (systemMessage == null) {
-                        emitter.send(
-                            AiMessageDTO(AiMessageDTO.MessageType.TOKEN, "未能理解您的问题，请提供更多上下文后重试"),
-                        )
-                        return@execute
-                    }
-                    chatMemory.add(conversationId, SystemMessage(systemMessage))
-                }
-
-                processConversationLoop(
-                    context = queryContext,
-                    initialInputMessage = recoverResult.nextMessage,
-                )
-            } catch (e: Exception) {
-                runCatching {
-                    if (e is WebClientResponseException) {
-                        logger.error("AI query failed, response body = '{}', statusCode = {}", e.responseBodyAsString, e.statusCode)
-                    } else {
-                        logger.error("AI query failed", e)
-                    }
-                    val msg: String =
-                        if (e is BusinessException) {
-                            e.toI18nMessage(locale)
-                        } else {
-                            e.message ?: "AI query failed(Internal Error)"
-                        }
-                    sendMessage(
-                        queryContext,
-                        AiMessageDTO(AiMessageDTO.MessageType.ERROR, msg),
-                    )
-                }
-            } finally {
-                emitter.complete()
-            }
-        }
-    }
-
     private fun processConversationLoop(
         context: AiQueryContext,
         initialInputMessage: Message,
@@ -219,98 +88,61 @@ class DefaultAiService(
         var nextInputMessage: Message? = initialInputMessage
         while (currentIteration < maxIteration) {
             currentIteration++
-            val assistantTurn =
+            val toolCalls =
                 requestAssistantTurn(
                     context = context,
                     inputMessage = nextInputMessage ?: break,
                 )
             nextInputMessage = null
 
-            if (assistantTurn.toolCalls.isEmpty()) {
+            if (toolCalls.isEmpty()) {
                 return
             }
 
-            for (toolCall in assistantTurn.toolCalls) {
-                val parameter = aiToolRegistry.resolveParameter(toolCall.name, toolCall.arguments)
-                sendMessage(
-                    context,
-                    AiMessageDTO(
-                        type = AiMessageDTO.MessageType.TOOL_CALL_START,
-                        data = toolCall.name,
-                        parameter = parameter,
-                    ),
-                )
-
-                if (aiToolRegistry.requiresConfirm(toolCall.name)) {
-                    sendMessage(
-                        context,
-                        AiMessageDTO(
-                            type = AiMessageDTO.MessageType.PENDING_CONFIRM,
-                            data = toolCall.name,
-                            parameter = parameter,
-                        ),
-                    )
+            for (toolCall in toolCalls) {
+                context.publisher.onToolCallStart(toolCall.name, toolCall.arguments)
+                if (agentToolsManager.isRequireConfirm(toolCall.name)) {
+                    context.publisher.sendPendingConfirm(toolCall.name, toolCall.arguments)
                     return
-                }
-
-                if (toolCall.name == AiTools.ASK_HUMAN) {
-                    sendMessage(
-                        context,
-                        AiMessageDTO(
-                            type = AiMessageDTO.MessageType.ASK_HUMAN,
-                            data = toolCall.name,
-                            parameter = toolCall.arguments,
-                        ),
-                    )
+                } else if (toolCall.name == AskHumanTool.NAME) {
+                    context.publisher.askHuman(toolCall.arguments)
                     return
                 }
 
                 val executionResult =
-                    aiToolRegistry.execute(
-                        toolName = toolCall.name,
-                        context =
-                            AiToolExecutionContext(
-                                conversationId = context.conversationId,
-                                channelId = context.channelId,
-                                securityContext = context.securityContext,
-                            ),
-                        argumentsJson = toolCall.arguments,
+                    agentToolsManager.executeTool(
+                        io.github.vudsen.spectre.api.ai
+                            .AiToolExecutionContext(context.conversationId),
+                        toolCall.name,
+                        toolCall.arguments,
                     )
 
-                nextInputMessage = buildToolResponseMessage(toolCall.id, toolCall.name, executionResult.output)
-                sendMessage(
-                    context,
-                    AiMessageDTO(
-                        type = AiMessageDTO.MessageType.TOOL_CALL_END,
-                        data = toolCall.name,
-                        parameter = executionResult.output,
-                    ),
-                )
+                nextInputMessage =
+                    ToolResponseMessage
+                        .builder()
+                        .responses(listOf(ToolResponseMessage.ToolResponse(toolCall.id, toolCall.name, executionResult)))
+                        .metadata(mapOf())
+                        .build()
+                context.publisher.onToolCallEnd(toolCall.name, executionResult)
                 break
             }
         }
         if (currentIteration == maxIteration) {
-            sendMessage(
-                context,
-                AiMessageDTO(
-                    type = AiMessageDTO.MessageType.ERROR,
-                    data = "达到迭代次数",
-                ),
-            )
+            context.publisher.onError(null, "达到迭代次数")
         }
     }
 
     private fun requestAssistantTurn(
         context: AiQueryContext,
         inputMessage: Message,
-    ): AssistantTurn {
+    ): List<AssistantMessage.ToolCall> {
         ensureNotExceededTokenLimit(context.llmConfig.maxTokenPerHour)
 
         val chatClient = getOrCreateChatClient(context.llmConfig)
         val options =
             buildLlmOptions(context) {
                 internalToolExecutionEnabled(false)
-                toolCallbacks(*aiToolRegistry.toolCallbacks())
+                toolCallbacks(agentToolsManager.toolCallbacks())
             }
 
         var latest: ChatResponse? = null
@@ -332,158 +164,50 @@ class DefaultAiService(
                         .orEmpty()
                 if (delta.isNotEmpty()) {
                     assistantMessageBuilder.append(delta)
-                    sendMessage(context, AiMessageDTO(AiMessageDTO.MessageType.TOKEN, delta))
+                    context.publisher.onMessage(delta)
                 }
             }.blockLast()
 
         val finalResponse = latest ?: throw AppException("Empty completion from model")
         val assistantMessage = finalResponse.result!!.output
 
-        val toolCalls =
-            assistantMessage.toolCalls.map { toolCall ->
-                AiToolCall(
-                    id = toolCall.id(),
-                    name = toolCall.name(),
-                    arguments = toolCall.arguments(),
-                )
-            }
-
         val usedTokens =
             finalResponse.metadata.usage.totalTokens
                 .toLong()
         recordTokenUsage(usedTokens)
 
-        return AssistantTurn(assistantMessageBuilder.toString(), toolCalls, usedTokens)
-    }
-
-    private fun recoverPendingState(
-        context: AiQueryContext,
-        question: String,
-    ): RecoverResult {
-        val pendingToolConfirm = getPendingToolConfirmFromMemory(context.conversationId)
-        if (pendingToolConfirm != null) {
-            return recoverPendingConfirm(
-                context = context,
-                question = question,
-                pending = pendingToolConfirm,
-            )
-        }
-
-        val pendingAskHuman = getPendingAskHumanFromMemory(context.conversationId)
-        if (pendingAskHuman != null) {
-            sendMessage(
-                context,
-                AiMessageDTO(
-                    type = AiMessageDTO.MessageType.TOOL_CALL_END,
-                    data = pendingAskHuman.toolName,
-                    parameter = pendingAskHuman.parameter,
-                ),
-            )
-            return RecoverResult(nextMessage = buildToolResponseMessage(pendingAskHuman.toolCallId, pendingAskHuman.toolName, question))
-        }
-
-        return RecoverResult(nextMessage = UserMessage(question))
+        return assistantMessage.toolCalls
     }
 
     private fun recoverPendingConfirm(
         context: AiQueryContext,
         question: String,
-        pending: PendingToolConfirmState,
-    ): RecoverResult {
+        tool: AssistantMessage.ToolCall,
+    ): ToolResponseMessage {
         val response =
             when (question) {
                 "YES" -> {
-                    val executionResult =
-                        aiToolRegistry.execute(
-                            toolName = pending.toolName,
-                            context =
-                                AiToolExecutionContext(
-                                    conversationId = context.conversationId,
-                                    channelId = context.channelId,
-                                    securityContext = context.securityContext,
-                                ),
-                            argumentsJson = pending.toolArguments,
-                        )
-
-                    executionResult.output
+                    agentToolsManager.executeTool(
+                        io.github.vudsen.spectre.api.ai
+                            .AiToolExecutionContext(context.channelId),
+                        tool.name,
+                        tool.arguments,
+                    )
                 }
-
                 "NO" -> {
                     "User refuse to execute this command, please try another command or exit the process."
                 }
-
                 else -> {
                     throw IllegalArgumentException("Pending confirmation only accepts YES or NO")
                 }
             }
 
-        sendMessage(
-            context,
-            AiMessageDTO(
-                type = AiMessageDTO.MessageType.TOOL_CALL_END,
-                data = pending.toolName,
-                parameter = response,
-            ),
-        )
+        context.publisher.onToolCallEnd(tool.name, response)
 
-        return RecoverResult(nextMessage = buildToolResponseMessage(pending.toolCallId, pending.toolName, response))
-    }
-
-    private data class PendingToolConfirmState(
-        val toolCallId: String,
-        val toolName: String,
-        val toolArguments: String,
-        val parameter: String?,
-    )
-
-    private data class PendingAskHumanState(
-        val toolCallId: String,
-        val toolName: String,
-        val requestJson: String,
-        val parameter: String?,
-    )
-
-    private fun getPendingToolConfirmFromMemory(conversationId: String): PendingToolConfirmState? {
-        val toolCall = readLastAssistantToolCall(conversationId) ?: return null
-        if (!aiToolRegistry.requiresConfirm(toolCall.name())) {
-            return null
-        }
-        return PendingToolConfirmState(
-            toolCallId = toolCall.id(),
-            toolName = toolCall.name(),
-            toolArguments = toolCall.arguments(),
-            parameter = aiToolRegistry.resolveParameter(toolCall.name(), toolCall.arguments()),
-        )
-    }
-
-    private fun getPendingAskHumanFromMemory(conversationId: String): PendingAskHumanState? {
-        val toolCall = readLastAssistantToolCall(conversationId) ?: return null
-        if (toolCall.name() != AiTools.ASK_HUMAN) {
-            return null
-        }
-        return PendingAskHumanState(
-            toolCallId = toolCall.id(),
-            toolName = toolCall.name(),
-            requestJson = toolCall.arguments(),
-            parameter = toolCall.arguments(),
-        )
-    }
-
-    private fun readLastAssistantToolCall(conversationId: String): AssistantMessage.ToolCall? {
-        val lastMessage = chatMemory.get(conversationId).lastOrNull() as? AssistantMessage ?: return null
-        return lastMessage.toolCalls.firstOrNull()
-    }
-
-    private fun buildToolResponseMessage(
-        toolCallId: String,
-        toolName: String,
-        responseData: String,
-    ): ToolResponseMessage {
-        val toolResponse = ToolResponseMessage.ToolResponse(toolCallId, toolName, responseData)
+        // TODO: 支持多工具调用?
         return ToolResponseMessage
             .builder()
-            .responses(listOf(toolResponse))
-            .metadata(mapOf())
+            .responses(listOf(ToolResponseMessage.ToolResponse(tool.id, tool.name, response)))
             .build()
     }
 
@@ -556,21 +280,30 @@ class DefaultAiService(
 
         val options =
             buildLlmOptions(context)
+        val chatClient = getOrCreateChatClient(context.llmConfig)
 
         val response =
-            buildChatModel(context.llmConfig)
-                .call(Prompt(listOf(SystemMessage(selectionPrompt), UserMessage(question)), options))
+            chatClient
+                .prompt(question)
+                .system(selectionPrompt)
+                .options(options)
+                .call()
+                .chatResponse()
 
         val content =
-            response.result
+            response
+                ?.result
                 ?.output
                 ?.text
                 .orEmpty()
                 .trim()
 
         val usedTokens =
-            response.metadata.usage.totalTokens
-                .toLong()
+            response
+                ?.metadata
+                ?.usage
+                ?.totalTokens
+                ?.toLong() ?: 0
 
         recordTokenUsage(usedTokens)
         val normalized = normalizeSkillSelection(content)
@@ -584,7 +317,7 @@ class DefaultAiService(
     private fun buildLlmOptions(
         context: AiQueryContext,
         customise: (OpenAiChatOptions.Builder.() -> Unit)? = null,
-    ): OpenAiChatOptions {
+    ): OpenAiChatOptions.Builder {
         // Disable thinking.
         val extraBody: Map<String, Any>? =
             when (context.llmConfig.model) {
@@ -595,6 +328,7 @@ class DefaultAiService(
                                 "type" to "disabled",
                             ),
                     )
+
                 else -> null
             }
         val optionsBuilder =
@@ -614,7 +348,7 @@ class DefaultAiService(
         customise?.let {
             customise(optionsBuilder)
         }
-        return optionsBuilder.build()
+        return optionsBuilder
     }
 
     private fun normalizeSkillSelection(raw: String): String {
@@ -633,13 +367,6 @@ class DefaultAiService(
             }
 
         return candidate.trim('"', '\'', '`')
-    }
-
-    private fun estimateTokens(charCount: Int): Long {
-        if (charCount <= 0) {
-            return 0
-        }
-        return ((charCount + 3) / 4).toLong()
     }
 
     private fun ensureNotExceededTokenLimit(maxTokenPerHour: Long) {
@@ -715,6 +442,101 @@ class DefaultAiService(
         return HourlyTokenUsage(epochHour = hour, used = used)
     }
 
+    override fun chat(
+        conversationId: String,
+        channelId: String,
+        message: String,
+        publisher: AgentEventPublisher,
+        selectedSkillId: String?,
+    ) {
+        val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("error.llm.not.enabled")
+        val securityContext = SecurityContextHolder.getContext()
+
+        val locale = LocaleContextHolder.getLocale()
+        executor.execute {
+            SecurityContextHolder.setContext(securityContext)
+            val queryContext =
+                AiQueryContext(
+                    conversationId = conversationId,
+                    channelId = channelId,
+                    publisher = publisher,
+                    llmConfig = llmConfig,
+                )
+            try {
+                val tool = chatMemory.currentNotRespondedTool(conversationId)
+                if (tool != null) {
+                    recoverPendingState(tool, queryContext, message, conversationId)
+                    return@execute
+                }
+                if (chatMemory.get(conversationId).isEmpty()) {
+                    chatMemory.add(
+                        conversationId,
+                        SystemMessage(
+                            if (selectedSkillId != null) {
+                                buildSystemMessageWithSkill(
+                                    context = queryContext,
+                                    questionForSkillSelection = message,
+                                    selectedSkillId = selectedSkillId,
+                                )
+                            } else {
+                                buildSystemMessageWithoutSkill()
+                            },
+                        ),
+                    )
+                }
+                processConversationLoop(
+                    context = queryContext,
+                    initialInputMessage = UserMessage(message),
+                )
+            } catch (e: Exception) {
+                runCatching {
+//                    if (e is WebClientResponseException) {
+                    logger.error("AI query failed", e)
+                    val msg: String =
+                        if (e is BusinessException) {
+                            e.toI18nMessage(locale)
+                        } else {
+                            e.message ?: "AI query failed(Internal Error)"
+                        }
+                    publisher.onError(e, msg)
+                }
+            } finally {
+                SecurityContextHolder.clearContext()
+                publisher.done()
+            }
+        }
+    }
+
+    private fun recoverPendingState(
+        tool: AssistantMessage.ToolCall,
+        queryContext: AiQueryContext,
+        message: String,
+        conversationId: String,
+    ) {
+        if (tool.name == AskHumanTool.NAME) {
+            queryContext.publisher.onToolCallEnd(tool.name, message)
+            // TODO: 支持多工具调用?
+            processConversationLoop(
+                context = queryContext,
+                initialInputMessage =
+                    ToolResponseMessage
+                        .builder()
+                        .responses(listOf(ToolResponseMessage.ToolResponse(tool.id, tool.name, message)))
+                        .build(),
+            )
+            return
+        } else if (!agentToolsManager.isRequireConfirm(tool.name)) {
+            // unreachable.
+            logger.warn("Unreachable code, messages: {}, tool name: {}", chatMemory.get(conversationId), tool.name)
+            throw IllegalStateException("Unreachable code!")
+        }
+        processConversationLoop(
+            context = queryContext,
+            initialInputMessage = recoverPendingConfirm(queryContext, message, tool),
+        )
+        return
+    }
+
     override fun getCurrentLLMConfiguration(): LLMConfigurationVO {
         val llmConfig = getCurrentLLMConfigurationDTO() ?: return LLMConfigurationVO("", "", 0, false, 0, Instant.now())
         val hourlyUsage = parseHourlyTokenUsage(sysConfigService.findConfigValue(SysConfigIds.LLM_USED))
@@ -787,13 +609,6 @@ class DefaultAiService(
         }
     }
 
-    private fun sendMessage(
-        context: AiQueryContext,
-        message: AiMessageDTO,
-    ) {
-        context.emitter.send(message)
-    }
-
     private fun buildChatModel(llmConfig: LLMConfigurationDTO): OpenAiChatModel {
         if (!llmConfig.provider.equals("OPENAI", ignoreCase = true)) {
             throw IllegalStateException("Only OPENAI provider is supported")
@@ -808,11 +623,11 @@ class DefaultAiService(
             throw IllegalStateException("LLM model is required")
         }
 
-        val apiBuilder = OpenAiApi.builder().apiKey(apiKey)
+        val optionsBuilder = OpenAiChatOptions.builder().apiKey(apiKey)
         if (llmConfig.baseUrl.isNotBlank()) {
-            apiBuilder.baseUrl(llmConfig.baseUrl)
+            optionsBuilder.baseUrl(llmConfig.baseUrl)
         }
-        return OpenAiChatModel.builder().openAiApi(apiBuilder.build()).build()
+        return OpenAiChatModel.builder().options(optionsBuilder.build()).build()
     }
 
     private fun getOrCreateChatClient(llmConfig: LLMConfigurationDTO): ChatClient {
