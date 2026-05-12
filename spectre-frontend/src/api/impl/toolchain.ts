@@ -34,8 +34,12 @@ type ToolchainItemDTO = {
   armUrl?: string
 }
 
-export const saveToolchainItem = (dto: ToolchainItemDTO) => {
-  return axios.post('toolchain/item/save', dto)
+export const createToolchainItem = (dto: ToolchainItemDTO) => {
+  return axios.post('toolchain/item/create', dto)
+}
+
+export const updateToolchainItem = (dto: ToolchainItemDTO) => {
+  return axios.post('toolchain/item/update', dto)
 }
 
 type CreateToolchainBundleDTO = {

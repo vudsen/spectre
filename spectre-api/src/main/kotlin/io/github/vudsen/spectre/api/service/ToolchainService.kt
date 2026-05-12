@@ -1,9 +1,11 @@
 package io.github.vudsen.spectre.api.service
 
 import io.github.vudsen.spectre.api.dto.CreateToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.CreateToolchainItemDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
 import io.github.vudsen.spectre.api.dto.UpdateToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.UpdateToolchainItemDTO
 import io.github.vudsen.spectre.repo.entity.ToolchainType
 import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
@@ -34,11 +36,9 @@ interface ToolchainService {
      */
     fun resolveToolchainBundle(id: Long): ToolchainBundleDTO?
 
-    /**
-     * 更新或者创建工具
-     * @param p0 实体类
-     */
-    fun updateOrCreateToolchainItem(dto: ToolchainItemDTO)
+    fun createToolchainItem(dto: CreateToolchainItemDTO)
+
+    fun updateToolchainItem(dto: UpdateToolchainItemDTO)
 
     /**
      * 更新或者创建工具包

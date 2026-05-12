@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="202603111200" author="vudsen">
+        <!--   已经烂了，后面时间要用 DATETIME, 数据库用 TEXT     -->
+<!--       <dropColumn tableName="toolchain_bundle" columnName="http_client_tag"/>-->
+        <sql>
+            ALTER TABLE toolchain_bundle
+            DROP COLUMN http_client_tag;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
