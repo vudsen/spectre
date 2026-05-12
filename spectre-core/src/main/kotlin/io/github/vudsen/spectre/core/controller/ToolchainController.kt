@@ -1,8 +1,9 @@
 package io.github.vudsen.spectre.core.controller
 
 import io.github.vudsen.spectre.api.dto.CreateToolchainBundleDTO
-import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
+import io.github.vudsen.spectre.api.dto.CreateToolchainItemDTO
 import io.github.vudsen.spectre.api.dto.UpdateToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.UpdateToolchainItemDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.ToolchainService
 import io.github.vudsen.spectre.repo.entity.ToolchainType
@@ -70,10 +71,17 @@ class ToolchainController(
         toolchainService.createToolchainBundle(dto)
     }
 
-    @PostMapping("item/save")
-    fun saveToolchainItem(
-        @Validated @RequestBody dto: ToolchainItemDTO,
+    @PostMapping("item/create")
+    fun createToolchainItem(
+        @Validated @RequestBody dto: CreateToolchainItemDTO,
     ) {
-        toolchainService.updateOrCreateToolchainItem(dto)
+        toolchainService.createToolchainItem(dto)
+    }
+
+    @PostMapping("item/update")
+    fun updateToolchainItem(
+        @Validated @RequestBody dto: UpdateToolchainItemDTO,
+    ) {
+        toolchainService.updateToolchainItem(dto)
     }
 }

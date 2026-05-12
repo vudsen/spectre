@@ -1,10 +1,12 @@
 package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.dto.CreateToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.CreateToolchainItemDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
 import io.github.vudsen.spectre.api.dto.ToolchainItemDTO.Companion.toDTO
 import io.github.vudsen.spectre.api.dto.UpdateToolchainBundleDTO
+import io.github.vudsen.spectre.api.dto.UpdateToolchainItemDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.ToolchainService
 import io.github.vudsen.spectre.repo.ToolchainBundleRepository
@@ -14,6 +16,7 @@ import io.github.vudsen.spectre.repo.po.ToolchainBundlePO
 import io.github.vudsen.spectre.repo.po.ToolchainItemId
 import io.github.vudsen.spectre.repo.po.ToolchainItemPO
 import io.github.vudsen.spectre.support.LocalPackageManager
+import jakarta.transaction.Transactional
 import org.springframework.core.io.InputStreamSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -51,7 +54,7 @@ class DefaultToolchainService(
         )
     }
 
-    override fun updateOrCreateToolchainItem(dto: ToolchainItemDTO) {
+    override fun createToolchainItem(dto: CreateToolchainItemDTO) {
         toolchainItemRepository.save(
             ToolchainItemPO(
                 ToolchainItemId(dto.type, dto.tag),
@@ -60,6 +63,20 @@ class DefaultToolchainService(
                 Timestamp(System.currentTimeMillis()),
             ),
         )
+    }
+
+    @Transactional
+    override fun updateToolchainItem(dto: UpdateToolchainItemDTO) {
+        val toolchain =
+            toolchainItemRepository.findById(ToolchainItemId(dto.type, dto.tag)).getOrNull()
+                ?: throw BusinessException("error.toolchain.not.exit")
+
+        dto.armUrl?.let {
+            toolchain.armUrl = it
+        }
+        dto.url?.let {
+            toolchain.url = it
+        }
     }
 
     override fun saveToolchainBundle(po: ToolchainBundlePO): ToolchainBundlePO = toolchainBundleRepository.save(po)

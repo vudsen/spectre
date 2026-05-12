@@ -15,6 +15,4 @@ interface ToolchainBundleRepository :
     fun findFirstByJattachTag(jattachTag: String): List<ToolchainBundlePO>
 
     fun findFirstByArthasTag(arthasTag: String): List<ToolchainBundlePO>
-
-    fun findFirstByHttpClientTag(httpClientTag: String): List<ToolchainBundlePO>
 }
