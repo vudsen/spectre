@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   update_http_client:
-    if: ${{ github.event_name == 'pull_request' }}
     name: Update Http Client
     runs-on: ubuntu-latest
     permissions:
@@ -21,33 +20,33 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        if: ${{ github.event_name == 'pull_request' }}
+
       - uses: dorny/paths-filter@v3
+        if: ${{ github.event_name == 'pull_request' }}
         id: filter
         with:
           filters: |
             isHttpClientChange:
-              - 'cli/http-client/**'
+              - 'cli/native-http-client/**'
 
-      - name: Setup Java
-        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: zulu
-          java-version: 17
-
-      - name: Setup Gradle
-        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
-        uses: gradle/actions/setup-gradle@v4
+      - name: Build all targets
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
+        run: |
+          cd cli/native-http-client
+          cargo install cross --locked
+          cross build --release --target x86_64-unknown-linux-musl
+          cross build --release --target aarch64-unknown-linux-musl
 
       - name: Update Http Client
-        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' }}
+        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sh ./gradlew :cli:http-client:build -x test
           APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
-          jar tf cli/http-client/build/libs/http-client-$APP_VERSION.jar
-          cp cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
+          cp cli/native-http-client/target/x86_64-unknown-linux-musl/release/native-http-client spectre-common/src/main/resources/http-client-linux-amd64
+          cp cli/native-http-client/target/aarch64-unknown-linux-musl/release/native-http-client spectre-common/src/main/resources/http-client-linux-arm64
+          
           BRANCH="${{ github.head_ref }}"
 
           git config user.email "action@github.com"
@@ -55,12 +54,14 @@ jobs:
 
           git fetch origin $BRANCH
           git checkout $BRANCH
+          git add *
           git commit -am "Update http client"
           git push origin $BRANCH
 
   test:
     runs-on: ubuntu-latest
     name: Run Tests
+    needs: update_http_client
     steps:
       - name: Fetch Sources
         uses: actions/checkout@v4
@@ -117,6 +118,7 @@ jobs:
   integration-test:
     name: Integration Test
     runs-on: ubuntu-latest
+    needs: update_http_client
     steps:
       - name: Fetch Sources
         uses: actions/checkout@v4
