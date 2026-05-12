@@ -1,13 +1,12 @@
-package io.github.vudsen.spectre.core.service.ai
+package io.github.vudsen.spectre.core.integrate.ai
 
+import io.github.vudsen.spectre.api.AgentEventPublisher
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import org.springframework.security.core.context.SecurityContext
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 data class AiQueryContext(
     val conversationId: String,
     val channelId: String,
-    val emitter: SseEmitter,
-    val securityContext: SecurityContext,
+    val publisher: AgentEventPublisher,
     val llmConfig: LLMConfigurationDTO,
 )
