@@ -9,7 +9,6 @@ import java.util.function.Consumer
 class AgentToolsManager(
     tools: List<AgentTool>,
 ) {
-
     private val toolMap: Map<String, AgentTool> =
         buildMap {
             for (tool in tools) {

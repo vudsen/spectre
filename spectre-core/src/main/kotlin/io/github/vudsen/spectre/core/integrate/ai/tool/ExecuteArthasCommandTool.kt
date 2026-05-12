@@ -17,9 +17,8 @@ class ExecuteArthasCommandTool(
 
     override fun executeInternal(
         context: AiToolExecutionContext,
-        argument: ExecuteArthasCommandRequest
+        argument: ExecuteArthasCommandRequest,
     ): String = arthasExecutionService.execSync(context.channelId, argument.command).toString()
 
     override fun requireUserConfirm(): Boolean = true
-
 }

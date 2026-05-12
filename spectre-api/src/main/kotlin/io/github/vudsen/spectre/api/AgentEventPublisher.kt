@@ -26,7 +26,10 @@ interface AgentEventPublisher {
     /**
      * 发送待确认消息。在调用前必须调用 [onToolCallStart] 方法
      */
-    fun sendPendingConfirm(toolName: String, arguments: String?)
+    fun sendPendingConfirm(
+        toolName: String,
+        arguments: String?,
+    )
 
     fun done()
 }

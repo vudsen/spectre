@@ -47,7 +47,10 @@ class DefaultAgentEventPublisher(
         sseEmitter.send(AiMessageDTO(AiMessageDTO.MessageType.ASK_HUMAN, question))
     }
 
-    override fun sendPendingConfirm(toolName: String, arguments: String?) {
+    override fun sendPendingConfirm(
+        toolName: String,
+        arguments: String?,
+    ) {
         sseEmitter.send(AiMessageDTO(AiMessageDTO.MessageType.PENDING_CONFIRM, toolName, arguments))
     }
 

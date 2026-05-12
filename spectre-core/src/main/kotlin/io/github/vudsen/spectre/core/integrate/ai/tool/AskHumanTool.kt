@@ -18,11 +18,8 @@ class AskHumanTool : TypedAgentTool<AskHumanRequest>() {
 
     override fun executeInternal(
         context: AiToolExecutionContext,
-        argument: AskHumanRequest
-    ): String {
-        return ""
-    }
+        argument: AskHumanRequest,
+    ): String = ""
 
     override fun requireUserConfirm(): Boolean = false
-
 }

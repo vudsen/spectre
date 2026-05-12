@@ -11,11 +11,11 @@ import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.service.AiService
 import io.github.vudsen.spectre.api.service.SysConfigService
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
+import io.github.vudsen.spectre.core.integrate.ai.AgentToolsManager
 import io.github.vudsen.spectre.core.integrate.ai.AiQueryContext
 import io.github.vudsen.spectre.core.integrate.ai.AiSkillsLoader
-import io.github.vudsen.spectre.core.integrate.ai.tool.AskHumanTool
-import io.github.vudsen.spectre.core.integrate.ai.AgentToolsManager
 import io.github.vudsen.spectre.core.integrate.ai.currentNotRespondedTool
+import io.github.vudsen.spectre.core.integrate.ai.tool.AskHumanTool
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor

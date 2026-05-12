@@ -1,7 +1,6 @@
 package io.github.vudsen.spectre.api.ai
 
 interface AgentTool {
-
     fun getArgumentType(): Class<*>
 
     fun getName(): String
