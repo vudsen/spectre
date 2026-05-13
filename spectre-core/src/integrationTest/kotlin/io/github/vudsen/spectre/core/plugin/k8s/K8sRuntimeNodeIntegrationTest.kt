@@ -6,6 +6,8 @@ import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.testcontainers.images.builder.Transferable
@@ -13,13 +15,15 @@ import org.testcontainers.k3s.K3sContainer
 import org.testcontainers.utility.DockerImageName
 
 class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
-    @Test
-    fun testFullBusinessFlow() {
+
+    @ParameterizedTest
+    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
+    fun testFullBusinessFlow(mathGameTag: String) {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
 
-        val runtimeNodeId = setupK8sRuntimeNode()
+        val runtimeNodeId = setupK8sRuntimeNode(mathGameTag)
         val treeNode = findJvmTreeNode(runtimeNodeId)
-        val info = prepareChannel(runtimeNodeId, treeNode)
+        val info = prepareChannel(runtimeNodeId, treeNode, mathGameTag)
 
         testChannel(info)
     }
@@ -65,17 +69,17 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
     /**
      * @return runtimeNodeId
      */
-    private fun setupK8sRuntimeNode(): String {
+    private fun setupK8sRuntimeNode(mathGameTag: String): String {
         val k3s =
             K3sContainer(DockerImageName.parse("rancher/k3s:v1.31.0-k3s1"))
                 .withCommand("server", "--disable=traefik", "--disable=local-storage")
 
         k3s.start()
-        K8sRuntimeNodeExtensionTest::class.java.classLoader.getResourceAsStream("k8s-deploy.yaml").use { stream ->
+        K8sRuntimeNodeIntegrationTest::class.java.classLoader.getResourceAsStream("k8s-deploy.yaml").use { stream ->
             k3s.copyFileToContainer(Transferable.of(stream.readAllBytes()), "/opt/k8s-deploy.yaml")
         }
 
-        k3s.execInContainer("kubectl", "apply", "-f", "/opt/k8s-deploy.yaml").let {
+        k3s.execInContainer("kubectl", "apply", "-f", "/opt/k8s-deploy-${mathGameTag}.yaml").let {
             Assertions.assertEquals(0, it.exitCode, it.stderr)
         }
 

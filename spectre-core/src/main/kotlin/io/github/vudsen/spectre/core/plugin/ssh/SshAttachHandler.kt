@@ -80,7 +80,7 @@ class SshAttachHandler(
 
         dockerNode.user = "root"
         val arthasHome = "$containerHomePath/arthas"
-        val httpClientPath = "$containerHomePath/http-client.jar"
+        val httpClientPath = "$containerHomePath/http-client"
         val jattachPath = "$containerHomePath/jattach"
         val readyFlag = "$containerHomePath/READY.flag"
         if (isNotLatest(dockerNode, readyFlag)) {
@@ -99,18 +99,13 @@ class SshAttachHandler(
         if (!expectBound) {
             dockerNode
                 .execute(
-                    "$jattachPath ${jvm.pid} load instrument false \"$arthasHome/arthas-agent.jar=;localConnectionNonAuth=false;password=$password;httpPort=$DOCKER_LISTEN_PORT;telnetPort=-1;\"",
+                    "$jattachPath ${jvm.pid} load instrument false \"$arthasHome/arthas-agent.jar=$arthasHome/arthas-core.jar;localConnectionNonAuth=false;password=$password;httpPort=$DOCKER_LISTEN_PORT;telnetPort=-1;\"",
                 ).ok()
         }
         return ShellBasedArthasHttpClient(
             dockerNode,
             httpClientPath,
             "http://127.0.0.1:${DOCKER_LISTEN_PORT}/api",
-            if (dockerCnf.javaHome == null) {
-                "java"
-            } else {
-                "${dockerCnf.javaHome}/bin/java"
-            },
             password,
         )
     }
@@ -133,25 +128,19 @@ class SshAttachHandler(
                     runtimeNode,
                     paths.httpClientPath,
                     "http://127.0.0.1:$port/api",
-                    "${localConf.javaHome}/bin/java",
                     password,
                 )
             return client
         }
         runtimeNode
             .execute(
-                "${paths.jattachPath} ${jvm.id} load instrument false \"${paths.arthasHome}/arthas-agent.jar=;localConnectionNonAuth=false;password=$password;httpPort=$port;telnetPort=-1;\"",
+                "${paths.jattachPath} ${jvm.id} load instrument false \"${paths.arthasHome}/arthas-agent.jar=${paths.arthasHome}/arthas-core.jar;localConnectionNonAuth=false;password=$password;httpPort=$port;telnetPort=-1;\"",
             ).ok()
 
         return ShellBasedArthasHttpClient(
             runtimeNode,
             paths.httpClientPath,
             "http://127.0.0.1:$port/api",
-            if (localConf.javaHome.isNullOrEmpty()) {
-                "java"
-            } else {
-                "${localConf.javaHome}/bin/java"
-            },
             password,
         )
     }

@@ -18,7 +18,6 @@ open class ShellBasedArthasHttpClient(
     protected val runtimeNode: ShellAvailableRuntimeNode,
     protected val clientPath: String,
     protected val arthasHttpEndpoint: String,
-    protected val javaPath: String,
     /**
      * 该字段暴露仅用于测试
      */
@@ -42,9 +41,9 @@ open class ShellBasedArthasHttpClient(
                     StandardCharsets.UTF_8,
                 ),
             )
-        val result = runtimeNode.execute(javaPath, "-jar", clientPath, arthasHttpEndpoint, encodedBody, password)
+        val result = runtimeNode.execute(clientPath, arthasHttpEndpoint, encodedBody, password)
         if (result.exitCode != 0) {
-            if ("Connection refused\n" == result.stdout) {
+            if (result.stdout.startsWith("Connection refused")) {
                 // arthas 连接 JVM 后主动调用了 stop 命令
                 throw BusinessException("error.jvm.restart.needed")
             }

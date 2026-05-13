@@ -31,100 +31,18 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
     }
 
     @Test
-    fun testDockerAttach() {
-        val runtimeNodeId = setupDockerAttachContainer()
-
-        val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
-        val dockerNode = root.get(0)
-
-        val dockerNodes = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, dockerNode.id)
-
-        val mathGame = dockerNodes.find { node -> node.name.startsWith(MATH_GAME) }
-        Assertions.assertNotNull(mathGame)
-
-        attachTester.testAttach(runtimeNodeId, mathGame!!)
-    }
-
-    private fun setupDockerAttachContainer(): Long {
-        val container =
-            GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSHD_WITH_DOCKER)).apply {
-                withExposedPorts(22)
-                withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
-            }
-        container.start()
-
-        val result =
-            container.execInContainer("/usr/bin/docker", "run", "--name", MATH_GAME, "--rm", "-d", TestConstant.DOCKER_IMAGE_MATH_GAME)
-        if (result.exitCode != 0) {
-            Assertions.fail<Unit>("Failed to start docker run command: $result")
-        }
-        GlobalDisposer.registerDispose {
-            container.execInContainer("/usr/bin/docker", "stop", MATH_GAME)
-            container.close()
-        }
-
-        val objectMapper = ObjectMapper()
-        val conf =
-            SshRuntimeNodeConfig(
-                SshRuntimeNodeConfig.Docker(true, "docker", null, null),
-                null,
-                container.host,
-                container.firstMappedPort,
-                "root",
-                SshRuntimeNodeConfig.LoginPrincipal(
-                    SshRuntimeNodeConfig.LoginType.PASSWORD,
-                    "P@ssw0rd",
-                    null,
-                    null,
-                ),
-                "/opt/spectre",
-            )
-        val runtimeNodeId =
-            runtimeNodeService
-                .createRuntimeNode(
-                    CreateRuntimeNodeDTO().apply {
-                        name = "Test Node"
-                        pluginId = SshRuntimeNodeExtension.ID
-                        configuration = objectMapper.writeValueAsString(conf)
-                    },
-                ).id
-        return runtimeNodeId
-    }
-
-    @Test
-    fun testLocalAttach() {
-        val pair = setupContainerForLocal()
-        val runtimeNodeId = pair.second
-
-        try {
-            val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
-            val localeNode = root.get(0)
-
-            val localJvms =
-                runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, localeNode.id)
-
-            val mathGame = localJvms.get(0)
-            Assertions.assertTrue(mathGame.isJvm)
-
-            attachTester.testAttach(runtimeNodeId, mathGame)
-        } finally {
-            pair.first.close()
-        }
-    }
-
-    @Test
     fun testExecWithWrongPassword() {
         val pair = setupContainerForLocal()
         val runtimeNodeId = pair.second
 
         try {
             val root = runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, null)
-            val localeNode = root.get(0)
+            val localeNode = root[0]
 
             val localJvms =
                 runtimeNodeService.expandRuntimeNodeTree(runtimeNodeId, localeNode.id)
 
-            val mathGame = localJvms.get(0)
+            val mathGame = localJvms[0]
             Assertions.assertTrue(mathGame.isJvm)
 
             val channelId = attachTester.attachSync(runtimeNodeId, mathGame)

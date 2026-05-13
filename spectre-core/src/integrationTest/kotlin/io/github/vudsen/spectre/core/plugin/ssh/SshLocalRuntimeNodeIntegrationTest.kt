@@ -3,19 +3,22 @@ package io.github.vudsen.spectre.core.plugin.ssh
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.test.AbstractSpectreIntegrationTest
 import io.github.vudsen.spectre.test.TestConstant
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 
 class SshLocalRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
-    @Test
-    fun testLocalAttach() {
+
+    @ParameterizedTest
+    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
+    fun testLocalAttach(sshServerTag: String) {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
-        val runtimeNodeId = setSshRuntimeNode()
+        val runtimeNodeId = setSshRuntimeNode(sshServerTag)
         val treeNode = findJvmTreeNode(runtimeNodeId)
-        val channelId = prepareChannel(runtimeNodeId, treeNode)
+        val channelId = prepareChannel(runtimeNodeId, treeNode, sshServerTag)
 
         testChannel(channelId)
     }
@@ -23,8 +26,8 @@ class SshLocalRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
     /**
      * @return runtimeNodeId
      */
-    private fun setSshRuntimeNode(): String {
-        val sshServer = setupSshServer()
+    private fun setSshRuntimeNode(sshServerTag: String): String {
+        val sshServer = setupSshServer(sshServerTag)
 
         return client
             .post()
@@ -38,13 +41,13 @@ class SshLocalRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                         objectMapper.writeValueAsString(
                             SshRuntimeNodeConfig(
                                 null,
-                                SshRuntimeNodeConfig.Local(true, "/opt/java"),
+                                SshRuntimeNodeConfig.Local(true, "/opt/java/openjdk"),
                                 sshServer.host,
                                 sshServer.firstMappedPort,
                                 "root",
                                 SshRuntimeNodeConfig.LoginPrincipal(
                                     SshRuntimeNodeConfig.LoginType.PASSWORD,
-                                    "root",
+                                    "P@ssw0rd",
                                     null,
                                     null,
                                 ),
@@ -61,9 +64,9 @@ class SshLocalRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
             .responseBody!!
     }
 
-    private fun setupSshServer(): GenericContainer<*> {
+    private fun setupSshServer(sshServerTag: String): GenericContainer<*> {
         val container =
-            GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME)).apply {
+            GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSH_WITH_MATH_GAME_PREFIX + sshServerTag)).apply {
                 withExposedPorts(22)
             }
         container.start()

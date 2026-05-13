@@ -75,20 +75,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            isHttpClientChange:
-              - 'cli/http-client/**'
-
-      - name: Update Http Client
-        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
-        run: |
-          sh ./gradlew :cli:http-client:build -x test
-          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
-          mv -f cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
-
       - name: Tests
         id: test
         run: sh ./gradlew spectre-core:test
@@ -131,20 +117,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            isHttpClientChange:
-              - 'cli/http-client/**'
-
-      - name: Update Http Client
-        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
-        run: |
-          sh ./gradlew :cli:http-client:build -x test
-          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
-          mv -f cli/http-client/build/libs/http-client-$APP_VERSION.jar spectre-common/src/main/resources/http-client.jar
 
       - name: Run Integration Test
         id: test

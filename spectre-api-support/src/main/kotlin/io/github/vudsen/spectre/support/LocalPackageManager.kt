@@ -78,14 +78,24 @@ object LocalPackageManager {
 
     private val httpClient: ConstantBoundedInputStreamSource
 
+    private val httpClientArm: ConstantBoundedInputStreamSource
+
     init {
-        LocalPackageManager::class.java.classLoader.getResourceAsStream("http-client.jar")!!.use { inputStream ->
+        LocalPackageManager::class.java.classLoader.getResourceAsStream("http-client-linux-amd64")!!.use { inputStream ->
             val bytes = inputStream.readAllBytes()
             httpClient = ConstantBoundedInputStreamSource(bytes)
         }
+        LocalPackageManager::class.java.classLoader.getResourceAsStream("http-client-linux-arm64")!!.use { inputStream ->
+            val bytes = inputStream.readAllBytes()
+            httpClientArm = ConstantBoundedInputStreamSource(bytes)
+        }
     }
 
-    fun resolveBundledHttpClient(): BoundedInputStreamSource = httpClient
+    fun resolveBundledHttpClient(isArm: Boolean): BoundedInputStreamSource = if (isArm) {
+        httpClientArm
+    } else {
+        httpClient
+    }
 
     /**
      * 获取对应软件包的路径.
