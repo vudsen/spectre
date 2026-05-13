@@ -104,10 +104,14 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         downloadDirectory: String,
         spectreHome: String,
     ): String {
+        val appVersion = ApplicationContextHolder.getAppVersion()
+        val finalPath = "$spectreHome/packages/http-client/http-client-$appVersion"
+        if (runtimeNode.isFileExist(finalPath)) {
+            return finalPath
+        }
         val httpClient = LocalPackageManager.resolveBundledHttpClient(runtimeNode.isArm())
 
         ProgressReportHolder.currentProgressManager()?.pushState("上传 http-client 到目标节点")
-        val appVersion = ApplicationContextHolder.getAppVersion()
         val dest = "$downloadDirectory/http-client-$appVersion"
         try {
             runtimeNode.upload(httpClient, dest)
@@ -115,7 +119,6 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
             ProgressReportHolder.currentProgressManager()?.popState()
         }
 
-        val finalPath = "$spectreHome/packages/http-client/http-client-$appVersion"
         runtimeNode.mkdirs("$spectreHome/packages/http-client/")
         runtimeNode.execute("cp $dest $finalPath").ok()
         runtimeNode.execute("chmod u+x $finalPath").ok()
@@ -126,8 +129,11 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         downloadDirectory: String,
         spectreHome: String,
     ): String {
-        val arthasBundle = prepareBundle(downloadDirectory, bundles.arthas)
         val packageDirectory = "$spectreHome/packages/arthas/${bundles.arthas.tag}"
+        if (runtimeNode.isFileExist("$packageDirectory/arthas-agent.jar")) {
+            return packageDirectory
+        }
+        val arthasBundle = prepareBundle(downloadDirectory, bundles.arthas)
         runtimeNode.mkdirs(packageDirectory)
         runtimeNode.execute("tar -zxvf $arthasBundle -C $packageDirectory").ok()
         return packageDirectory
@@ -137,10 +143,14 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         downloadDirectory: String,
         spectreHome: String,
     ): String {
-        val jattachBundle = prepareBundle(downloadDirectory, bundles.jattach)
         val packageDirectory = "$spectreHome/packages/jattach/${bundles.jattach.tag}"
+        val finalFilePath = "$packageDirectory/jattach"
+        if (runtimeNode.isFileExist(finalFilePath)) {
+            return finalFilePath
+        }
+        val jattachBundle = prepareBundle(downloadDirectory, bundles.jattach)
         runtimeNode.mkdirs(packageDirectory)
         runtimeNode.execute("tar -xvf $jattachBundle -C $packageDirectory").ok()
-        return "$packageDirectory/jattach"
+        return finalFilePath
     }
 }
