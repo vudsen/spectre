@@ -18,8 +18,6 @@ import org.testcontainers.utility.DockerImageName
 
 @Component
 class AttachTester {
-
-
     @set:Autowired
     lateinit var runtimeNodeService: RuntimeNodeService
 
@@ -58,7 +56,6 @@ class AttachTester {
         val channelId = status.channelId!!
         return channelId
     }
-
 
     val commonRuntimeNodeId: Long by lazy {
         val container =

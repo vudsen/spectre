@@ -48,9 +48,7 @@ abstract class AbstractSpectreIntegrationTest {
         this.client = client.mutate().responseTimeout(Duration.ofDays(1)).build()
     }
 
-
     var cookiesConsumer: Consumer<MultiValueMap<String, String>> = {}
-
 
     @BeforeEach
     fun beforeAll(
@@ -119,7 +117,7 @@ abstract class AbstractSpectreIntegrationTest {
     protected fun prepareChannel(
         runtimeNodeId: String,
         treeNode: JvmTreeNodeDTO,
-        javaVersion: String
+        javaVersion: String,
     ): ChannelTestContext {
         val bundleId = findLatestBundleId()
 

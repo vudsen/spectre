@@ -5,7 +5,6 @@ import io.github.vudsen.spectre.test.AbstractSpectreIntegrationTest
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.expectBody
@@ -15,7 +14,6 @@ import org.testcontainers.k3s.K3sContainer
 import org.testcontainers.utility.DockerImageName
 
 class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
-
     @ParameterizedTest
     @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testFullBusinessFlow(mathGameTag: String) {
@@ -79,7 +77,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
             k3s.copyFileToContainer(Transferable.of(stream.readAllBytes()), "/opt/k8s-deploy.yaml")
         }
 
-        k3s.execInContainer("kubectl", "apply", "-f", "/opt/k8s-deploy-${mathGameTag}.yaml").let {
+        k3s.execInContainer("kubectl", "apply", "-f", "/opt/k8s-deploy-$mathGameTag.yaml").let {
             Assertions.assertEquals(0, it.exitCode, it.stderr)
         }
 

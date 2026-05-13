@@ -91,11 +91,12 @@ object LocalPackageManager {
         }
     }
 
-    fun resolveBundledHttpClient(isArm: Boolean): BoundedInputStreamSource = if (isArm) {
-        httpClientArm
-    } else {
-        httpClient
-    }
+    fun resolveBundledHttpClient(isArm: Boolean): BoundedInputStreamSource =
+        if (isArm) {
+            httpClientArm
+        } else {
+            httpClient
+        }
 
     /**
      * 获取对应软件包的路径.

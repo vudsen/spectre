@@ -36,7 +36,15 @@ class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         container.start()
 
         val result =
-            container.execInContainer("/usr/bin/docker", "run", "--name", MATH_GAME, "--rm", "-d", TestConstant.DOCKER_IMAGE_MATH_GAME_PREFIX + mathGameTag)
+            container.execInContainer(
+                "/usr/bin/docker",
+                "run",
+                "--name",
+                MATH_GAME,
+                "--rm",
+                "-d",
+                TestConstant.DOCKER_IMAGE_MATH_GAME_PREFIX + mathGameTag,
+            )
         if (result.exitCode != 0) {
             Assertions.fail<Unit>("Failed to start docker run command: $result")
         }

@@ -21,17 +21,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         if: ${{ github.event_name == 'pull_request' }}
-
-      - uses: dorny/paths-filter@v3
-        if: ${{ github.event_name == 'pull_request' }}
-        id: filter
         with:
-          filters: |
-            isHttpClientChange:
-              - 'cli/native-http-client/**'
+          fetch-depth: 0
+
+      - name: Check http client diff
+        if: ${{ github.event_name == 'pull_request' }}
+        id: http_client_diff
+        run: |
+          set -e
+          LAST_ARTIFACT_COMMIT=$(git log -n 1 --pretty=format:%H -- spectre-common/src/main/resources/http-client-linux-amd64 || true)
+          echo "last_artifact_commit=$LAST_ARTIFACT_COMMIT" >> $GITHUB_OUTPUT
+          if [ -z "$LAST_ARTIFACT_COMMIT" ]; then
+            echo "need_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if git diff --quiet "$LAST_ARTIFACT_COMMIT" "${{ github.sha }}" -- cli/native-http-client; then
+            echo "need_build=false" >> $GITHUB_OUTPUT
+          else
+            echo "need_build=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build all targets
-        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
+        if: ${{ steps.http_client_diff.outputs.need_build == 'true' && github.event_name == 'pull_request' }}
         run: |
           cd cli/native-http-client
           cargo install cross --locked
@@ -39,14 +51,13 @@ jobs:
           cross build --release --target aarch64-unknown-linux-musl
 
       - name: Update Http Client
-        if: ${{ steps.filter.outputs.isHttpClientChange == 'true' && github.event_name == 'pull_request' }}
+        if: ${{ steps.http_client_diff.outputs.need_build == 'true' && github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          APP_VERSION=`cat gradle.properties | grep spectreVersion | cut -d'=' -f2 | tr -d ' '`
           cp cli/native-http-client/target/x86_64-unknown-linux-musl/release/native-http-client spectre-common/src/main/resources/http-client-linux-amd64
           cp cli/native-http-client/target/aarch64-unknown-linux-musl/release/native-http-client spectre-common/src/main/resources/http-client-linux-arm64
-          
+
           BRANCH="${{ github.head_ref }}"
 
           git config user.email "action@github.com"
@@ -54,8 +65,13 @@ jobs:
 
           git fetch origin $BRANCH
           git checkout $BRANCH
-          git add *
-          git commit -am "Update http client"
+          git add spectre-common/src/main/resources/http-client-linux-amd64 spectre-common/src/main/resources/http-client-linux-arm64
+          git status --short
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes detected, skip commit and push."
+            exit 0
+          fi
+          git commit -m "Update http client"
           git push origin $BRANCH
 
   test:
@@ -256,4 +272,3 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: sudo sh /opt/spectre/reboot.sh ${{ needs.build.outputs.app_version }}-${{ github.sha }}
-
