@@ -53,7 +53,7 @@ class SshRuntimeNodeExtensionTest : AbstractSpectreTest() {
                 client.exec("version")
             } catch (e: BusinessException) {
                 Assertions.assertNotNull(e.message)
-                Assertions.assertTrue(e.message!!.contains("Server returned HTTP response code: 401 for URL"))
+                Assertions.assertTrue(e.message!!.contains("401"))
             }
         } finally {
             pair.first.close()

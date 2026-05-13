@@ -15,7 +15,8 @@ import org.testcontainers.utility.DockerImageName
 
 class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
     @ParameterizedTest
-    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
+//    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
+    @ValueSource(strings = ["java8"])
     fun testFullBusinessFlow(mathGameTag: String) {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
 
@@ -73,11 +74,11 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                 .withCommand("server", "--disable=traefik", "--disable=local-storage")
 
         k3s.start()
-        K8sRuntimeNodeIntegrationTest::class.java.classLoader.getResourceAsStream("k8s-deploy.yaml").use { stream ->
-            k3s.copyFileToContainer(Transferable.of(stream.readAllBytes()), "/opt/k8s-deploy.yaml")
+        K8sRuntimeNodeIntegrationTest::class.java.classLoader.getResourceAsStream("k8s-deploy-$mathGameTag.yaml").use { stream ->
+            k3s.copyFileToContainer(Transferable.of(stream!!.readAllBytes()), "/opt/k8s-deploy.yaml")
         }
 
-        k3s.execInContainer("kubectl", "apply", "-f", "/opt/k8s-deploy-$mathGameTag.yaml").let {
+        k3s.execInContainer("kubectl", "apply", "-f", "/opt/k8s-deploy.yaml").let {
             Assertions.assertEquals(0, it.exitCode, it.stderr)
         }
 

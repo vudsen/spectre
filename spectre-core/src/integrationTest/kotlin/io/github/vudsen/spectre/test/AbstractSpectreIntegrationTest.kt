@@ -27,7 +27,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
-import java.time.Duration
 import java.util.function.Consumer
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -40,13 +39,13 @@ abstract class AbstractSpectreIntegrationTest {
     @Autowired
     lateinit var graphQlTester: HttpGraphQlTester
 
-//    @Autowired
+    @Autowired
     lateinit var client: WebTestClient
 
-    @Autowired
-    fun setClientForDebug(client: WebTestClient) {
-        this.client = client.mutate().responseTimeout(Duration.ofDays(1)).build()
-    }
+//    @Autowired
+//    fun setClientForDebug(client: WebTestClient) {
+//        this.client = client.mutate().responseTimeout(Duration.ofDays(1)).build()
+//    }
 
     var cookiesConsumer: Consumer<MultiValueMap<String, String>> = {}
 
