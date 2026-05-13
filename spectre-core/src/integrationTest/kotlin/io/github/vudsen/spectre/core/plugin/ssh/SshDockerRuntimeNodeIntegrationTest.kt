@@ -6,7 +6,8 @@ import io.github.vudsen.spectre.test.AbstractSpectreIntegrationTest
 import io.github.vudsen.spectre.test.GlobalDisposer
 import io.github.vudsen.spectre.test.TestConstant
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.testcontainers.containers.GenericContainer
@@ -14,18 +15,19 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
 
 class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
-    @Test
-    fun testDockerAttach() {
+    @ParameterizedTest
+    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
+    fun testDockerAttach(mathGameTag: String) {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
 
-        val runtimeNodeId = setupSshDockerRuntimeNode()
+        val runtimeNodeId = setupSshDockerRuntimeNode(mathGameTag)
         val treeNode = findJvmTreeNode(runtimeNodeId)
-        val channelId = prepareChannel(runtimeNodeId, treeNode)
+        val channelId = prepareChannel(runtimeNodeId, treeNode, mathGameTag)
 
         testChannel(channelId)
     }
 
-    private fun setupSshDockerRuntimeNode(): String {
+    private fun setupSshDockerRuntimeNode(mathGameTag: String): String {
         val container =
             GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSHD_WITH_DOCKER)).apply {
                 withExposedPorts(22)
@@ -34,7 +36,15 @@ class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         container.start()
 
         val result =
-            container.execInContainer("/usr/bin/docker", "run", "--name", MATH_GAME, "--rm", "-d", TestConstant.DOCKER_IMAGE_MATH_GAME)
+            container.execInContainer(
+                "/usr/bin/docker",
+                "run",
+                "--name",
+                MATH_GAME,
+                "--rm",
+                "-d",
+                TestConstant.DOCKER_IMAGE_MATH_GAME_PREFIX + mathGameTag,
+            )
         if (result.exitCode != 0) {
             Assertions.fail<Unit>("Failed to start docker run command: $result")
         }
@@ -110,6 +120,6 @@ class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                 .expectBodyList<JvmTreeNodeDTO>()
                 .returnResult()
                 .responseBody!!
-        return holder.find { node -> node.name.contains(TestConstant.DOCKER_IMAGE_MATH_GAME) }!!
+        return holder.find { node -> node.name.contains(TestConstant.DOCKER_IMAGE_MATH_GAME_PREFIX) }!!
     }
 }

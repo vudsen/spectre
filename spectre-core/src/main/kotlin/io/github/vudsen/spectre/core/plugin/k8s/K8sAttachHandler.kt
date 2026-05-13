@@ -60,7 +60,6 @@ class K8sAttachHandler(
             runtimeNode,
             paths.httpClientPath,
             "http://127.0.0.1:${KUBERNETES_LISTEN_PORT}/api",
-            "java",
             password,
         )
     }

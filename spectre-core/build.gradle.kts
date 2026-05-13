@@ -37,6 +37,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:k3s:1.21.4")
     testImplementation("org.testcontainers:testcontainers:1.21.4")
+    integrationTestImplementation("org.junit.jupiter:junit-jupiter-params")
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-graphql-test")
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     integrationTestImplementation("org.springframework.boot:spring-boot-webtestclient")

@@ -42,6 +42,11 @@ abstract class AbstractSpectreIntegrationTest {
     @Autowired
     lateinit var client: WebTestClient
 
+//    @Autowired
+//    fun setClientForDebug(client: WebTestClient) {
+//        this.client = client.mutate().responseTimeout(Duration.ofDays(1)).build()
+//    }
+
     var cookiesConsumer: Consumer<MultiValueMap<String, String>> = {}
 
     @BeforeEach
@@ -111,6 +116,7 @@ abstract class AbstractSpectreIntegrationTest {
     protected fun prepareChannel(
         runtimeNodeId: String,
         treeNode: JvmTreeNodeDTO,
+        javaVersion: String,
     ): ChannelTestContext {
         val bundleId = findLatestBundleId()
 
@@ -149,7 +155,7 @@ abstract class AbstractSpectreIntegrationTest {
             .expectBody<ArthasConsumerDTO>()
             .returnResult()
             .responseBody!!
-        return ChannelTestContext(channelId, runtimeNodeId)
+        return ChannelTestContext(channelId, runtimeNodeId, javaVersion)
     }
 
     private fun executeArthasCommand(
@@ -248,7 +254,7 @@ abstract class AbstractSpectreIntegrationTest {
             .isOk
 
         val treeNode = findJvmTreeNode(context.runtimeNodeId)
-        val newChannelId = prepareChannel(context.runtimeNodeId, treeNode)
+        val newChannelId = prepareChannel(context.runtimeNodeId, treeNode, context.javaVersion)
         assertEquals(context.channelId, newChannelId.channelId)
     }
 
@@ -265,7 +271,7 @@ abstract class AbstractSpectreIntegrationTest {
             .isOk
 
         val treeNode = findJvmTreeNode(context.runtimeNodeId)
-        val newChannel = prepareChannel(context.runtimeNodeId, treeNode)
+        val newChannel = prepareChannel(context.runtimeNodeId, treeNode, context.javaVersion)
         context.channelId = newChannel.channelId
         testChannel0(newChannel)
     }
@@ -273,7 +279,7 @@ abstract class AbstractSpectreIntegrationTest {
     protected fun testRetransform(info: ChannelTestContext) {
         val builder = MultipartBodyBuilder()
 
-        builder.part("file", ClassPathResource("MathGame.class"))
+        builder.part("file", ClassPathResource("MathGame-${info.javaVersion}.class"))
 
         val raw =
             client
@@ -289,7 +295,11 @@ abstract class AbstractSpectreIntegrationTest {
                 .responseBody!!
         val result = objectMapper.readTree(raw)
 
-        val target = result.find { item -> item.get("type").textValue() == "retransform" }!!
+        val target = result.find { item -> item.get("type").textValue() == "retransform" }
+        if (target == null) {
+            Assertions.fail<Unit>(result.toPrettyString())
+            return
+        }
 
         val jobId = target.get("jobId").numberValue().toInt()
 

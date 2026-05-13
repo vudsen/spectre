@@ -122,7 +122,14 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
                 if (it.exitCode == 0) {
                     return@let it.stdout
                 } else {
-                    return@let runtimeNode.grep("java", "ps", "-eo", "pid,command").ok()
+                    val grep = runtimeNode.grep("java", "ps", "-eo", "pid,command")
+                    if (grep.isFailed()) {
+                        if (grep.stdout.contains("bad -o argument 'command'")) {
+                            return@let runtimeNode.grep("java", "ps", "-eo", "pid,comm").ok()
+                        }
+                        throw BusinessException("列出JVM失败: " + grep.stdout)
+                    }
+                    return@let grep.stdout
                 }
             }
 

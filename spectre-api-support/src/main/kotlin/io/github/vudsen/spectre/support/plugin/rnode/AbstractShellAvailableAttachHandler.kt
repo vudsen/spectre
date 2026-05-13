@@ -104,20 +104,21 @@ abstract class AbstractShellAvailableAttachHandler<T : ShellAvailableRuntimeNode
         downloadDirectory: String,
         spectreHome: String,
     ): String {
-        val httpClient = LocalPackageManager.resolveBundledHttpClient()
+        val httpClient = LocalPackageManager.resolveBundledHttpClient(runtimeNode.isArm())
 
         ProgressReportHolder.currentProgressManager()?.pushState("上传 http-client 到目标节点")
         val appVersion = ApplicationContextHolder.getAppVersion()
-        val dest = "$downloadDirectory/http-client-$appVersion.jar"
+        val dest = "$downloadDirectory/http-client-$appVersion"
         try {
             runtimeNode.upload(httpClient, dest)
         } finally {
             ProgressReportHolder.currentProgressManager()?.popState()
         }
 
-        val finalPath = "$spectreHome/packages/http-client/http-client-$appVersion.jar"
+        val finalPath = "$spectreHome/packages/http-client/http-client-$appVersion"
         runtimeNode.mkdirs("$spectreHome/packages/http-client/")
         runtimeNode.execute("cp $dest $finalPath").ok()
+        runtimeNode.execute("chmod u+x $finalPath").ok()
         return finalPath
     }
 

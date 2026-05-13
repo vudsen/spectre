@@ -7,28 +7,17 @@ import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeConfig
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeExtension
-import io.github.vudsen.spectre.support.BoundedInputStreamSourceEntity
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import org.springframework.util.ResourceUtils
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
-import tools.jackson.databind.node.ArrayNode
-import tools.jackson.databind.node.ObjectNode
 
 @Component
 class AttachTester {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AttachTester::class.java)
-    }
-
     @set:Autowired
     lateinit var runtimeNodeService: RuntimeNodeService
 
@@ -37,52 +26,6 @@ class AttachTester {
 
     @set:Autowired
     lateinit var arthasInstanceService: ArthasInstanceService
-
-    fun testAttach(
-        runtimeNodeId: Long,
-        jvmNode: JvmTreeNodeDTO,
-    ) {
-        val channelId = attachSync(runtimeNodeId, jvmNode)
-        val sessionDTO = arthasExecutionService.joinChannel(channelId, "test")
-        arthasExecutionService.execAsync(channelId, "sc demo.*")
-
-        checkScResult(pullResultSync(channelId, sessionDTO.consumerId))
-        testRetransform(channelId, sessionDTO.consumerId)
-        testRestart(channelId, runtimeNodeId, jvmNode)
-    }
-
-    /**
-     * 测试服务重启，缓存清空
-     */
-    private fun testRestart(
-        prevChannelId: String,
-        runtimeNodeId: Long,
-        jvmNode: JvmTreeNodeDTO,
-    ) {
-        arthasInstanceService.clearCachedClient(false)
-        val channelId = attachSync(runtimeNodeId, jvmNode)
-        assertEquals(prevChannelId, channelId)
-    }
-
-    fun pullResultSync(
-        channelId: String,
-        consumerId: String,
-    ): ArrayNode {
-        var r: ArrayNode? = null
-        loop(5) {
-            val result = arthasExecutionService.pullResults(channelId, consumerId)
-            if (result is ArrayNode) {
-                if (result.isEmpty) {
-                    return@loop null
-                }
-                r = result
-                return@loop true
-            } else {
-                Assertions.fail("Invalid type: ${result::class.java}")
-            }
-        }
-        return r!!
-    }
 
     /**
      * @return channelId
@@ -112,59 +55,6 @@ class AttachTester {
         Assertions.assertNotNull(status.channelId, "Attach timeout!")
         val channelId = status.channelId!!
         return channelId
-    }
-
-    private fun checkScResult(node: ArrayNode) {
-        assertTrue(node.size() == 10)
-        val messageNode = node.get(1) as ObjectNode
-        assertEquals("Welcome to arthas!", messageNode.get("message").asString())
-        val scResult = node.get(6) as ObjectNode
-        val classes = scResult.get("classNames") as ArrayNode
-
-        Assertions.assertIterableEquals(listOf("demo.MathGame"), classes.mapIndexed { _, node -> node.asString() })
-    }
-
-    private fun testRetransform(
-        channelId: String,
-        consumerId: String,
-    ) {
-        val file = ResourceUtils.getFile("classpath:MathGame.class")
-        val result =
-            file.inputStream().use { input ->
-                arthasExecutionService.retransform(channelId, BoundedInputStreamSourceEntity(file.length(), input))
-            } as ArrayNode
-        val target = result.find { item -> item.get("type").textValue() == "retransform" }!!
-
-        val jobId = target.get("jobId").numberValue().toInt()
-
-        val status = result.find { item -> item.get("jobId").numberValue().toInt() == jobId && item.get("type").textValue() == "status" }!!
-        assertEquals(status.get("statusCode").numberValue().toInt(), 0)
-
-        arthasExecutionService.execAsync(channelId, "watch demo.MathGame primeFactors -n 2 -x 1 'target.illegalArgumentCount'")
-
-        val record = arrayOf(Int.MAX_VALUE, Int.MAX_VALUE)
-        val exactNumberRegx = Regex("@Integer\\[(-?\\d+)]")
-        var rp = 0
-        loop(5) {
-            val r = pullResultSync(channelId, consumerId)
-            logger.debug("Pull result: {}", r)
-            val watchResult = r.filter { item -> item.get("type").textValue() == "watch" }
-            for (node in watchResult) {
-                val value = node.get("value").textValue()
-                val matchResult = exactNumberRegx.find(value)
-                if (matchResult == null) {
-                    Assertions.fail("Can't parse number from '$value'")
-                } else {
-                    record[rp] = matchResult.groupValues[1].toInt()
-                    rp++
-                }
-            }
-            if (rp == record.size) {
-                return@loop true
-            }
-            return@loop null
-        }
-        assertTrue(record[0] > record[1])
     }
 
     val commonRuntimeNodeId: Long by lazy {
