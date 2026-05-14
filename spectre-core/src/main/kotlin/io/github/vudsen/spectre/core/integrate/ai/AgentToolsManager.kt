@@ -2,6 +2,8 @@ package io.github.vudsen.spectre.core.integrate.ai
 
 import io.github.vudsen.spectre.api.ai.AgentTool
 import io.github.vudsen.spectre.api.ai.AiToolExecutionContext
+import io.github.vudsen.spectre.api.exception.BusinessException
+import org.slf4j.LoggerFactory
 import org.springframework.ai.tool.ToolCallback
 import org.springframework.ai.tool.function.FunctionToolCallback
 import java.util.function.Consumer
@@ -9,6 +11,11 @@ import java.util.function.Consumer
 class AgentToolsManager(
     tools: List<AgentTool>,
 ) {
+    companion object {
+        @JvmStatic
+        private val logger = LoggerFactory.getLogger(AgentToolsManager::class.java)
+    }
+
     private val toolMap: Map<String, AgentTool> =
         buildMap {
             for (tool in tools) {
@@ -43,6 +50,14 @@ class AgentToolsManager(
         argument: String,
     ): String {
         val tool = toolMap[toolName] ?: throw IllegalStateException("Tool $toolName not found")
-        return tool.execute(context, argument)
+        try {
+            return tool.execute(context, argument)
+        } catch (e: Exception) {
+            if (e is BusinessException) {
+                return e.toI18nMessage()
+            }
+            logger.error("", e)
+            return "System Error: " + e.message
+        }
     }
 }
