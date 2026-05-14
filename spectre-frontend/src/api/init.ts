@@ -22,10 +22,20 @@ function handleResponse0(
     showDialog({
       title: i18n.t('auth.unauthorized'),
       message: i18n.t('auth.redirect'),
-      color: 'warning',
+      color: 'danger',
       onConfirm: () => {
         store.dispatch(clearUserInfo())
-        location.replace(`${import.meta.env.VITE_BASE_PATH}/login`)
+        if (location.pathname != import.meta.env.VITE_BASE_PATH) {
+          const currentPath =
+            location.pathname.substring(import.meta.env.VITE_BASE_PATH.length) +
+            location.search
+          console.log(currentPath)
+          location.replace(
+            `${import.meta.env.VITE_BASE_PATH}/login?backTo=${encodeURIComponent(currentPath)}`,
+          )
+        } else {
+          location.replace(`${import.meta.env.VITE_BASE_PATH}/login`)
+        }
       },
     })
     return Promise.reject(new Error(i18n.t('hardcoded.msg_api_init_001')))
