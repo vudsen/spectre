@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+set -e
+
+echo "[pre-commit] Running ktlint format..."
+./gradlew ktlintFormat
+
+
+if git diff --cached --name-only | grep -q '^spectre-frontend/'; then
+  echo "[pre-commit] Frontend changes detected, running lint..."
+  (cd spectre-frontend && pnpm run lint)
+else
+  echo "[pre-commit] No frontend changes detected, skipping frontend lint."
+fi
+
+if ! git diff --quiet; then
+  echo "[pre-commit] ktlintFormat produced changes. Please review and stage them, then commit again."
+  exit 1
+fi
