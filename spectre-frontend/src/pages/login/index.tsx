@@ -41,7 +41,12 @@ const LoginPage: React.FC = () => {
           username: user.username,
         }),
       )
-      nav('/')
+      const backTo = new URLSearchParams(location.search).get('backTo')
+      if (backTo) {
+        nav(backTo)
+      } else {
+        nav('/')
+      }
     } catch (e: unknown) {
       showDialog({
         title: i18n.t('hardcoded.msg_pages_login_index_002'),

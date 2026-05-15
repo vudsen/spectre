@@ -1,6 +1,8 @@
 import type { TypedDocumentString } from './generated/graphql'
 import { showDialog } from '@/common/util.ts'
 import i18n, { getCurrentLocale } from '@/i18n'
+import { store } from '@/store'
+import { clearUserInfo } from '@/store/sessionSlice.ts'
 
 type QLError = {
   extensions: {
@@ -58,9 +60,20 @@ export async function execute<TResult, TVariables>(
     showDialog({
       title: i18n.t('auth.unauthorized'),
       message: i18n.t('auth.redirect'),
-      color: 'warning',
+      color: 'danger',
       onConfirm: () => {
-        location.replace(`${import.meta.env.VITE_BASE_PATH}/login`)
+        store.dispatch(clearUserInfo())
+        if (location.pathname != import.meta.env.VITE_BASE_PATH) {
+          const currentPath =
+            location.pathname.substring(import.meta.env.VITE_BASE_PATH.length) +
+            location.search
+          console.log(currentPath)
+          location.replace(
+            `${import.meta.env.VITE_BASE_PATH}/login?backTo=${encodeURIComponent(currentPath)}`,
+          )
+        } else {
+          location.replace(`${import.meta.env.VITE_BASE_PATH}/login`)
+        }
       },
     })
     return Promise.reject(
