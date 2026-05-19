@@ -4,10 +4,10 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.support.plugin.rnode.SearchTreeBuilder
 import io.github.vudsen.spectre.support.plugin.rnode.TypedRuntimeNodeExtensionPoint
@@ -47,7 +47,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
                 runtimeNode as SshRuntimeNode
                 val configuration = runtimeNode.getConfiguration()
                 if (configuration.local?.enabled == true) {
-                    return@addHandler listOf(JvmSearchNode("Localhost", false, null))
+                    return@addHandler listOf(JvmSearchNode("Localhost", false, null, listOf("process")))
                 }
                 return@addHandler emptyList()
             }
@@ -57,7 +57,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
                 runtimeNode as SshRuntimeNode
                 val configuration = runtimeNode.getConfiguration()
                 if (configuration.docker?.enabled == true) {
-                    return@addHandler listOf(JvmSearchNode("Docker", false, null))
+                    return@addHandler listOf(JvmSearchNode("Docker", false, null, listOf("docker")))
                 }
                 return@addHandler emptyList()
             }
@@ -67,7 +67,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
                 runtimeNode as SshRuntimeNode
                 val local = runtimeNode.getConfiguration().local
                 if (local != null && local.enabled) {
-                    return@addHandler listAllLocalContainers(runtimeNode, local)
+                    return@addHandler listAllLocalJavaProcess(runtimeNode, local)
                 }
                 return@addHandler emptyList()
             }
@@ -104,15 +104,16 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
             }
             val tree = objectMapper.readTree(container)
             val name = "${tree["Names"]!!.asString()}(${tree["Image"]!!.asString()})"
-            val jvm = DockerJvm(tree["ID"]!!.asString(), name)
+            val id = tree["ID"]!!.asString()
+            val jvm = DockerJvm(id, name)
             result.add(
-                JvmSearchNode(jvm.name, true, jvm),
+                JvmSearchNode(jvm.name, true, jvm, listOf("docker", id)),
             )
         }
         return result
     }
 
-    private fun listAllLocalContainers(
+    private fun listAllLocalJavaProcess(
         runtimeNode: SshRuntimeNode,
         conf: SshRuntimeNodeConfig.Local,
     ): List<JvmSearchNode<LocalJvm>> {
@@ -133,7 +134,7 @@ class SshRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<SshRuntimeNodeCon
                 }
             }
 
-        return parseLocalJvmOutput(out).map { jvm -> JvmSearchNode(jvm.name, true, jvm) }
+        return parseLocalJvmOutput(out).map { jvm -> JvmSearchNode(jvm.name, true, jvm, listOf("process", jvm.id)) }
     }
 
     private fun parseLocalJvmOutput(output: String): List<LocalJvm> {

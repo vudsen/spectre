@@ -1,6 +1,10 @@
 package io.github.vudsen.spectre.repo.po
 
+import io.github.vudsen.spectre.common.Jvm
+import io.github.vudsen.spectre.repo.convert.ArthasInstanceJvmConverter
 import io.github.vudsen.spectre.repo.convert.InstantToStringConverter
+import io.github.vudsen.spectre.repo.convert.StringListConverter
+import io.github.vudsen.spectre.repo.entity.EmptyJvm
 import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -12,38 +16,71 @@ import java.time.Instant
 @Entity
 @Table(name = "arthas_instance")
 @DynamicUpdate
-class ArthasInstancePO {
+open class ArthasInstancePO() {
     /**
-     * 实例id，和节点树节点 id 一致
+     * 实例id，和**节点树节点 id 一致**
      */
     @Id
-    var id: String? = null
+    open var id: String = ""
 
-    var channelId: String? = null
+    open var channelId: String = ""
 
-    var endpointPassword: String? = null
+    open var endpointPassword: String = ""
 
-    var boundPort: Int? = null
+    open var boundPort: Int = 0
 
-    var sessionId: String? = null
+    open var sessionId: String = ""
 
-    var runtimeNodeId: Long? = null
+    open var runtimeNodeId: Long = 0
 
-    var restrictedMode: Boolean? = null
+    open var restrictedMode: Boolean = true
 
-    var bundleId: Long? = null
+    open var bundleId: Long = 0
 
-    var extPointId: String? = null
+    open var extPointId: String = ""
 
-    var jvm: String? = null
+    @Convert(converter = ArthasInstanceJvmConverter::class)
+    open var jvm: Jvm = EmptyJvm()
 
     @Convert(converter = InstantToStringConverter::class)
-    var lastAccess: Instant? = null
+    open var lastAccess: Instant = Instant.now()
+
+    /**
+     * 在节点树中的路径
+     */
+    @Convert(converter = StringListConverter::class)
+    open var paths: List<String> = emptyList()
+
+    constructor(
+        path: List<String>,
+        jvm: Jvm,
+        extPointId: String,
+        bundleId: Long,
+        restrictedMode: Boolean,
+        runtimeNodeId: Long,
+        sessionId: String,
+        boundPort: Int,
+        endpointPassword: String,
+        channelId: String,
+        id: String,
+    ) : this() {
+        this.paths = path
+        this.jvm = jvm
+        this.extPointId = extPointId
+        this.bundleId = bundleId
+        this.restrictedMode = restrictedMode
+        this.runtimeNodeId = runtimeNodeId
+        this.sessionId = sessionId
+        this.boundPort = boundPort
+        this.endpointPassword = endpointPassword
+        this.channelId = channelId
+        this.id = id
+    }
 
     @PrePersist
     fun prePersist() {
-        if (id == null) {
-            lastAccess = Instant.now()
+        if (paths.isEmpty()) {
+            throw IllegalStateException("'path' is empty")
         }
     }
 }

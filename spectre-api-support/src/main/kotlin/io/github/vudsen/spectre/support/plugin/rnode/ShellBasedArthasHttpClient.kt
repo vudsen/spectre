@@ -43,7 +43,7 @@ open class ShellBasedArthasHttpClient(
             )
         val result = runtimeNode.execute(clientPath, arthasHttpEndpoint, encodedBody, password)
         if (result.exitCode != 0) {
-            if (result.stdout.startsWith("Connection refused")) {
+            if (result.stdout.contains("Connection refused")) {
                 // arthas 连接 JVM 后主动调用了 stop 命令
                 throw BusinessException("error.jvm.restart.needed")
             }

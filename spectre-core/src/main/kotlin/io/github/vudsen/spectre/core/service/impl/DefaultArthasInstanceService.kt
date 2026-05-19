@@ -1,12 +1,11 @@
 package io.github.vudsen.spectre.core.service.impl
 
-import io.github.vudsen.spectre.api.dto.ArthasInstanceDTO
-import io.github.vudsen.spectre.api.dto.ArthasInstanceDTO.Companion.toDTO
-import io.github.vudsen.spectre.api.exception.AppException
+import io.github.vudsen.spectre.api.dto.CreateArthasInstanceDTO
+import io.github.vudsen.spectre.api.dto.UpdateArthasInstanceDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.repo.ArthasInstanceRepository
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 import jakarta.transaction.Transactional
@@ -66,21 +65,6 @@ open class DefaultArthasInstanceService(
      */
     private val lastUpdateMap = WeakHashMap<String, Long>()
 
-    private fun updateLastAccess(instance: ArthasInstanceDTO) {
-        val now = System.currentTimeMillis()
-        lastUpdateMap[instance.id]?.let {
-            if (now - it < updateInterval) {
-                return
-            }
-        }
-
-        val instancePO = instance.toPO()
-
-        instancePO.lastAccess = Instant.now()
-        lastUpdateMap[instance.id] = now
-        arthasInstanceRepository.save(instancePO)
-    }
-
     private fun buildId(
         runtimeNodeId: Long,
         jvm: Jvm,
@@ -88,78 +72,75 @@ open class DefaultArthasInstanceService(
 
     @Transactional(rollbackOn = [Exception::class])
     override fun save(
-        instance: ArthasInstanceDTO,
+        instance: CreateArthasInstanceDTO,
         client: ArthasHttpClient,
     ) {
-        val id = buildId(instance.runtimeNodeId, instance.jvm)
-        clientMap[id] = ClientHolder(client, System.currentTimeMillis())
+        clientMap[instance.id] = ClientHolder(client, System.currentTimeMillis())
 
-        arthasInstanceRepository.save(instance.toPO())
+        arthasInstanceRepository.save(
+            ArthasInstancePO(
+                id = instance.id,
+                channelId = instance.channelId,
+                endpointPassword = instance.endpointPassword,
+                boundPort = instance.boundPort,
+                sessionId = instance.sessionId,
+                runtimeNodeId = instance.runtimeNodeId,
+                restrictedMode = instance.restrictedMode,
+                bundleId = instance.bundleId,
+                extPointId = instance.extPointId,
+                jvm = instance.jvm,
+                path = instance.path,
+            ),
+        )
     }
 
     @Transactional(rollbackOn = [Exception::class])
-    override fun updateArthasInstance(update: ArthasInstancePO) {
-        val id = update.id ?: throw AppException("Id is null")
+    override fun updateArthasInstance(update: UpdateArthasInstanceDTO) {
+        val id = update.id
         val arthasInstance = arthasInstanceRepository.findById(id).getOrNull() ?: throw BusinessException("Arthas instance is not found")
 
-        var updated = false
         update.boundPort?.let {
             arthasInstance.boundPort = it
-            updated = true
         }
         update.sessionId?.let {
             arthasInstance.sessionId = it
-            updated = true
-        }
-        if (updated) {
-            arthasInstanceRepository.save(arthasInstance)
         }
     }
-
-//    @Transactional(rollbackOn = [Exception::class])
-//    override fun updateArthasInstance(
-//        base: ArthasInstanceDTO,
-//        newPort: Int,
-//        client: ArthasHttpClient
-//    ) {
-//        val id = buildId(base.runtimeNodeId, base.jvm)
-//        clientMap[id] = ClientHolder(client, System.currentTimeMillis())
-//
-//        val po = base.toPO()
-//        po.boundPort = newPort
-//
-//        arthasInstanceRepository.save(po)
-//    }
 
     override fun saveClient(
-        tree: ArthasInstanceDTO,
+        tree: ArthasInstancePO,
         client: ArthasHttpClient,
     ) {
-        clientMap[buildId(tree.runtimeNodeId, tree.jvm)] = ClientHolder(client, System.currentTimeMillis())
+        clientMap[tree.id] = ClientHolder(client, System.currentTimeMillis())
     }
 
-    override fun findInstanceById(id: String): ArthasInstanceDTO? {
-        arthasInstanceRepository.findById(id).getOrNull()?.toDTO() ?.let {
-            updateLastAccess(it)
-            return it
+    override fun findInstanceById(id: String): ArthasInstancePO? {
+        val instance = arthasInstanceRepository.findById(id).getOrNull() ?: return null
+        val now = System.currentTimeMillis()
+        lastUpdateMap[instance.id]?.let {
+            if (now - it < updateInterval) {
+                return instance
+            }
         }
-        return null
+        instance.lastAccess = Instant.now()
+        lastUpdateMap[instance.id] = now
+        return instance
     }
 
-    override fun findInstanceByChannelId(id: String): ArthasInstanceDTO? = arthasInstanceRepository.findByChannelId(id)?.toDTO()
+    override fun findInstanceByChannelId(id: String): ArthasInstancePO? = arthasInstanceRepository.findByChannelId(id)
 
-    override fun resolveCachedClientByChannelId(channelId: String): Pair<ArthasHttpClient?, ArthasInstanceDTO>? {
+    override fun resolveCachedClientByChannelId(channelId: String): Pair<ArthasHttpClient?, ArthasInstancePO>? {
         val arthasInstanceDTO = findInstanceByChannelId(channelId) ?: return null
         return Pair(
-            clientMap[buildId(arthasInstanceDTO.runtimeNodeId, arthasInstanceDTO.jvm)]?.wrapper,
+            clientMap[arthasInstanceDTO.id]?.wrapper,
             arthasInstanceDTO,
         )
     }
 
-    override fun resolveCachedClient(treeNodeId: String): Pair<ArthasHttpClient?, ArthasInstanceDTO>? {
+    override fun resolveCachedClient(treeNodeId: String): Pair<ArthasHttpClient?, ArthasInstancePO>? {
         val arthasInstanceDTO = findInstanceById(treeNodeId) ?: return null
         return Pair(
-            clientMap[buildId(arthasInstanceDTO.runtimeNodeId, arthasInstanceDTO.jvm)]?.wrapper,
+            clientMap[arthasInstanceDTO.id]?.wrapper,
             arthasInstanceDTO,
         )
     }

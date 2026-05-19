@@ -12,5 +12,6 @@
     <include file="changes/patches-0.5.0.xml" relativeToChangelogFile="true"/>
     <include file="changes/patches-0.7.xml" relativeToChangelogFile="true"/>
     <include file="changes/patches-0.9.xml" relativeToChangelogFile="true"/>
+    <include file="changes/patches-0.10.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

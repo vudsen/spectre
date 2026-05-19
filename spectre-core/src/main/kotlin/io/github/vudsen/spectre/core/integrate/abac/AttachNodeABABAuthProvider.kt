@@ -41,7 +41,7 @@ class AttachNodeABABAuthProvider : PolicyAuthenticationProvider {
                                 mapOf(Pair("foo", "bar")),
                                 false,
                             ),
-                            JvmSearchNode("Hello", false, null),
+                            JvmSearchNode("Hello", false, null, listOf("docker", "1")),
                         ),
                     ),
                 ),

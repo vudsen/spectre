@@ -5,10 +5,10 @@ import io.github.vudsen.spectre.api.dto.CreatePolicyPermissionDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.perm.AppPermissions
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.PolicyPermissionService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
 import io.github.vudsen.spectre.core.plugin.abac.ArthasExecutionEnhancePolicyAuthenticationExtension.ArthasExecutionConfiguration
 import io.github.vudsen.spectre.repo.entity.PolicyPermissionEnhancePlugin

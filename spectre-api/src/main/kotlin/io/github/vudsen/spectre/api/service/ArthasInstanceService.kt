@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.api.service
 
-import io.github.vudsen.spectre.api.dto.ArthasInstanceDTO
+import io.github.vudsen.spectre.api.dto.CreateArthasInstanceDTO
+import io.github.vudsen.spectre.api.dto.UpdateArthasInstanceDTO
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 
@@ -12,38 +13,38 @@ interface ArthasInstanceService {
      * 保存实例. 如果存在，则会报错
      */
     fun save(
-        instance: ArthasInstanceDTO,
+        instance: CreateArthasInstanceDTO,
         client: ArthasHttpClient,
     )
 
     /**
      * 更新端口和客户端
      */
-    fun updateArthasInstance(update: ArthasInstancePO)
+    fun updateArthasInstance(update: UpdateArthasInstanceDTO)
 
     /**
      * 保存客户端
      */
     fun saveClient(
-        tree: ArthasInstanceDTO,
+        tree: ArthasInstancePO,
         client: ArthasHttpClient,
     )
 
     /**
      * 查询或者创建 ArthasInstance
      *
-     * @return ArthasInstance，如果是新创建的 [ArthasInstanceDTO.boundPort] 为 0
+     * @return ArthasInstance，如果是新创建的 [ArthasInstancePO.boundPort] 为 0
      */
-    fun findInstanceById(id: String): ArthasInstanceDTO?
+    fun findInstanceById(id: String): ArthasInstancePO?
 
-    fun findInstanceByChannelId(id: String): ArthasInstanceDTO?
+    fun findInstanceByChannelId(id: String): ArthasInstancePO?
 
-    fun resolveCachedClientByChannelId(channelId: String): Pair<ArthasHttpClient?, ArthasInstanceDTO>?
+    fun resolveCachedClientByChannelId(channelId: String): Pair<ArthasHttpClient?, ArthasInstancePO>?
 
     /**
      * 获取缓存中的客户端
      */
-    fun resolveCachedClient(treeNodeId: String): Pair<ArthasHttpClient?, ArthasInstanceDTO>?
+    fun resolveCachedClient(treeNodeId: String): Pair<ArthasHttpClient?, ArthasInstancePO>?
 
     /**
      * 测试使用，清除所有客户端缓存

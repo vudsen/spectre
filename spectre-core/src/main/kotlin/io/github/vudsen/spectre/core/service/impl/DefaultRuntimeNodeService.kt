@@ -8,10 +8,11 @@ import io.github.vudsen.spectre.api.dto.UpdateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
+import io.github.vudsen.spectre.common.Jvm
+import io.github.vudsen.spectre.common.util.toSha256
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.repo.RuntimeNodeRepository
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
@@ -142,13 +143,32 @@ class DefaultRuntimeNodeService(
             )
         return buildList {
             for (searchNode in nodes) {
-                // Should we use random id?
-                val id = "tree:$runtimeNodeId:${searchNode.hashCode()}"
+                val id = buildTreeNodeId(runtimeNodeId, searchNode)
                 add(JvmTreeNodeDTO(id, searchNode.name, searchNode.isJvm))
                 cache.putIfAbsent(id, searchNode)
             }
         }
     }
+
+    override fun findTreeNode(
+        runtimeNodeId: Long,
+        paths: List<String>,
+    ): JvmSearchNode<Any>? {
+        val runtimeNode = findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.node.not.exist")
+        val ext =
+            findPluginById(runtimeNode.pluginId)
+        val searcher = ext.createSearcher()
+
+        val searchNode = searcher.findNode(ext.connect(runtimeNode.configuration), paths) ?: return null
+        val id = buildTreeNodeId(runtimeNodeId, searchNode)
+        cache.putIfAbsent(id, searchNode)
+        return searchNode
+    }
+
+    private fun buildTreeNodeId(
+        runtimeNodeId: Long,
+        searchNode: JvmSearchNode<Any>,
+    ): String = "$runtimeNodeId:${searchNode.idPath.joinToString(":")}".toSha256()
 
     override fun getRuntimeNode(runtimeNodeId: Long): RuntimeNodeDTO? {
         val dto = runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO(true) ?: return null
