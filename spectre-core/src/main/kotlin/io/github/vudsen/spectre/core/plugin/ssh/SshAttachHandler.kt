@@ -4,7 +4,7 @@ import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.support.plugin.rnode.AbstractShellAvailableAttachHandler
 import io.github.vudsen.spectre.support.plugin.rnode.ShellAvailableRuntimeNode
 import io.github.vudsen.spectre.support.plugin.rnode.ShellBasedArthasHttpClient

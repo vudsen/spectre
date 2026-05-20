@@ -3,9 +3,9 @@ package io.github.vudsen.spectre.support.plugin.rnode
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.dto.ToolchainItemDTO
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.common.ApplicationContextHolder
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.support.LocalPackageManager
 import org.slf4j.LoggerFactory

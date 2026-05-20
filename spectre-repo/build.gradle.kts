@@ -16,6 +16,7 @@ dependencies {
     compileOnly("jakarta.validation:jakarta.validation-api")
     compileOnly("com.fasterxml.jackson.core:jackson-core")
     compileOnly("com.fasterxml.jackson.core:jackson-databind")
+    implementation("tools.jackson.core:jackson-databind")
     implementation("org.springframework.data:spring-data-jpa")
     implementation("org.hibernate.orm:hibernate-core")
     implementation(project(":spectre-common"))

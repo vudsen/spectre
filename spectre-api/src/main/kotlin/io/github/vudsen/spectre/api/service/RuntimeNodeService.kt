@@ -7,9 +7,9 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeTestDTO
 import io.github.vudsen.spectre.api.dto.UpdateRuntimeNodeDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.RuntimeNode
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.repo.po.RuntimeNodePO
 import org.springframework.data.domain.Page
 
@@ -61,6 +61,14 @@ interface RuntimeNodeService {
         runtimeNodeId: Long,
         parentNodeId: String?,
     ): List<JvmTreeNodeDTO>
+
+    /**
+     * 以指定路径展开节点树
+     */
+    fun findTreeNode(
+        runtimeNodeId: Long,
+        paths: List<String>,
+    ): JvmSearchNode<Any>?
 
     /**
      * 获取运行时节点. 该方法会过滤敏感信息，如果需要敏感信息，请使用 [findPureRuntimeNodeById]

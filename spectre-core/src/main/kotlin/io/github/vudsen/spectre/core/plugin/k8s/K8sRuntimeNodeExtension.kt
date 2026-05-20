@@ -4,10 +4,10 @@ import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
 import io.github.vudsen.spectre.api.exception.AppException
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.core.plugin.k8s.entity.K8sPod
 import io.github.vudsen.spectre.support.plugin.rnode.SearchTreeBuilder
@@ -25,10 +25,10 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
         val builder = SearchTreeBuilder.create()
 
         val namespaceNode =
-            builder.addHandler { runtimeNode, searchNode ->
+            builder.addHandler { runtimeNode, _ ->
                 runtimeNode as K8sRuntimeNode
                 return@addHandler runtimeNode.listNamespaces().map { namespace ->
-                    JvmSearchNode(namespace, false, null)
+                    JvmSearchNode(namespace, false, null, listOf(namespace))
                 }
             }
 
@@ -36,11 +36,16 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
             namespaceNode.addHandler { runtimeNode, searchNode ->
                 runtimeNode as K8sRuntimeNode
                 return@addHandler runtimeNode.listPods(searchNode.name).map { pod ->
-                    JvmSearchNode("${pod.metadata.name} (Pod) (${pod.status.phase})", true, pod)
+                    JvmSearchNode(
+                        "${pod.metadata.name} (Pod) (${pod.status.phase})",
+                        true,
+                        pod,
+                        listOf(pod.metadata.namespace, pod.metadata.name),
+                    )
                 }
             }
 
-        podNode.addHandler<PodWithSpecificContainer> { runtimeNodeCache, searchNode ->
+        podNode.addHandler<PodWithSpecificContainer> { _, searchNode ->
             val pod = searchNode.ctx ?: return@addHandler emptyList()
             return@addHandler pod.spec.containers.mapIndexed { index, container ->
                 JvmSearchNode(
@@ -50,6 +55,7 @@ class K8sRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<K8sRuntimeNodeCon
                         this@apply.index = index
                         this@apply.pod = pod
                     },
+                    listOf(pod.metadata.namespace, pod.metadata.name, container.name),
                 )
             }
         }

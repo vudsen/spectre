@@ -2,25 +2,27 @@ package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
-import io.github.vudsen.spectre.api.dto.ArthasInstanceDTO
 import io.github.vudsen.spectre.api.dto.AttachStatus
+import io.github.vudsen.spectre.api.dto.CreateArthasInstanceDTO
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
+import io.github.vudsen.spectre.api.dto.UpdateArthasInstanceDTO
 import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.perm.AppPermissions
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
+import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.service.AppAccessControlService
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
 import io.github.vudsen.spectre.api.service.RuntimeNodeService
 import io.github.vudsen.spectre.api.service.ToolchainService
-import io.github.vudsen.spectre.common.SpectreEnvironment
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.common.progress.ProgressReportHolder
 import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.common.util.SecureUtils
+import io.github.vudsen.spectre.common.util.toSha256
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
 import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
@@ -61,17 +63,14 @@ import org.springframework.stereotype.Service
 import tools.jackson.databind.JsonNode
 import java.lang.reflect.InvocationTargetException
 import java.time.Instant
-import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 
 /**
  * 管理 Arthas 连接的服务。
  *
  *
- * 为了确保未来集群能够正常使用，当成功 attach 到一个 JVM 后，会往数据库中写 [ArthasInstanceDTO] 数据，对于后续的 attach 请求
+ * 为了确保未来集群能够正常使用，当成功 attach 到一个 JVM 后，会往数据库中写 [ArthasInstancePO] 数据，对于后续的 attach 请求
  * 将会直接复用对应的端口以及其它数据。
  *
  * ## 资源类型：
@@ -81,7 +80,7 @@ import javax.crypto.spec.SecretKeySpec
  * 频道，在代码上代表一个 [ArthasHttpClient] 实例，表示一个到 arthas 的连接。
  *
  * 可用上下文：
- * - [ArthasInstanceDTO]
+ * - [ArthasInstancePO]
  *
  * ### Consumer
  *
@@ -111,8 +110,6 @@ class DefaultArthasExecutionService(
         private val logger = LoggerFactory.getLogger(DefaultArthasExecutionService::class.java)
         private const val MAX_IDLE_MILLISECONDS = 1000 * 60 * 5
         private const val MAX_PROFILER_FILE_COUNT = 10
-        private const val HMAC_SHA_256 = "HmacSHA256"
-        private val defaultHashKey = "hM0,vR4_vV5^rZ2<gL1\$oL3`hD0:gH9~".toByteArray()
         private val ALLOWED_EXPRESSION: Set<Class<*>> =
             setOf(
                 Literal::class.java,
@@ -167,10 +164,11 @@ class DefaultArthasExecutionService(
         treeNodeId: String,
     ) {
         val treeNode =
-            runtimeNodeService.findTreeNode(treeNodeId)
+            findTreeNodeWithFallback(treeNodeId, runtimeNodeId)
                 ?: throw BusinessException("error.node.not.exist")
         val node =
-            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId) ?: throw BusinessException("error.runtime.node.not.exist")
+            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId)
+                ?: throw BusinessException("error.runtime.node.not.exist")
         val ctx = AttachNodePolicyPermissionContext(AppPermissions.RUNTIME_NODE_ATTACH, node, treeNode)
         appAccessControlService.checkPolicyPermission(ctx)
     }
@@ -186,7 +184,8 @@ class DefaultArthasExecutionService(
             arthasInstanceService.findInstanceByChannelId(channelId)
                 ?: throw BusinessException("error.channel.not.exist")
         val runtimeNodeDTO =
-            runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId) ?: throw BusinessException("error.node.not.exist")
+            runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId)
+                ?: throw BusinessException("error.node.not.exist")
 
         appAccessControlService.checkPolicyPermission(
             ArthasExecutionPolicyPermissionContext(
@@ -238,15 +237,6 @@ class DefaultArthasExecutionService(
         bundleId: Long,
     ): AttachStatus {
         checkTreeNodePermission(runtimeNodeId, treeNodeId)
-
-        val runtimeNodeDto =
-            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId)
-                ?: throw BusinessException("error.runtime.node.not.exist")
-
-        val node =
-            runtimeNodeService.findTreeNode(treeNodeId)
-                ?: throw NamedExceptions.SESSION_EXPIRED.toException()
-        val jvm = runtimeNodeService.deserializeToJvm(runtimeNodeDto.pluginId, node)
         arthasInstanceService.resolveCachedClient(treeNodeId)?.let {
             if (it.first != null) {
                 return AttachStatus(true).apply {
@@ -255,6 +245,12 @@ class DefaultArthasExecutionService(
             }
         }
 
+        val runtimeNodeDto =
+            runtimeNodeService.findPureRuntimeNodeById(runtimeNodeId)
+                ?: throw BusinessException("error.runtime.node.not.exist")
+
+        val node = findTreeNodeWithFallback(treeNodeId, runtimeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
+        val jvm = runtimeNodeService.deserializeToJvm(runtimeNodeDto.pluginId, node)
         val jvmId = resolveJvmId(runtimeNodeId, jvm)
 
         // start init channel
@@ -284,12 +280,26 @@ class DefaultArthasExecutionService(
         }
 
         try {
-            attachJvmAsync(runtimeNodeDto, jvm, status, bundleId, treeNodeId)
+            attachJvmAsync(runtimeNodeDto, jvm, status, bundleId, treeNodeId, node)
             return returnAttachingMsg(status)
         } catch (e: Exception) {
             status.clientInitLock.set(false)
             throw e
         }
+    }
+
+    private fun findTreeNodeWithFallback(
+        treeNodeId: String,
+        runtimeNodeId: Long,
+    ): JvmSearchNode<Any>? {
+        var node: JvmSearchNode<Any>? = runtimeNodeService.findTreeNode(treeNodeId)
+        if (node == null) {
+            arthasInstanceService.findInstanceById(treeNodeId)?.let {
+                // 重新将树节点加载到缓存里
+                node = runtimeNodeService.findTreeNode(runtimeNodeId, it.paths)
+            }
+        }
+        return node
     }
 
     private fun returnAttachingMsg(holder: ArthasClientInitStatus): AttachStatus =
@@ -339,8 +349,7 @@ class DefaultArthasExecutionService(
                 // arthas 自己关了会话
                 val initSession = client.initSession()
                 arthasInstanceService.updateArthasInstance(
-                    ArthasInstancePO().apply {
-                        id = arthasInstanceDTO.id
+                    UpdateArthasInstanceDTO(arthasInstanceDTO.id).apply {
                         sessionId = initSession.sessionId
                     },
                 )
@@ -358,7 +367,7 @@ class DefaultArthasExecutionService(
         }
     }
 
-    private fun createClient(arthasInstanceDTO: ArthasInstanceDTO): ArthasHttpClient {
+    private fun createClient(arthasInstanceDTO: ArthasInstancePO): ArthasHttpClient {
         val extPoint = runtimeNodeService.findPluginById(arthasInstanceDTO.extPointId)
         val runtimeNode = runtimeNodeService.connect(arthasInstanceDTO.runtimeNodeId)
 
@@ -367,8 +376,7 @@ class DefaultArthasExecutionService(
         val httpClient = handler.attach(arthasInstanceDTO.boundPort, arthasInstanceDTO.endpointPassword)
         if (httpClient.getPort() != arthasInstanceDTO.boundPort) {
             arthasInstanceService.updateArthasInstance(
-                ArthasInstancePO().apply {
-                    id = arthasInstanceDTO.id
+                UpdateArthasInstanceDTO(arthasInstanceDTO.id).apply {
                     boundPort = httpClient.getPort()
                 },
             )
@@ -376,27 +384,12 @@ class DefaultArthasExecutionService(
         return httpClient
     }
 
-    private fun buildPassword(
-        dto: RuntimeNodeDTO,
-        jvm: Jvm,
-        treeNodeId: String,
-    ): String {
-        val mac: Mac = Mac.getInstance(HMAC_SHA_256)
-        val keySpec =
-            SecretKeySpec(
-                SpectreEnvironment.ENCRYPTOR_KEY ?: defaultHashKey,
-                HMAC_SHA_256,
-            )
-        mac.init(keySpec)
-
-        val result: ByteArray? = mac.doFinal("${dto.id}:${jvm.id}:$treeNodeId".toByteArray())
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(result)
-    }
+    private fun buildPassword(treeNodeId: String): String = treeNodeId.toSha256()
 
     /**
      * 异步 attach 到 jvm
      *
-     * 该方法会设置 [ArthasInstanceDTO]，主要用于保存最终连接的端口
+     * 该方法会设置 [ArthasInstancePO]，主要用于保存最终连接的端口
      */
     private fun attachJvmAsync(
         runtimeNodeDto: RuntimeNodeDTO,
@@ -404,6 +397,7 @@ class DefaultArthasExecutionService(
         holder: ArthasClientInitStatus,
         bundleId: Long,
         treeNodeId: String,
+        treeNode: JvmSearchNode<Any>,
     ) {
         val locale = LocaleContextHolder.getLocale()
         executor.execute {
@@ -426,7 +420,7 @@ class DefaultArthasExecutionService(
 
                 val handler = runtimeNode.getExtPoint().createAttachHandler(runtimeNode, jvm, bundle)
                 val arthasInstance = arthasInstanceService.findInstanceById(treeNodeId)
-                val password = arthasInstance?.endpointPassword ?: buildPassword(runtimeNodeDto, jvm, treeNodeId)
+                val password = arthasInstance?.endpointPassword ?: buildPassword(treeNodeId)
 
                 val client =
                     if (arthasInstance == null) {
@@ -440,7 +434,7 @@ class DefaultArthasExecutionService(
                 if (arthasInstance == null) {
                     val session = client.initSession()
                     arthasInstanceService.save(
-                        ArthasInstanceDTO(
+                        CreateArthasInstanceDTO(
                             treeNodeId,
                             holder.channelId,
                             password,
@@ -452,14 +446,14 @@ class DefaultArthasExecutionService(
                             runtimeNode.getExtPoint().getId(),
                             jvm,
                             Instant.now(),
+                            treeNode.idPath,
                         ),
                         client,
                     )
                     clientInitMap.remove(resolveJvmId(runtimeNodeDto.id, jvm))
                 } else if (client.getPort() != arthasInstance.boundPort) {
                     arthasInstanceService.updateArthasInstance(
-                        ArthasInstancePO().apply {
-                            id = arthasInstance.id
+                        UpdateArthasInstanceDTO(arthasInstance.id).apply {
                             boundPort = client.getPort()
                         },
                     )
@@ -500,7 +494,7 @@ class DefaultArthasExecutionService(
     /**
      * 尝试获取 client，如果没有，则尝试创建一个新的
      */
-    private fun tryResolveClient(channelId: String): Pair<ArthasHttpClient, ArthasInstanceDTO> {
+    private fun tryResolveClient(channelId: String): Pair<ArthasHttpClient, ArthasInstancePO> {
         val pair =
             arthasInstanceService.resolveCachedClientByChannelId(channelId)
                 ?: throw BusinessException("error.runtime.node.expired")
@@ -514,7 +508,7 @@ class DefaultArthasExecutionService(
     private fun checkAndGetNode(
         channelId: String,
         commands: List<String>,
-    ): Pair<ArthasHttpClient, ArthasInstanceDTO> {
+    ): Pair<ArthasHttpClient, ArthasInstancePO> {
         checkTreeNodePermission(channelId)
         checkCommandExecPermission(channelId, commands)
         val pair = tryResolveClient(channelId)
@@ -558,7 +552,7 @@ class DefaultArthasExecutionService(
     }
 
     private fun beforeExec(
-        instance: ArthasInstanceDTO,
+        instance: ArthasInstancePO,
         client: ArthasHttpClient,
         commands: MutableList<String>,
         sessionId: String?,
@@ -574,8 +568,13 @@ class DefaultArthasExecutionService(
             }
             when (commands[1]) {
                 "start", "collect", "dump", "stop" -> {
-                    return client.execProfilerCommand("${instance.channelId}-${System.currentTimeMillis()}", commands, sessionId)
+                    return client.execProfilerCommand(
+                        "${instance.channelId}-${System.currentTimeMillis()}",
+                        commands,
+                        sessionId,
+                    )
                 }
+
                 "execute" -> {
                     // TODO 替换输出文件路径
                     if (instance.restrictedMode) {

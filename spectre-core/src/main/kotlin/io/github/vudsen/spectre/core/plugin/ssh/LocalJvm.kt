@@ -1,6 +1,6 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
+import io.github.vudsen.spectre.common.Jvm
 
 class LocalJvm(
     id: String,

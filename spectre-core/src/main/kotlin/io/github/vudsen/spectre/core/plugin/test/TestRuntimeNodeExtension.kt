@@ -3,10 +3,10 @@ package io.github.vudsen.spectre.core.plugin.test
 import io.github.vudsen.spectre.api.dto.RuntimeNodeDTO
 import io.github.vudsen.spectre.api.dto.ToolchainBundleDTO
 import io.github.vudsen.spectre.api.entity.PageDescriptor
-import io.github.vudsen.spectre.api.plugin.rnode.Jvm
 import io.github.vudsen.spectre.api.plugin.rnode.JvmAttachHandler
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearchNode
 import io.github.vudsen.spectre.api.plugin.rnode.JvmSearcher
+import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.support.plugin.rnode.SearchTreeBuilder
 import io.github.vudsen.spectre.support.plugin.rnode.TypedRuntimeNodeExtensionPoint
@@ -24,11 +24,11 @@ class TestRuntimeNodeExtension : TypedRuntimeNodeExtensionPoint<TestRuntimeNodeC
 
         val testHolder =
             builder.addHandler { _, _ ->
-                return@addHandler listOf(JvmSearchNode("Test", false, null))
+                return@addHandler listOf(JvmSearchNode("Test", false, null, listOf("test")))
             }
 
         testHolder.addHandler { _, _ ->
-            return@addHandler listOf(JvmSearchNode("Test Jvm", true, null))
+            return@addHandler listOf(JvmSearchNode("Test Jvm", true, null, listOf("test", "1")))
         }
 
         builder.build {

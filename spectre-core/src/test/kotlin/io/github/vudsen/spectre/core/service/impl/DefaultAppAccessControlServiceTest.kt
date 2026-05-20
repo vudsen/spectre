@@ -51,9 +51,9 @@ class DefaultAppAccessControlServiceTest : AbstractSpectreTest() {
         roleService.saveRole(rolePO)
 
         GlobalDisposer.registerDispose {
-            roleService.deleteRole(rolePO.id!!)
+            roleService.deleteRole(rolePO.id)
         }
-        return rolePO.id!!
+        return rolePO.id
     }
 
     private fun createUser(username: String): Long {

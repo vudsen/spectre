@@ -1,4 +1,4 @@
-package io.github.vudsen.spectre.api.plugin.rnode
+package io.github.vudsen.spectre.common
 
 abstract class Jvm(
     /**

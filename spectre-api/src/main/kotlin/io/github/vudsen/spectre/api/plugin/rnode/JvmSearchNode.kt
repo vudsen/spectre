@@ -19,11 +19,15 @@ data class JvmSearchNode<T>(
      * 当前上下文. 用于下一次搜索. 必须提供 [hashCode] 方法的重写
      */
     var ctx: T?,
+    /**
+     * 获取节点 id path
+     */
+    var idPath: List<String>,
 ) {
     /**
      * 反序列化使用
      */
-    constructor() : this("", false, null)
+    constructor() : this("", false, null, emptyList())
 
     /**
      * 下一步搜索的标识
