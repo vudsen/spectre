@@ -91,3 +91,12 @@ export const listProfilerFiles = (
 ): Promise<ProfilerFile[]> => {
   return axios.get(`arthas/channel/${channelId}/profiler-files`)
 }
+
+type ChannelCreateVO = {
+  runtimeNodeId: string
+  treeNodeId: string
+  bundleId: string
+}
+
+export const batchCreateChannel = (vos: ChannelCreateVO[]) =>
+  axios.post('arthas/batch/create-channel', vos)

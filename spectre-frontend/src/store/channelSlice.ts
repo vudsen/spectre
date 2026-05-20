@@ -9,6 +9,7 @@ type ChannelContext = {
   inputStatus: InputStatusResponse['inputStatus']
   selectedSkill?: SkillDTO
   availableSkills?: SkillDTO[]
+  batchChannelIds: string[]
   /**
    * 自动执行 LLM 工具执行请求
    */
@@ -26,6 +27,7 @@ const initialState: ChannelState = {
   context: {
     channelId: '-1',
     inputStatus: 'DISABLED',
+    batchChannelIds: [],
   },
 }
 
