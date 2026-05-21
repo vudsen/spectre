@@ -20,6 +20,7 @@ const config: CodegenConfig = {
   },
   documents: ['src/**/*.tsx'],
   ignoreNoDocuments: true,
+  debug: true,
   generates: {
     './src/graphql/generated/': {
       preset: 'client',

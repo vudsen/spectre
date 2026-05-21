@@ -181,7 +181,7 @@ const Menu: React.FC = () => {
     return []
   }, [locations.pathname, navigations])
   return (
-    <div className="h-screen min-w-48 overflow-y-scroll">
+    <div className="z-40 h-screen min-w-48 overflow-y-scroll">
       <div className="z-40 box-border flex h-screen min-w-48 flex-col justify-between border-r-1 border-r-zinc-100 bg-zinc-50 px-2">
         <div className="space-y-2 pt-2 text-nowrap">
           <div className="text-primary my-3 flex grow-0 items-center text-2xl font-bold">

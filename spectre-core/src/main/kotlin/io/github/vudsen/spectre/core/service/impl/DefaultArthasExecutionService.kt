@@ -251,7 +251,7 @@ class DefaultArthasExecutionService(
 
         val node = findTreeNodeWithFallback(treeNodeId, runtimeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
         val jvm = runtimeNodeService.deserializeToJvm(runtimeNodeDto.pluginId, node)
-        val jvmId = resolveJvmId(runtimeNodeId, jvm)
+        val jvmId = treeNodeId
 
         // start init channel
         val status = startInitClient(jvmId) ?: return AttachStatus(false)

@@ -93,7 +93,15 @@
     "skillSelectTip": "Use $ to quickly select skills",
     "aiWelcomeMessage": "Start a talk with AI!",
     "llmDisabled": "Agent is disabled.",
-    "goOpen": "Go Open"
+    "goOpen": "Go Open",
+    "batchArgsEmpty": "Batch connect arguments are empty",
+    "successCounter": "Connected {{successCount}} / {{totalCount}}",
+    "connected": "Connected",
+    "connectFailed": "Error",
+    "connecting": "Connecting",
+    "noLogs": "No logs yet",
+    "error": "Error: {{message}}",
+    "nextRetry": "Next retry at: {{time}}"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",

@@ -30,6 +30,9 @@ type Documents = {
     "\n  query UserDetailQuery($userId: Long!) {\n    user {\n      user(id: $userId) {\n        id\n        createdAt\n        displayName\n        username\n        labels\n      }\n    }\n  }\n": typeof types.UserDetailQueryDocument,
     "\n  query UserListQuery($page: Int!, $size: Int!) {\n    user {\n      users(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          createdAt\n          displayName\n          username\n          labels\n        }\n      }\n    }\n  }\n": typeof types.UserListQueryDocument,
     "\n  query UserQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        labels\n        username\n        displayName\n      }\n    }\n  }\n": typeof types.UserQueryDocument,
+    "\n  query ToolchainBundleQueryForBatchAttach {\n    toolchain {\n      toolchainBundles(page: 0, size: 10) {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n": typeof types.ToolchainBundleQueryForBatchAttachDocument,
+    "\n  query ArthasInstanceListQuery($page: Int!, $size: Int!) {\n    arthasInstance {\n      list(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          runtimeNodeId\n          jvm {\n            name\n          }\n        }\n      }\n    }\n  }\n": typeof types.ArthasInstanceListQueryDocument,
+    "\n  query RuntimeNodeNameBatchQuery($ids: [String!]!) {\n    runtimeNode {\n      byIds(ids: $ids) {\n        id\n        name\n      }\n    }\n  }\n": typeof types.RuntimeNodeNameBatchQueryDocument,
     "\n  query ToolchainBundleQueryForAttach {\n    toolchain {\n      toolchainBundles(page: 0, size: 10) {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n": typeof types.ToolchainBundleQueryForAttachDocument,
     "\n  query NodeInfoQuery($id: String!) {\n    runtimeNode {\n      runtimeNode(id: $id) {\n        name\n        labels\n        createdAt\n      }\n    }\n  }\n": typeof types.NodeInfoQueryDocument,
     "\n  query ListJvmSource($page: Int!, $size: Int!) {\n    runtimeNode {\n      runtimeNodes(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          name\n          createdAt\n          pluginId\n          labels\n          restrictedMode\n        }\n      }\n      plugins {\n        id\n        name\n      }\n    }\n  }\n": typeof types.ListJvmSourceDocument,
@@ -56,6 +59,9 @@ const documents: Documents = {
     "\n  query UserDetailQuery($userId: Long!) {\n    user {\n      user(id: $userId) {\n        id\n        createdAt\n        displayName\n        username\n        labels\n      }\n    }\n  }\n": types.UserDetailQueryDocument,
     "\n  query UserListQuery($page: Int!, $size: Int!) {\n    user {\n      users(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          createdAt\n          displayName\n          username\n          labels\n        }\n      }\n    }\n  }\n": types.UserListQueryDocument,
     "\n  query UserQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        labels\n        username\n        displayName\n      }\n    }\n  }\n": types.UserQueryDocument,
+    "\n  query ToolchainBundleQueryForBatchAttach {\n    toolchain {\n      toolchainBundles(page: 0, size: 10) {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n": types.ToolchainBundleQueryForBatchAttachDocument,
+    "\n  query ArthasInstanceListQuery($page: Int!, $size: Int!) {\n    arthasInstance {\n      list(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          runtimeNodeId\n          jvm {\n            name\n          }\n        }\n      }\n    }\n  }\n": types.ArthasInstanceListQueryDocument,
+    "\n  query RuntimeNodeNameBatchQuery($ids: [String!]!) {\n    runtimeNode {\n      byIds(ids: $ids) {\n        id\n        name\n      }\n    }\n  }\n": types.RuntimeNodeNameBatchQueryDocument,
     "\n  query ToolchainBundleQueryForAttach {\n    toolchain {\n      toolchainBundles(page: 0, size: 10) {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n": types.ToolchainBundleQueryForAttachDocument,
     "\n  query NodeInfoQuery($id: String!) {\n    runtimeNode {\n      runtimeNode(id: $id) {\n        name\n        labels\n        createdAt\n      }\n    }\n  }\n": types.NodeInfoQueryDocument,
     "\n  query ListJvmSource($page: Int!, $size: Int!) {\n    runtimeNode {\n      runtimeNodes(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          name\n          createdAt\n          pluginId\n          labels\n          restrictedMode\n        }\n      }\n      plugins {\n        id\n        name\n      }\n    }\n  }\n": types.ListJvmSourceDocument,
@@ -127,6 +133,18 @@ export function graphql(source: "\n  query UserListQuery($page: Int!, $size: Int
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query UserQuery($id: Long!) {\n    user {\n      user(id: $id) {\n        id\n        labels\n        username\n        displayName\n      }\n    }\n  }\n"): typeof import('./graphql').UserQueryDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ToolchainBundleQueryForBatchAttach {\n    toolchain {\n      toolchainBundles(page: 0, size: 10) {\n        result {\n          id\n          name\n        }\n      }\n    }\n  }\n"): typeof import('./graphql').ToolchainBundleQueryForBatchAttachDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ArthasInstanceListQuery($page: Int!, $size: Int!) {\n    arthasInstance {\n      list(page: $page, size: $size) {\n        totalPages\n        result {\n          id\n          runtimeNodeId\n          jvm {\n            name\n          }\n        }\n      }\n    }\n  }\n"): typeof import('./graphql').ArthasInstanceListQueryDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query RuntimeNodeNameBatchQuery($ids: [String!]!) {\n    runtimeNode {\n      byIds(ids: $ids) {\n        id\n        name\n      }\n    }\n  }\n"): typeof import('./graphql').RuntimeNodeNameBatchQueryDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

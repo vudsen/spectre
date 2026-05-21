@@ -98,5 +98,6 @@ type ChannelCreateVO = {
   bundleId: string
 }
 
-export const batchCreateChannel = (vos: ChannelCreateVO[]) =>
-  axios.post('arthas/batch/create-channel', vos)
+export const batchCreateChannel = (
+  vos: ChannelCreateVO[],
+): Promise<AttachStatus[]> => axios.post('arthas/batch/create-channel', vos)

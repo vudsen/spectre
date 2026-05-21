@@ -14,8 +14,11 @@ import TreeContext, {
 import ToolchainSelectModal from '@/pages/runtime-node/[node-id]/tree/ToolchainSelectModal.tsx'
 import {
   Alert,
+  Button,
   Card,
   CardBody,
+  Drawer,
+  DrawerContent,
   Input,
   Skeleton,
   useDisclosure,
@@ -36,6 +39,11 @@ import Shepherd from 'shepherd.js'
 import { updateTourStep } from '@/api/impl/sys-conf.ts'
 import 'shepherd.js/dist/css/shepherd.css'
 import i18n from '@/i18n'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useDispatch, useSelector } from 'react-redux'
+import type { RootState } from '@/store'
+import { updateSearchContent } from '@/store/runtimeNodeTreeSlice'
+import BatchConnectDrawerContent from '@/pages/runtime-node/[node-id]/tree/BatchConnectDrawerContent.tsx'
 
 const NodeInfoQuery = graphql(`
   query NodeInfoQuery($id: String!) {
@@ -48,6 +56,21 @@ const NodeInfoQuery = graphql(`
     }
   }
 `)
+
+const sheetVariants = {
+  hidden: {
+    y: '100%',
+    opacity: 0,
+  },
+  visible: {
+    y: 0,
+    opacity: 1,
+  },
+  exit: {
+    y: '100%',
+    opacity: 0,
+  },
+}
 
 function setupTour() {
   const sp = new URL(location.href).searchParams
@@ -128,9 +151,11 @@ function setupTour() {
 const RuntimeNodeTreePage: React.FC = () => {
   const params = useParams()
   const nodeId = params['node-id'] ?? '-1'
+  const dispatch = useDispatch()
   const [rootNodes, setRootnNodes] = useState<JvmTreeNodeDTO[]>([])
   const [context, setContext] = useState<NodeTreeContext>()
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
+  const batchDialog = useDisclosure()
   const selectedSearchNode = useRef<JvmTreeNodeDTO>(undefined)
   const [isRootNodeLoading, setRootNodeLoading] = useState(true)
   const [isAlertVisible, setAlertVisible] = React.useState(true)
@@ -142,24 +167,15 @@ const RuntimeNodeTreePage: React.FC = () => {
       }
     }, [nodeId]),
   )
+  const batchSelectedNodes = useSelector<RootState, JvmTreeNodeDTO[]>(
+    (state) => state.runtimeNodeTree.batchSelectedNodes,
+  )
 
   const tour = useMemo(() => setupTour(), [])
 
   useEffect(() => {
-    let listeners: Array<() => void> = []
-    const contentListeners: Array<(content: string) => void> = []
     setContext({
       nodeId,
-      subScribeSelectionChangeOnce: (cb) => {
-        listeners.push(cb)
-        return cb.length - 1
-      },
-      onSelectionChange() {
-        for (const listener of listeners) {
-          listener()
-        }
-        listeners = []
-      },
       requireAttach: (searchNode) => {
         selectedSearchNode.current = searchNode
         if (tour && tour.currentStep?.id === 'attach') {
@@ -167,18 +183,6 @@ const RuntimeNodeTreePage: React.FC = () => {
           updateTourStep(2).then()
         }
         onOpen()
-      },
-      subscribeSearchContentChange: (cb) => {
-        contentListeners.push(cb)
-        return contentListeners.length
-      },
-      onSearchContentChange: (content: string) => {
-        for (const contentListener of contentListeners) {
-          contentListener(content)
-        }
-      },
-      unsubscribeSearchContentChange: (id: number) => {
-        contentListeners.splice(id, 1)
       },
       tour,
     })
@@ -215,7 +219,7 @@ const RuntimeNodeTreePage: React.FC = () => {
   }
 
   const onInput = (e: FormEvent<HTMLInputElement>) => {
-    context?.onSearchContentChange((e.target as HTMLInputElement).value)
+    dispatch(updateSearchContent((e.target as HTMLInputElement).value))
   }
 
   const onRootTreeExpand = () => {
@@ -234,7 +238,7 @@ const RuntimeNodeTreePage: React.FC = () => {
   }
   return (
     <TreeContext value={context}>
-      <div className="mx-6 space-y-5">
+      <div className="mx-6 space-y-5 pb-20">
         <div className="header-1">
           {i18n.t('hardcoded.msg_pages_runtime_node_list_index_004')}
         </div>
@@ -353,6 +357,47 @@ const RuntimeNodeTreePage: React.FC = () => {
           </CardBody>
         </Card>
       </div>
+      <AnimatePresence>
+        {batchSelectedNodes.length > 1 ? (
+          <motion.div
+            variants={sheetVariants}
+            initial="hidden"
+            animate="visible"
+            className="bg-primary-50 sticky bottom-0 left-0 z-1 flex w-full items-center justify-between px-5 py-3"
+            exit="exit"
+            transition={{
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+            }}
+          >
+            <div>
+              <span className="text-primary">批量连接</span>
+              <span className="text-default-500 ml-3 text-sm">
+                一条命令，同时发给多个节点，并将结果聚合后展示
+              </span>
+            </div>
+            <div>
+              <Button
+                color="primary"
+                variant="flat"
+                onPress={batchDialog.onOpen}
+              >
+                批量连接
+              </Button>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+      <Drawer
+        isOpen={batchDialog.isOpen}
+        onOpenChange={batchDialog.onOpenChange}
+        size="3xl"
+      >
+        <DrawerContent>
+          {(onClose) => <BatchConnectDrawerContent onClose={onClose} />}
+        </DrawerContent>
+      </Drawer>
     </TreeContext>
   )
 }

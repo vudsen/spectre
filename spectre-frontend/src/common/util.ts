@@ -122,3 +122,9 @@ export const appendShepherdStepsBeforeShow = (
     })
   }
 }
+
+const EMPTY_LIST: unknown[] = []
+export const emptyList = <T>(): T[] => {
+  // @ts-expect-error ignore
+  return EMPTY_LIST
+}

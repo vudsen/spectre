@@ -31,11 +31,41 @@ export type AiQueries = {
   config: LlmConfigurationVo;
 };
 
+export type ArthasInstancePo = {
+  __typename?: 'ArthasInstancePO';
+  id: Scalars['String']['output'];
+  jvm: Jvm;
+  runtimeNodeId: Scalars['String']['output'];
+};
+
+export type ArthasInstancePoPage = {
+  __typename?: 'ArthasInstancePOPage';
+  result: Array<ArthasInstancePo>;
+  totalPages: Scalars['Int']['output'];
+};
+
+export type ArthasInstanceQueries = {
+  __typename?: 'ArthasInstanceQueries';
+  list: ArthasInstancePoPage;
+};
+
+
+export type ArthasInstanceQueriesListArgs = {
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
+};
+
 export type BasePermissionEntity = {
   __typename?: 'BasePermissionEntity';
   action: Scalars['String']['output'];
   name: Scalars['String']['output'];
   resource: Scalars['String']['output'];
+};
+
+export type Jvm = {
+  __typename?: 'Jvm';
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type LlmConfigurationVo = {
@@ -146,6 +176,7 @@ export type PolicyPermissionQueriesPermissionsArgs = {
 export type Query = {
   __typename?: 'Query';
   ai: AiQueries;
+  arthasInstance: ArthasInstanceQueries;
   log: LogEntityQueries;
   permission: PolicyPermissionQueries;
   role: RoleQueries;
@@ -233,10 +264,16 @@ export type RuntimeNodePluginVo = {
 
 export type RuntimeNodeQueries = {
   __typename?: 'RuntimeNodeQueries';
+  byIds: Array<RuntimeNodeDto>;
   plugin?: Maybe<RuntimeNodePluginVo>;
   plugins: Array<RuntimeNodePluginVo>;
   runtimeNode?: Maybe<RuntimeNodeDto>;
   runtimeNodes: RuntimeNodePage;
+};
+
+
+export type RuntimeNodeQueriesByIdsArgs = {
+  ids: Array<Scalars['String']['input']>;
 };
 
 
@@ -524,6 +561,26 @@ export type UserQueryQueryVariables = Exact<{
 
 
 export type UserQueryQuery = { __typename?: 'Query', user: { __typename?: 'UserQueries', user?: { __typename?: 'User', id: string, labels?: any | null, username: string, displayName?: string | null } | null } };
+
+export type ToolchainBundleQueryForBatchAttachQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ToolchainBundleQueryForBatchAttachQuery = { __typename?: 'Query', toolchain: { __typename?: 'ToolchainItemQueries', toolchainBundles: { __typename?: 'ToolchainBundlePage', result: Array<{ __typename?: 'ToolchainBundlePO', id: string, name: string }> } } };
+
+export type ArthasInstanceListQueryQueryVariables = Exact<{
+  page: Scalars['Int']['input'];
+  size: Scalars['Int']['input'];
+}>;
+
+
+export type ArthasInstanceListQueryQuery = { __typename?: 'Query', arthasInstance: { __typename?: 'ArthasInstanceQueries', list: { __typename?: 'ArthasInstancePOPage', totalPages: number, result: Array<{ __typename?: 'ArthasInstancePO', id: string, runtimeNodeId: string, jvm: { __typename?: 'Jvm', name: string } }> } } };
+
+export type RuntimeNodeNameBatchQueryQueryVariables = Exact<{
+  ids: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+
+export type RuntimeNodeNameBatchQueryQuery = { __typename?: 'Query', runtimeNode: { __typename?: 'RuntimeNodeQueries', byIds: Array<{ __typename?: 'RuntimeNodeDTO', id: string, name: string }> } };
 
 export type ToolchainBundleQueryForAttachQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -828,6 +885,44 @@ export const UserQueryDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<UserQueryQuery, UserQueryQueryVariables>;
+export const ToolchainBundleQueryForBatchAttachDocument = new TypedDocumentString(`
+    query ToolchainBundleQueryForBatchAttach {
+  toolchain {
+    toolchainBundles(page: 0, size: 10) {
+      result {
+        id
+        name
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<ToolchainBundleQueryForBatchAttachQuery, ToolchainBundleQueryForBatchAttachQueryVariables>;
+export const ArthasInstanceListQueryDocument = new TypedDocumentString(`
+    query ArthasInstanceListQuery($page: Int!, $size: Int!) {
+  arthasInstance {
+    list(page: $page, size: $size) {
+      totalPages
+      result {
+        id
+        runtimeNodeId
+        jvm {
+          name
+        }
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<ArthasInstanceListQueryQuery, ArthasInstanceListQueryQueryVariables>;
+export const RuntimeNodeNameBatchQueryDocument = new TypedDocumentString(`
+    query RuntimeNodeNameBatchQuery($ids: [String!]!) {
+  runtimeNode {
+    byIds(ids: $ids) {
+      id
+      name
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<RuntimeNodeNameBatchQueryQuery, RuntimeNodeNameBatchQueryQueryVariables>;
 export const ToolchainBundleQueryForAttachDocument = new TypedDocumentString(`
     query ToolchainBundleQueryForAttach {
   toolchain {

@@ -17,5 +17,6 @@ type Query {
     permission: PolicyPermissionQueries!
     log: LogEntityQueries!
     ai: AIQueries!
+    arthasInstance: ArthasInstanceQueries!
 }
 

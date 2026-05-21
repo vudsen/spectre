@@ -97,6 +97,7 @@ const createArthasMessageBusInternal = async (
         setupChannelContext({
           channelId,
           inputStatus: 'DISABLED',
+          batchChannelIds: [],
         }),
       )
       return messages
@@ -108,6 +109,7 @@ const createArthasMessageBusInternal = async (
         inputStatus: status
           ? (status.value as InputStatusResponse).inputStatus
           : 'ALLOW_INPUT',
+        batchChannelIds: [],
       }),
     )
     return messages

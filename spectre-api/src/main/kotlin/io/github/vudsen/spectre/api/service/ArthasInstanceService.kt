@@ -4,11 +4,20 @@ import io.github.vudsen.spectre.api.dto.CreateArthasInstanceDTO
 import io.github.vudsen.spectre.api.dto.UpdateArthasInstanceDTO
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
+import org.springframework.data.domain.Page
 
 /**
  * 缓存 arthas 客户端，避免重复创建
  */
 interface ArthasInstanceService {
+    /**
+     * 列出实例
+     */
+    fun list(
+        page: Int,
+        size: Int,
+    ): Page<ArthasInstancePO>
+
     /**
      * 保存实例. 如果存在，则会报错
      */

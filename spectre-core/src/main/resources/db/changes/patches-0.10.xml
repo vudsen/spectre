@@ -10,5 +10,10 @@
             <column name="paths" type="varchar(128)"/>
         </addColumn>
     </changeSet>
+    <changeSet id="202605211016" author="vudsen">
+        <delete tableName="arthas_instance">
+            <where>paths IS NULL</where>
+        </delete>
+    </changeSet>
 
 </databaseChangeLog>

@@ -50,4 +50,9 @@ class RuntimeNodeQueriesController(
 
     @SchemaMapping
     fun plugins(): List<RuntimeNodePluginVO> = service.listPlugins().map { extensionPoint -> mapPluginToVo(extensionPoint) }
+
+    @SchemaMapping
+    fun byIds(
+        @Argument ids: List<String>,
+    ): List<RuntimeNodeDTO> = service.findByIds(ids.map { id -> id.toLong() })
 }

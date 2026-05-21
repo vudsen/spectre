@@ -84,7 +84,15 @@
     "skillSelectTip": "使用 $ 可以快速选择技能",
     "aiWelcomeMessage": "开始与 AI 对话吧",
     "llmDisabled": "智能体已被禁用",
-    "goOpen": "前往开启"
+    "goOpen": "前往开启",
+    "batchArgsEmpty": "批量连接参数为空",
+    "successCounter": "已成功 {{successCount}} / {{totalCount}}",
+    "connected": "连接成功",
+    "connectFailed": "连接异常",
+    "connecting": "连接中",
+    "noLogs": "暂无日志",
+    "error": "错误: {{message}}",
+    "nextRetry": "下次重试时间: {{time}}"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",

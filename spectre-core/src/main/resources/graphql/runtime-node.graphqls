@@ -3,6 +3,7 @@ type RuntimeNodeQueries {
     runtimeNode(id: String!): RuntimeNodeDTO
     plugin(pluginId: String!): RuntimeNodePluginVO
     plugins: [RuntimeNodePluginVO!]!
+    byIds(ids: [String!]!): [RuntimeNodeDTO!]!
 }
 
 
