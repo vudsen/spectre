@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotEmpty
 
 class BatchExecRequestVO {
     @NotEmpty
-    var channelIds: List<String> = emptyList()
+    var channelId: String = ""
 
     @NotEmpty
     var command: String = ""

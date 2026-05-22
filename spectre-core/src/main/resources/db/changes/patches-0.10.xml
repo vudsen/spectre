@@ -16,4 +16,15 @@
         </delete>
     </changeSet>
 
+    <changeSet id="202605221009" author="vudsen">
+        <createTable tableName="channel">
+            <column name="id" type="java.sql.Types.VARCHAR(64)"/>
+            <column name="instance_ids" type="java.sql.Types.VARCHAR(1024)"/>
+            <column name="last_access" type="JAVA.SQL.TYPES.DATETIME"/>
+        </createTable>
+        <dropColumn tableName="arthas_instance">
+            <column name="channel_id"/>
+        </dropColumn>
+    </changeSet>
+
 </databaseChangeLog>

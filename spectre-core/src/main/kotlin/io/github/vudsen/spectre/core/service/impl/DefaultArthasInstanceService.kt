@@ -134,7 +134,7 @@ open class DefaultArthasInstanceService(
         return instance
     }
 
-    override fun findInstanceByChannelId(id: String): ArthasInstancePO? = arthasInstanceRepository.findByChannelId(id)
+    override fun findInstanceByChannelId(id: String): ArthasInstancePO? = arthasInstanceRepository.findById(id).getOrNull()
 
     override fun resolveCachedClientByChannelId(channelId: String): Pair<ArthasHttpClient?, ArthasInstancePO>? {
         val arthasInstanceDTO = findInstanceByChannelId(channelId) ?: return null

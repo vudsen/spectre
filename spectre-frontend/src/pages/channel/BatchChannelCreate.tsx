@@ -1,273 +1,198 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import i18n from '@/i18n'
-import { batchCreateChannel, type AttachStatus } from '@/api/impl/arthas.ts'
-import { Spinner } from '@heroui/react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  Button,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from '@heroui/react'
+import SvgIcon from '@/components/icon/SvgIcon.tsx'
+import Icon from '@/components/icon/icon.ts'
+import { batchCreateInstances } from '@/api/impl/arthas.ts'
+
+type ChannelCreateRequest = {
+  treeNodeId: string
+  bundleId: string
+  runtimeNodeId: string
+  name: string
+}
 
 export interface BatchChannelCreateProps {
-  channels: { treeNodeId: string; bundleId: string; runtimeNodeId: string }[]
+  channels: ChannelCreateRequest[]
 }
 
 type ChannelState = 'pending' | 'success' | 'error'
 
-type ChannelStatus = {
-  key: string
-  treeNodeId: string
-  runtimeNodeId: string
-  bundleId: string
+type MyChannel = {
   state: ChannelState
-  channelId?: string
-  title?: string
-  lastMessage?: string
-  messageHistory: string[]
-  errorMessage?: string
-  nextRetryTime?: number
+  message: string
+  stopped: boolean
+} & ChannelCreateRequest
+
+type PollState = {
+  lastId?: number
+  isStopped: boolean
 }
 
-const POLL_INTERVAL = 1000
-
-const makeChannelKey = (
-  channel: BatchChannelCreateProps['channels'][number],
-  index: number,
-) =>
-  `${channel.runtimeNodeId}::${channel.treeNodeId}::${channel.bundleId}::${index}`
-
-const BatchChannelCreate: React.FC<BatchChannelCreateProps> = ({
-  channels,
-}) => {
-  const [statusMap, setStatusMap] = useState<Record<string, ChannelStatus>>({})
-  const statusMapRef = useRef<Record<string, ChannelStatus>>({})
-  const pollState = useRef<{ timerId?: number; stopped: boolean }>({
-    stopped: false,
+const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
+  const [channels, setChannels] = useState<MyChannel[]>(() =>
+    props.channels.map((channel) => ({
+      ...channel,
+      state: 'pending',
+      message: '',
+      stopped: false,
+    })),
+  )
+  const pollState = useRef<PollState>({
+    isStopped: false,
   })
 
-  const channelList = useMemo(
-    () =>
-      channels.map((channel, index) => ({
-        ...channel,
-        key: makeChannelKey(channel, index),
-      })),
-    [channels],
-  )
-
-  useEffect(() => {
-    const initialMap: Record<string, ChannelStatus> = {}
-    for (const channel of channelList) {
-      initialMap[channel.key] = {
-        key: channel.key,
-        treeNodeId: channel.treeNodeId,
-        runtimeNodeId: channel.runtimeNodeId,
-        bundleId: channel.bundleId,
-        state: 'pending',
-        messageHistory: [],
-      }
+  const doPoll = useCallback(() => {
+    if (pollState.current.isStopped) {
+      return
     }
-    setStatusMap(initialMap)
-    statusMapRef.current = initialMap
-  }, [channelList])
+    setChannels((channels) => {
+      const preNewChannels = [...channels]
+      const nextPollChannels: MyChannel[] = []
+      for (let i = 0; i < channels.length; i++) {
+        const channel = channels[i]
+        if (!channel.stopped && channel.state !== 'success') {
+          nextPollChannels.push(channel)
+          preNewChannels[i].state = 'pending'
+          preNewChannels[i].message = '正在连接中'
+        }
+      }
+      if (nextPollChannels.length === 0) {
+        return channels
+      }
+      clearTimeout(pollState.current.lastId)
+      pollState.current.lastId = setTimeout(async () => {
+        if (pollState.current.isStopped) {
+          return
+        }
+        const status = await batchCreateInstances(nextPollChannels)
+        setChannels((prevState) => {
+          const newChannels = [...prevState]
+          let nextRetryTime = 0
+          for (const nextPollChannel of nextPollChannels) {
+            const current = status[nextPollChannel.treeNodeId]
+            const i = prevState.findIndex(
+              (p) => p.treeNodeId === nextPollChannel.treeNodeId,
+            )
+            if (current.error) {
+              newChannels[i].state = 'error'
+              newChannels[i].message = current.error.message
+              nextRetryTime = Math.max(
+                nextRetryTime,
+                Number.parseInt(current.error.nextRetryTime),
+              )
+            } else if (current.isReady) {
+              newChannels[i].state = 'success'
+              newChannels[i].message = '连接成功'
+            } else {
+              newChannels[i].state = 'pending'
+              newChannels[i].message =
+                current.message ?? current.title ?? '连接中'
+            }
+          }
+          if (nextRetryTime > 0) {
+            const delay = nextRetryTime - Date.now()
+            if (delay <= 100) {
+              doPoll()
+            } else {
+              setTimeout(() => {
+                doPoll()
+              }, delay)
+            }
+          } else {
+            doPoll()
+          }
+          return newChannels
+        })
+      }, 1000)
+      return preNewChannels
+    })
+  }, [])
 
   useEffect(() => {
     const state = pollState.current
-    state.stopped = false
-
-    const poll = (targets: typeof channelList) => {
-      if (state.stopped || targets.length === 0) {
-        return
-      }
-      state.timerId = setTimeout(() => {
-        batchCreateChannel(targets)
-          .then((result) => {
-            if (state.stopped) {
-              return
-            }
-            const nextTargets: typeof channelList = []
-            const updates: Record<string, ChannelStatus> = {}
-            for (let index = 0; index < targets.length; index++) {
-              const target = targets[index]
-              const attachStatus: AttachStatus | undefined = result[index]
-              const previous = statusMapRef.current[target.key] ?? {
-                key: target.key,
-                treeNodeId: target.treeNodeId,
-                runtimeNodeId: target.runtimeNodeId,
-                bundleId: target.bundleId,
-                state: 'pending' as ChannelState,
-                messageHistory: [],
-              }
-              const mergedHistory = previous.messageHistory.slice()
-              const message = attachStatus?.message
-              if (message) {
-                mergedHistory.push(message)
-              }
-              if (attachStatus?.isReady) {
-                updates[target.key] = {
-                  ...previous,
-                  state: 'success',
-                  channelId: attachStatus.channelId ?? previous.channelId,
-                  title: attachStatus.title ?? previous.title,
-                  lastMessage: message ?? previous.lastMessage,
-                  messageHistory: mergedHistory,
-                  errorMessage: undefined,
-                  nextRetryTime: undefined,
-                }
-              } else if (attachStatus?.error) {
-                updates[target.key] = {
-                  ...previous,
-                  state: 'error',
-                  title: attachStatus.title ?? previous.title,
-                  lastMessage: message ?? previous.lastMessage,
-                  messageHistory: mergedHistory,
-                  errorMessage: attachStatus.error.message,
-                  nextRetryTime: attachStatus.error.nextRetryTime,
-                }
-                nextTargets.push(target)
-              } else {
-                updates[target.key] = {
-                  ...previous,
-                  state: 'pending',
-                  title: attachStatus?.title ?? previous.title,
-                  lastMessage: message ?? previous.lastMessage,
-                  messageHistory: mergedHistory,
-                  errorMessage: undefined,
-                  nextRetryTime: undefined,
-                }
-                nextTargets.push(target)
-              }
-            }
-            setStatusMap((old) => {
-              const next = {
-                ...old,
-                ...updates,
-              }
-              statusMapRef.current = next
-              return next
-            })
-            if (nextTargets.length > 0) {
-              poll(nextTargets)
-            }
-          })
-          .catch((e) => {
-            if (state.stopped) {
-              return
-            }
-            setStatusMap((old) => {
-              const next = { ...old }
-              for (const target of targets) {
-                const previous = old[target.key]
-                if (!previous || previous.state === 'success') {
-                  continue
-                }
-                next[target.key] = {
-                  ...previous,
-                  state: 'error',
-                  errorMessage: e.message,
-                }
-              }
-              statusMapRef.current = next
-              return next
-            })
-            poll(targets)
-          })
-      }, POLL_INTERVAL)
-    }
-
-    if (channelList.length > 0) {
-      poll(channelList)
-    }
-
+    state.isStopped = false
+    doPoll()
     return () => {
-      state.stopped = true
-      if (state.timerId) {
-        clearTimeout(state.timerId)
-      }
+      clearTimeout(state.lastId)
+      state.isStopped = true
     }
-  }, [channelList])
+  }, [doPoll])
 
-  const statusList = useMemo(
-    () => channelList.map((channel) => statusMap[channel.key]).filter(Boolean),
-    [channelList, statusMap],
-  )
-  const totalCount = channelList.length
-  const successCount = statusList.filter(
-    (item) => item.state === 'success',
-  ).length
-  const isDone = totalCount > 0 && successCount === totalCount
-
-  if (totalCount === 0) {
-    return <div>{i18n.t('channel.batchArgsEmpty')}</div>
-  }
+  const stopRetry = useCallback((id: string) => {
+    setChannels((prevState) => {
+      const newChannels = [...prevState]
+      const target = newChannels.find((ch) => ch.treeNodeId === id)
+      if (target) {
+        target.stopped = true
+        return newChannels
+      } else {
+        return prevState
+      }
+    })
+  }, [])
 
   return (
-    <div className="-mt-navbar h-screen w-full overflow-auto px-6 py-10">
-      <div className="mx-auto max-w-4xl space-y-6">
-        <div className="border-default-200 bg-content1 flex items-center justify-between rounded-lg border px-4 py-3">
-          <div className="text-foreground text-sm font-semibold">
-            {i18n.t('channel.successCounter', {
-              successCount,
-              totalCount,
-            })}
-          </div>
-          {!isDone && <Spinner size="sm" variant="wave" />}
-        </div>
-
-        <div className="space-y-3">
-          {statusList.map((item) => (
-            <div
-              key={item.key}
-              className="border-default-200 rounded-lg border p-3"
-            >
-              <div className="mb-2 flex items-center justify-between text-sm">
-                <div className="font-medium">
-                  {item.treeNodeId} / {item.runtimeNodeId}
-                </div>
-                <div
-                  className={
-                    item.state === 'success'
-                      ? 'text-success'
-                      : item.state === 'error'
-                        ? 'text-danger'
-                        : 'text-warning'
-                  }
-                >
-                  {item.state === 'success'
-                    ? i18n.t('channel.connected')
-                    : item.state === 'error'
-                      ? i18n.t('channel.connectFailed')
-                      : i18n.t('channel.connecting')}
-                </div>
-              </div>
-
-              <div className="bg-content2 text-foreground-600 max-h-40 overflow-auto rounded-md p-2 font-mono text-xs leading-6">
-                {item.messageHistory.length === 0 ? (
-                  <div>{i18n.t('channel.noLogs')}</div>
-                ) : (
-                  item.messageHistory.map((message, index) => (
-                    <div key={`${item.key}-message-${index}`}>{message}</div>
-                  ))
-                )}
-                {item.errorMessage && (
-                  <div className="text-danger mt-1">
-                    {i18n.t('channel.error', {
-                      message: item.errorMessage,
-                    })}
-                  </div>
-                )}
-                {item.nextRetryTime && (
-                  <div className="text-warning mt-1">
-                    {i18n.t('channel.nextRetry', {
-                      time: new Date(item.nextRetryTime).toLocaleTimeString(),
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+    <div className="flex h-screen w-screen flex-col items-center justify-center">
+      <div className="text-primary text-bold mb-5 text-lg">正在连接中</div>
+      <Table hideHeader aria-label="Connections" className="max-w-256">
+        <TableHeader>
+          <TableColumn>Status</TableColumn>
+          <TableColumn>Name</TableColumn>
+          <TableColumn>Message</TableColumn>
+          <TableColumn>Actions</TableColumn>
+        </TableHeader>
+        <TableBody>
+          {channels.map((channel) => (
+            <TableRow key={channel.treeNodeId}>
+              <TableCell className="w-8">
+                {channel.state === 'pending' ? (
+                  <Spinner color="primary" size="sm" />
+                ) : null}
+                {channel.state === 'success' ? (
+                  <SvgIcon
+                    icon={Icon.CHECK}
+                    size={22}
+                    className="text-success"
+                  />
+                ) : null}
+                {channel.state === 'error' ? (
+                  <SvgIcon
+                    icon={Icon.CLOSE}
+                    size={22}
+                    className="text-danger"
+                  />
+                ) : null}
+              </TableCell>
+              <TableCell className="w-64">{channel.name}</TableCell>
+              <TableCell>{channel.message}</TableCell>
+              <TableCell>
+                {channel.state === 'error' && !channel.stopped ? (
+                  <Button
+                    color="danger"
+                    variant="light"
+                    size="sm"
+                    onPress={() => stopRetry(channel.treeNodeId)}
+                  >
+                    取消重试
+                  </Button>
+                ) : null}
+                {channel.state === 'error' && channel.stopped ? (
+                  <div className="text-danger">已停止重试</div>
+                ) : null}
+              </TableCell>
+            </TableRow>
           ))}
-        </div>
-
-        {isDone && (
-          <div className="border-success-300 bg-success-50 text-success-700 rounded-lg border px-4 py-3 text-sm">
-            {i18n.t('hardcoded.msg_pages_channel_batch_create_009')}
-          </div>
-        )}
-      </div>
+        </TableBody>
+      </Table>
     </div>
   )
 }

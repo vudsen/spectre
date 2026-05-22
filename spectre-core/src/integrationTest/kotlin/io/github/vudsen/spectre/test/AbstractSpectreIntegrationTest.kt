@@ -137,7 +137,7 @@ abstract class AbstractSpectreIntegrationTest {
                         .expectBody<AttachStatus>()
                         .returnResult()
                         .responseBody!!
-                attachStatus.channelId?.let {
+                attachStatus.treeNodeId?.let {
                     if (attachStatus.isReady) {
                         return@loop it
                     }

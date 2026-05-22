@@ -7,7 +7,7 @@ export type AttachStatus = {
   message?: string
   error?: {
     message: string
-    nextRetryTime: number
+    nextRetryTime: string
   }
 }
 
@@ -98,6 +98,37 @@ type ChannelCreateVO = {
   bundleId: string
 }
 
-export const batchCreateChannel = (
+/**
+ * @return treeNodeId to status
+ */
+export const batchCreateInstances = (
   vos: ChannelCreateVO[],
-): Promise<AttachStatus[]> => axios.post('arthas/batch/create-channel', vos)
+): Promise<Record<string, AttachStatus>> =>
+  axios.post('arthas/batch/create-instances', vos)
+
+/**
+ * @return channelId
+ */
+export const createBatchChannel = (instanceIds: string[]): Promise<string> =>
+  axios.post('arthas/batch/create-channel', instanceIds)
+
+type ChannelInfoVO = {
+  runtimeNodeName: string
+  jvmName: string
+  instanceId: string
+}
+
+export const joinBatchChannel = (channelId: string): Promise<ChannelInfoVO[]> =>
+  axios.post('arthas/batch/join?channelId=' + channelId)
+
+type BatchExecuteRequest = {
+  channelId: string
+  command: string
+}
+export const batchExecute = (body: BatchExecuteRequest) =>
+  axios.post('arthas/batch/execute', body)
+
+export const batchPullResult = (
+  channelId: string,
+): Promise<Record<string, PureArthasResponse[]>> =>
+  axios.get('arthas/batch/pull-result?channelId=' + channelId)

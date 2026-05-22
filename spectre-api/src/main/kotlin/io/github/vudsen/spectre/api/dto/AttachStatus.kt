@@ -9,7 +9,7 @@ class AttachStatus(
     /**
      * 每个 arthas 进程在全局唯一的 id
      */
-    var channelId: String? = null
+    var treeNodeId: String? = null
     var error: ErrorInfo? = null
     var title: String? = null
     var message: String? = null

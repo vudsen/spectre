@@ -152,9 +152,9 @@ class DefaultArthasExecutionService(
         jvm: Jvm,
     ): String = "$runtimeNodeId:${jvm.hashCode()}"
 
-    private fun checkTreeNodePermission(channelId: String) {
+    private fun checkTreeNodePermission(instanceId: String) {
         val info =
-            arthasInstanceService.findInstanceByChannelId(channelId)
+            arthasInstanceService.findInstanceById(instanceId)
                 ?: throw BusinessException("error.channel.not.exist")
         checkTreeNodePermission(info.runtimeNodeId, info.id)
     }
@@ -174,14 +174,14 @@ class DefaultArthasExecutionService(
     }
 
     private fun checkCommandExecPermission(
-        channelId: String,
+        instanceId: String,
         commands: List<String>,
     ) {
         if (DISALLOWED_ARTHAS_COMMAND.contains(commands[0])) {
             throw BusinessException("error.command.not.allowed", arrayOf(commands[0]))
         }
         val info =
-            arthasInstanceService.findInstanceByChannelId(channelId)
+            arthasInstanceService.findInstanceByChannelId(instanceId)
                 ?: throw BusinessException("error.channel.not.exist")
         val runtimeNodeDTO =
             runtimeNodeService.findPureRuntimeNodeById(info.runtimeNodeId)
@@ -240,7 +240,7 @@ class DefaultArthasExecutionService(
         arthasInstanceService.resolveCachedClient(treeNodeId)?.let {
             if (it.first != null) {
                 return AttachStatus(true).apply {
-                    channelId = it.second.channelId
+                    this.treeNodeId = it.second.id
                 }
             }
         }
@@ -274,7 +274,7 @@ class DefaultArthasExecutionService(
         arthasInstanceService.resolveCachedClient(treeNodeId)?.let {
             if (it.first != null) {
                 return AttachStatus(true).apply {
-                    channelId = it.second.channelId
+                    this.treeNodeId = it.second.id
                 }
             }
         }
@@ -311,19 +311,19 @@ class DefaultArthasExecutionService(
             }
         }
 
-    private fun arthasInitDistributedLockKey(runtimeNodeId: Long): String = "runtime-node-lock:$runtimeNodeId"
+    private fun arthasInitDistributedLockKey(runtimeNodeId: String): String = "runtime-node-lock:$runtimeNodeId"
 
     override fun joinChannel(
-        channelId: String,
+        instanceId: String,
         ownerIdentifier: String,
     ): ArthasConsumerDTO {
-        checkTreeNodePermission(channelId)
+        checkTreeNodePermission(instanceId)
         val arthasInstanceDTO =
-            arthasInstanceService.findInstanceByChannelId(channelId)
+            arthasInstanceService.findInstanceById(instanceId)
                 ?: throw BusinessException("error.channel.reconnect.required")
         val distributedLockKey = "arthas:channel:join-lock:$ownerIdentifier"
 
-        val consumerCacheKey = "channel:consumer:$channelId:$ownerIdentifier"
+        val consumerCacheKey = "channel:consumer:$instanceId:$ownerIdentifier"
         // 并发概率不高，先这样简单写，主要是防止前端 react 开发模式同时发两次请求
         joinLock.lock(distributedLockKey)
         try {
@@ -331,7 +331,7 @@ class DefaultArthasExecutionService(
                 return it as ArthasConsumerDTO
             }
 
-            val pair = arthasInstanceService.resolveCachedClientByChannelId(arthasInstanceDTO.channelId)
+            val pair = arthasInstanceService.resolveCachedClientByChannelId(arthasInstanceDTO.id)
             var client = pair?.first
             if (client == null) {
                 val newClient = createClient(arthasInstanceDTO)
@@ -401,7 +401,7 @@ class DefaultArthasExecutionService(
     ) {
         val locale = LocaleContextHolder.getLocale()
         executor.execute {
-            val lockKey = arthasInitDistributedLockKey(runtimeNodeDto.id)
+            val lockKey = arthasInitDistributedLockKey(treeNodeId)
             if (!joinLock.tryLock(lockKey)) {
                 return@execute
             }
@@ -494,9 +494,9 @@ class DefaultArthasExecutionService(
     /**
      * 尝试获取 client，如果没有，则尝试创建一个新的
      */
-    private fun tryResolveClient(channelId: String): Pair<ArthasHttpClient, ArthasInstancePO> {
+    private fun tryResolveClient(instanceId: String): Pair<ArthasHttpClient, ArthasInstancePO> {
         val pair =
-            arthasInstanceService.resolveCachedClientByChannelId(channelId)
+            arthasInstanceService.resolveCachedClientByChannelId(instanceId)
                 ?: throw BusinessException("error.runtime.node.expired")
         pair.first?.let {
             return Pair(it, pair.second)
@@ -506,12 +506,12 @@ class DefaultArthasExecutionService(
     }
 
     private fun checkAndGetNode(
-        channelId: String,
+        instanceId: String,
         commands: List<String>,
     ): Pair<ArthasHttpClient, ArthasInstancePO> {
-        checkTreeNodePermission(channelId)
-        checkCommandExecPermission(channelId, commands)
-        val pair = tryResolveClient(channelId)
+        checkTreeNodePermission(instanceId)
+        checkCommandExecPermission(instanceId, commands)
+        val pair = tryResolveClient(instanceId)
         if (pair.second.restrictedMode) {
             checkOgnlExpression(commands)
         }
@@ -519,27 +519,27 @@ class DefaultArthasExecutionService(
     }
 
     private fun deleteOldProfilerFiles(
-        channelId: String,
+        instanceId: String,
         client: ArthasHttpClient,
     ) {
-        val profilerFiles = listProfilerFiles(channelId)
+        val profilerFiles = listProfilerFiles(instanceId)
         if (profilerFiles.size <= MAX_PROFILER_FILE_COUNT) {
             return
         }
         executor.execute {
-            val lockKey = "profiler-cleaner:$channelId"
+            val lockKey = "profiler-cleaner:$instanceId"
             if (!joinLock.tryLock(lockKey)) {
                 return@execute
             }
             try {
-                val profilerFiles = listProfilerFiles0(channelId)
+                val profilerFiles = listProfilerFiles0(instanceId)
                 if (profilerFiles.size <= MAX_PROFILER_FILE_COUNT) {
                     return@execute
                 }
                 val sortedBy = profilerFiles.sortedByDescending { f -> f.timestamp }
                 val end = profilerFiles.size - MAX_PROFILER_FILE_COUNT
                 for (i in 0 until end) {
-                    val filename = "$channelId-${sortedBy[i].timestamp}.${sortedBy[i].extension}"
+                    val filename = "$instanceId-${sortedBy[i].timestamp}.${sortedBy[i].extension}"
                     if (SecureUtils.isNotPureFilename(filename)) {
                         throw BusinessException("error.file.name.invalid")
                     }
@@ -564,12 +564,12 @@ class DefaultArthasExecutionService(
         val cmd = commands[0]
         if ("profiler" == cmd && commands.size >= 2) {
             if ("stop" == commands[1]) {
-                deleteOldProfilerFiles(instance.channelId, client)
+                deleteOldProfilerFiles(instance.id, client)
             }
             when (commands[1]) {
                 "start", "collect", "dump", "stop" -> {
                     return client.execProfilerCommand(
-                        "${instance.channelId}-${System.currentTimeMillis()}",
+                        "${instance.id}-${System.currentTimeMillis()}",
                         commands,
                         sessionId,
                     )
@@ -587,11 +587,11 @@ class DefaultArthasExecutionService(
     }
 
     override fun execAsync(
-        channelId: String,
+        instanceId: String,
         command: String,
     ) {
         val commands = splitCommand(command)
-        val pair = checkAndGetNode(channelId, commands)
+        val pair = checkAndGetNode(instanceId, commands)
         beforeExec(pair.second, pair.first, commands, pair.second.sessionId)?.let {
             return
         }
@@ -599,11 +599,11 @@ class DefaultArthasExecutionService(
     }
 
     override fun execSync(
-        channelId: String,
+        instanceId: String,
         command: String,
     ): JsonNode {
         val commands = splitCommand(command)
-        val pair = checkAndGetNode(channelId, commands)
+        val pair = checkAndGetNode(instanceId, commands)
         beforeExec(pair.second, pair.first, commands, null)?.let {
             return it
         }
@@ -749,26 +749,26 @@ class DefaultArthasExecutionService(
     }
 
     override fun pullResults(
-        channelId: String,
+        instanceId: String,
         consumerId: String,
     ): JsonNode {
-        checkTreeNodePermission(channelId)
-        val pair = tryResolveClient(channelId)
+        checkTreeNodePermission(instanceId)
+        val pair = tryResolveClient(instanceId)
         return pair.first.pullResults(pair.second.sessionId, consumerId)
     }
 
-    override fun interruptCommand(channelId: String) {
-        checkTreeNodePermission(channelId)
-        val pair = tryResolveClient(channelId)
+    override fun interruptCommand(instanceId: String) {
+        checkTreeNodePermission(instanceId)
+        val pair = tryResolveClient(instanceId)
         pair.first.interruptJob(pair.second.sessionId)
     }
 
     override fun retransform(
-        channelId: String,
+        instanceId: String,
         source: BoundedInputStreamSource,
     ): JsonNode {
-        checkCommandExecPermission(channelId, listOf("retransform"))
-        val pair = tryResolveClient(channelId)
+        checkCommandExecPermission(instanceId, listOf("retransform"))
+        val pair = tryResolveClient(instanceId)
 
         return pair.first.retransform(source)
     }
@@ -776,8 +776,8 @@ class DefaultArthasExecutionService(
     /**
      * 列出文件，移除了权限校验
      */
-    fun listProfilerFiles0(channelId: String): List<ProfilerFile> {
-        val pair = tryResolveClient(channelId)
+    fun listProfilerFiles0(instaceId: String): List<ProfilerFile> {
+        val pair = tryResolveClient(instaceId)
         val files = pair.first.listProfilerFiles()
 
         return buildList {
@@ -797,16 +797,16 @@ class DefaultArthasExecutionService(
         }
     }
 
-    override fun listProfilerFiles(channelId: String): List<ProfilerFile> {
-        checkCommandExecPermission(channelId, listOf("profiler"))
-        return listProfilerFiles0(channelId)
+    override fun listProfilerFiles(instanceId: String): List<ProfilerFile> {
+        checkCommandExecPermission(instanceId, listOf("profiler"))
+        return listProfilerFiles0(instanceId)
     }
 
     override fun readProfilerFile(file: ProfilerFile): BoundedInputStreamSource? {
-        checkCommandExecPermission(file.channelId, listOf("profiler"))
-        val pair = tryResolveClient(file.channelId)
+        checkCommandExecPermission(file.instanceId, listOf("profiler"))
+        val pair = tryResolveClient(file.instanceId)
 
-        val filename = "${file.channelId}-${file.timestamp}.${file.extension}"
+        val filename = "${file.instanceId}-${file.timestamp}.${file.extension}"
         if (SecureUtils.isNotPureFilename(filename)) {
             throw BusinessException("error.file.name.invalid")
         }

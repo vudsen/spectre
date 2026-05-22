@@ -232,6 +232,7 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
         bundleId: bundleId[0],
         runtimeNodeId: node.runtimeNodeId,
         treeNodeId: node.id,
+        name: node.name,
       }),
     )
 

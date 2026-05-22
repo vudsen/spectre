@@ -13,7 +13,7 @@ interface SingleChannelCreateProps {
 
 type ErrorInfo = {
   message: string
-  nextRetryTime?: number
+  nextRetryTime?: string
 }
 
 type PollState = {
