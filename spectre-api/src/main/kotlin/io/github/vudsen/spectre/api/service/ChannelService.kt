@@ -4,7 +4,7 @@ import io.github.vudsen.spectre.api.vo.ChannelInfoVO
 import io.github.vudsen.spectre.repo.po.ChannelPO
 
 interface ChannelService {
-    fun resolveChannelId(id: Long): List<ChannelInfoVO>
+    fun resolveChannelById(id: Long): List<ChannelInfoVO>
 
     /**
      * @return channel id

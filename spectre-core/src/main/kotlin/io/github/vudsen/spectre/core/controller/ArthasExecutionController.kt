@@ -39,6 +39,15 @@ import java.nio.charset.StandardCharsets
 
 /**
  * Arthas 交互接口.
+ *
+ * 目前有两种交互类型：
+ * - 单个交互(连接一个 arthas 实例)，对应 [io.github.vudsen.spectre.repo.po.ArthasInstancePO]
+ * - 另外一个是批量交互(同时连接多个 arthas)，对应 [io.github.vudsen.spectre.repo.po.ChannelPO]
+ *
+ * 目前虽然单个交互部分参数名称使用的也是 channelId，这是历史遗留问题，这个 channelId 实际是 [io.github.vudsen.spectre.repo.po.ArthasInstancePO.id]，
+ * 单个交互**不会**创建 [io.github.vudsen.spectre.repo.po.ChannelPO]
+ *
+ * TODO: 统一交互逻辑，考虑为单个交互也创建 channel? 以后只有批量交互，单个交互视为*只连接了一个实例的批量交互*
  */
 @RequestMapping("arthas")
 @RestController
@@ -65,7 +74,22 @@ class ArthasExecutionController(
     fun joinChannel(
         @PathVariable channelId: String,
         request: HttpServletRequest,
-    ): ArthasConsumerDTO = joinChannel0(request, channelId)
+    ): List<ChannelInfoVO> {
+        val channel =
+            channelId.toLongOrNull()?.let {
+                channelService.findById(it)
+            }
+        if (channel == null) {
+            // see 顶部注释, 这里兼容旧接口，channelId 是 instanceId
+            val joinChannel0 = joinChannel0(request, channelId)
+            return listOf(ChannelInfoVO("TODO", joinChannel0.name, channelId))
+        } else {
+            for (instanceId in channel.instanceIds) {
+                joinChannel0(request, instanceId)
+            }
+            return channelService.resolveChannelById(channelId.toLong())
+        }
+    }
 
     /**
      * @return consumerId
@@ -93,10 +117,23 @@ class ArthasExecutionController(
     fun pullResults(
         @PathVariable channelId: String,
         request: HttpServletRequest,
-    ): String {
-        val channelSession = resolveChannelSession(request, channelId)
+    ): Map<String, JsonNode> {
+        val channel =
+            channelId.toLongOrNull()?.let {
+                channelService.findById(it)
+            }
         try {
-            return arthasExecutionService.pullResults(channelId, channelSession.consumerId).toString()
+            if (channel == null) {
+                val channelSession = resolveChannelSession(request, channelId)
+                return mapOf(channelId to arthasExecutionService.pullResults(channelId, channelSession.consumerId))
+            } else {
+                return buildMap {
+                    for (instanceId in channel.instanceIds) {
+                        val channelSession = resolveChannelSession(request, instanceId)
+                        put(instanceId, arthasExecutionService.pullResults(instanceId, channelSession.consumerId))
+                    }
+                }
+            }
         } catch (_: ConsumerNotFountException) {
             val session = request.getSession(false)
             session?.removeAttribute(channelSessionDataKey(channelId))
@@ -244,7 +281,7 @@ class ArthasExecutionController(
     @PostMapping("batch/create-channel")
     fun createChannel(
         @RequestBody instanceIds: List<String>,
-    ): Long = channelService.createChannel(instanceIds)
+    ): String = "\"${channelService.createChannel(instanceIds)}\""
 
     /**
      *
@@ -258,7 +295,7 @@ class ArthasExecutionController(
         for (instanceId in channelPO.instanceIds) {
             joinChannel0(request, instanceId)
         }
-        return channelService.resolveChannelId(channelId)
+        return channelService.resolveChannelById(channelId)
     }
 
     @PostMapping("batch/execute")
@@ -266,7 +303,8 @@ class ArthasExecutionController(
         @RequestBody @Validated batchExec: BatchExecRequestVO,
         request: HttpServletRequest,
     ) {
-        val channelPO = channelService.findById(batchExec.channelId.toLong()) ?: throw BusinessException("error.channel.not.exist")
+        val channelPO =
+            channelService.findById(batchExec.channelId.toLong()) ?: throw BusinessException("error.channel.not.exist")
         for (instanceId in channelPO.instanceIds) {
             resolveChannelSession(request, instanceId)
             arthasExecutionService.execAsync(instanceId, batchExec.command.trim())

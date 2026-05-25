@@ -13,7 +13,7 @@ interface SingleChannelCreateProps {
 
 type ErrorInfo = {
   message: string
-  nextRetryTime?: string
+  nextRetryTime?: number
 }
 
 type PollState = {
@@ -47,7 +47,12 @@ const SingleChannelCreate: React.FC<SingleChannelCreateProps> = ({
             if (r.isReady) {
               nav(`/channel/${r.channelId}`)
             } else if (r.error) {
-              setErrorInfo(r.error)
+              setErrorInfo({
+                message: r.error.message,
+                nextRetryTime: r.error.nextRetryTime
+                  ? Number(r.error.nextRetryTime)
+                  : undefined,
+              })
             } else {
               setProgressInfo((old) => ({
                 title: r.title ?? old.title,

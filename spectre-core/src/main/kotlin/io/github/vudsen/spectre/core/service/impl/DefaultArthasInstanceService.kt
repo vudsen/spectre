@@ -87,7 +87,6 @@ open class DefaultArthasInstanceService(
         arthasInstanceRepository.save(
             ArthasInstancePO(
                 id = instance.id,
-                channelId = instance.channelId,
                 endpointPassword = instance.endpointPassword,
                 boundPort = instance.boundPort,
                 sessionId = instance.sessionId,

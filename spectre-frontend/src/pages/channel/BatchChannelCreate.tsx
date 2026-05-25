@@ -11,7 +11,8 @@ import {
 } from '@heroui/react'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
-import { batchCreateInstances } from '@/api/impl/arthas.ts'
+import { batchCreateInstances, createBatchChannel } from '@/api/impl/arthas.ts'
+import { useNavigate } from 'react-router'
 
 type ChannelCreateRequest = {
   treeNodeId: string
@@ -38,6 +39,8 @@ type PollState = {
 }
 
 const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
+  const nav = useNavigate()
+  const isCreatingChannel = useRef(false)
   const [channels, setChannels] = useState<MyChannel[]>(() =>
     props.channels.map((channel) => ({
       ...channel,
@@ -57,13 +60,27 @@ const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
     setChannels((channels) => {
       const preNewChannels = [...channels]
       const nextPollChannels: MyChannel[] = []
+      let successCount = 0
       for (let i = 0; i < channels.length; i++) {
         const channel = channels[i]
+        if (channel.state === 'success') {
+          successCount++
+        }
         if (!channel.stopped && channel.state !== 'success') {
           nextPollChannels.push(channel)
           preNewChannels[i].state = 'pending'
-          preNewChannels[i].message = '正在连接中'
+          // preNewChannels[i].message = '正在连接中'
         }
+      }
+      if (successCount === channels.length) {
+        if (isCreatingChannel.current) {
+          return channels
+        }
+        isCreatingChannel.current = true
+        createBatchChannel(channels.map((ch) => ch.treeNodeId)).then((r) => {
+          nav(`/channel/${r}`)
+        })
+        return channels
       }
       if (nextPollChannels.length === 0) {
         return channels
@@ -96,6 +113,7 @@ const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
               newChannels[i].state = 'pending'
               newChannels[i].message =
                 current.message ?? current.title ?? '连接中'
+              console.log(current.message ?? current.title ?? '连接中')
             }
           }
           if (nextRetryTime > 0) {
@@ -115,7 +133,7 @@ const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
       }, 1000)
       return preNewChannels
     })
-  }, [])
+  }, [nav])
 
   useEffect(() => {
     const state = pollState.current
@@ -173,7 +191,9 @@ const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
                 ) : null}
               </TableCell>
               <TableCell className="w-64">{channel.name}</TableCell>
-              <TableCell>{channel.message}</TableCell>
+              <TableCell className="max-w-168 truncate">
+                {channel.message}
+              </TableCell>
               <TableCell>
                 {channel.state === 'error' && !channel.stopped ? (
                   <Button

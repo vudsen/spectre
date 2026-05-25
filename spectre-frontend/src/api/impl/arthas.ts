@@ -27,17 +27,12 @@ export const createChannel = (
   })
 }
 
-export type ChannelSessionDTO = {
-  consumerId: string
-  name: string
-}
-
 /**
  * @return Consumer ID
  */
 export const joinChannel = (
   channelId: string,
-): Promise<ChannelSessionDTO | undefined> => {
+): Promise<InstanceInfoVO[] | undefined> => {
   return axios.post(`arthas/channel/${channelId}/join`)
 }
 
@@ -52,9 +47,11 @@ export type PureArthasResponse = {
   jobId: number
 }
 
+export type BatchPullResultsResponse = Record<string, PureArthasResponse[]>
+
 export const pullResults = async (
   channelId: string,
-): Promise<PureArthasResponse[]> =>
+): Promise<BatchPullResultsResponse> =>
   axios.get(`arthas/channel/${channelId}/pull-result`)
 
 export const executeArthasCommand = (channelId: string, command: string) => {
@@ -112,14 +109,11 @@ export const batchCreateInstances = (
 export const createBatchChannel = (instanceIds: string[]): Promise<string> =>
   axios.post('arthas/batch/create-channel', instanceIds)
 
-type ChannelInfoVO = {
+export type InstanceInfoVO = {
   runtimeNodeName: string
   jvmName: string
   instanceId: string
 }
-
-export const joinBatchChannel = (channelId: string): Promise<ChannelInfoVO[]> =>
-  axios.post('arthas/batch/join?channelId=' + channelId)
 
 type BatchExecuteRequest = {
   channelId: string

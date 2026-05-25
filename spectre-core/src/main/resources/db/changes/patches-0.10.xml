@@ -22,7 +22,10 @@
             <column name="instance_ids" type="java.sql.Types.VARCHAR(1024)"/>
             <column name="last_access" type="JAVA.SQL.TYPES.DATETIME"/>
         </createTable>
-        <dropColumn tableName="arthas_instance">
+        <createIndex tableName="channel" unique="true" indexName="channel_instance_ids_idx">
+            <column name="instance_ids"/>
+        </createIndex>
+        <dropColumn tableName="arthas_instance" columnName="channel_id">
             <column name="channel_id"/>
         </dropColumn>
     </changeSet>

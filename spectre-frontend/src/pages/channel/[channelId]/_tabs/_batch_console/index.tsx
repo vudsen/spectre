@@ -1,0 +1,32 @@
+import React, { useState } from 'react'
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
+import BatchArthasResponseListTab from '@/pages/channel/[channelId]/_tabs/_batch_console/BatchArthasResponseListTab.tsx'
+import type { AggregatedCommandGroup } from '@/pages/channel/[channelId]/messageAggregation.ts'
+import BatchArthasResponseDetailTab from '@/pages/channel/[channelId]/_tabs/_batch_console/BatchArthasResponseDetailTab.tsx'
+
+const BatchConsoleTab: React.FC = () => {
+  const [selectedEntity, setSelectedEntity] = useState<AggregatedCommandGroup>()
+  return (
+    <div className="flex h-full">
+      <div className="z-10 flex h-full w-0 grow flex-col">
+        <PanelGroup
+          direction="horizontal"
+          className="flex h-0! w-full grow"
+          autoSaveId="batch-channel-attach"
+        >
+          <Panel minSize={20} defaultSize={40}>
+            <BatchArthasResponseListTab
+              onSelect={setSelectedEntity}
+            ></BatchArthasResponseListTab>
+          </Panel>
+          <PanelResizeHandle className="bg-default-200 border-default-100 border-l-1" />
+          <Panel minSize={20} defaultSize={40}>
+            <BatchArthasResponseDetailTab group={selectedEntity} />
+          </Panel>
+        </PanelGroup>
+      </div>
+    </div>
+  )
+}
+
+export default BatchConsoleTab

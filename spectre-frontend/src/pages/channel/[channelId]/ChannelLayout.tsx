@@ -12,14 +12,15 @@ import type { QuickCommandRef } from '@/pages/channel/[channelId]/_component/Qui
 import useArthasMessageBus from '@/pages/channel/[channelId]/useArthasMessageBus.tsx'
 import AiPanel from '@/pages/channel/[channelId]/_ai/AiPanel.tsx'
 import './_message_view/init.ts'
+import type { InstanceInfoVO } from '@/api/impl/arthas.ts'
 
 interface ChannelLayoutProps {
+  channelInfos: InstanceInfoVO[]
   channelId: string
-  appName: string
 }
 
 const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
-  const bus = useArthasMessageBus(props.channelId)
+  const bus = useArthasMessageBus(props.channelId, props.channelInfos)
   const tabsController = useRef<TabsControllerRef>(null)
   const quickCommandRef = useRef<QuickCommandRef>(null)
   const [aiOpen, setAiOpen] = useState(false)
@@ -49,7 +50,12 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
         <div className="flex">
           <div className="w-0 grow">
             <Header
-              {...props}
+              channelId={props.channelId}
+              appName={
+                props.channelInfos.length > 1
+                  ? '批量连接'
+                  : props.channelInfos[0].jvmName
+              }
               aiConsoleOpen={aiOpen}
               onAiConsoleToggle={() => {
                 setAiOpen((old) => !old)

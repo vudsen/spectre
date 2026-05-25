@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.repo.ArthasInstanceRepository
 import io.github.vudsen.spectre.repo.ChannelRepository
 import io.github.vudsen.spectre.repo.RuntimeNodeRepository
 import io.github.vudsen.spectre.repo.po.ChannelPO
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import kotlin.jvm.optionals.getOrNull
 
@@ -16,7 +17,7 @@ class DefaultChannelService(
     private val runtimeNodeRepository: RuntimeNodeRepository,
     private val instanceRepository: ArthasInstanceRepository,
 ) : ChannelService {
-    override fun resolveChannelId(id: Long): List<ChannelInfoVO> {
+    override fun resolveChannelById(id: Long): List<ChannelInfoVO> {
         val channel = channelRepository.findById(id).getOrNull() ?: throw BusinessException("error.channel.not.exist")
         val instances = instanceRepository.findAllById(channel.instanceIds)
         val runtimeNodes = runtimeNodeRepository.findAllById(instances.map { instance -> instance.runtimeNodeId })
@@ -31,13 +32,23 @@ class DefaultChannelService(
         }
     }
 
-    override fun createChannel(instanceIds: List<String>): Long =
-        channelRepository
+
+    @Transactional(rollbackOn = [Exception::class])
+    override fun createChannel(instanceIds: List<String>): Long {
+        channelRepository.findFirstByInstanceIds(instanceIds)?.let {
+            println("========================== ======${it.id}")
+            return it.id
+        }
+        val id = channelRepository
             .save(
                 ChannelPO().apply {
                     this.instanceIds = instanceIds
                 },
             ).id
+        println("================================${id}")
+        return id
+    }
+
 
     override fun findById(id: Long): ChannelPO? = channelRepository.findById(id).getOrNull()
 }

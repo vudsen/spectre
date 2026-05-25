@@ -1,6 +1,9 @@
 package io.github.vudsen.spectre.repo.po
 
+import io.github.vudsen.spectre.repo.convert.InstantToStringConverter
+import io.github.vudsen.spectre.repo.convert.StringListConverter
 import io.github.vudsen.spectre.repo.util.SnowFlake
+import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.PrePersist
@@ -15,11 +18,12 @@ import java.time.Instant
 @Table(name = "channel")
 class ChannelPO {
     @Id
-    @NotEmpty
     var id: Long = 0
 
+    @Convert(converter = StringListConverter::class)
     var instanceIds: List<String> = emptyList()
 
+    @Convert(converter = InstantToStringConverter::class)
     var lastAccess: Instant = Instant.MIN
 
     @PrePersist

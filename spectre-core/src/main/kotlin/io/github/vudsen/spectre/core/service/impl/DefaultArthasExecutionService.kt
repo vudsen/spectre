@@ -209,8 +209,8 @@ class DefaultArthasExecutionService(
         }
     }
 
-    fun startInitClient(jvmId: String): ArthasClientInitStatus? {
-        clientInitMap[jvmId]?.let {
+    fun startInitClient(treeNodeId: String): ArthasClientInitStatus? {
+        clientInitMap[treeNodeId]?.let {
             it.lastAccess = System.currentTimeMillis()
             return it
         }
@@ -218,13 +218,13 @@ class DefaultArthasExecutionService(
             return null
         }
         try {
-            clientInitMap[jvmId]?.let {
+            clientInitMap[treeNodeId]?.let {
                 it.lastAccess = System.currentTimeMillis()
                 return it
             }
             val arthasClientInitStatus =
-                ArthasClientInitStatus(UUID.randomUUID().toString(), System.currentTimeMillis())
-            clientInitMap[jvmId] = arthasClientInitStatus
+                ArthasClientInitStatus(treeNodeId, System.currentTimeMillis())
+            clientInitMap[treeNodeId] = arthasClientInitStatus
             return arthasClientInitStatus
         } finally {
             modifyLock.unlock()
@@ -251,10 +251,9 @@ class DefaultArthasExecutionService(
 
         val node = findTreeNodeWithFallback(treeNodeId, runtimeNodeId) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
         val jvm = runtimeNodeService.deserializeToJvm(runtimeNodeDto.pluginId, node)
-        val jvmId = treeNodeId
 
         // start init channel
-        val status = startInitClient(jvmId) ?: return AttachStatus(false)
+        val status = startInitClient(treeNodeId) ?: return AttachStatus(false)
 
         // error check
         status.error?.let {
@@ -436,7 +435,6 @@ class DefaultArthasExecutionService(
                     arthasInstanceService.save(
                         CreateArthasInstanceDTO(
                             treeNodeId,
-                            holder.channelId,
                             password,
                             client.getPort(),
                             session.sessionId,
@@ -478,11 +476,12 @@ class DefaultArthasExecutionService(
                             ),
                             System.currentTimeMillis() + 5000,
                         )
+                    logger.debug("Failed to attach", e)
                 } else {
                     holder.error =
-                        AttachStatus.ErrorInfo(ex.message ?: "<Unknown>", System.currentTimeMillis() + 5000)
+                        AttachStatus.ErrorInfo("Internal Server Error", System.currentTimeMillis() + 5000)
+                    logger.error("", e)
                 }
-                logger.debug("Failed to attach", e)
             } finally {
                 joinLock.unlock(lockKey)
                 holder.clientInitLock.set(false)

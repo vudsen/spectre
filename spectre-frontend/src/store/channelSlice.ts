@@ -1,4 +1,4 @@
-import type { InputStatusResponse } from '@/api/impl/arthas.ts'
+import type { InputStatusResponse, InstanceInfoVO } from '@/api/impl/arthas.ts'
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { SkillDTO } from '@/api/impl/ai.ts'
 
@@ -9,11 +9,12 @@ type ChannelContext = {
   inputStatus: InputStatusResponse['inputStatus']
   selectedSkill?: SkillDTO
   availableSkills?: SkillDTO[]
-  batchChannelIds: string[]
+  instances: InstanceInfoVO[]
   /**
    * 自动执行 LLM 工具执行请求
    */
   autoConfirm?: boolean
+  isBatch?: boolean
 }
 
 interface ChannelState {
@@ -27,7 +28,7 @@ const initialState: ChannelState = {
   context: {
     channelId: '-1',
     inputStatus: 'DISABLED',
-    batchChannelIds: [],
+    instances: [],
   },
 }
 

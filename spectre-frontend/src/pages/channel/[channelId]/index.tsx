@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router'
-import { type ChannelSessionDTO, joinChannel } from '@/api/impl/arthas.ts'
+import { type InstanceInfoVO, joinChannel } from '@/api/impl/arthas.ts'
 import ChannelLayout from '@/pages/channel/[channelId]/ChannelLayout.tsx'
 import i18n from '@/i18n'
 
@@ -9,7 +9,7 @@ const ChannelPage: React.FC = () => {
   const channelId = params.channelId
   const [loading, setLoading] = useState(true)
   const [channelJoinMsg, setChannelJoinMsg] = useState<string>()
-  const [session, setSession] = useState<ChannelSessionDTO>()
+  const [session, setSession] = useState<InstanceInfoVO[]>([])
 
   const doJoinChannel = useCallback((channelId: string) => {
     joinChannel(channelId)
@@ -50,7 +50,7 @@ const ChannelPage: React.FC = () => {
   } else if (channelJoinMsg) {
     return <div className="text-danger">{channelJoinMsg}</div>
   }
-  return <ChannelLayout appName={session!.name} channelId={channelId!} />
+  return <ChannelLayout channelInfos={session} channelId={channelId!} />
 }
 
 export default ChannelPage
