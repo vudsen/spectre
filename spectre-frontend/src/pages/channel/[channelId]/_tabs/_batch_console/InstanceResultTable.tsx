@@ -19,12 +19,14 @@ import Icon from '@/components/icon/icon.ts'
 interface InstanceResultTableProps {
   messages: ArthasMessage[]
   instanceId: string
+  onView: (message: ArthasMessage) => void
 }
 
 const IGNORED_TYPES = new Set(['input_status', 'command'])
 
 const InstanceResultTable: React.FC<InstanceResultTableProps> = ({
   instanceId,
+  onView,
   messages,
 }) => {
   const instances = useSelector<RootState, Record<string, InstanceInfoVO>>(
@@ -71,7 +73,12 @@ const InstanceResultTable: React.FC<InstanceResultTableProps> = ({
                 </TableCell>
                 <TableCell>{view.name}</TableCell>
                 <TableCell>
-                  <Button isIconOnly color="primary" variant="light">
+                  <Button
+                    isIconOnly
+                    color="primary"
+                    variant="light"
+                    onPress={() => onView(msg)}
+                  >
                     <SvgIcon icon={Icon.VIEW} />
                   </Button>
                 </TableCell>

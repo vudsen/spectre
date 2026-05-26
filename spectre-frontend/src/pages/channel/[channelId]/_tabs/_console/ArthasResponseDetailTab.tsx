@@ -10,10 +10,14 @@ import i18n from '@/i18n'
 
 interface ArthasResponseDetailProps {
   entity?: ArthasMessage
+  rightContent?: React.ReactNode
+  onOpenExternal?: () => void
 }
 
 const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
   entity,
+  rightContent,
+  onOpenExternal,
 }) => {
   const context = useContext(ChannelContext)
   if (!entity) {
@@ -33,6 +37,7 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
     )
   }
   const openInNewTab = () => {
+    onOpenExternal?.()
     context
       .getTabsController()
       .openTab(
@@ -72,7 +77,7 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
           </div>
         </Tab>
       </Tabs>
-      <div className="absolute top-3.5 right-5">
+      <div className="absolute top-3.5 right-5 flex items-center">
         <Tooltip content={i18n.t('channel.openInNewTab')}>
           <SvgIcon
             onClick={openInNewTab}
@@ -80,6 +85,7 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
             className="text-primary cursor-pointer"
           />
         </Tooltip>
+        {rightContent}
       </div>
     </div>
   )
