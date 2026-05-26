@@ -7,16 +7,17 @@ import {
   pullResults,
 } from '@/api/impl/arthas.ts'
 import { useEffect, useState } from 'react'
-import { setupChannelContext, updateInputStatus } from '@/store/channelSlice.ts'
+import {
+  setupChannelContext,
+  updateChannelContext,
+  updateInputStatus,
+} from '@/store/channelSlice.ts'
 import { store } from '@/store'
 import { useDispatch } from 'react-redux'
 import type { Dispatch } from '@reduxjs/toolkit'
 import setupDB, { type ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 import type { CommandMessage } from '@/pages/channel/[channelId]/_message_view/_component/CommandMessageDetail.tsx'
-import {
-  aggregateCommandMessages,
-  type AggregatedCommandGroup,
-} from '@/pages/channel/[channelId]/messageAggregation.ts'
+import { aggregateCommandMessages } from '@/pages/channel/[channelId]/messageAggregation.ts'
 
 interface Listener {
   onMessage?: (messages: ArthasMessage[]) => void
@@ -28,7 +29,6 @@ export type ArthasMessageBus = {
   removeListener(listenerId: number): void
   execute(command: string, interruptCurrent?: boolean): Promise<void>
   messages: ArthasMessage[]
-  aggregatedMessages: AggregatedCommandGroup[]
   clearAllMessage(): Promise<void>
   deleteMessage(message: ArthasMessage): Promise<void>
 }
@@ -62,7 +62,6 @@ const createArthasMessageBusInternal = async (
   const listenerMap = new Map<number, Listener>()
   const db = await setupDB()
   const messages = await setupMessages()
-  const aggregatedMessages = aggregateCommandMessages(messages)
   const contextIdByInstance = new Map<string, string>()
   const commandSeqByInstanceAndCommand = new Map<string, number>()
 
@@ -105,8 +104,11 @@ const createArthasMessageBusInternal = async (
   }
 
   function refreshAggregatedMessages() {
-    aggregatedMessages.splice(0, aggregatedMessages.length)
-    aggregatedMessages.push(...aggregateCommandMessages(messages))
+    dispatch(
+      updateChannelContext({
+        messages: aggregateCommandMessages(messages),
+      }),
+    )
   }
 
   async function setupMessages() {
@@ -114,12 +116,17 @@ const createArthasMessageBusInternal = async (
       channelId,
       MAX_BUS_MESSAGE_SIZE,
     )
+    const instancesMap: Record<string, InstanceInfoVO> = {}
+    for (const instance of instances) {
+      instancesMap[instance.instanceId] = instance
+    }
     if (loadedMessages.length === 0) {
       dispatch(
         setupChannelContext({
           channelId,
           inputStatus: 'DISABLED',
-          instances,
+          instances: instancesMap,
+          messages: aggregateCommandMessages(loadedMessages),
         }),
       )
       return loadedMessages
@@ -132,7 +139,8 @@ const createArthasMessageBusInternal = async (
         inputStatus: status
           ? (status.value as InputStatusResponse).inputStatus
           : 'ALLOW_INPUT',
-        instances,
+        instances: instancesMap,
+        messages: aggregateCommandMessages(loadedMessages),
       }),
     )
     return loadedMessages
@@ -326,7 +334,6 @@ const createArthasMessageBusInternal = async (
     removeListener,
     execute,
     messages,
-    aggregatedMessages,
     close,
     cleanExpiredMessage,
     clearAllMessage,

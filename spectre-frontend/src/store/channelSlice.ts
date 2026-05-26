@@ -1,6 +1,12 @@
 import type { InputStatusResponse, InstanceInfoVO } from '@/api/impl/arthas.ts'
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { SkillDTO } from '@/api/impl/ai.ts'
+import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
+
+export type AggregatedCommandGroup = {
+  command: string
+  instances: Record<string, ArthasMessage[]>
+}
 
 type ChannelContext = {
   isDebugMode?: boolean
@@ -9,7 +15,8 @@ type ChannelContext = {
   inputStatus: InputStatusResponse['inputStatus']
   selectedSkill?: SkillDTO
   availableSkills?: SkillDTO[]
-  instances: InstanceInfoVO[]
+  instances: Record<string, InstanceInfoVO>
+  messages: AggregatedCommandGroup[]
   /**
    * 自动执行 LLM 工具执行请求
    */
@@ -28,7 +35,8 @@ const initialState: ChannelState = {
   context: {
     channelId: '-1',
     inputStatus: 'DISABLED',
-    instances: [],
+    instances: {},
+    messages: [],
   },
 }
 

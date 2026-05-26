@@ -32,23 +32,22 @@ class DefaultChannelService(
         }
     }
 
-
     @Transactional(rollbackOn = [Exception::class])
     override fun createChannel(instanceIds: List<String>): Long {
         channelRepository.findFirstByInstanceIds(instanceIds)?.let {
             println("========================== ======${it.id}")
             return it.id
         }
-        val id = channelRepository
-            .save(
-                ChannelPO().apply {
-                    this.instanceIds = instanceIds
-                },
-            ).id
-        println("================================${id}")
+        val id =
+            channelRepository
+                .save(
+                    ChannelPO().apply {
+                        this.instanceIds = instanceIds
+                    },
+                ).id
+        println("================================$id")
         return id
     }
-
 
     override fun findById(id: Long): ChannelPO? = channelRepository.findById(id).getOrNull()
 }

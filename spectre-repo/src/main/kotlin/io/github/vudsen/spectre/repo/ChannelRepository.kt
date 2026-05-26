@@ -9,6 +9,5 @@ import org.springframework.stereotype.Repository
 interface ChannelRepository :
     JpaRepository<ChannelPO, Long>,
     QueryByExampleExecutor<ChannelPO> {
-
     fun findFirstByInstanceIds(instanceIds: List<String>): ChannelPO?
 }

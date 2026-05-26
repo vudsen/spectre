@@ -3,6 +3,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import BatchArthasResponseListTab from '@/pages/channel/[channelId]/_tabs/_batch_console/BatchArthasResponseListTab.tsx'
 import type { AggregatedCommandGroup } from '@/pages/channel/[channelId]/messageAggregation.ts'
 import BatchArthasResponseDetailTab from '@/pages/channel/[channelId]/_tabs/_batch_console/BatchArthasResponseDetailTab.tsx'
+import CommandExecuteBlock from '@/pages/channel/[channelId]/_tabs/_console/CommandExecuteBlock.tsx'
 
 const BatchConsoleTab: React.FC = () => {
   const [selectedEntity, setSelectedEntity] = useState<AggregatedCommandGroup>()
@@ -24,6 +25,7 @@ const BatchConsoleTab: React.FC = () => {
             <BatchArthasResponseDetailTab group={selectedEntity} />
           </Panel>
         </PanelGroup>
+        <CommandExecuteBlock />
       </div>
     </div>
   )

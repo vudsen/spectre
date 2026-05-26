@@ -159,9 +159,22 @@ class ArthasExecutionController(
         @Validated @RequestBody vo: ExecuteCommandRequestVO,
         request: HttpServletRequest,
     ) {
-        // ensure connected.
-        resolveChannelSession(request, channelId)
-        arthasExecutionService.execAsync(channelId, vo.command.trim())
+//        val start = System.currentTimeMillis()
+        val channel =
+            channelId.toLongOrNull()?.let {
+                channelService.findById(it)
+            }
+        if (channel == null) {
+            // ensure connected.
+            resolveChannelSession(request, channelId)
+            arthasExecutionService.execAsync(channelId, vo.command)
+        } else {
+            for (instanceId in channel.instanceIds) {
+                resolveChannelSession(request, instanceId)
+                arthasExecutionService.execAsync(instanceId, vo.command)
+//                println("end: " + (System.currentTimeMillis() - start) + "ms")
+            }
+        }
     }
 
     @PostMapping("/channel/{channelId}/execute-sync", produces = [MediaType.APPLICATION_JSON_VALUE])
