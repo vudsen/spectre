@@ -40,7 +40,7 @@ export function registerMessageView<T extends PureArthasResponse>(
       const base: PreviewInfo = {
         name: conf.type,
         tag: conf.type,
-        color: 'default',
+        color: 'primary',
         tabName: message.context.command ?? conf.type,
       }
       return Object.assign(base, conf.display(message))

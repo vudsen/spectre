@@ -70,7 +70,7 @@ class ArthasExecutionController(
      * @return consumerId
      */
     @PostMapping("/channel/{channelId}/join")
-    @Log("log.arthas.channel.join", "{ channelId: #args[0], consumerId: #returnObj?.consumerId }")
+    @Log("log.arthas.channel.join", "{ channelId: #args[0] }")
     fun joinChannel(
         @PathVariable channelId: String,
         request: HttpServletRequest,
@@ -135,8 +135,14 @@ class ArthasExecutionController(
                 }
             }
         } catch (_: ConsumerNotFountException) {
-            val session = request.getSession(false)
-            session?.removeAttribute(channelSessionDataKey(channelId))
+            val session = request.getSession(false) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
+            if (channel == null) {
+                session.removeAttribute(channelSessionDataKey(channelId))
+            } else {
+                for (instanceId in channel.instanceIds) {
+                    session.removeAttribute(channelSessionDataKey(instanceId))
+                }
+            }
             throw NamedExceptions.SESSION_EXPIRED.toException()
         }
     }

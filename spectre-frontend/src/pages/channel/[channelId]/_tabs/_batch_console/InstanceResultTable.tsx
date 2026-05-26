@@ -45,7 +45,12 @@ const InstanceResultTable: React.FC<InstanceResultTableProps> = ({
   return (
     <div>
       <div className="text-primary ml-3">{instanceInfoVO.jvmName}</div>
-      <Table removeWrapper className="mt-4 px-2" isStriped>
+      <Table
+        removeWrapper
+        className="mt-4 px-2"
+        isStriped
+        aria-label="Arthas Result"
+      >
         <TableHeader>
           <TableColumn>Tag</TableColumn>
           <TableColumn>结果</TableColumn>
@@ -55,7 +60,7 @@ const InstanceResultTable: React.FC<InstanceResultTableProps> = ({
           {filteredMessage.map((msg) => {
             const view = getArthasMessageView(msg.value.type)?.display(msg) ?? {
               name: '<Unknown>',
-              color: 'default',
+              color: 'primary',
               tag: msg.value.type,
               tabName: 'Unknown',
             }

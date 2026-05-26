@@ -1,10 +1,6 @@
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 import type { CommandMessage } from '@/pages/channel/[channelId]/_message_view/_component/CommandMessageDetail.tsx'
-
-export type AggregatedCommandGroup = {
-  command: string
-  instances: Record<string, ArthasMessage[]>
-}
+import type { AggregatedCommandGroup } from '@/store/channelSlice.ts'
 
 type GroupState = {
   command: string
@@ -60,5 +56,6 @@ export function aggregateCommandMessages(
   return groups.map((group) => ({
     command: group.command,
     instances: group.instances,
+    version: 0,
   }))
 }
