@@ -25,7 +25,8 @@
     "updateSuccess": "更新成功",
     "delete": "删除",
     "deleteAll": "删除全部",
-    "neverRemind": "不再提醒"
+    "neverRemind": "不再提醒",
+    "gotIt": "了解"
   },
   "router": {
     "home": "首页",
@@ -92,7 +93,12 @@
     "connecting": "连接中",
     "noLogs": "暂无日志",
     "error": "错误: {{message}}",
-    "nextRetry": "下次重试时间: {{time}}"
+    "nextRetry": "下次重试时间: {{time}}",
+    "stopRetry": "取消重试",
+    "retryStopped": "已停止重试",
+    "incompleteTipTitle": "\uD83D\uDEA7功能受限\uD83D\uDEA7",
+    "incompleteTipMessage": "批量操作仍在开发中，目前仅完成了基础的命令执行功能，未完成的功能将被隐藏",
+    "executeResult": "执行结果"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",
@@ -226,9 +232,7 @@
     "msg_pages_audit_logdetaildrawercontent_008": "上下文信息:",
     "msg_pages_channel_index_001": "连接到 JVM 失败",
     "msg_pages_channel_index_002": "秒后自动重试",
-    "msg_pages_channel_index_003": "取消重试",
     "msg_pages_channel_index_004": "刷新",
-    "msg_pages_channel_index_005": "正在连接中",
     "msg_pages_channel_index_006": "连接中",
     "msg_pages_channel_index_007": "Jvm 参数为空",
     "msg_pages_channel_param_header_001": "断开连接",
@@ -297,7 +301,6 @@
     "msg_pages_channel_param_message_view_component_memorymessagedetail_002": "使用量",
     "msg_pages_channel_param_message_view_component_memorymessagedetail_003": "最大",
     "msg_pages_channel_param_message_view_component_messagedetail_001": "服务返回了消息:",
-    "msg_pages_channel_param_message_view_component_profilermessagedetail_001": "执行结果:",
     "msg_pages_channel_param_message_view_component_rowaffectdetail_001": "影响了",
     "msg_pages_channel_param_message_view_component_rowaffectdetail_002": "个类",
     "msg_pages_channel_param_message_view_component_scmessagedetail_001": "修饰符",
@@ -475,7 +478,6 @@
     "msg_pages_runtime_node_modify_index_003": "前端扩展页面不存在, pageName = ",
     "msg_pages_runtime_node_modify_index_004": "展开类型",
     "msg_pages_runtime_node_modify_index_005": "Spectre 支持多种方式来连接 JVM，点击这里可以查看支持的类型。请选择 `Test` 以继续教程",
-    "msg_pages_runtime_node_modify_index_006": "了解",
     "msg_pages_runtime_node_modify_index_007": "类型信息",
     "msg_pages_runtime_node_modify_index_008": "此处将显示具体的类型信息",
     "msg_pages_runtime_node_modify_index_009": "进入配置界面",

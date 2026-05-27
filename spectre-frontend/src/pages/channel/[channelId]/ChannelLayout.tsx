@@ -4,7 +4,7 @@ import TabsController, {
   type TabsControllerRef,
 } from '@/pages/channel/[channelId]/_tabs/TabsController.tsx'
 import ChannelSvgSymbols from '@/pages/channel/[channelId]/_channel_icons/svg-symbols.tsx'
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import ChannelContext, {
   type ChannelContextState,
 } from '@/pages/channel/[channelId]/context.ts'
@@ -13,6 +13,11 @@ import useArthasMessageBus from '@/pages/channel/[channelId]/useArthasMessageBus
 import AiPanel from '@/pages/channel/[channelId]/_ai/AiPanel.tsx'
 import './_message_view/init.ts'
 import type { InstanceInfoVO } from '@/api/impl/arthas.ts'
+import { store } from '@/store'
+import { showDialog } from '@/common/util.ts'
+import { useDispatch } from 'react-redux'
+import { setTipRead } from '@/store/tipSlice.ts'
+import i18n from '@/i18n'
 
 interface ChannelLayoutProps {
   channelInfos: InstanceInfoVO[]
@@ -24,6 +29,25 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
   const tabsController = useRef<TabsControllerRef>(null)
   const quickCommandRef = useRef<QuickCommandRef>(null)
   const [aiOpen, setAiOpen] = useState(false)
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    if (!store.getState().tip.batchInstanceIncompleteTip) {
+      showDialog({
+        title: i18n.t('channel.incompleteTipTitle'),
+        message: i18n.t('channel.incompleteTipMessage'),
+        color: 'primary',
+        confirmBtnText: i18n.t('common.gotIt'),
+        onConfirm() {
+          dispatch(
+            setTipRead({
+              batchInstanceIncompleteTip: true,
+            }),
+          )
+        },
+      })
+    }
+  }, [dispatch])
 
   const contextValue = useMemo<ChannelContextState | null>(() => {
     if (!bus) {
@@ -53,7 +77,7 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
               channelId={props.channelId}
               appName={
                 props.channelInfos.length > 1
-                  ? '批量连接'
+                  ? props.channelInfos.map((info) => info.jvmName).join(';')
                   : props.channelInfos[0].jvmName
               }
               aiConsoleOpen={aiOpen}

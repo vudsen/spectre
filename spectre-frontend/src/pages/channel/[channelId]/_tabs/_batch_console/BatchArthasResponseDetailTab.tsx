@@ -56,7 +56,20 @@ const BatchArthasResponseDetailTab: React.FC<
   BatchArthasResponseDetailTabProps
 > = ({ groupIndex }) => {
   if (groupIndex === null || groupIndex === undefined) {
-    return <div>点击右侧消息</div>
+    return (
+      <div className="m-3 text-sm select-none">
+        <div>
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_arthasresponsedetailtab_001',
+          )}
+        </div>
+        <div className="text-secondary">
+          {i18n.t(
+            'hardcoded.msg_pages_channel_param_tabs_console_arthasresponsedetailtab_002',
+          )}
+        </div>
+      </div>
+    )
   }
   return <BatchArthasResponseDetailTab0 groupIndex={groupIndex} />
 }

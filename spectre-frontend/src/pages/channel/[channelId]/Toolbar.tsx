@@ -11,6 +11,7 @@ import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 import i18n from '@/i18n'
+import { store } from '@/store'
 
 interface MenuListProps {
   isExpand?: boolean
@@ -45,6 +46,9 @@ interface MenuContentProps {
 }
 
 const CollapsedMenuContent: React.FC<MenuContentProps> = (props) => {
+  if (Object.keys(store.getState().channel.context.instances).length > 1) {
+    return null
+  }
   return (
     <>
       {menuItems.map((item) => (

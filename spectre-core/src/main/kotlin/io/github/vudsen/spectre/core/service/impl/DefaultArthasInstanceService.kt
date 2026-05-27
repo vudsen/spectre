@@ -5,7 +5,6 @@ import io.github.vudsen.spectre.api.dto.UpdateArthasInstanceDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
-import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.repo.ArthasInstanceRepository
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 import jakarta.transaction.Transactional
@@ -60,17 +59,12 @@ open class DefaultArthasInstanceService(
 
     private val clientMap = ConcurrentHashMap<String, ClientHolder>()
 
-    private val updateInterval = 1000 * 60 * 10L
+    private val updateInterval = 1000 * 60 * 1L
 
     /**
      * 保存上次更新数据库时间
      */
     private val lastUpdateMap = WeakHashMap<String, Long>()
-
-    private fun buildId(
-        runtimeNodeId: Long,
-        jvm: Jvm,
-    ): String = "$runtimeNodeId:${jvm.hashCode()}"
 
     override fun list(
         page: Int,

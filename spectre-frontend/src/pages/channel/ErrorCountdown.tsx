@@ -57,7 +57,7 @@ const ErrorCountdown: React.FC<ErrorCountdownProps> = ({
             {countdown} {i18n.t('hardcoded.msg_pages_channel_index_002')}
           </div>
           <Button color="danger" variant="flat" onPress={cancelRetry}>
-            {i18n.t('hardcoded.msg_pages_channel_index_003')}
+            {i18n.t('channel.stopRetry')}
           </Button>
         </div>
       ) : (

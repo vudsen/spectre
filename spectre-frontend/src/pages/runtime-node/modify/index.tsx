@@ -145,7 +145,7 @@ const JvmSourceModifyPage: React.FC = () => {
       },
       buttons: [
         {
-          text: i18n.t('hardcoded.msg_pages_runtime_node_modify_index_006'),
+          text: i18n.t('common.gotIt'),
           action: tour.hide,
         },
       ],

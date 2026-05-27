@@ -35,17 +35,20 @@ class DefaultChannelService(
     @Transactional(rollbackOn = [Exception::class])
     override fun createChannel(instanceIds: List<String>): Long {
         channelRepository.findFirstByInstanceIds(instanceIds)?.let {
-            println("========================== ======${it.id}")
             return it.id
+        }
+        for (instanceId in instanceIds) {
+            if (!instanceRepository.existsById(instanceId)) {
+                throw BusinessException("error.instance.not.exist")
+            }
         }
         val id =
             channelRepository
                 .save(
                     ChannelPO().apply {
-                        this.instanceIds = instanceIds
+                        this.instanceIds = instanceIds.sorted()
                     },
                 ).id
-        println("================================$id")
         return id
     }
 

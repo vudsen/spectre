@@ -11,7 +11,7 @@ import {
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { useDispatch, useSelector } from 'react-redux'
-import type { RootState } from '@/store'
+import { type RootState, store } from '@/store'
 import { updateChannelContext } from '@/store/channelSlice.ts'
 import { showDialog } from '@/common/util.ts'
 import { disconnectSession } from '@/api/impl/arthas.ts'
@@ -107,6 +107,9 @@ const Header: React.FC<ToolbarProps> = (props) => {
     }
   }
 
+  const isBatch =
+    Object.keys(store.getState().channel.context.instances).length > 1
+
   return (
     <div className="border-b-divider mx-3 flex items-center justify-between border-b-1">
       <div className="flex max-w-1/2 items-center">
@@ -124,35 +127,42 @@ const Header: React.FC<ToolbarProps> = (props) => {
         </Tooltip>
       </div>
       <div className="flex items-center">
-        <QuickCommand ref={props.ref} />
-        <Popover>
-          <PopoverTrigger className="mr-2">
-            <div className="flex cursor-pointer items-center text-sm">
-              <SvgIcon icon={ChannelIcon.HASH} />
-              {classloaderHash ?? '<default>'}
-              <SvgIcon icon={Icon.RIGHT_ARROW} className="rotate-90" />
-            </div>
-          </PopoverTrigger>
-          <PopoverContent>
-            <form className="flex flex-col pt-3" onSubmit={saveClassloaderHash}>
-              <Input
-                label="Classloader Hash"
-                name="hash"
-                defaultValue={classloaderHash}
-                labelPlacement="outside-top"
-              />
-              <Button
-                type="submit"
-                color="primary"
-                size="sm"
-                variant="light"
-                className="mt-2 self-end"
-              >
-                {i18n.t('common.save')}
-              </Button>
-            </form>
-          </PopoverContent>
-        </Popover>
+        {isBatch ? null : (
+          <React.Fragment>
+            <QuickCommand ref={props.ref} />
+            <Popover>
+              <PopoverTrigger className="mr-2">
+                <div className="flex cursor-pointer items-center text-sm">
+                  <SvgIcon icon={ChannelIcon.HASH} />
+                  {classloaderHash ?? '<default>'}
+                  <SvgIcon icon={Icon.RIGHT_ARROW} className="rotate-90" />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent>
+                <form
+                  className="flex flex-col pt-3"
+                  onSubmit={saveClassloaderHash}
+                >
+                  <Input
+                    label="Classloader Hash"
+                    name="hash"
+                    defaultValue={classloaderHash}
+                    labelPlacement="outside-top"
+                  />
+                  <Button
+                    type="submit"
+                    color="primary"
+                    size="sm"
+                    variant="light"
+                    className="mt-2 self-end"
+                  >
+                    {i18n.t('common.save')}
+                  </Button>
+                </form>
+              </PopoverContent>
+            </Popover>
+          </React.Fragment>
+        )}
         <Tooltip
           content={i18n.t('hardcoded.msg_pages_channel_param_header_004')}
         >
@@ -160,32 +170,34 @@ const Header: React.FC<ToolbarProps> = (props) => {
             <SvgIcon icon={Icon.HOME} size={22} />
           </Button>
         </Tooltip>
-        <Tooltip
-          color={isTryAiTipRead ? undefined : 'primary'}
-          content={
-            isTryAiTipRead ? (
-              i18n.t('channel.ai')
-            ) : (
-              <div className="flex flex-col">
-                <div className="mt-2">{i18n.t('channel.tryAiTip')}</div>
-                <Button
-                  onPress={markAiTipRead}
-                  className="mt-2 self-end text-white"
-                  variant="light"
-                >
-                  {i18n.t('common.neverRemind')}
-                </Button>
-              </div>
-            )
-          }
-          showArrow
-          placement="bottom"
-          isOpen={isTryAiTipRead === undefined ? true : undefined}
-        >
-          <Button variant="light" isIconOnly onPress={onAiConsoleToggle}>
-            <SvgIcon size={23} icon={ChannelIcon.AI}></SvgIcon>
-          </Button>
-        </Tooltip>
+        {isBatch ? null : (
+          <Tooltip
+            color={isTryAiTipRead ? undefined : 'primary'}
+            content={
+              isTryAiTipRead ? (
+                i18n.t('channel.ai')
+              ) : (
+                <div className="flex flex-col">
+                  <div className="mt-2">{i18n.t('channel.tryAiTip')}</div>
+                  <Button
+                    onPress={markAiTipRead}
+                    className="mt-2 self-end text-white"
+                    variant="light"
+                  >
+                    {i18n.t('common.neverRemind')}
+                  </Button>
+                </div>
+              )
+            }
+            showArrow
+            placement="bottom"
+            isOpen={isTryAiTipRead === undefined ? true : undefined}
+          >
+            <Button variant="light" isIconOnly onPress={onAiConsoleToggle}>
+              <SvgIcon size={23} icon={ChannelIcon.AI}></SvgIcon>
+            </Button>
+          </Tooltip>
+        )}
         <Tooltip
           content={i18n.t('hardcoded.msg_pages_channel_param_header_006')}
         >

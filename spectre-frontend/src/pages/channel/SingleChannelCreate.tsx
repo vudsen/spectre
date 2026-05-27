@@ -28,7 +28,7 @@ const SingleChannelCreate: React.FC<SingleChannelCreateProps> = ({
 }) => {
   const [errorInfo, setErrorInfo] = useState<ErrorInfo>()
   const [progressInfo, setProgressInfo] = useState({
-    title: i18n.t('hardcoded.msg_pages_channel_index_005'),
+    title: i18n.t('channel.connecting'),
     message: i18n.t('hardcoded.msg_pages_channel_index_006'),
   })
   const pollState = useRef<PollState>({

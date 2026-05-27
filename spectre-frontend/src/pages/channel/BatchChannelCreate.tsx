@@ -13,6 +13,7 @@ import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { batchCreateInstances, createBatchChannel } from '@/api/impl/arthas.ts'
 import { useNavigate } from 'react-router'
+import i18n from '@/i18n'
 
 type ChannelCreateRequest = {
   treeNodeId: string
@@ -108,12 +109,11 @@ const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
               )
             } else if (current.isReady) {
               newChannels[i].state = 'success'
-              newChannels[i].message = '连接成功'
+              newChannels[i].message = i18n.t('channel.connected')
             } else {
               newChannels[i].state = 'pending'
               newChannels[i].message =
-                current.message ?? current.title ?? '连接中'
-              console.log(current.message ?? current.title ?? '连接中')
+                current.message ?? current.title ?? i18n.t('channel.connecting')
             }
           }
           if (nextRetryTime > 0) {
@@ -160,7 +160,9 @@ const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
 
   return (
     <div className="flex h-screen w-screen flex-col items-center justify-center">
-      <div className="text-primary text-bold mb-5 text-lg">正在连接中</div>
+      <div className="text-primary text-bold mb-5 text-lg">
+        {i18n.t('channel.connecting')}
+      </div>
       <Table hideHeader aria-label="Connections" className="max-w-256">
         <TableHeader>
           <TableColumn>Status</TableColumn>
@@ -202,11 +204,13 @@ const BatchChannelCreate: React.FC<BatchChannelCreateProps> = (props) => {
                     size="sm"
                     onPress={() => stopRetry(channel.treeNodeId)}
                   >
-                    取消重试
+                    {i18n.t('channel.stopRetry')}
                   </Button>
                 ) : null}
                 {channel.state === 'error' && channel.stopped ? (
-                  <div className="text-danger">已停止重试</div>
+                  <div className="text-danger">
+                    {i18n.t('channel.retryStopped')}
+                  </div>
                 ) : null}
               </TableCell>
             </TableRow>

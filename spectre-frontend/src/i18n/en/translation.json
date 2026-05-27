@@ -32,7 +32,8 @@
     "upload": "Upload",
     "delete": "Delete",
     "deleteAll": "Delete All",
-    "neverRemind": "Never Remind"
+    "neverRemind": "Never Remind",
+    "gotIt": "Got It"
   },
   "router": {
     "home": "Home",
@@ -101,7 +102,12 @@
     "connecting": "Connecting",
     "noLogs": "No logs yet",
     "error": "Error: {{message}}",
-    "nextRetry": "Next retry at: {{time}}"
+    "nextRetry": "Next retry at: {{time}}",
+    "stopRetry": "Cancel Retry",
+    "retryStopped": "Retry Stopped",
+    "incompleteTipTitle": "\uD83D\uDEA7Functionality Limited\uD83D\uDEA7",
+    "incompleteTipMessage": "Batch operations are still under development. Currently, only basic command execution functionality has been completed. Unfinished features will be hidden.",
+    "executeResult": "Execution result"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",
@@ -235,9 +241,7 @@
     "msg_pages_audit_logdetaildrawercontent_008": "Context information:",
     "msg_pages_channel_index_001": "Failed to connect to JVM",
     "msg_pages_channel_index_002": "seconds before auto retry",
-    "msg_pages_channel_index_003": "Cancel retry",
     "msg_pages_channel_index_004": "Refresh",
-    "msg_pages_channel_index_005": "Connecting",
     "msg_pages_channel_index_006": "Connected",
     "msg_pages_channel_index_007": "JVM arguments are empty",
     "msg_pages_channel_param_header_001": "Disconnect",
@@ -306,7 +310,6 @@
     "msg_pages_channel_param_message_view_component_memorymessagedetail_002": "Used",
     "msg_pages_channel_param_message_view_component_memorymessagedetail_003": "Max",
     "msg_pages_channel_param_message_view_component_messagedetail_001": "Service returned a message:",
-    "msg_pages_channel_param_message_view_component_profilermessagedetail_001": "Execution result:",
     "msg_pages_channel_param_message_view_component_rowaffectdetail_001": "Affected",
     "msg_pages_channel_param_message_view_component_rowaffectdetail_002": "classes",
     "msg_pages_channel_param_message_view_component_scmessagedetail_001": "Modifier",
@@ -484,7 +487,6 @@
     "msg_pages_runtime_node_modify_index_003": "Frontend extension page does not exist, pageName = ",
     "msg_pages_runtime_node_modify_index_004": "Expand types",
     "msg_pages_runtime_node_modify_index_005": "Spectre supports multiple ways to connect to JVMs. Click here to view supported types. Please select `Test` to continue the tutorial",
-    "msg_pages_runtime_node_modify_index_006": "Got it",
     "msg_pages_runtime_node_modify_index_007": "Type information",
     "msg_pages_runtime_node_modify_index_008": "Detailed type information will be shown here",
     "msg_pages_runtime_node_modify_index_009": "Enter configuration page",

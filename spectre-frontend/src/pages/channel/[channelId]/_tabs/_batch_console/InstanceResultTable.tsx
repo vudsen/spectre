@@ -15,6 +15,7 @@ import type { InstanceInfoVO } from '@/api/impl/arthas.ts'
 import { getArthasMessageView } from '@/pages/channel/[channelId]/_message_view/factory.ts'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
+import i18n from '@/i18n'
 
 interface InstanceResultTableProps {
   messages: ArthasMessage[]
@@ -55,8 +56,8 @@ const InstanceResultTable: React.FC<InstanceResultTableProps> = ({
       >
         <TableHeader>
           <TableColumn>Tag</TableColumn>
-          <TableColumn>结果</TableColumn>
-          <TableColumn>操作</TableColumn>
+          <TableColumn>{i18n.t('channel.executeResult')}</TableColumn>
+          <TableColumn>{i18n.t('channel.action')}</TableColumn>
         </TableHeader>
         <TableBody>
           {filteredMessage.map((msg) => {
