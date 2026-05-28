@@ -105,9 +105,7 @@ const ClassInfoDisplay: React.FC<{ classInfo: ClassInfo }> = ({
             >
               {classInfo.modifier}
             </KVGridItem>
-            <KVGridItem name={i18n.t('hardcoded.msg_ext_view_k8sview_003')}>
-              {type}
-            </KVGridItem>
+            <KVGridItem name={i18n.t('common.type')}>{type}</KVGridItem>
             <KVGridItem name="Classloader Hash">
               <Tooltip
                 content={i18n.t(
@@ -153,9 +151,7 @@ const ClassInfoDisplay: React.FC<{ classInfo: ClassInfo }> = ({
                   <TableColumn>
                     {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
                   </TableColumn>
-                  <TableColumn>
-                    {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
-                  </TableColumn>
+                  <TableColumn>{i18n.t('common.type')}</TableColumn>
                   <TableColumn>
                     {i18n.t(
                       'hardcoded.msg_pages_channel_param_message_view_component_scmessagedetail_006',

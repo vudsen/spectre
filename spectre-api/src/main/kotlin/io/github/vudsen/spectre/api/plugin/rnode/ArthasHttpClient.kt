@@ -5,6 +5,7 @@ import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ArrayNode
 
 interface ArthasHttpClient {
     /**
@@ -66,7 +67,7 @@ interface ArthasHttpClient {
     fun pullResults(
         sessionId: String,
         consumerId: String,
-    ): JsonNode
+    ): ArrayNode
 
     /**
      * 创建会话

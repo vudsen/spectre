@@ -26,7 +26,10 @@
     "delete": "删除",
     "deleteAll": "删除全部",
     "neverRemind": "不再提醒",
-    "gotIt": "了解"
+    "gotIt": "了解",
+    "type": "类型",
+    "empty": "没有任何可用数据",
+    "tip": "提示"
   },
   "router": {
     "home": "首页",
@@ -54,7 +57,18 @@
     "selectTypeInfo1": "创建一个新的运行节点: 运行节点是一个抽象概念，它可以是一台远程服务器，也可以是一个Kubernetes 集群，或其它任何能够运行 JVM 的东西。",
     "selectTypeInfo2": "运行节点作为 Spectre 核心功能的入口，我们会从运行节点为你列出所有的 JVM 来进行进一步的操作。",
     "selectTypeInfo3": "选择一个类型来开始：",
-    "selectTypeTip": "选择一个类型"
+    "selectTypeTip": "选择一个类型",
+    "batchConnect": "批量连接",
+    "batchConnectDesc": "一条命令，同时发给多个节点，并将结果聚合后展示",
+    "batchSelected": "已选择的 JVM实例/树节点",
+    "name": "运行节点名称",
+    "jvmName": "JVM 名称",
+    "runningInstance": "运行中实例",
+    "pendingConnectInstance": "代连接实例",
+    "otherNodes": "其它可用 JVM 实例",
+    "otherNodesDesc": "目前需要在其它运行节点，手动连接 JVM 后才可以在该列表中看见",
+    "current": "当前节点",
+    "atLeastTwoNode": "至少选中两个JVM实例/树节点"
   },
   "settings": {
     "basic": "基础配置",
@@ -207,7 +221,6 @@
     "msg_ext_form_testnodeform_002": "测试节点",
     "msg_ext_view_k8sview_001": "基础信息",
     "msg_ext_view_k8sview_002": "该节点为 Kubernetes 节点。",
-    "msg_ext_view_k8sview_003": "类型",
     "msg_ext_view_k8sview_004": "连接信息",
     "msg_ext_view_k8sview_005": "忽略 SSL",
     "msg_ext_view_sshview_001": "高级设置",

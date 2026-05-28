@@ -87,7 +87,7 @@ const ToolchainItemModifyDrawerContent: React.FC<
           rules={{ required: true }}
           selectProps={{
             isRequired: true,
-            label: i18n.t('hardcoded.msg_ext_view_k8sview_003'),
+            label: i18n.t('common.type'),
             onSelectionChange,
             defaultSelectedKeys: [props.type],
           }}

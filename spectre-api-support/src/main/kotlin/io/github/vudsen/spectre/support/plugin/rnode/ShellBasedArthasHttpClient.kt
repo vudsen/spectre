@@ -10,6 +10,7 @@ import io.github.vudsen.spectre.common.util.SecureUtils
 import org.slf4j.LoggerFactory
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.node.ArrayNode
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.Base64
@@ -172,7 +173,7 @@ open class ShellBasedArthasHttpClient(
     override fun pullResults(
         sessionId: String,
         consumerId: String,
-    ): JsonNode {
+    ): ArrayNode {
         val response =
             sendRequest(
                 buildMap {
@@ -182,7 +183,7 @@ open class ShellBasedArthasHttpClient(
                 },
                 false,
             )
-        return response.get("body").get("results")
+        return response.get("body").get("results").asArray()
     }
 
     override fun initSession(): ArthasSession {

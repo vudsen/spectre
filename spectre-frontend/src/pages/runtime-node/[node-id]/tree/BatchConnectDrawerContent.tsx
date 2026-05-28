@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Chip,
   DrawerBody,
@@ -24,7 +25,7 @@ import React, {
 } from 'react'
 import { graphql } from '@/graphql/generated'
 import { store } from '@/store'
-import { emptyList, handleError } from '@/common/util.ts'
+import { emptyList, handleError, showDialog } from '@/common/util.ts'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
 import { type DocumentResult, execute } from '@/graphql/execute.ts'
@@ -182,7 +183,7 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
       .runtimeNodeTree.batchSelectedNodes.map<SimpleJvm>((node) => ({
         id: node.id,
         name: node.name,
-        runtimeNodeName: '当前节点',
+        runtimeNodeName: i18n.t('runtimeNode.current'),
         type: 'tree',
         runtimeNodeId,
       })),
@@ -227,6 +228,14 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
   }
 
   const doBatchConnect = () => {
+    if (selectedNode.length < 2) {
+      showDialog({
+        title: i18n.t('common.error'),
+        message: i18n.t('runtimeNode.atLeastTwoNode'),
+        color: 'danger',
+      })
+      return
+    }
     const batch: BatchChannelCreateProps['channels'] = selectedNode.map(
       (node) => ({
         bundleId: bundleId[0],
@@ -249,7 +258,7 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
 
   return (
     <>
-      <DrawerHeader>批量连接</DrawerHeader>
+      <DrawerHeader>{i18n.t('runtimeNode.batchConnect')}</DrawerHeader>
       <DrawerBody className="space-y-3">
         <Select
           label={i18n.t(
@@ -266,13 +275,13 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
           ))}
         </Select>
         <div>
-          <div className="mb-2">已选择的节点</div>
+          <div className="mb-2">{i18n.t('runtimeNode.batchSelected')}</div>
           <Table aria-label="Selected nodes" removeWrapper>
             <TableHeader>
-              <TableColumn>运行节点名称</TableColumn>
-              <TableColumn>名称</TableColumn>
-              <TableColumn>类型</TableColumn>
-              <TableColumn>操作</TableColumn>
+              <TableColumn>{i18n.t('runtimeNode.name')}</TableColumn>
+              <TableColumn>{i18n.t('runtimeNode.jvmName')}</TableColumn>
+              <TableColumn>{i18n.t('common.type')}</TableColumn>
+              <TableColumn>{i18n.t('common.action')}</TableColumn>
             </TableHeader>
             <TableBody items={selectedNode}>
               {(row) => (
@@ -291,7 +300,9 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
                     <Chip
                       color={row.type === 'instance' ? 'primary' : 'secondary'}
                     >
-                      {row.type === 'instance' ? '运行中实例' : '待连接实例'}
+                      {row.type === 'instance'
+                        ? i18n.t('runtimeNode.runningInstance')
+                        : i18n.t('runtimeNode.pendingConnectInstance')}
                     </Chip>
                   </TableCell>
                   <TableCell>
@@ -310,8 +321,14 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
             </TableBody>
           </Table>
         </div>
-        <div>
-          <div className="mb-2">其它可用节点</div>
+        <div className="space-y-3">
+          <div>{i18n.t('runtimeNode.otherNodes')}</div>
+          <Alert
+            color="warning"
+            title={i18n.t('common.tip')}
+            variant="faded"
+            description={i18n.t('runtimeNode.otherNodesDesc')}
+          />
           <Table
             aria-label="Available nodes"
             removeWrapper
@@ -332,11 +349,14 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
             }
           >
             <TableHeader>
-              <TableColumn>运行节点名称</TableColumn>
-              <TableColumn>名称</TableColumn>
-              <TableColumn>操作</TableColumn>
+              <TableColumn>{i18n.t('runtimeNode.name')}</TableColumn>
+              <TableColumn>{i18n.t('runtimeNode.jvmName')}</TableColumn>
+              <TableColumn>{i18n.t('common.action')}</TableColumn>
             </TableHeader>
-            <TableBody items={data.instances} emptyContent="暂无其它可用节点">
+            <TableBody
+              items={data.instances}
+              emptyContent={i18n.t('common.empty')}
+            >
               {(row) => (
                 <TableRow key={row.id}>
                   <TableCell>
@@ -361,10 +381,10 @@ const BatchConnectDrawerContent: React.FC<BatchConnectDrawerContentProps> = ({
       </DrawerBody>
       <DrawerFooter>
         <Button color="danger" variant="light" onPress={onClose}>
-          取消
+          {i18n.t('common.cancel')}
         </Button>
         <Button color="primary" onPress={doBatchConnect}>
-          连接
+          {i18n.t('router.connect')}
         </Button>
       </DrawerFooter>
     </>

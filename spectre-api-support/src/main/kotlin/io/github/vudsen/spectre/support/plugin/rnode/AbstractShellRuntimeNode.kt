@@ -3,16 +3,22 @@ package io.github.vudsen.spectre.support.plugin.rnode
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.RuntimeNodeExtensionPoint
+import io.github.vudsen.spectre.common.ApplicationContextHolder
+import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.support.BoundedInputStreamSourceEntity
 import io.github.vudsen.spectre.support.InteractiveShellInputStreamSource
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.concurrent.Executor
 import kotlin.text.iterator
 
 abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
     companion object {
         @JvmStatic
         private val logger = LoggerFactory.getLogger(AbstractShellRuntimeNode::class.java)
+        private val fileUploadLock: KeyBasedLock by lazy {
+            KeyBasedLock(ApplicationContextHolder.applicationContext.getBean("applicationTaskExecutor", Executor::class.java))
+        }
     }
 
     private lateinit var extensionPoint: RuntimeNodeExtensionPoint
@@ -53,9 +59,14 @@ abstract class AbstractShellRuntimeNode() : ShellAvailableRuntimeNode {
         if (isFileExist(dest)) {
             return
         }
-        val tmp = "$dest.tmp"
-        doUpload(source, tmp)
-        execute("mv $tmp $dest").ok()
+        fileUploadLock.lock(dest) {
+            if (isFileExist(dest)) {
+                return
+            }
+            val tmp = "$dest.tmp"
+            doUpload(source, tmp)
+            execute("mv $tmp $dest").ok()
+        }
     }
 
     /**

@@ -358,7 +358,7 @@ const RuntimeNodeTreePage: React.FC = () => {
         </Card>
       </div>
       <AnimatePresence>
-        {batchSelectedNodes.length > 1 ? (
+        {batchSelectedNodes.length > 0 ? (
           <motion.div
             variants={sheetVariants}
             initial="hidden"
@@ -372,9 +372,11 @@ const RuntimeNodeTreePage: React.FC = () => {
             }}
           >
             <div>
-              <span className="text-primary">批量连接</span>
+              <span className="text-primary">
+                {i18n.t('runtimeNode.batchConnect')}
+              </span>
               <span className="text-default-500 ml-3 text-sm">
-                一条命令，同时发给多个节点，并将结果聚合后展示
+                {i18n.t('runtimeNode.batchConnectDesc')}
               </span>
             </div>
             <div>
@@ -383,7 +385,7 @@ const RuntimeNodeTreePage: React.FC = () => {
                 variant="flat"
                 onPress={batchDialog.onOpen}
               >
-                批量连接
+                {i18n.t('runtimeNode.batchConnect')}
               </Button>
             </div>
           </motion.div>

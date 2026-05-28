@@ -45,7 +45,7 @@ const SingleChannelCreate: React.FC<SingleChannelCreateProps> = ({
         createChannel(runtimeNodeId, treeNodeId, bundleId!)
           .then((r) => {
             if (r.isReady) {
-              nav(`/channel/${r.channelId}`)
+              nav(`/channel/${r.treeNodeId}`)
             } else if (r.error) {
               setErrorInfo({
                 message: r.error.message,

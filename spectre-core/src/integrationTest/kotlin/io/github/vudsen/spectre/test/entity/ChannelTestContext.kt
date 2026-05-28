@@ -4,4 +4,5 @@ class ChannelTestContext(
     var channelId: String,
     val runtimeNodeId: String,
     val javaVersion: String,
+    val instanceIds: List<String>,
 )

@@ -24,7 +24,6 @@ import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.common.util.SecureUtils
 import io.github.vudsen.spectre.common.util.toSha256
 import io.github.vudsen.spectre.core.bean.ArthasClientInitStatus
-import io.github.vudsen.spectre.core.configuration.constant.CacheConstant
 import io.github.vudsen.spectre.core.integrate.abac.ArthasExecutionPolicyPermissionContext
 import io.github.vudsen.spectre.core.integrate.abac.AttachNodePolicyPermissionContext
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
@@ -61,6 +60,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ArrayNode
 import java.lang.reflect.InvocationTargetException
 import java.time.Instant
 import java.util.concurrent.locks.ReentrantLock
@@ -141,8 +141,6 @@ class DefaultArthasExecutionService(
     private val modifyLock = ReentrantLock()
 
     private val joinLock = KeyBasedLock(executor)
-
-    private val cache = cacheManager.getCache(CacheConstant.QUICK_EXPIRE_CACHE_KEY)!!
 
     private val clientInitMap = HashMap<String, ArthasClientInitStatus>()
 
@@ -325,10 +323,6 @@ class DefaultArthasExecutionService(
         // 并发概率不高，先这样简单写，主要是防止前端 react 开发模式同时发两次请求
         joinLock.lock(distributedLockKey)
         try {
-            cache[consumerCacheKey]?.get()?.let {
-                return it as ArthasConsumerDTO
-            }
-
             val pair = arthasInstanceService.resolveCachedClientByChannelId(arthasInstanceDTO.id)
             var client = pair?.first
             if (client == null) {
@@ -358,7 +352,6 @@ class DefaultArthasExecutionService(
                     )
             }
             // 用于解决创建期间的并发，该方法返回后，相关数据会保存到用户自己的 session 中，这里的数据就没必要了
-            cache.put(consumerCacheKey, consumer)
             return consumer
         } finally {
             joinLock.unlock(distributedLockKey)
@@ -749,7 +742,7 @@ class DefaultArthasExecutionService(
     override fun pullResults(
         instanceId: String,
         consumerId: String,
-    ): JsonNode {
+    ): ArrayNode {
         checkTreeNodePermission(instanceId)
         val pair = tryResolveClient(instanceId)
         return pair.first.pullResults(pair.second.sessionId, consumerId)

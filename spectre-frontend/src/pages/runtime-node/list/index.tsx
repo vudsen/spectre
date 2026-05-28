@@ -253,9 +253,7 @@ const JvmSourcePage: React.FC = () => {
           <TableColumn>
             {i18n.t('hardcoded.msg_components_labeleditor_index_004')}
           </TableColumn>
-          <TableColumn>
-            {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
-          </TableColumn>
+          <TableColumn>{i18n.t('common.type')}</TableColumn>
           <TableColumn>
             {i18n.t('hardcoded.msg_components_labeleditor_index_001')}
           </TableColumn>

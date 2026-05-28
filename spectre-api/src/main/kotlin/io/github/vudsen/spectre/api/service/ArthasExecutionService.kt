@@ -6,6 +6,7 @@ import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ArrayNode
 
 /**
  * Arthas 执行服务
@@ -58,7 +59,7 @@ interface ArthasExecutionService {
     fun pullResults(
         instanceId: String,
         consumerId: String,
-    ): JsonNode
+    ): ArrayNode
 
     /**
      * 中断前台任务

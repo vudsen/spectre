@@ -9,33 +9,40 @@ import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.ChannelService
 import io.github.vudsen.spectre.api.vo.ChannelInfoVO
+import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.core.util.MultipartFileAdapter
-import io.github.vudsen.spectre.core.vo.BatchExecRequestVO
 import io.github.vudsen.spectre.core.vo.CreateChannelRequestVO
 import io.github.vudsen.spectre.core.vo.ExecuteCommandRequestVO
+import io.github.vudsen.spectre.repo.po.ChannelPO
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
+import org.springframework.core.task.TaskExecutor
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.util.UriUtils
 import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ArrayNode
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * Arthas 交互接口.
@@ -55,8 +62,13 @@ import java.nio.charset.StandardCharsets
 class ArthasExecutionController(
     private val arthasExecutionService: ArthasExecutionService,
     private val channelService: ChannelService,
+    @param:Qualifier("applicationTaskExecutor") private val executor: TaskExecutor,
 ) {
+    private val logger = LoggerFactory.getLogger(ArthasExecutionController::class.java)
+
     private fun channelSessionDataKey(instanceId: String): String = "InstanceIdToConsumerId:$instanceId"
+
+    private val joinLock = KeyBasedLock(executor)
 
     /**
      * @return Channel Id
@@ -79,38 +91,28 @@ class ArthasExecutionController(
             channelId.toLongOrNull()?.let {
                 channelService.findById(it)
             }
-        if (channel == null) {
-            // see 顶部注释, 这里兼容旧接口，channelId 是 instanceId
-            val joinChannel0 = joinChannel0(request, channelId)
-            return listOf(ChannelInfoVO("TODO", joinChannel0.name, channelId))
-        } else {
-            for (instanceId in channel.instanceIds) {
-                joinChannel0(request, instanceId)
-            }
-            return channelService.resolveChannelById(channelId.toLong())
-        }
+        return joinChannelInternal(channel, request, channelId)
     }
 
     /**
      * @return consumerId
      */
-    private fun joinChannel0(
+    private fun joinChannelForSingleInstance(
         request: HttpServletRequest,
         instanceId: String,
     ): ArthasConsumerDTO {
         val session = request.getSession(true)
-        val key = channelSessionDataKey(instanceId)
-        val oldConsumerId = session.getAttribute(key) as ArthasConsumerDTO?
-        if (oldConsumerId != null) {
-            return oldConsumerId
+        val lockKey = session.id + ":" + instanceId
+        joinLock.lock(lockKey) {
+            val key = channelSessionDataKey(instanceId)
+            val oldConsumerId = session.getAttribute(key) as ArthasConsumerDTO?
+            if (oldConsumerId != null) {
+                return oldConsumerId
+            }
+            val detail = arthasExecutionService.joinChannel(instanceId, session.id)
+            session.setAttribute(key, detail)
+            return detail
         }
-        val currentSavedConsumerId = session.getAttribute(key) as ArthasConsumerDTO?
-        if (currentSavedConsumerId != oldConsumerId) {
-            return currentSavedConsumerId
-        }
-        val detail = arthasExecutionService.joinChannel(instanceId, session.id)
-        session.setAttribute(key, detail)
-        return detail
     }
 
     @GetMapping("/channel/{channelId}/pull-result", produces = [MediaType.APPLICATION_JSON_VALUE])
@@ -122,28 +124,67 @@ class ArthasExecutionController(
             channelId.toLongOrNull()?.let {
                 channelService.findById(it)
             }
-        try {
-            if (channel == null) {
+        if (channel == null) {
+            try {
                 val channelSession = resolveChannelSession(request, channelId)
                 return mapOf(channelId to arthasExecutionService.pullResults(channelId, channelSession.consumerId))
-            } else {
-                return buildMap {
-                    for (instanceId in channel.instanceIds) {
-                        val channelSession = resolveChannelSession(request, instanceId)
-                        put(instanceId, arthasExecutionService.pullResults(instanceId, channelSession.consumerId))
+            } catch (_: ConsumerNotFountException) {
+                return mapOf(channelId to recreateConsumerAndPull(request, channelId))
+            }
+        } else {
+            return buildMap {
+                val latch = CountDownLatch(channel.instanceIds.size)
+                for (instanceId in channel.instanceIds) {
+                    val ctx = SecurityContextHolder.getContext()
+                    executor.execute {
+                        SecurityContextHolder.setContext(ctx)
+                        try {
+                            val channelSession = resolveChannelSession(request, instanceId)
+                            put(instanceId, arthasExecutionService.pullResults(instanceId, channelSession.consumerId) as ArrayNode)
+                        } catch (_: ConsumerNotFountException) {
+                            put(instanceId, recreateConsumerAndPull(request, instanceId))
+                        } catch (e: Exception) {
+                            // TODO 告诉前端出错了
+                            logger.error("", e)
+                        } finally {
+                            latch.countDown()
+                            SecurityContextHolder.clearContext()
+                        }
                     }
                 }
+                latch.await(3, TimeUnit.SECONDS)
             }
+        }
+    }
+
+    private fun recreateConsumerAndPull(
+        request: HttpServletRequest,
+        instanceId: String,
+    ): ArrayNode {
+        val session = request.getSession(false) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
+        session.removeAttribute(channelSessionDataKey(instanceId))
+        try {
+            // reconnect.
+            val consumerDTO = joinChannelForSingleInstance(request, instanceId)
+            return arthasExecutionService.pullResults(instanceId, consumerDTO.consumerId) as ArrayNode
         } catch (_: ConsumerNotFountException) {
-            val session = request.getSession(false) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
-            if (channel == null) {
-                session.removeAttribute(channelSessionDataKey(channelId))
-            } else {
-                for (instanceId in channel.instanceIds) {
-                    session.removeAttribute(channelSessionDataKey(instanceId))
-                }
-            }
             throw NamedExceptions.SESSION_EXPIRED.toException()
+        }
+    }
+
+    private fun joinChannelInternal(
+        channel: ChannelPO?,
+        request: HttpServletRequest,
+        channelId: String,
+    ): List<ChannelInfoVO> {
+        if (channel == null) {
+            val r = joinChannelForSingleInstance(request, channelId)
+            return listOf(ChannelInfoVO("unused", r.name, channelId))
+        } else {
+            for (instanceId in channel.instanceIds) {
+                joinChannelForSingleInstance(request, instanceId)
+            }
+            return channelService.resolveChannelById(channelId.toLong())
         }
     }
 
@@ -165,7 +206,6 @@ class ArthasExecutionController(
         @Validated @RequestBody vo: ExecuteCommandRequestVO,
         request: HttpServletRequest,
     ) {
-//        val start = System.currentTimeMillis()
         val channel =
             channelId.toLongOrNull()?.let {
                 channelService.findById(it)
@@ -178,7 +218,6 @@ class ArthasExecutionController(
             for (instanceId in channel.instanceIds) {
                 resolveChannelSession(request, instanceId)
                 arthasExecutionService.execAsync(instanceId, vo.command)
-//                println("end: " + (System.currentTimeMillis() - start) + "ms")
             }
         }
     }
@@ -301,54 +340,4 @@ class ArthasExecutionController(
     fun createChannel(
         @RequestBody instanceIds: List<String>,
     ): String = "\"${channelService.createChannel(instanceIds)}\""
-
-    /**
-     *
-     */
-    @PostMapping("batch/join")
-    fun batchJoin(
-        request: HttpServletRequest,
-        @RequestParam channelId: Long,
-    ): List<ChannelInfoVO> {
-        val channelPO = channelService.findById(channelId) ?: throw BusinessException("error.channel.not.exist")
-        for (instanceId in channelPO.instanceIds) {
-            joinChannel0(request, instanceId)
-        }
-        return channelService.resolveChannelById(channelId)
-    }
-
-    @PostMapping("batch/execute")
-    fun batchExec(
-        @RequestBody @Validated batchExec: BatchExecRequestVO,
-        request: HttpServletRequest,
-    ) {
-        val channelPO =
-            channelService.findById(batchExec.channelId.toLong()) ?: throw BusinessException("error.channel.not.exist")
-        for (instanceId in channelPO.instanceIds) {
-            resolveChannelSession(request, instanceId)
-            arthasExecutionService.execAsync(instanceId, batchExec.command.trim())
-        }
-    }
-
-    /**
-     * @return instanceId -> response
-     */
-    @GetMapping("batch/pull-result")
-    fun batchPullResult(
-        request: HttpServletRequest,
-        @RequestParam channelId: Long,
-    ): Map<String, JsonNode> =
-        buildMap {
-            val channelPO = channelService.findById(channelId) ?: throw BusinessException("error.channel.not.exist")
-            for (instanceId in channelPO.instanceIds) {
-                val channelSession = resolveChannelSession(request, instanceId)
-                try {
-                    put(instanceId, arthasExecutionService.pullResults(instanceId, channelSession.consumerId))
-                } catch (_: ConsumerNotFountException) {
-                    val session = request.getSession(false)
-                    session?.removeAttribute(channelSessionDataKey(instanceId))
-                    throw NamedExceptions.SESSION_EXPIRED.toException()
-                }
-            }
-        }
 }

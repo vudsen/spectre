@@ -98,9 +98,7 @@ const ProfilerTab: React.FC = () => {
                   'hardcoded.msg_components_page_permissionslist_index_010',
                 )}
               </TableColumn>
-              <TableColumn>
-                {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
-              </TableColumn>
+              <TableColumn>{i18n.t('common.type')}</TableColumn>
               <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
             </TableHeader>
             <TableBody
@@ -179,9 +177,7 @@ const ProfilerTab: React.FC = () => {
                   'hardcoded.msg_components_page_permissionslist_index_010',
                 )}
               </TableColumn>
-              <TableColumn>
-                {i18n.t('hardcoded.msg_ext_view_k8sview_003')}
-              </TableColumn>
+              <TableColumn>{i18n.t('common.type')}</TableColumn>
               <TableColumn align="end">{i18n.t('common.action')}</TableColumn>
             </TableHeader>
             <TableBody

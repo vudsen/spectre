@@ -32,7 +32,10 @@ const ChannelLayout: React.FC<ChannelLayoutProps> = (props) => {
   const dispatch = useDispatch()
 
   useEffect(() => {
-    if (!store.getState().tip.batchInstanceIncompleteTip) {
+    if (
+      !store.getState().tip.batchInstanceIncompleteTip &&
+      Object.keys(store.getState().channel.context.instances).length > 1
+    ) {
       showDialog({
         title: i18n.t('channel.incompleteTipTitle'),
         message: i18n.t('channel.incompleteTipMessage'),

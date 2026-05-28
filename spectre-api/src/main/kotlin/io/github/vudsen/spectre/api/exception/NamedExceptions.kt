@@ -7,7 +7,7 @@ enum class NamedExceptions(
     /**
      * 会话过期
      */
-    SESSION_EXPIRED("当前会话过期，请刷新页面"),
+    SESSION_EXPIRED("Arthas 连接已过期，请刷新页面"),
     FORBIDDEN("您没有访问当前接口的权限", 403),
     ;
 

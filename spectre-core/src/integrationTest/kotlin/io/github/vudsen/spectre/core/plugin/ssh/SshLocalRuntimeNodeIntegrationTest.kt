@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre.core.plugin.ssh
 
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
-import io.github.vudsen.spectre.test.AbstractSpectreIntegrationTest
+import io.github.vudsen.spectre.test.BaseSpectreIntegrationTest
 import io.github.vudsen.spectre.test.TestConstant
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -10,7 +10,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 
-class SshLocalRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
+class SshLocalRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
     @ParameterizedTest
     @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testLocalAttach(sshServerTag: String) {
@@ -37,7 +37,7 @@ class SshLocalRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                     "name" to "test",
                     "pluginId" to SshRuntimeNodeExtension.ID,
                     "configuration" to
-                        objectMapper.writeValueAsString(
+                        jsonMapper.writeValueAsString(
                             SshRuntimeNodeConfig(
                                 null,
                                 SshRuntimeNodeConfig.Local(true, "/opt/java/openjdk"),
@@ -73,7 +73,7 @@ class SshLocalRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         return container
     }
 
-    override fun findJvmTreeNode(runtimeNodeId: String): JvmTreeNodeDTO {
+    override fun findJvmTreeNode(runtimeNodeId: String): List<JvmTreeNodeDTO> {
         val treeNode =
             client
                 .post()
@@ -104,6 +104,6 @@ class SshLocalRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                 .hasSize(1)
                 .returnResult()
                 .responseBody!!
-        return holder[0]
+        return listOf(holder[0])
     }
 }

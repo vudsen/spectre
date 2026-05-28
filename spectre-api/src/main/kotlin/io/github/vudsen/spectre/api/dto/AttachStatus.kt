@@ -17,5 +17,7 @@ class AttachStatus(
     class ErrorInfo(
         var message: String,
         var nextRetryTime: Long,
-    )
+    ) {
+        constructor() : this("", 0)
+    }
 }

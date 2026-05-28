@@ -1,7 +1,7 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
-import io.github.vudsen.spectre.test.AbstractSpectreIntegrationTest
+import io.github.vudsen.spectre.test.BaseSpectreIntegrationTest
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
@@ -13,7 +13,7 @@ import org.testcontainers.images.builder.Transferable
 import org.testcontainers.k3s.K3sContainer
 import org.testcontainers.utility.DockerImageName
 
-class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
+class K8sRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
     @ParameterizedTest
 //    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     @ValueSource(strings = ["java8"])
@@ -27,7 +27,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         testChannel(info)
     }
 
-    override fun findJvmTreeNode(runtimeNodeId: String): JvmTreeNodeDTO {
+    override fun findJvmTreeNode(runtimeNodeId: String): List<JvmTreeNodeDTO> {
         val treeNode =
             client
                 .post()
@@ -62,7 +62,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                 .hasSize(1)
                 .returnResult()
                 .responseBody!!
-        return holder[0]
+        return listOf(holder[0])
     }
 
     /**
@@ -115,7 +115,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                     "name" to "K8s",
                     "pluginId" to K8sRuntimeNodeExtension.ID,
                     "configuration" to
-                        objectMapper.writeValueAsString(
+                        jsonMapper.writeValueAsString(
                             K8sRuntimeNodeConfig(
                                 endpoint,
                                 token,

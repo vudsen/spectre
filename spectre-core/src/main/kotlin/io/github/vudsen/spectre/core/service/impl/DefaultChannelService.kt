@@ -34,7 +34,8 @@ class DefaultChannelService(
 
     @Transactional(rollbackOn = [Exception::class])
     override fun createChannel(instanceIds: List<String>): Long {
-        channelRepository.findFirstByInstanceIds(instanceIds)?.let {
+        val sorted = instanceIds.sorted()
+        channelRepository.findFirstByInstanceIds(sorted)?.let {
             return it.id
         }
         for (instanceId in instanceIds) {
@@ -46,7 +47,7 @@ class DefaultChannelService(
             channelRepository
                 .save(
                     ChannelPO().apply {
-                        this.instanceIds = instanceIds.sorted()
+                        this.instanceIds = sorted
                     },
                 ).id
         return id

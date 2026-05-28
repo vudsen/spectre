@@ -2,7 +2,7 @@ import axios from 'axios'
 
 export type AttachStatus = {
   isReady: boolean
-  channelId?: string
+  treeNodeId?: string
   title?: string
   message?: string
   error?: {
@@ -114,15 +114,3 @@ export type InstanceInfoVO = {
   jvmName: string
   instanceId: string
 }
-
-type BatchExecuteRequest = {
-  channelId: string
-  command: string
-}
-export const batchExecute = (body: BatchExecuteRequest) =>
-  axios.post('arthas/batch/execute', body)
-
-export const batchPullResult = (
-  channelId: string,
-): Promise<Record<string, PureArthasResponse[]>> =>
-  axios.get('arthas/batch/pull-result?channelId=' + channelId)

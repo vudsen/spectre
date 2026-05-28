@@ -5,7 +5,8 @@ import io.github.vudsen.spectre.api.entity.ArthasSession
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import tools.jackson.databind.JsonNode
-import tools.jackson.databind.node.NullNode
+import tools.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.JsonNodeFactory
 import java.util.UUID
 
 class FakeArthasHttpClient : ArthasHttpClient {
@@ -48,10 +49,7 @@ class FakeArthasHttpClient : ArthasHttpClient {
     override fun pullResults(
         sessionId: String,
         consumerId: String,
-    ): JsonNode {
-        // TODO
-        return NullNode.instance
-    }
+    ): ArrayNode = ArrayNode(JsonNodeFactory.instance)
 
     override fun initSession(): ArthasSession = ArthasSession(SESSION_ID, UUID.randomUUID().toString())
 
