@@ -14,9 +14,9 @@ import org.testcontainers.k3s.K3sContainer
 import org.testcontainers.utility.DockerImageName
 
 class K8sRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
+    //    @ValueSource(strings = ["java8"])
     @ParameterizedTest
-//    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
-    @ValueSource(strings = ["java8"])
+    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testFullBusinessFlow(mathGameTag: String) {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
 

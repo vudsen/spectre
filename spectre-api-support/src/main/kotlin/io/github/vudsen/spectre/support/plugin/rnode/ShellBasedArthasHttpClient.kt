@@ -161,13 +161,15 @@ open class ShellBasedArthasHttpClient(
     override fun readProfilerFile(filename: String): BoundedInputStreamSource? = runtimeNode.readFile("${getProfilerDirectory()}/$filename")
 
     override fun interruptJob(sessionId: String) {
-        sendRequest(
-            buildMap {
-                put("action", "interrupt_job")
-                put("sessionId", sessionId)
-            },
-            false,
-        )
+        val r =
+            sendRequest(
+                buildMap {
+                    put("action", "interrupt_job")
+                    put("sessionId", sessionId)
+                },
+                false,
+            )
+        println(r)
     }
 
     override fun pullResults(

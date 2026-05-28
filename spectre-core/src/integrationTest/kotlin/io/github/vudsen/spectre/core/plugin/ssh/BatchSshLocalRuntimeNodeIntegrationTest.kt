@@ -17,9 +17,9 @@ class BatchSshLocalRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
         val mathGameNames = listOf("math-game-1", "math-game-2", "math-game-3")
     }
 
+    //    @ValueSource(strings = ["java17"])
     @ParameterizedTest
-//    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
-    @ValueSource(strings = ["java17"])
+    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testDockerAttach(javaVersion: String) {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
 

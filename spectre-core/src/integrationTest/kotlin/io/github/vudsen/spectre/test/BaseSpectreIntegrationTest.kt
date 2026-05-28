@@ -285,24 +285,36 @@ abstract class BaseSpectreIntegrationTest : AbstractSpectreIntegrationTest() {
 
         executeArthasCommand(info.channelId, "watch demo.MathGame primeFactors -n 2 -x 1 'target.illegalArgumentCount'")
 
-        val record = arrayOf(Int.MAX_VALUE, Int.MAX_VALUE)
-        val exactNumberRegx = Regex("@Integer\\[(-?\\d+)]")
-        var rp = 0
-        val arthasResult = pullResultSync(info)
+        val indexMap = mutableMapOf<String, Int>()
+        val recordMap = mutableMapOf<String, Array<Int>>()
         for (instanceId in info.instanceIds) {
-            val r = arthasResult[instanceId]!!
-            val watchResult = r.filter { item -> item.get("type").stringValue() == "watch" }
-            for (node in watchResult) {
-                val value = node.get("value").stringValue()
-                val matchResult = exactNumberRegx.find(value)
-                if (matchResult == null) {
-                    Assertions.fail("Can't parse number from '$value'")
-                } else {
-                    record[rp] = matchResult.groupValues[1].toInt()
-                    rp++
+            recordMap[instanceId] = arrayOf(Int.MAX_VALUE, Int.MAX_VALUE)
+            indexMap[instanceId] = 0
+        }
+        val exactNumberRegx = Regex("@Integer\\[(-?\\d+)]")
+        loop(5) {
+            val arthasResult = pullResultSync(info)
+            for (instanceId in info.instanceIds) {
+                val r = arthasResult[instanceId]!!
+                val watchResult = r.filter { item -> item.get("type").stringValue() == "watch" }
+                val rp = indexMap[instanceId]!!
+                val record = recordMap[instanceId]!!
+                for (node in watchResult) {
+                    val value = node.get("value").stringValue()
+                    val matchResult = exactNumberRegx.find(value)
+                    if (matchResult == null) {
+                        Assertions.fail("Can't parse number from '$value'")
+                    } else {
+                        record[rp] = matchResult.groupValues[1].toInt()
+                        indexMap[instanceId] = rp + 1
+                        if (rp == 1) {
+                            assertTrue(record[0] > record[1])
+                            return@loop true
+                        }
+                    }
                 }
             }
+            return@loop null
         }
-        assertTrue(record[0] > record[1])
     }
 }

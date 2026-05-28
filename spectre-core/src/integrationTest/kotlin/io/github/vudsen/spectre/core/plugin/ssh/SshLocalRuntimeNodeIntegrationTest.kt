@@ -11,6 +11,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 
 class SshLocalRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
+    //    @ValueSource(strings = ["java17"])
     @ParameterizedTest
     @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testLocalAttach(sshServerTag: String) {
