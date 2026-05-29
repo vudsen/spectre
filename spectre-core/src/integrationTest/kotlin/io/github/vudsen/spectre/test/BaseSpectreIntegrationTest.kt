@@ -3,6 +3,7 @@ package io.github.vudsen.spectre.test
 import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.api.vo.ChannelInfoVO
+import io.github.vudsen.spectre.core.vo.BatchPullResultVO
 import io.github.vudsen.spectre.test.entity.ChannelTestContext
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -164,14 +165,17 @@ abstract class BaseSpectreIntegrationTest : AbstractSpectreIntegrationTest() {
                     .exchange()
                     .expectStatus()
                     .isOk
-                    .expectBody<Map<String, JsonNode>>()
+                    .expectBody<Map<String, BatchPullResultVO>>()
                     .returnResult()
                     .responseBody
             for (entry in raw!!.entries) {
                 val instanceId = entry.key
-                val nodes = entry.value as ArrayNode
-                if (!nodes.isEmpty) {
-                    r[instanceId] = nodes
+                val result = entry.value
+                if (result.isError!!) {
+                    Assertions.fail<Unit>(result.message!!)
+                }
+                if (!result.data!!.isEmpty) {
+                    r[instanceId] = result.data!!
                 }
             }
             if (r.size == context.instanceIds.size) {

@@ -47,7 +47,13 @@ export type PureArthasResponse = {
   jobId: number
 }
 
-export type BatchPullResultsResponse = Record<string, PureArthasResponse[]>
+export type BatchPullResultsResponse = Record<string, BatchPullResultVO>
+
+type BatchPullResultVO = {
+  isError: boolean
+  message?: string
+  data: PureArthasResponse[]
+}
 
 export const pullResults = async (
   channelId: string,

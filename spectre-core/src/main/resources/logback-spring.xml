@@ -3,7 +3,10 @@
     <springProfile name="prod">
         <include resource="logback-spring-prod.xml"/>
     </springProfile>
-    <springProfile name="!prod">
+    <springProfile name="pg">
+        <include resource="logback-spring-prod.xml"/>
+    </springProfile>
+    <springProfile name="dev">
         <include resource="logback-spring-default.xml"/>
     </springProfile>
 </configuration>

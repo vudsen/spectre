@@ -57,7 +57,7 @@ const InstanceResultTable: React.FC<InstanceResultTableProps> = ({
         <TableHeader>
           <TableColumn>Tag</TableColumn>
           <TableColumn>{i18n.t('channel.executeResult')}</TableColumn>
-          <TableColumn>{i18n.t('channel.action')}</TableColumn>
+          <TableColumn>{i18n.t('common.action')}</TableColumn>
         </TableHeader>
         <TableBody>
           {filteredMessage.map((msg) => {

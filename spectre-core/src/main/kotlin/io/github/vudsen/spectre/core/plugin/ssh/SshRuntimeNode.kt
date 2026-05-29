@@ -132,36 +132,40 @@ open class SshRuntimeNode :
     }
 
     private val session: ClientSession by lazy {
-        val client =
-            SshClient
-                .setUpDefaultClient()
+        try {
+            val client =
+                SshClient
+                    .setUpDefaultClient()
 
-        client.ioServiceFactoryFactory = Nio2ServiceFactoryFactory(executorServiceFactory)
-        client.start()
-        val session =
-            client
-                .connect(nodeConfig.username, nodeConfig.host, nodeConfig.port)
-                .verify(3, TimeUnit.SECONDS)
-                .session
-        nodeConfig.principal?.let {
-            if (it.loginType == SshRuntimeNodeConfig.LoginType.KEY) {
-                session.addPublicKeyIdentity(
-                    loadKeyPairAllowEmptyPublic(
-                        it.secretKey ?: throw BusinessException("error.private.key.not.configured"),
-                        it.secretKeyPassword,
-                        session,
-                    ),
-                )
-            } else if (it.loginType == SshRuntimeNodeConfig.LoginType.PASSWORD) {
-                if (it.password.isNullOrEmpty()) {
-                    throw BusinessException("Password is empty.")
+            client.ioServiceFactoryFactory = Nio2ServiceFactoryFactory(executorServiceFactory)
+            client.start()
+            val session =
+                client
+                    .connect(nodeConfig.username, nodeConfig.host, nodeConfig.port)
+                    .verify(3, TimeUnit.SECONDS)
+                    .session
+            nodeConfig.principal?.let {
+                if (it.loginType == SshRuntimeNodeConfig.LoginType.KEY) {
+                    session.addPublicKeyIdentity(
+                        loadKeyPairAllowEmptyPublic(
+                            it.secretKey ?: throw BusinessException("error.private.key.not.configured"),
+                            it.secretKeyPassword,
+                            session,
+                        ),
+                    )
+                } else if (it.loginType == SshRuntimeNodeConfig.LoginType.PASSWORD) {
+                    if (it.password.isNullOrEmpty()) {
+                        throw BusinessException("Password is empty.")
+                    }
+                    session.addPasswordIdentity(it.password)
                 }
-                session.addPasswordIdentity(it.password)
             }
+            session.auth().verify(3, TimeUnit.SECONDS)
+            logger.info("Successfully connected to {}", nodeConfig.host)
+            session
+        } catch (e: Exception) {
+            throw BusinessException(e.message ?: "error.server.internal.error")
         }
-        session.auth().verify(3, TimeUnit.SECONDS)
-        logger.info("Successfully connected to {}", nodeConfig.host)
-        session
     }
 
     override fun execute(command: String): CommandExecuteResult {

@@ -12,6 +12,7 @@ import io.github.vudsen.spectre.api.vo.ChannelInfoVO
 import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.core.util.MultipartFileAdapter
+import io.github.vudsen.spectre.core.vo.BatchPullResultVO
 import io.github.vudsen.spectre.core.vo.CreateChannelRequestVO
 import io.github.vudsen.spectre.core.vo.ExecuteCommandRequestVO
 import io.github.vudsen.spectre.repo.po.ChannelPO
@@ -38,7 +39,6 @@ import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.util.UriUtils
-import tools.jackson.databind.JsonNode
 import tools.jackson.databind.node.ArrayNode
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CountDownLatch
@@ -119,7 +119,7 @@ class ArthasExecutionController(
     fun pullResults(
         @PathVariable channelId: String,
         request: HttpServletRequest,
-    ): Map<String, JsonNode> {
+    ): Map<String, BatchPullResultVO> {
         val channel =
             channelId.toLongOrNull()?.let {
                 channelService.findById(it)
@@ -127,9 +127,11 @@ class ArthasExecutionController(
         if (channel == null) {
             try {
                 val channelSession = resolveChannelSession(request, channelId)
-                return mapOf(channelId to arthasExecutionService.pullResults(channelId, channelSession.consumerId))
+                return mapOf(
+                    channelId to BatchPullResultVO(false, null, arthasExecutionService.pullResults(channelId, channelSession.consumerId)),
+                )
             } catch (_: ConsumerNotFountException) {
-                return mapOf(channelId to recreateConsumerAndPull(request, channelId))
+                return mapOf(channelId to BatchPullResultVO(false, null, recreateConsumerAndPull(request, channelId)))
             }
         } else {
             return buildMap {
@@ -139,16 +141,31 @@ class ArthasExecutionController(
                     executor.execute {
                         SecurityContextHolder.setContext(ctx)
                         try {
-                            val channelSession = resolveChannelSession(request, instanceId)
-                            put(instanceId, arthasExecutionService.pullResults(instanceId, channelSession.consumerId) as ArrayNode)
-                        } catch (_: ConsumerNotFountException) {
-                            put(instanceId, recreateConsumerAndPull(request, instanceId))
+                            try {
+                                val channelSession = resolveChannelSession(request, instanceId)
+                                put(
+                                    instanceId,
+                                    BatchPullResultVO(
+                                        false,
+                                        null,
+                                        arthasExecutionService.pullResults(instanceId, channelSession.consumerId),
+                                    ),
+                                )
+                            } catch (_: ConsumerNotFountException) {
+                                put(instanceId, BatchPullResultVO(false, null, recreateConsumerAndPull(request, instanceId)))
+                            } finally {
+                                latch.countDown()
+                                SecurityContextHolder.clearContext()
+                            }
                         } catch (e: Exception) {
-                            // TODO 告诉前端出错了
-                            logger.error("", e)
-                        } finally {
-                            latch.countDown()
-                            SecurityContextHolder.clearContext()
+                            val errorMessage =
+                                if (e is BusinessException) {
+                                    e.toI18nMessage()
+                                } else {
+                                    logger.error("", e)
+                                    "Internal Server Error"
+                                }
+                            put(instanceId, BatchPullResultVO(true, errorMessage, null))
                         }
                     }
                 }

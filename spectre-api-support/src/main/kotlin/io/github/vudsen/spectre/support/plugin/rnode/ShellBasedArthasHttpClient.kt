@@ -7,6 +7,7 @@ import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.common.util.SecureUtils
+import io.github.vudsen.spectre.repo.util.SnowFlake
 import org.slf4j.LoggerFactory
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
@@ -238,7 +239,7 @@ open class ShellBasedArthasHttpClient(
     override fun getPort(): Int = URL(arthasHttpEndpoint).port
 
     override fun retransform(source: BoundedInputStreamSource): JsonNode {
-        val dest = "${runtimeNode.getHomePath()}/downloads/rt${System.currentTimeMillis()}.class"
+        val dest = "${runtimeNode.getHomePath()}/downloads/rt${SnowFlake.nextId()}.class"
         try {
             runtimeNode.upload(source, dest)
             return exec("retransform $dest")
