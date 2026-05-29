@@ -1,12 +1,9 @@
 <configuration>
 <!--    <include resource="logback-spring-${spring.profiles.active}.xml"/>-->
-    <springProfile name="prod">
-        <include resource="logback-spring-prod.xml"/>
-    </springProfile>
-    <springProfile name="pg">
+    <springProfile name="!dev">
         <include resource="logback-spring-prod.xml"/>
     </springProfile>
     <springProfile name="dev">
-        <include resource="logback-spring-default.xml"/>
+        <include resource="logback-spring-dev.xml"/>
     </springProfile>
 </configuration>

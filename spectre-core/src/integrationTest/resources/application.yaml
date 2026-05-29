@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: dev
   liquibase:
     change-log: classpath:/db/changelog-master.xml
   datasource:
