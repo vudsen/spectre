@@ -8,15 +8,19 @@ import io.github.vudsen.spectre.test.entity.ChannelTestContext
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.web.reactive.function.BodyInserters
-import tools.jackson.databind.JsonNode
 import tools.jackson.databind.node.ArrayNode
 import tools.jackson.databind.node.ObjectNode
 
 abstract class BaseSpectreIntegrationTest : AbstractSpectreIntegrationTest() {
+    companion object {
+        val logger = LoggerFactory.getLogger(BaseSpectreIntegrationTest::class.java)
+    }
+
     protected fun findLatestBundleId(): String =
         graphQlTester
             .mutate()
@@ -154,8 +158,8 @@ abstract class BaseSpectreIntegrationTest : AbstractSpectreIntegrationTest() {
     /**
      * 同步拉取结果，该方法会保证所有实例的消息都非空
      */
-    private fun pullResultSync(context: ChannelTestContext): Map<String, JsonNode> {
-        val r = HashMap<String, JsonNode>()
+    private fun pullResultSync(context: ChannelTestContext): Map<String, ArrayNode> {
+        val r = HashMap<String, ArrayNode>()
         loop(5) {
             val raw =
                 client
@@ -300,10 +304,16 @@ abstract class BaseSpectreIntegrationTest : AbstractSpectreIntegrationTest() {
             val arthasResult = pullResultSync(info)
             for (instanceId in info.instanceIds) {
                 val r = arthasResult[instanceId]!!
+                if (logger.isDebugEnabled) {
+                    logger.debug("Current result:\n{}", r.toPrettyString())
+                }
                 val watchResult = r.filter { item -> item.get("type").stringValue() == "watch" }
-                val rp = indexMap[instanceId]!!
+                if (logger.isDebugEnabled) {
+                    logger.debug("Filtered size: {}", watchResult.size)
+                }
                 val record = recordMap[instanceId]!!
                 for (node in watchResult) {
+                    val rp = indexMap[instanceId]!!
                     val value = node.get("value").stringValue()
                     val matchResult = exactNumberRegx.find(value)
                     if (matchResult == null) {

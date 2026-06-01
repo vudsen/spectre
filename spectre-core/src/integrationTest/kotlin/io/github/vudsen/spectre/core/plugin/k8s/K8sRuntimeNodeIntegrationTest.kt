@@ -2,6 +2,7 @@ package io.github.vudsen.spectre.core.plugin.k8s
 
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.test.BaseSpectreIntegrationTest
+import io.github.vudsen.spectre.test.GlobalDisposer
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
@@ -14,7 +15,7 @@ import org.testcontainers.k3s.K3sContainer
 import org.testcontainers.utility.DockerImageName
 
 class K8sRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
-    //    @ValueSource(strings = ["java8"])
+//    @ValueSource(strings = ["java25"])
     @ParameterizedTest
     @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testFullBusinessFlow(mathGameTag: String) {
@@ -72,6 +73,7 @@ class K8sRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
         val k3s =
             K3sContainer(DockerImageName.parse("rancher/k3s:v1.31.0-k3s1"))
                 .withCommand("server", "--disable=traefik", "--disable=local-storage")
+                .withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
 
         k3s.start()
         K8sRuntimeNodeIntegrationTest::class.java.classLoader.getResourceAsStream("k8s-deploy-$mathGameTag.yaml").use { stream ->
@@ -87,6 +89,10 @@ class K8sRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
         val result = k3s.execInContainer("kubectl", "create", "token", "spectre", "-n", "spectre")
         Assertions.assertEquals(0, result.exitCode)
         val token = result.stdout
+
+        GlobalDisposer.registerDispose {
+            k3s.stop()
+        }
 
         loop(60) {
             val execInContainer =
