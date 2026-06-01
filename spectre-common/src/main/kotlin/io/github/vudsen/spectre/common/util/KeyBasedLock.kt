@@ -5,6 +5,9 @@ import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
+/**
+ * TODO: 支持集群
+ */
 class KeyBasedLock(
     private val lockCleanExecutor: Executor,
 ) {
@@ -52,6 +55,18 @@ class KeyBasedLock(
                     isCleaning.set(false)
                 }
             }
+        }
+    }
+
+    inline fun <T> lock(
+        key: String,
+        action: () -> T,
+    ): T {
+        lock(key)
+        return try {
+            action()
+        } finally {
+            unlock(key)
         }
     }
 }

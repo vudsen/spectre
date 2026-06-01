@@ -18,6 +18,8 @@ import { ListboxItem } from '@heroui/react'
 import useRightClickMenu from '@/components/RightClickMenu/useRightClickMenu.ts'
 import ChannelIcon from '@/pages/channel/[channelId]/_channel_icons/ChannelIcon.ts'
 import i18n from '@/i18n'
+import BatchConsoleTab from '@/pages/channel/[channelId]/_tabs/_batch_console'
+import { store } from '@/store'
 
 type TabInfo = {
   node: React.ReactNode
@@ -49,13 +51,21 @@ const TabsController: React.FC<TabsControllerProps> = (props) => {
   const [tabs, setTabs] = useState<TabInfo[]>(() => {
     // always open
     return [
-      {
-        node: <Index />,
-        name: 'Console',
-        icon: ChannelIcon.TERMINAL,
-        isLocked: true,
-        id: 0,
-      },
+      Object.keys(store.getState().channel.context.instances).length === 1
+        ? {
+            node: <Index />,
+            name: 'Console',
+            icon: ChannelIcon.TERMINAL,
+            isLocked: true,
+            id: 0,
+          }
+        : {
+            node: <BatchConsoleTab />,
+            name: 'Console',
+            icon: ChannelIcon.TERMINAL,
+            isLocked: true,
+            id: 0,
+          },
     ]
   })
 

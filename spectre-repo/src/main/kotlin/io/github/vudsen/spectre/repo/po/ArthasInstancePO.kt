@@ -23,12 +23,13 @@ open class ArthasInstancePO() {
     @Id
     open var id: String = ""
 
-    open var channelId: String = ""
-
     open var endpointPassword: String = ""
 
     open var boundPort: Int = 0
 
+    /**
+     * Arthas 的会话 id
+     */
     open var sessionId: String = ""
 
     open var runtimeNodeId: Long = 0
@@ -61,7 +62,6 @@ open class ArthasInstancePO() {
         sessionId: String,
         boundPort: Int,
         endpointPassword: String,
-        channelId: String,
         id: String,
     ) : this() {
         this.paths = path
@@ -73,7 +73,6 @@ open class ArthasInstancePO() {
         this.sessionId = sessionId
         this.boundPort = boundPort
         this.endpointPassword = endpointPassword
-        this.channelId = channelId
         this.id = id
     }
 

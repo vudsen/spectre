@@ -2,13 +2,12 @@ package io.github.vudsen.spectre.core.plugin.ssh
 
 import io.github.vudsen.spectre.api.BoundedInputStreamSource
 import io.github.vudsen.spectre.api.entity.CommandExecuteResult
-import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.InteractiveShell
 import io.github.vudsen.spectre.common.RuntimeNodeConfig
 import io.github.vudsen.spectre.support.plugin.rnode.AbstractShellRuntimeNode
 
 class DockerRuntimeNode(
-    private val delegate: SshRuntimeNode,
+    private val hostNode: SshRuntimeNode,
     private val dockerPath: String,
     private val containerId: String,
     private val homePath: String,
@@ -17,9 +16,9 @@ class DockerRuntimeNode(
 
     override fun execute(command: String): CommandExecuteResult =
         if (user == null) {
-            delegate.execute("$dockerPath exec $containerId $command")
+            hostNode.execute("$dockerPath exec $containerId $command")
         } else {
-            delegate.execute("$dockerPath exec -u $user $containerId $command")
+            hostNode.execute("$dockerPath exec -u $user $containerId $command")
         }
 
     /**
@@ -33,32 +32,27 @@ class DockerRuntimeNode(
             } else {
                 "-u $user"
             }
-        return delegate.createInteractiveShell("$dockerPath exec -i $us $containerId sh -c '$command'")
+        return hostNode.createInteractiveShell("$dockerPath exec -i $us $containerId sh -c '$command'")
     }
 
     override fun getHomePath(): String = homePath
 
     override fun ensureAttachEnvironmentReady() {
-        delegate.ensureAttachEnvironmentReady()
+        hostNode.ensureAttachEnvironmentReady()
     }
 
-    override fun getConfiguration(): RuntimeNodeConfig = delegate.getConfiguration()
+    override fun getConfiguration(): RuntimeNodeConfig = hostNode.getConfiguration()
 
     override fun doUpload(
         source: BoundedInputStreamSource,
         dest: String,
     ) {
-        createInteractiveShell("cat > $dest").use { shell ->
-            source.inputStream.use { inputStream ->
-                shell.getOutputStream().use { outputStream ->
-                    inputStream.transferTo(outputStream)
-                }
-                shell.exitCode()?.let {
-                    if (it != 0) {
-                        throw BusinessException(String(shell.getInputStream().readAllBytes()))
-                    }
-                }
-            }
-        }
+        val homePath = hostNode.getHomePath()
+        val filename = dest.subSequence(dest.lastIndexOf('/') + 1, dest.length)
+
+        val hostPath = "$homePath/$filename"
+        hostNode.upload(source, hostPath)
+        hostNode.execute(dockerPath, "cp", hostPath, "$containerId:$dest").ok()
+        hostNode.deleteFile(hostPath)
     }
 }

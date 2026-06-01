@@ -1,10 +1,17 @@
-import { type MouseEvent, useEffect } from 'react'
+import { type MouseEvent } from 'react'
 import React, { useContext, useRef, useState } from 'react'
 import { expandTree, type JvmTreeNodeDTO } from '@/api/impl/runtime-node.ts'
 import SvgIcon from '@/components/icon/SvgIcon.tsx'
 import Icon from '@/components/icon/icon.ts'
-import { Button, Spinner } from '@heroui/react'
+import { Button, Checkbox, Spinner } from '@heroui/react'
 import TreeContext from '@/pages/runtime-node/[node-id]/tree/context.ts'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  onBatchSelect,
+  setCurrentSelected,
+} from '@/store/runtimeNodeTreeSlice.ts'
+import type { RootState } from '@/store'
+import clsx from 'clsx'
 
 type NodeProps = {
   searchNode: JvmTreeNodeDTO
@@ -14,14 +21,37 @@ type NodeProps = {
   isTourAttachTarget?: boolean
 }
 
-const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
+const RuntimeNodeTree: React.FC<NodeProps> = ({
+  id,
+  isTourAttachTarget,
+  level,
+  onExpanded,
+  searchNode,
+}) => {
+  const batchSelectedNodes = useSelector<RootState, JvmTreeNodeDTO[]>(
+    (state) => state.runtimeNodeTree.batchSelectedNodes,
+  )
+  const currentSelectedNode = useSelector<
+    RootState,
+    JvmTreeNodeDTO | undefined
+  >((state) => state.runtimeNodeTree.currentSelect)
+  const searchContent = useSelector<RootState, string>(
+    (state) => state.runtimeNodeTree.searchContent,
+  )
+
   const [rootNodes, setRootnNodes] = useState<JvmTreeNodeDTO[]>([])
   const [expand, setExpand] = useState(false)
   const [loading, setLoading] = useState(false)
   const loadedFlag = useRef(false)
   const ctx = useContext(TreeContext)
-  const [selected, setSelected] = useState(false)
-  const [highlight, setHighlight] = useState(false)
+  const dispatch = useDispatch()
+
+  const selected =
+    currentSelectedNode?.id === searchNode.id ||
+    !!batchSelectedNodes.find((node) => node.id === searchNode.id)
+
+  const needsHighlight =
+    searchContent.length > 0 && searchNode.name.includes(searchContent)
 
   const toggleTreeNode = (force?: boolean) => {
     if (loading) {
@@ -34,11 +64,11 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
       }
     }
     setLoading(true)
-    expandTree(ctx.nodeId, props.searchNode.id)
+    expandTree(ctx.nodeId, searchNode.id)
       .then((r) => {
         loadedFlag.current = true
         setRootnNodes(r)
-        props.onExpanded?.()
+        onExpanded?.()
       })
       .catch((_) => {
         setExpand(false)
@@ -55,47 +85,33 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
     ) {
       toggleTreeNode()
     }
-    if (selected) {
+    if (currentSelectedNode?.id === searchNode.id) {
       return
     }
-    ctx.onSelectionChange()
-    setSelected(true)
-    ctx.subScribeSelectionChangeOnce(() => {
-      setSelected(false)
-    })
+    dispatch(setCurrentSelected(searchNode))
   }
 
   const attach = () => {
-    ctx.requireAttach(props.searchNode)
+    ctx.requireAttach(searchNode)
   }
 
-  useEffect(() => {
-    const id = ctx.subscribeSearchContentChange((content) => {
-      if (content.length === 0) {
-        setHighlight(false)
-      } else {
-        setHighlight(props.searchNode.name.includes(content))
-      }
-    })
-    return () => {
-      ctx.unsubscribeSearchContentChange(id)
-    }
-  }, [ctx, props.searchNode.name])
-
-  useEffect(() => {
-    if (props.isTourAttachTarget) {
-      ctx.onSelectionChange()
-      setSelected(true)
-      ctx.subScribeSelectionChangeOnce(() => {
-        setSelected(false)
-      })
-    }
-  }, [ctx, props.isTourAttachTarget])
+  const onBatchSelect0 = (b: boolean) => {
+    dispatch(
+      onBatchSelect({
+        node: searchNode,
+        select: b,
+      }),
+    )
+  }
 
   return (
-    <div className="w-full px-3" id={props.id}>
+    <div className="w-full px-3" id={id}>
       <div
-        className={`w-full rounded-xl ${highlight ? 'text-yellow-500' : ''} group box-border flex cursor-pointer items-center justify-between px-2 py-3.5 select-none ${selected ? 'bg-primary-100' : 'hover:bg-default-100'}`}
+        className={clsx(
+          'group box-border flex w-full cursor-pointer items-center justify-between rounded-xl px-2 py-3.5 select-none',
+          needsHighlight ? 'text-yellow-500' : '',
+          selected ? 'bg-primary-100' : 'hover:bg-default-100',
+        )}
         onDoubleClick={() => toggleTreeNode()}
         onClick={onclick}
       >
@@ -107,16 +123,17 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
           ) : (
             <SvgIcon icon={Icon.RIGHT} className={expand ? 'rotate-90' : ''} />
           )}
-          {props.searchNode.isJvm ? (
-            <SvgIcon
-              icon={Icon.COFFEE}
-              size={22}
-              id={props.isTourAttachTarget ? 'jvm-flag' : undefined}
-            />
+          {searchNode.isJvm ? (
+            <>
+              <Checkbox onValueChange={onBatchSelect0} className="ml-0.5" />
+              <SvgIcon
+                icon={Icon.COFFEE}
+                size={22}
+                id={isTourAttachTarget ? 'jvm-flag' : undefined}
+              />
+            </>
           ) : null}
-          <span className="mx-2 max-w-[90%] truncate">
-            {props.searchNode.name}
-          </span>
+          <span className="mx-2 max-w-[90%] truncate">{searchNode.name}</span>
         </div>
         <div className={`${selected ? '' : 'hidden group-hover:inline-flex'}`}>
           <Button isIconOnly size="sm" variant="light">
@@ -126,14 +143,14 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
             isIconOnly
             size="sm"
             variant="light"
-            className={props.searchNode.isJvm ? '' : 'hidden'}
+            className={searchNode.isJvm ? '' : 'hidden'}
             onPress={attach}
           >
             <SvgIcon
               icon={Icon.PLUG}
               size={22}
               className="text-primary"
-              id={props.isTourAttachTarget ? 'plug-flag' : undefined}
+              id={isTourAttachTarget ? 'plug-flag' : undefined}
             />
           </Button>
           <Button
@@ -155,7 +172,7 @@ const RuntimeNodeTree: React.FC<NodeProps> = (props) => {
                 }
                 key={node.id}
                 searchNode={node}
-                level={props.level + 1}
+                level={level + 1}
               />
             ))
           : null}

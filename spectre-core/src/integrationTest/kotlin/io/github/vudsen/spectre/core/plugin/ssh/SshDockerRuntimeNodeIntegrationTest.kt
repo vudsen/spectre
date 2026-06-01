@@ -2,7 +2,7 @@ package io.github.vudsen.spectre.core.plugin.ssh
 
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
 import io.github.vudsen.spectre.core.plugin.ssh.SshRuntimeNodeExtensionTest.Companion.MATH_GAME
-import io.github.vudsen.spectre.test.AbstractSpectreIntegrationTest
+import io.github.vudsen.spectre.test.BaseSpectreIntegrationTest
 import io.github.vudsen.spectre.test.GlobalDisposer
 import io.github.vudsen.spectre.test.TestConstant
 import org.junit.jupiter.api.Assertions
@@ -14,7 +14,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
 
-class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
+class SshDockerRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
     @ParameterizedTest
     @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testDockerAttach(mathGameTag: String) {
@@ -90,7 +90,7 @@ class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
             .responseBody!!
     }
 
-    override fun findJvmTreeNode(runtimeNodeId: String): JvmTreeNodeDTO {
+    override fun findJvmTreeNode(runtimeNodeId: String): List<JvmTreeNodeDTO> {
         val treeNode =
             client
                 .post()
@@ -120,6 +120,6 @@ class SshDockerRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                 .expectBodyList<JvmTreeNodeDTO>()
                 .returnResult()
                 .responseBody!!
-        return holder.find { node -> node.name.contains(TestConstant.DOCKER_IMAGE_MATH_GAME_PREFIX) }!!
+        return listOf(holder.find { node -> node.name.contains(TestConstant.DOCKER_IMAGE_MATH_GAME_PREFIX) }!!)
     }
 }

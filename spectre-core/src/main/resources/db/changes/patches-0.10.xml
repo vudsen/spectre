@@ -10,5 +10,24 @@
             <column name="paths" type="varchar(128)"/>
         </addColumn>
     </changeSet>
+    <changeSet id="202605211016" author="vudsen">
+        <delete tableName="arthas_instance">
+            <where>paths IS NULL</where>
+        </delete>
+    </changeSet>
+
+    <changeSet id="202605221009" author="vudsen">
+        <createTable tableName="channel">
+            <column name="id" type="java.sql.Types.VARCHAR(64)"/>
+            <column name="instance_ids" type="java.sql.Types.VARCHAR(1024)"/>
+            <column name="last_access" type="JAVA.SQL.TYPES.DATETIME"/>
+        </createTable>
+        <createIndex tableName="channel" unique="true" indexName="channel_instance_ids_idx">
+            <column name="instance_ids"/>
+        </createIndex>
+        <dropColumn tableName="arthas_instance" columnName="channel_id">
+            <column name="channel_id"/>
+        </dropColumn>
+    </changeSet>
 
 </databaseChangeLog>

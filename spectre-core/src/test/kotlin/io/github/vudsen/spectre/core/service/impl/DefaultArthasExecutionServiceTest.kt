@@ -87,7 +87,7 @@ class DefaultArthasExecutionServiceTest : AbstractSpectreTest() {
 
         arthasExecutionService.execAsync(defaultChannel, "watch demo.MathGame primeFactors \"{params[0],target}\" \"params[0]<0\"")
         arthasExecutionService.interruptCommand(defaultChannel)
-        arthasExecutionService.execAsync(defaultChannel, "ognl '#root.fake'")
+        arthasExecutionService.execSync(defaultChannel, "ognl '#root.fake'")
         arthasExecutionService.execAsync(defaultChannel, "watch demo.MathGame primeFactors \"{params,returnObj}\" -x 2 -b")
         arthasExecutionService.interruptCommand(defaultChannel)
     }

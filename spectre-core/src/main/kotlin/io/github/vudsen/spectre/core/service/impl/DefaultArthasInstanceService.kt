@@ -5,11 +5,12 @@ import io.github.vudsen.spectre.api.dto.UpdateArthasInstanceDTO
 import io.github.vudsen.spectre.api.exception.BusinessException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.api.service.ArthasInstanceService
-import io.github.vudsen.spectre.common.Jvm
 import io.github.vudsen.spectre.repo.ArthasInstanceRepository
 import io.github.vudsen.spectre.repo.po.ArthasInstancePO
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -58,17 +59,17 @@ open class DefaultArthasInstanceService(
 
     private val clientMap = ConcurrentHashMap<String, ClientHolder>()
 
-    private val updateInterval = 1000 * 60 * 10L
+    private val updateInterval = 1000 * 60 * 1L
 
     /**
      * 保存上次更新数据库时间
      */
     private val lastUpdateMap = WeakHashMap<String, Long>()
 
-    private fun buildId(
-        runtimeNodeId: Long,
-        jvm: Jvm,
-    ): String = "$runtimeNodeId:${jvm.hashCode()}"
+    override fun list(
+        page: Int,
+        size: Int,
+    ): Page<ArthasInstancePO> = arthasInstanceRepository.findAll(PageRequest.of(page, size))
 
     @Transactional(rollbackOn = [Exception::class])
     override fun save(
@@ -80,7 +81,6 @@ open class DefaultArthasInstanceService(
         arthasInstanceRepository.save(
             ArthasInstancePO(
                 id = instance.id,
-                channelId = instance.channelId,
                 endpointPassword = instance.endpointPassword,
                 boundPort = instance.boundPort,
                 sessionId = instance.sessionId,
@@ -127,7 +127,7 @@ open class DefaultArthasInstanceService(
         return instance
     }
 
-    override fun findInstanceByChannelId(id: String): ArthasInstancePO? = arthasInstanceRepository.findByChannelId(id)
+    override fun findInstanceByChannelId(id: String): ArthasInstancePO? = arthasInstanceRepository.findById(id).getOrNull()
 
     override fun resolveCachedClientByChannelId(channelId: String): Pair<ArthasHttpClient?, ArthasInstancePO>? {
         val arthasInstanceDTO = findInstanceByChannelId(channelId) ?: return null

@@ -80,6 +80,8 @@ interface RuntimeNodeService {
      */
     fun findPureRuntimeNodeById(runtimeNodeId: Long): RuntimeNodeDTO?
 
+    fun findByIds(ids: List<Long>): List<RuntimeNodeDTO>
+
     /**
      * 获取树节点
      */

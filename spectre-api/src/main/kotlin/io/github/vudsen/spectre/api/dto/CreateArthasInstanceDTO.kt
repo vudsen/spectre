@@ -5,7 +5,6 @@ import java.time.Instant
 
 data class CreateArthasInstanceDTO(
     val id: String,
-    val channelId: String,
     val endpointPassword: String,
     val boundPort: Int,
     val sessionId: String,

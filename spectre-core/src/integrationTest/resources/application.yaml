@@ -1,8 +1,14 @@
 spring:
+  profiles:
+    active: dev
   liquibase:
     change-log: classpath:/db/changelog-master.xml
   datasource:
-    url: jdbc:sqlite:identifier-integration-test.sqlite
+    url: jdbc:sqlite:identifier-integration-test.sqlite?busy_timeout=5000
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
+      connection-init-sql: PRAGMA journal_mode=WAL
   jpa:
     properties:
       hibernate:

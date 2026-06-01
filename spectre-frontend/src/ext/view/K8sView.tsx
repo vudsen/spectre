@@ -33,7 +33,7 @@ const K8sView: ViewComponent = (props) => {
                 value: data.name,
               },
               {
-                name: i18n.t('hardcoded.msg_ext_view_k8sview_003'),
+                name: i18n.t('common.type'),
                 value: 'Kubernetes',
               },
               {

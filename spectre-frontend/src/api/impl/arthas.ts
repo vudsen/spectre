@@ -2,12 +2,12 @@ import axios from 'axios'
 
 export type AttachStatus = {
   isReady: boolean
-  channelId?: string
+  treeNodeId?: string
   title?: string
   message?: string
   error?: {
     message: string
-    nextRetryTime: number
+    nextRetryTime: string
   }
 }
 
@@ -27,17 +27,12 @@ export const createChannel = (
   })
 }
 
-export type ChannelSessionDTO = {
-  consumerId: string
-  name: string
-}
-
 /**
  * @return Consumer ID
  */
 export const joinChannel = (
   channelId: string,
-): Promise<ChannelSessionDTO | undefined> => {
+): Promise<InstanceInfoVO[] | undefined> => {
   return axios.post(`arthas/channel/${channelId}/join`)
 }
 
@@ -52,9 +47,17 @@ export type PureArthasResponse = {
   jobId: number
 }
 
+export type BatchPullResultsResponse = Record<string, BatchPullResultVO>
+
+type BatchPullResultVO = {
+  isError: boolean
+  message?: string
+  data: PureArthasResponse[]
+}
+
 export const pullResults = async (
   channelId: string,
-): Promise<PureArthasResponse[]> =>
+): Promise<BatchPullResultsResponse> =>
   axios.get(`arthas/channel/${channelId}/pull-result`)
 
 export const executeArthasCommand = (channelId: string, command: string) => {
@@ -90,4 +93,30 @@ export const listProfilerFiles = (
   channelId: string,
 ): Promise<ProfilerFile[]> => {
   return axios.get(`arthas/channel/${channelId}/profiler-files`)
+}
+
+type ChannelCreateVO = {
+  runtimeNodeId: string
+  treeNodeId: string
+  bundleId: string
+}
+
+/**
+ * @return treeNodeId to status
+ */
+export const batchCreateInstances = (
+  vos: ChannelCreateVO[],
+): Promise<Record<string, AttachStatus>> =>
+  axios.post('arthas/batch/create-instances', vos)
+
+/**
+ * @return channelId
+ */
+export const createBatchChannel = (instanceIds: string[]): Promise<string> =>
+  axios.post('arthas/batch/create-channel', instanceIds)
+
+export type InstanceInfoVO = {
+  runtimeNodeName: string
+  jvmName: string
+  instanceId: string
 }

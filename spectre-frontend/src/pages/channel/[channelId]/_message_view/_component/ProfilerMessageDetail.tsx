@@ -15,11 +15,7 @@ const ProfilerMessageDetail: React.FC<
 > = ({ msg }) => {
   return (
     <div className="space-y-3">
-      <div>
-        {i18n.t(
-          'hardcoded.msg_pages_channel_param_message_view_component_profilermessagedetail_001',
-        )}
-      </div>
+      <div>{i18n.t('channel.executeResult')}</div>
       <Code>{msg.executeResult}</Code>
     </div>
   )

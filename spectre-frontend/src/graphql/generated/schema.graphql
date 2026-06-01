@@ -19,6 +19,21 @@ type AIQueries {
   config: LLMConfigurationVO!
 }
 
+type ArthasInstancePO {
+  id: String!
+  jvm: Jvm!
+  runtimeNodeId: String!
+}
+
+type ArthasInstancePOPage {
+  result: [ArthasInstancePO!]!
+  totalPages: Int!
+}
+
+type ArthasInstanceQueries {
+  list(page: Int!, size: Int!): ArthasInstancePOPage!
+}
+
 type BasePermissionEntity {
   action: String!
   name: String!
@@ -27,6 +42,11 @@ type BasePermissionEntity {
 
 """Dynamic JSON Type"""
 scalar JSON
+
+type Jvm {
+  id: String!
+  name: String!
+}
 
 type LLMConfigurationVO {
   baseUrl: String!
@@ -103,6 +123,7 @@ type PolicyPermissionQueries {
 
 type Query {
   ai: AIQueries!
+  arthasInstance: ArthasInstanceQueries!
   log: LogEntityQueries!
   permission: PolicyPermissionQueries!
   role: RoleQueries!
@@ -155,6 +176,7 @@ type RuntimeNodePluginVO {
 }
 
 type RuntimeNodeQueries {
+  byIds(ids: [String!]!): [RuntimeNodeDTO!]!
   plugin(pluginId: String!): RuntimeNodePluginVO
   plugins: [RuntimeNodePluginVO!]!
   runtimeNode(id: String!): RuntimeNodeDTO

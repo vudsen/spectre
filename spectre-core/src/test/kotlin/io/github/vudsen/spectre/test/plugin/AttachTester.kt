@@ -52,8 +52,8 @@ class AttachTester {
             }
 
         Assertions.assertTrue(status.isReady, "Attach timeout!")
-        Assertions.assertNotNull(status.channelId, "Attach timeout!")
-        val channelId = status.channelId!!
+        Assertions.assertNotNull(status.treeNodeId, "Attach timeout!")
+        val channelId = status.treeNodeId!!
         return channelId
     }
 

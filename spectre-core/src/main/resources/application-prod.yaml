@@ -1,6 +1,8 @@
 spring:
   datasource:
-    url: jdbc:sqlite:identifier.sqlite
+    url: jdbc:sqlite:identifier.sqlite?busy_timeout=3000
+    hikari:
+      connection-init-sql: PRAGMA busy_timeout = 5000;
   jpa:
     properties:
       hibernate:

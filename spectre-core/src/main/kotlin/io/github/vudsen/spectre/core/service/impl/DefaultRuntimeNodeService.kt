@@ -178,6 +178,8 @@ class DefaultRuntimeNodeService(
     override fun findPureRuntimeNodeById(runtimeNodeId: Long): RuntimeNodeDTO? =
         runtimeNodeRepository.findById(runtimeNodeId).getOrNull()?.toDTO()
 
+    override fun findByIds(ids: List<Long>): List<RuntimeNodeDTO> = runtimeNodeRepository.findAllById(ids).map { node -> node.toDTO() }
+
     override fun findTreeNode(id: String): JvmSearchNode<Any>? = cache[id]?.get() as JvmSearchNode<Any>?
 
     override fun deserializeToJvm(

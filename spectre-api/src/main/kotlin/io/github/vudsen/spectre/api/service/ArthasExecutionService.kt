@@ -6,6 +6,7 @@ import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ArrayNode
 
 /**
  * Arthas 执行服务
@@ -16,7 +17,6 @@ interface ArthasExecutionService {
     /**
      * 尝试 attach 到指定 jvm
      * @param runtimeNodeId 节点id
-     * @param ctx 由 JVM 树携带的节点上下文
      */
     fun requireAttach(
         runtimeNodeId: Long,
@@ -26,12 +26,12 @@ interface ArthasExecutionService {
 
     /**
      * 加入一个频道
-     * @param channelId 频道id
+     * @param instanceId 频道id
      * @param ownerIdentifier 会话凭据。对于每个凭据，在并发调用时应该只能创建一个 session
      * @return consumer id. 该 id 应该被缓存到用户的会话中
      */
     fun joinChannel(
-        channelId: String,
+        instanceId: String,
         ownerIdentifier: String,
     ): ArthasConsumerDTO
 
@@ -39,7 +39,7 @@ interface ArthasExecutionService {
      * 异步执行命令
      */
     fun execAsync(
-        channelId: String,
+        instanceId: String,
         command: String,
     )
 
@@ -47,7 +47,7 @@ interface ArthasExecutionService {
      * 同步执行命令
      */
     fun execSync(
-        channelId: String,
+        instanceId: String,
         command: String,
     ): JsonNode
 
@@ -57,27 +57,27 @@ interface ArthasExecutionService {
      */
     @Throws(ConsumerNotFountException::class)
     fun pullResults(
-        channelId: String,
+        instanceId: String,
         consumerId: String,
-    ): JsonNode
+    ): ArrayNode
 
     /**
      * 中断前台任务
      */
-    fun interruptCommand(channelId: String)
+    fun interruptCommand(instanceId: String)
 
     /**
      * 替换字节码. 该命令为同步命令
      */
     fun retransform(
-        channelId: String,
+        instanceId: String,
         source: BoundedInputStreamSource,
     ): JsonNode
 
     /**
      * 列出 profiler 文件
      */
-    fun listProfilerFiles(channelId: String): List<ProfilerFile>
+    fun listProfilerFiles(instanceId: String): List<ProfilerFile>
 
     /**
      * 读取 profiler 文件

@@ -1,0 +1,130 @@
+package io.github.vudsen.spectre.core.plugin.ssh
+
+import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
+import io.github.vudsen.spectre.test.BaseSpectreIntegrationTest
+import io.github.vudsen.spectre.test.GlobalDisposer
+import io.github.vudsen.spectre.test.TestConstant
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.test.web.reactive.server.expectBodyList
+import org.testcontainers.containers.GenericContainer
+import org.testcontainers.utility.DockerImageName
+
+class BatchSshLocalRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
+    companion object {
+        val mathGameNames = listOf("math-game-1", "math-game-2", "math-game-3")
+    }
+
+    //    @ValueSource(strings = ["java17"])
+    @ParameterizedTest
+    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
+    fun testDockerAttach(javaVersion: String) {
+        setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
+
+        val runtimeNodeId = setupSshDockerRuntimeNode(javaVersion)
+        val treeNodes = findJvmTreeNode(runtimeNodeId)
+        val channelId = prepareChannel(runtimeNodeId, treeNodes, javaVersion)
+
+        testChannel(channelId)
+    }
+
+    private fun setupSshDockerRuntimeNode(mathGameTag: String): String {
+        val container =
+            GenericContainer(DockerImageName.parse(TestConstant.DOCKER_IMAGE_SSHD_WITH_DOCKER)).apply {
+                withExposedPorts(22)
+                withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
+            }
+        container.start()
+
+        for (mathGameName in mathGameNames) {
+            val result =
+                container.execInContainer(
+                    "/usr/bin/docker",
+                    "run",
+                    "--name",
+                    mathGameName,
+                    "--rm",
+                    "-d",
+                    TestConstant.DOCKER_IMAGE_MATH_GAME_PREFIX + mathGameTag,
+                )
+            if (result.exitCode != 0) {
+                Assertions.fail<Unit>("Failed to start docker run command: $result")
+            }
+            GlobalDisposer.registerDispose {
+                container.execInContainer("/usr/bin/docker", "stop", mathGameName)
+            }
+        }
+        GlobalDisposer.registerDispose {
+            container.close()
+        }
+
+        return client
+            .post()
+            .uri("spectre-api/runtime-node/create")
+            .cookies(cookiesConsumer)
+            .bodyValue(
+                mutableMapOf(
+                    "name" to "test-batch",
+                    "pluginId" to SshRuntimeNodeExtension.ID,
+                    "configuration" to
+                        jsonMapper.writeValueAsString(
+                            SshRuntimeNodeConfig(
+                                SshRuntimeNodeConfig.Docker(true, "docker", null, null),
+                                null,
+                                container.host,
+                                container.firstMappedPort,
+                                "root",
+                                SshRuntimeNodeConfig.LoginPrincipal(
+                                    SshRuntimeNodeConfig.LoginType.PASSWORD,
+                                    "P@ssw0rd",
+                                    null,
+                                    null,
+                                ),
+                                "/opt/spectre",
+                            ),
+                        ),
+                    "restrictedMode" to true,
+                ),
+            ).exchange()
+            .expectStatus()
+            .isOk
+            .expectBody<String>()
+            .returnResult()
+            .responseBody!!
+    }
+
+    override fun findJvmTreeNode(runtimeNodeId: String): List<JvmTreeNodeDTO> {
+        val root =
+            client
+                .post()
+                .uri("spectre-api/runtime-node/expand-tree")
+                .cookies(cookiesConsumer)
+                .bodyValue(
+                    mutableMapOf(
+                        "runtimeNodeId" to runtimeNodeId,
+                    ),
+                ).exchange()
+                .expectBodyList<JvmTreeNodeDTO>()
+                .hasSize(1)
+                .returnResult()
+                .responseBody!!
+
+        val holder =
+            client
+                .post()
+                .uri("spectre-api/runtime-node/expand-tree")
+                .cookies(cookiesConsumer)
+                .bodyValue(
+                    mutableMapOf(
+                        "runtimeNodeId" to runtimeNodeId,
+                        "parentNodeId" to root[0].id,
+                    ),
+                ).exchange()
+                .expectBodyList<JvmTreeNodeDTO>()
+                .returnResult()
+                .responseBody!!
+        return holder.filter { node -> node.name.contains(TestConstant.DOCKER_IMAGE_MATH_GAME_PREFIX) }
+    }
+}

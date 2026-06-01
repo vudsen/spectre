@@ -1,7 +1,8 @@
 package io.github.vudsen.spectre.core.plugin.k8s
 
 import io.github.vudsen.spectre.api.dto.JvmTreeNodeDTO
-import io.github.vudsen.spectre.test.AbstractSpectreIntegrationTest
+import io.github.vudsen.spectre.test.BaseSpectreIntegrationTest
+import io.github.vudsen.spectre.test.GlobalDisposer
 import io.github.vudsen.spectre.test.TestConstant
 import io.github.vudsen.spectre.test.loop
 import org.junit.jupiter.api.Assertions
@@ -13,10 +14,10 @@ import org.testcontainers.images.builder.Transferable
 import org.testcontainers.k3s.K3sContainer
 import org.testcontainers.utility.DockerImageName
 
-class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
+class K8sRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
+//    @ValueSource(strings = ["java25"])
     @ParameterizedTest
-//    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
-    @ValueSource(strings = ["java8"])
+    @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testFullBusinessFlow(mathGameTag: String) {
         setupCookies(TestConstant.ADMIN_USER_USERNAME, TestConstant.ADMIN_USER_PASSWORD)
 
@@ -27,7 +28,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         testChannel(info)
     }
 
-    override fun findJvmTreeNode(runtimeNodeId: String): JvmTreeNodeDTO {
+    override fun findJvmTreeNode(runtimeNodeId: String): List<JvmTreeNodeDTO> {
         val treeNode =
             client
                 .post()
@@ -62,7 +63,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                 .hasSize(1)
                 .returnResult()
                 .responseBody!!
-        return holder[0]
+        return listOf(holder[0])
     }
 
     /**
@@ -72,6 +73,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         val k3s =
             K3sContainer(DockerImageName.parse("rancher/k3s:v1.31.0-k3s1"))
                 .withCommand("server", "--disable=traefik", "--disable=local-storage")
+                .withFileSystemBind("/var/run/docker.sock", "/var/run/docker.sock")
 
         k3s.start()
         K8sRuntimeNodeIntegrationTest::class.java.classLoader.getResourceAsStream("k8s-deploy-$mathGameTag.yaml").use { stream ->
@@ -87,6 +89,10 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
         val result = k3s.execInContainer("kubectl", "create", "token", "spectre", "-n", "spectre")
         Assertions.assertEquals(0, result.exitCode)
         val token = result.stdout
+
+        GlobalDisposer.registerDispose {
+            k3s.stop()
+        }
 
         loop(60) {
             val execInContainer =
@@ -115,7 +121,7 @@ class K8sRuntimeNodeIntegrationTest : AbstractSpectreIntegrationTest() {
                     "name" to "K8s",
                     "pluginId" to K8sRuntimeNodeExtension.ID,
                     "configuration" to
-                        objectMapper.writeValueAsString(
+                        jsonMapper.writeValueAsString(
                             K8sRuntimeNodeConfig(
                                 endpoint,
                                 token,

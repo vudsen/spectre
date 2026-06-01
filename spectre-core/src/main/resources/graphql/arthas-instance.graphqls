@@ -1,0 +1,20 @@
+
+type ArthasInstanceQueries {
+    list(page: Int!, size: Int!): ArthasInstancePOPage!
+}
+
+type Jvm {
+    id: String!
+    name: String!
+}
+
+type ArthasInstancePO {
+    id: String!
+    runtimeNodeId: String!
+    jvm: Jvm!
+}
+
+type ArthasInstancePOPage {
+    totalPages: Int!
+    result: [ArthasInstancePO!]!
+}

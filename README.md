@@ -72,8 +72,7 @@ Retransform allows you to upload class files directly through the web interface 
 ## Local Deployment
 
 Database Requirements:
-- SQLite
-- Postgresql
+- SQLite or PostgreSQL (Recommended)
 
 The initial username and password are: `admin`/`P@ssw0rd`
 
@@ -119,12 +118,19 @@ spring:
   profiles:
     active: prod
   datasource:
-    # Postgresql is available too, the driver has builtin
     url: jdbc:sqlite:data/identifier.sqlite
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.community.dialect.SQLiteDialect
+```
+
+It's recommend to use PostgreSQL in production:
+
+```yaml
+spring:
+  profiles:
+    active: pg
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mydatabase
+    username: postgres
+    password: password
 ```
 
 ## Usage Guide

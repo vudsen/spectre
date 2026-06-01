@@ -7,9 +7,11 @@ import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
 import io.github.vudsen.spectre.api.exception.SessionNotFoundException
 import io.github.vudsen.spectre.api.plugin.rnode.ArthasHttpClient
 import io.github.vudsen.spectre.common.util.SecureUtils
+import io.github.vudsen.spectre.repo.util.SnowFlake
 import org.slf4j.LoggerFactory
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.node.ArrayNode
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.Base64
@@ -160,19 +162,21 @@ open class ShellBasedArthasHttpClient(
     override fun readProfilerFile(filename: String): BoundedInputStreamSource? = runtimeNode.readFile("${getProfilerDirectory()}/$filename")
 
     override fun interruptJob(sessionId: String) {
-        sendRequest(
-            buildMap {
-                put("action", "interrupt_job")
-                put("sessionId", sessionId)
-            },
-            false,
-        )
+        val r =
+            sendRequest(
+                buildMap {
+                    put("action", "interrupt_job")
+                    put("sessionId", sessionId)
+                },
+                false,
+            )
+        println(r)
     }
 
     override fun pullResults(
         sessionId: String,
         consumerId: String,
-    ): JsonNode {
+    ): ArrayNode {
         val response =
             sendRequest(
                 buildMap {
@@ -182,7 +186,7 @@ open class ShellBasedArthasHttpClient(
                 },
                 false,
             )
-        return response.get("body").get("results")
+        return response.get("body").get("results").asArray()
     }
 
     override fun initSession(): ArthasSession {
@@ -235,7 +239,7 @@ open class ShellBasedArthasHttpClient(
     override fun getPort(): Int = URL(arthasHttpEndpoint).port
 
     override fun retransform(source: BoundedInputStreamSource): JsonNode {
-        val dest = "${runtimeNode.getHomePath()}/downloads/rt${System.currentTimeMillis()}.class"
+        val dest = "${runtimeNode.getHomePath()}/downloads/rt${SnowFlake.nextId()}.class"
         try {
             runtimeNode.upload(source, dest)
             return exec("retransform $dest")
