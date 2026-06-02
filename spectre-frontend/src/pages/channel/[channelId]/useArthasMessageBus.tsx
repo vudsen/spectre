@@ -24,6 +24,14 @@ interface Listener {
   afterExecute?: (command: string, fail: boolean) => void
 }
 
+type DisplayMessages = (channelId?: string) => void
+
+declare global {
+  interface Window {
+    displayMessages?: DisplayMessages
+  }
+}
+
 export type ArthasMessageBus = {
   addListener(listener: Listener): number
   removeListener(listenerId: number): void
@@ -54,6 +62,10 @@ const INPUT_STATUS = 'input_status'
 const MAX_BUS_MESSAGE_SIZE = 100
 const BUS_MESSAGE_THRESHOLD = 90
 
+function parseChannelIdFromPathname(pathname: string): string | undefined {
+  return /\/channel\/([^/]+)/.exec(pathname)?.[1]
+}
+
 const createArthasMessageBusInternal = async (
   channelId: string,
   dispatch: Dispatch,
@@ -71,6 +83,10 @@ const createArthasMessageBusInternal = async (
     taskDelay: 0,
     isFetching: false,
     isExcited: false,
+  }
+
+  if (import.meta.env.DEV) {
+    registerDisplayMessages()
   }
 
   async function initializeInstanceContext() {
@@ -297,10 +313,40 @@ const createArthasMessageBusInternal = async (
     }
   }
 
+  function registerDisplayMessages() {
+    const fallbackChannelId =
+      parseChannelIdFromPathname(window.location.pathname) ?? channelId
+
+    window.displayMessages = (requestedChannelId) => {
+      const resolvedChannelId =
+        requestedChannelId ??
+        parseChannelIdFromPathname(window.location.pathname) ??
+        fallbackChannelId
+
+      console.info('Exporting...')
+
+      if (!resolvedChannelId) {
+        console.warn('No data from the channelId')
+        return
+      }
+
+      db.listDisplayMessages(resolvedChannelId)
+        .then((groupedMessages) => {
+          console.log(groupedMessages)
+        })
+        .catch((error) => {
+          console.error('Failed to export', error)
+        })
+    }
+  }
+
   function close() {
     state.isExcited = true
     if (state.pullResultsTaskId) {
       clearTimeout(state.pullResultsTaskId)
+    }
+    if (import.meta.env.DEV) {
+      delete window.displayMessages
     }
     db.close()
   }

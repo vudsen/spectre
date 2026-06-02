@@ -135,7 +135,7 @@ class ArthasExecutionController(
                     channelId to arthasExecutionService.pullResults(channelId, channelSession.consumerId),
                 )
             } catch (_: ConsumerNotFountException) {
-                return mapOf(channelId to  recreateConsumerAndPull(request, channelId))
+                return mapOf(channelId to recreateConsumerAndPull(request, channelId))
             }
         } else {
             return buildMap {
