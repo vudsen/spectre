@@ -12,6 +12,6 @@
 
 ## 3. Validation
 
-- [ ] 3.1 Verify the helper logs per-instance persisted messages from the browser console in local development
+- [x] 3.1 Verify the helper logs per-instance persisted messages from the browser console in local development
 - [x] 3.2 Run `pnpm run lint` in `spectre-frontend`
 - [x] 3.3 Run `pnpm run check` in `spectre-frontend`
