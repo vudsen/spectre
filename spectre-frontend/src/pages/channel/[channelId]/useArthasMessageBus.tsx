@@ -18,8 +18,6 @@ import type { Dispatch } from '@reduxjs/toolkit'
 import setupDB, { type ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 import type { CommandMessage } from '@/pages/channel/[channelId]/_message_view/_component/CommandMessageDetail.tsx'
 import { aggregateCommandMessages } from '@/pages/channel/[channelId]/messageAggregation.ts'
-import { addToast } from '@heroui/react'
-import i18n from 'i18next'
 
 interface Listener {
   onMessage?: (messages: ArthasMessage[]) => void
@@ -206,17 +204,8 @@ const createArthasMessageBusInternal = async (
       })
     }
 
-    console.log(result)
     for (const [instanceId, responses] of Object.entries(result)) {
-      if (responses.isError) {
-        addToast({
-          title: i18n.t('common.error'),
-          description: responses.message ?? '<Unknown>',
-          color: 'danger',
-        })
-        continue
-      }
-      for (const response of responses.data!) {
+      for (const response of responses) {
         await appendMessage(instanceId, response)
       }
     }

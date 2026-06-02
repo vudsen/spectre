@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import i18n from '@/i18n'
-import { createChannel } from '@/api/impl/arthas.ts'
+import { createInstance } from '@/api/impl/arthas.ts'
 import ErrorCountdown from '@/pages/channel/ErrorCountdown.tsx'
 import { Spinner } from '@heroui/react'
 
@@ -42,7 +42,7 @@ const SingleChannelCreate: React.FC<SingleChannelCreateProps> = ({
         return
       }
       pollState.current.lastId = setTimeout(() => {
-        createChannel(runtimeNodeId, treeNodeId, bundleId!)
+        createInstance(runtimeNodeId, treeNodeId, bundleId!)
           .then((r) => {
             if (r.isReady) {
               nav(`/channel/${r.treeNodeId}`)

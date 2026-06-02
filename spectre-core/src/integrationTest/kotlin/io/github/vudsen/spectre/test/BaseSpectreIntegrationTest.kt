@@ -58,7 +58,7 @@ abstract class BaseSpectreIntegrationTest : AbstractSpectreIntegrationTest() {
                     val attachStatus =
                         client
                             .post()
-                            .uri("spectre-api/arthas/create-channel")
+                            .uri("spectre-api/arthas/create-instance")
                             .cookies(cookiesConsumer)
                             .bodyValue(
                                 mutableMapOf(

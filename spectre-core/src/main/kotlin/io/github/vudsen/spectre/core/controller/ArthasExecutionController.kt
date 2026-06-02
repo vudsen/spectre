@@ -12,7 +12,7 @@ import io.github.vudsen.spectre.api.vo.ChannelInfoVO
 import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.core.audit.Log
 import io.github.vudsen.spectre.core.util.MultipartFileAdapter
-import io.github.vudsen.spectre.core.vo.BatchPullResultVO
+import io.github.vudsen.spectre.core.vo.BatchExecResponseVO
 import io.github.vudsen.spectre.core.vo.CreateChannelRequestVO
 import io.github.vudsen.spectre.core.vo.ExecuteCommandRequestVO
 import io.github.vudsen.spectre.repo.po.ChannelPO
@@ -40,6 +40,10 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.util.UriUtils
 import tools.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.IntNode
+import tools.jackson.databind.node.JsonNodeFactory
+import tools.jackson.databind.node.ObjectNode
+import tools.jackson.databind.node.StringNode
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -73,8 +77,8 @@ class ArthasExecutionController(
     /**
      * @return Channel Id
      */
-    @PostMapping("create-channel")
-    fun createChannel(
+    @PostMapping("create-instance")
+    fun createInstance(
         @RequestBody @Validated vo: CreateChannelRequestVO,
     ): AttachStatus = arthasExecutionService.requireAttach(vo.runtimeNodeId, vo.treeNodeId, vo.bundleId)
 
@@ -119,7 +123,7 @@ class ArthasExecutionController(
     fun pullResults(
         @PathVariable channelId: String,
         request: HttpServletRequest,
-    ): Map<String, BatchPullResultVO> {
+    ): Map<String, ArrayNode> {
         val channel =
             channelId.toLongOrNull()?.let {
                 channelService.findById(it)
@@ -128,10 +132,10 @@ class ArthasExecutionController(
             try {
                 val channelSession = resolveChannelSession(request, channelId)
                 return mapOf(
-                    channelId to BatchPullResultVO(false, null, arthasExecutionService.pullResults(channelId, channelSession.consumerId)),
+                    channelId to arthasExecutionService.pullResults(channelId, channelSession.consumerId),
                 )
             } catch (_: ConsumerNotFountException) {
-                return mapOf(channelId to BatchPullResultVO(false, null, recreateConsumerAndPull(request, channelId)))
+                return mapOf(channelId to  recreateConsumerAndPull(request, channelId))
             }
         } else {
             return buildMap {
@@ -145,33 +149,45 @@ class ArthasExecutionController(
                                 val channelSession = resolveChannelSession(request, instanceId)
                                 put(
                                     instanceId,
-                                    BatchPullResultVO(
-                                        false,
-                                        null,
-                                        arthasExecutionService.pullResults(instanceId, channelSession.consumerId),
-                                    ),
+                                    arthasExecutionService.pullResults(instanceId, channelSession.consumerId),
                                 )
                             } catch (_: ConsumerNotFountException) {
-                                put(instanceId, BatchPullResultVO(false, null, recreateConsumerAndPull(request, instanceId)))
+                                put(instanceId, recreateConsumerAndPull(request, instanceId))
                             } finally {
                                 latch.countDown()
                                 SecurityContextHolder.clearContext()
                             }
                         } catch (e: Exception) {
-                            val errorMessage =
-                                if (e is BusinessException) {
-                                    e.toI18nMessage()
-                                } else {
-                                    logger.error("", e)
-                                    "Internal Server Error"
-                                }
-                            put(instanceId, BatchPullResultVO(true, errorMessage, null))
+                            val errorMessage = exactErrorMsg(e)
+                            val node = ArrayNode(JsonNodeFactory.instance)
+                            node.add(createErrorMsg(errorMessage))
+                            put(instanceId, node)
                         }
                     }
                 }
                 latch.await(3, TimeUnit.SECONDS)
             }
         }
+    }
+
+    private fun exactErrorMsg(e: Exception): String {
+        val errorMessage =
+            if (e is BusinessException) {
+                e.toI18nMessage()
+            } else {
+                logger.error("", e)
+                "Internal Server Error"
+            }
+        return errorMessage
+    }
+
+    private fun createErrorMsg(msg: String): ObjectNode {
+        val node = ObjectNode(JsonNodeFactory.instance)
+        node["type"] = StringNode("status")
+        node["statusCode"] = IntNode(-1)
+        node["jobId"] = IntNode(System.currentTimeMillis().toInt())
+        node["message"] = StringNode(msg)
+        return node
     }
 
     private fun recreateConsumerAndPull(
@@ -222,7 +238,7 @@ class ArthasExecutionController(
         @PathVariable channelId: String,
         @Validated @RequestBody vo: ExecuteCommandRequestVO,
         request: HttpServletRequest,
-    ) {
+    ): Map<String, BatchExecResponseVO> {
         val channel =
             channelId.toLongOrNull()?.let {
                 channelService.findById(it)
@@ -231,10 +247,19 @@ class ArthasExecutionController(
             // ensure connected.
             resolveChannelSession(request, channelId)
             arthasExecutionService.execAsync(channelId, vo.command)
+            return mapOf(channelId to BatchExecResponseVO(true))
         } else {
-            for (instanceId in channel.instanceIds) {
-                resolveChannelSession(request, instanceId)
-                arthasExecutionService.execAsync(instanceId, vo.command)
+            return buildMap {
+                for (instanceId in channel.instanceIds) {
+                    resolveChannelSession(request, instanceId)
+                    try {
+                        arthasExecutionService.execAsync(instanceId, vo.command)
+                        put(instanceId, BatchExecResponseVO(true))
+                    } catch (e: Exception) {
+                        val msg = exactErrorMsg(e)
+                        put(instanceId, BatchExecResponseVO(false, msg))
+                    }
+                }
             }
         }
     }

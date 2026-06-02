@@ -15,12 +15,12 @@ export type AttachStatus = {
  * 创建频道
  * @return channel id
  */
-export const createChannel = (
+export const createInstance = (
   runtimeNodeId: string,
   treeNodeId: string,
   bundleId: string,
 ): Promise<AttachStatus> => {
-  return axios.post('arthas/create-channel', {
+  return axios.post('arthas/create-instance', {
     bundleId,
     treeNodeId,
     runtimeNodeId,
@@ -47,13 +47,7 @@ export type PureArthasResponse = {
   jobId: number
 }
 
-export type BatchPullResultsResponse = Record<string, BatchPullResultVO>
-
-type BatchPullResultVO = {
-  isError: boolean
-  message?: string
-  data: PureArthasResponse[]
-}
+export type BatchPullResultsResponse = Record<string, PureArthasResponse[]>
 
 export const pullResults = async (
   channelId: string,
