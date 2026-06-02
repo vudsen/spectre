@@ -52,7 +52,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
-    implementation("org.liquibase:liquibase-core:5.0.2")
+    implementation("org.liquibase:liquibase-core:5.0.3")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation(project(":spectre-repo"))
     implementation(project(":spectre-api"))
