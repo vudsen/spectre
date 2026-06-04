@@ -16,7 +16,7 @@ const BatchArthasResponseDetailTab0: React.FC<{
   groupIndex: number
 }> = ({ groupIndex }) => {
   const messages = useSelector<RootState, AggregatedCommandGroup[]>(
-    (state) => state.channel.context.messages,
+    (state) => state.channel.context.groupedMessages,
   )
   const group = messages[groupIndex]
   const [targetViewMessage, setTargetViewMessage] = useState<ArthasMessage>()

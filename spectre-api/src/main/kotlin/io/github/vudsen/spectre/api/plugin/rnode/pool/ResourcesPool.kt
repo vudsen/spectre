@@ -8,13 +8,14 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedTransferQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 class ResourcesPool(
     private val factory: RuntimeNodeFactory,
 ) : Closeable {
     companion object {
         private val logger = LoggerFactory.getLogger(ResourcesPool::class.java)
-        private const val QUEUE_SIZE = 3
+        private const val QUEUE_SIZE = 5
     }
 
     private val pool: BlockingQueue<CloseableRuntimeNode> = LinkedTransferQueue()
@@ -25,10 +26,7 @@ class ResourcesPool(
     private val modifyLock = ReentrantLock()
 
     private fun waitForResource(): CloseableRuntimeNode {
-        val res = pool.poll(3, TimeUnit.SECONDS)
-        if (res == null) {
-            throw BusinessException("error.system.busy")
-        }
+        val res = pool.poll(3, TimeUnit.SECONDS) ?: throw BusinessException("error.system.busy")
         return res
     }
 
@@ -57,16 +55,22 @@ class ResourcesPool(
     }
 
     fun borrow(): CloseableRuntimeNode {
-        val res = pool.poll()
-        if (res == null) {
-            if (count < QUEUE_SIZE) {
-                return tryCreateResource()
-            }
-        }
+        val res = pool.poll() ?: tryCreateResource()
         if (res.isAlive()) {
             return res
         }
+        cleanDeadConnection(res)
         return tryCreateResource()
+    }
+
+    private fun cleanDeadConnection(dead: CloseableRuntimeNode) {
+        modifyLock.withLock {
+            count--
+            try {
+                dead.close()
+            } catch (_: Exception) {
+            }
+        }
     }
 
     fun retrieve(node: CloseableRuntimeNode) {

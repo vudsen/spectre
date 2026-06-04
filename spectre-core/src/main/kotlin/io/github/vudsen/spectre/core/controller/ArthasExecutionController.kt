@@ -46,7 +46,6 @@ import tools.jackson.databind.node.ObjectNode
 import tools.jackson.databind.node.StringNode
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 /**
  * Arthas 交互接口.
@@ -138,35 +137,33 @@ class ArthasExecutionController(
                 return mapOf(channelId to recreateConsumerAndPull(request, channelId))
             }
         } else {
-            return buildMap {
-                val latch = CountDownLatch(channel.instanceIds.size)
-                for (instanceId in channel.instanceIds) {
-                    val ctx = SecurityContextHolder.getContext()
-                    executor.execute {
-                        SecurityContextHolder.setContext(ctx)
+            val result = mutableMapOf<String, ArrayNode>()
+            val latch = CountDownLatch(channel.instanceIds.size)
+            for (instanceId in channel.instanceIds) {
+                val ctx = SecurityContextHolder.getContext()
+                executor.execute {
+                    SecurityContextHolder.setContext(ctx)
+                    try {
                         try {
-                            try {
-                                val channelSession = resolveChannelSession(request, instanceId)
-                                put(
-                                    instanceId,
-                                    arthasExecutionService.pullResults(instanceId, channelSession.consumerId),
-                                )
-                            } catch (_: ConsumerNotFountException) {
-                                put(instanceId, recreateConsumerAndPull(request, instanceId))
-                            } finally {
-                                latch.countDown()
-                                SecurityContextHolder.clearContext()
-                            }
-                        } catch (e: Exception) {
-                            val errorMessage = exactErrorMsg(e)
-                            val node = ArrayNode(JsonNodeFactory.instance)
-                            node.add(createErrorMsg(errorMessage))
-                            put(instanceId, node)
+                            val channelSession = resolveChannelSession(request, instanceId)
+                            result[instanceId] = arthasExecutionService.pullResults(instanceId, channelSession.consumerId)
+                        } catch (_: ConsumerNotFountException) {
+                            result[instanceId] = recreateConsumerAndPull(request, instanceId)
+                        } finally {
+                            latch.countDown()
+                            SecurityContextHolder.clearContext()
                         }
+                    } catch (e: Exception) {
+                        val errorMessage = exactErrorMsg(e)
+                        val node = ArrayNode(JsonNodeFactory.instance)
+                        node.add(createErrorMsg(errorMessage))
+                        result[instanceId] = node
                     }
                 }
-                latch.await(3, TimeUnit.SECONDS)
             }
+            // TODO 添加超时并且将消息缓存到服务里
+            latch.await()
+            return result
         }
     }
 
@@ -183,9 +180,8 @@ class ArthasExecutionController(
 
     private fun createErrorMsg(msg: String): ObjectNode {
         val node = ObjectNode(JsonNodeFactory.instance)
-        node["type"] = StringNode("status")
-        node["statusCode"] = IntNode(-1)
-        node["jobId"] = IntNode(System.currentTimeMillis().toInt())
+        node["type"] = StringNode("message")
+        node["jobId"] = IntNode((System.currentTimeMillis() / 1000).toInt())
         node["message"] = StringNode(msg)
         return node
     }

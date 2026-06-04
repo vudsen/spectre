@@ -3,7 +3,7 @@ import { Code } from '@heroui/react'
 import type { DetailComponentProps } from '../factory.ts'
 import i18n from '@/i18n'
 
-type MessageResponse = {
+export type MessageResponse = {
   type: 'message'
   jobId: number
   message: string

@@ -32,7 +32,11 @@ const IGNORED_TYPES = new Set(['input_status', 'command'])
 function buildArray0(bus: ArthasMessageBus) {
   const channelSlice = store.getState().channel
   const isDebugMode = channelSlice.context.isDebugMode
-  return buildArray(bus.messages, undefined, isDebugMode)
+  return buildArray(
+    bus.messages[Object.keys(channelSlice.context.instances)[0]],
+    undefined,
+    isDebugMode,
+  )
 }
 
 function buildArray(
@@ -193,7 +197,13 @@ const ArthasResponseListTab: React.FC<ArthasResponseListProps> = (props) => {
         break
       case DELETE:
         await context.messageBus.deleteMessage(item.entity)
-        setFilteredResponse(buildArray(context.messageBus.messages))
+        setFilteredResponse(
+          buildArray(
+            context.messageBus.messages[
+              Object.keys(store.getState().channel.context.instances)[0]
+            ],
+          ),
+        )
         break
       case OPEN_IN_NEW_TAB:
         context

@@ -13,7 +13,7 @@ const BatchArthasResponseListTab: React.FC<BatchArthasResponseListTabProps> = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const messages = useSelector<RootState, AggregatedCommandGroup[]>(
-    (state) => state.channel.context.messages,
+    (state) => state.channel.context.groupedMessages,
   )
 
   const onSelect0 = (index: number) => {
