@@ -35,14 +35,6 @@ function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
     return []
   }
   let lastJobId = messages[0].value.jobId
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i]
-    const arthasResponse = msg.value
-    if (arthasResponse.type !== 'input_status') {
-      lastJobId = arthasResponse.jobId
-      break
-    }
-  }
   const result: MessageSegment[] = []
   const part: ArthasMessage[] = []
   let lastStart = 0
@@ -51,6 +43,21 @@ function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i]
     const arthasResponse = msg.value
+
+    if (arthasResponse.jobId !== lastJobId) {
+      result.push({
+        message: [...part],
+        jobId: lastJobId,
+        name: currentName,
+        isEnded: ended,
+        key: findKey(part),
+      })
+      lastJobId = arthasResponse.jobId
+      lastStart = i
+      currentName = UNKNOWN
+      ended = false
+      part.splice(0, part.length)
+    }
     part.push(msg)
 
     if (msg.value.type === 'command') {
@@ -62,23 +69,8 @@ function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
       ended = true
       if (currentName === UNKNOWN) {
         currentName =
-          status.message ?? 'Server failed with code: ' + status.statusCode
+          msg.context.command ?? status.message ?? 'Unknown Command Context'
       }
-    }
-
-    if (arthasResponse.jobId !== lastJobId) {
-      result.push({
-        message: part,
-        jobId: lastJobId,
-        name: currentName,
-        isEnded: ended,
-        key: findKey(part),
-      })
-      lastJobId = arthasResponse.jobId
-      lastStart = i
-      currentName = UNKNOWN
-      ended = false
-      part.splice(0, part.length)
     }
   }
   if (lastStart < messages.length - 1) {
@@ -107,60 +99,61 @@ function tryAppendExistGroup(
     if (cur < 0) {
       break
     }
-    while (true) {
-      let group = headGroups[cur]
-      let isCloned = false
-      let misMatchCount = 0
-      for (const instanceId of instances) {
-        const segments = segmentsMap[instanceId]
-        if (segments.length === 0) {
-          misMatchCount++
-          continue
-        }
-        const segment = segments[0]
-        if (segment.key !== group.key || segment.message.length === 0) {
-          misMatchCount++
-          continue
-        }
-        let cloned: AggregatedCommandGroup
-        if (isCloned) {
-          cloned = group
-        } else {
-          cloned = deepClone(group)
-          group = cloned
-          isCloned = true
-        }
+    let group = headGroups[cur]
+    let isCloned = false
+    for (const instanceId of instances) {
+      const segments = segmentsMap[instanceId]
+      if (segments.length === 0) {
+        continue
+      }
+      const segment = segments[0]
+      if (segment.key !== group.key || segment.message.length === 0) {
+        continue
+      }
+      const temp = group.instances[instanceId]
+      if (
+        temp &&
+        temp.length > 0 &&
+        segment.jobId !== temp[temp.length - 1].value.jobId
+      ) {
+        continue
+      }
 
-        const currentMessages = cloned.instances[instanceId]
-        if (!currentMessages || currentMessages.length === 0) {
+      let cloned: AggregatedCommandGroup
+      if (isCloned) {
+        cloned = group
+      } else {
+        cloned = deepClone(group)
+        group = cloned
+        isCloned = true
+      }
+
+      const currentMessages = cloned.instances[instanceId]
+      if (!currentMessages || currentMessages.length === 0) {
+        cloned.instances[instanceId] = segment.message
+      } else {
+        const tailJobId = segment.jobId
+        let j = currentMessages.length - 1
+        for (; j >= 0; j--) {
+          if (currentMessages[j].value.jobId != tailJobId) {
+            break
+          }
+        }
+        if (j < 0) {
+          // same part
           cloned.instances[instanceId] = segment.message
         } else {
-          const tailJobId = segment.jobId
-          let j = currentMessages.length - 1
-          for (; j >= 0; j--) {
-            if (currentMessages[j].value.jobId != tailJobId) {
-              break
-            }
-          }
-          if (j < 0) {
-            // same part
-            cloned.instances[instanceId] = segment.message
-          } else {
-            cloned.instances[instanceId] = [
-              ...currentMessages.slice(0, j + 1),
-              ...segment.message,
-            ]
-          }
-        }
-
-        headGroups[cur] = cloned
-        segments.splice(0, 1)
-        if (segment.isEnded) {
-          pendingCombined[instanceId].splice(0, segment.message.length)
+          cloned.instances[instanceId] = [
+            ...currentMessages.slice(0, j + 1),
+            ...segment.message,
+          ]
         }
       }
-      if (misMatchCount === instances.length) {
-        break
+
+      headGroups[cur] = cloned
+      segments.splice(0, 1)
+      if (segment.isEnded) {
+        pendingCombined[instanceId].splice(0, segment.message.length)
       }
     }
   }

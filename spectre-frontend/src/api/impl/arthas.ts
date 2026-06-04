@@ -54,7 +54,15 @@ export const pullResults = async (
 ): Promise<BatchPullResultsResponse> =>
   axios.get(`arthas/channel/${channelId}/pull-result`)
 
-export const executeArthasCommand = (channelId: string, command: string) => {
+type BatchExecResponseVO = {
+  success: boolean
+  message?: string
+}
+
+export const executeArthasCommand = (
+  channelId: string,
+  command: string,
+): Promise<Record<string, BatchExecResponseVO>> => {
   return axios.post(`arthas/channel/${channelId}/execute`, {
     command,
   })

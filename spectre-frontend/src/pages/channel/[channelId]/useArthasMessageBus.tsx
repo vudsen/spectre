@@ -17,6 +17,8 @@ import { store } from '@/store'
 import setupDB, { type ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 import type { CommandMessage } from '@/pages/channel/[channelId]/_message_view/_component/CommandMessageDetail.tsx'
 import { createMessageAggregator } from '@/pages/channel/[channelId]/messageAggregation.ts'
+import { showDialog } from '@/common/util.ts'
+import i18n from '@/i18n'
 
 interface Listener {
   onMessage?: (messages: ArthasMessage[]) => void
@@ -284,8 +286,35 @@ const createArthasMessageBusInternal = async (
 
     let fail = true
     try {
-      await executeArthasCommand(currentChannelId, finalCommand)
-      pullNow()
+      const result = await executeArthasCommand(currentChannelId, finalCommand)
+      const instanceMap = store.getState().channel.context.instances
+      const failMsgArr: string[] = []
+      let totalLen = 0
+      for (const [instanceId, exec] of Object.entries(result)) {
+        totalLen++
+        if (exec.success) {
+          continue
+        }
+        failMsgArr.push(instanceMap[instanceId].jvmName + ': ' + exec.message)
+      }
+      if (failMsgArr.length > 0) {
+        showDialog({
+          title: `${i18n.t('channel.batchExecFail')} (${totalLen - failMsgArr.length}/${totalLen})`,
+          message: (
+            <div className="flex flex-col">
+              <div>{i18n.t('channel.batchExecDesc')}</div>
+              {failMsgArr.map((msg, index) => (
+                <div key={index}>- {msg}</div>
+              ))}
+            </div>
+          ),
+          color: 'danger',
+          hideCancel: true,
+        })
+      }
+      if (failMsgArr.length !== totalLen) {
+        pullNow()
+      }
       fail = false
     } finally {
       for (const entry of listenerMap.entries()) {
@@ -339,7 +368,11 @@ const createArthasMessageBusInternal = async (
   }
 
   async function clearAllMessage() {
-    await db.deleteAllMessage(channelId)
+    await Promise.all(
+      Object.keys(messages).map((instanceId) =>
+        db.deleteAllMessage(instanceId),
+      ),
+    )
     for (const key of Object.keys(messages)) {
       messages[key] = []
     }
