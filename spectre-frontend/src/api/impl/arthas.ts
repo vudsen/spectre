@@ -54,6 +54,46 @@ export const pullResults = async (
 ): Promise<BatchPullResultsResponse> =>
   axios.get(`arthas/channel/${channelId}/pull-result`)
 
+export type ArthasPullResultsRequest = {
+  type: 'pull_results'
+  requestId: string
+  instanceIds?: string[]
+}
+
+export type ArthasPullResultEvent = {
+  type: 'pull_result'
+  requestId: string
+  instanceId: string
+  messages: PureArthasResponse[]
+}
+
+export type ArthasPullErrorEvent = {
+  type: 'pull_error'
+  requestId: string
+  instanceId: string
+  message: string
+}
+
+export type ArthasPullCompleteEvent = {
+  type: 'pull_complete'
+  requestId: string
+  instanceId: string
+  deliveredCount: number
+}
+
+export type ArthasResultWebSocketEvent =
+  | ArthasPullResultEvent
+  | ArthasPullErrorEvent
+  | ArthasPullCompleteEvent
+
+export const createArthasResultWebSocket = (channelId: string): WebSocket => {
+  const basePath = String(import.meta.env.VITE_API_BASE_PATH || '')
+  const url = new URL(`${basePath}/arthas/channel/results-ws`, location.origin)
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  url.searchParams.set('channelId', channelId)
+  return new WebSocket(url)
+}
+
 type BatchExecResponseVO = {
   success: boolean
   message?: string
