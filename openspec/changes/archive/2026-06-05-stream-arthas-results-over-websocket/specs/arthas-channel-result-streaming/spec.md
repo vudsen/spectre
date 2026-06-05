@@ -17,35 +17,34 @@ The system SHALL deliver Arthas pull results to the websocket client per instanc
 - **AND** the backend MUST continue waiting only for the remaining instances instead of delaying the completed instance's delivery
 
 ### Requirement: Empty Arthas payloads are not sent as result messages
-The system SHALL suppress websocket result payload messages for pulls that return no Arthas responses, while still signaling that the accepted instance pull has finished.
+The system SHALL suppress websocket result payload messages for pulls that return no Arthas responses.
 
 #### Scenario: Pull returns no Arthas messages
 - **WHEN** an accepted instance pull completes with an empty Arthas result list
 - **THEN** the backend MUST NOT send a websocket result payload containing an empty array for that instance
-- **AND** the backend MUST send a lightweight completion signal so the client can treat that instance as idle again
 
 ### Requirement: Pull debounce is enforced per client and per instance
-The system SHALL prevent one websocket client from running overlapping `pull_results` work for the same channel instance, and it MUST allow later requests to start pulls for other idle instances in the same channel.
+The system SHALL prevent one websocket client from running overlapping `pull_results` work for the same channel instance, and it MUST allow later requests to start pulls for other idle instances in the same channel using only server-side in-flight tracking.
 
 #### Scenario: Duplicate request targets a busy instance
-- **WHEN** a websocket client sends `pull_results` for a channel instance that already has an in-flight pull started by the same websocket client
+- **WHEN** a websocket client sends `pull_results` while a channel instance already has an in-flight pull started by the same websocket client
 - **THEN** the backend MUST NOT start a second concurrent pull for that same instance
 - **AND** the backend MUST keep the original in-flight pull running normally
 
-#### Scenario: Later request includes both busy and idle instances
-- **WHEN** a websocket client sends another `pull_results` request while some instances are still in flight and other instances are idle
-- **THEN** the backend MUST start new pull work only for the idle instances included in the request
+#### Scenario: Later request re-pulls the same channel
+- **WHEN** a websocket client sends another `pull_results` request for the same channel while some instances are still in flight and other instances are idle
+- **THEN** the backend MUST start new pull work only for the idle instances in that channel
 - **AND** the backend MUST leave the busy instances debounced until their current pulls complete
 
 ### Requirement: Frontend message bus persists streamed instance messages
-The channel-page Arthas message bus SHALL consume websocket result events, persist received `PureArthasResponse` items through the existing IndexedDB pipeline, and continue updating grouped messages and input status per instance.
+The channel-page Arthas message bus SHALL consume websocket result events, persist received `PureArthasResponse` items through the existing IndexedDB pipeline, and continue updating grouped messages and input status per instance without maintaining client-side instance busy state.
 
 #### Scenario: Streamed result is received for one instance
 - **WHEN** the websocket client receives a non-empty Arthas result event for an instance
 - **THEN** the frontend MUST persist the contained `PureArthasResponse` items using the existing channel message storage flow
 - **AND** the frontend MUST update the aggregated channel message state and listeners as it does for persisted polling results today
 
-#### Scenario: Instance pull completes with no result payload
-- **WHEN** the websocket client receives only the completion signal for an instance and no result payload was sent
-- **THEN** the frontend MUST mark that instance as available for later `pull_results` requests
+#### Scenario: Frontend re-pulls without client-side idle tracking
+- **WHEN** the frontend sends repeated `pull_results` requests for the same channel
+- **THEN** the frontend MUST rely on backend-side debounce instead of tracking per-instance in-flight state locally
 - **AND** the frontend MUST NOT create synthetic empty Arthas messages in storage or UI state
