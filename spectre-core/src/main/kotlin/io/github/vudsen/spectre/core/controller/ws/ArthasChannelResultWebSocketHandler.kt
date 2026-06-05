@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpSession
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.task.TaskExecutor
-import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.CloseStatus
@@ -43,14 +43,13 @@ class ArthasChannelResultWebSocketHandler(
         val channelId = session.attributes[ArthasResultWebSocketHandshakeInterceptor.CHANNEL_ID_ATTR] as? String ?: return
         val httpSession = session.attributes[ArthasResultWebSocketHandshakeInterceptor.HTTP_SESSION_ATTR] as? HttpSession ?: return
         val allInstanceIds = arthasPullResultCoordinator.resolveTargetInstanceIds(channelId)
-        val requestedInstanceIds = payload.instanceIds?.ifEmpty { null } ?: allInstanceIds
-        val acceptedInstanceIds = requestedInstanceIds.filter { it in allInstanceIds && acquireInFlight(session, it) }
-        val context = SecurityContextHolder.getContext()
+        val acceptedInstanceIds = allInstanceIds.filter { acquireInFlight(session, it) }
+        val context = session.attributes[ArthasResultWebSocketHandshakeInterceptor.SECURITY_CONTEXT] as SecurityContext
         for (instanceId in acceptedInstanceIds) {
             executor.execute {
                 SecurityContextHolder.setContext(context)
                 try {
-                    handlePullRequest(session, httpSession, payload.requestId, instanceId)
+                    handlePullRequest(session, httpSession, instanceId)
                 } finally {
                     SecurityContextHolder.clearContext()
                 }
@@ -76,36 +75,19 @@ class ArthasChannelResultWebSocketHandler(
     private fun handlePullRequest(
         session: WebSocketSession,
         httpSession: HttpSession,
-        requestId: String,
         instanceId: String,
     ) {
-        var deliveredCount = 0
         try {
             val messages = arthasPullResultCoordinator.pullResults(httpSession, instanceId)
-            deliveredCount = messages.size()
-            if (deliveredCount > 0) {
-                sendJson(session, PullResultWebSocketEvent(requestId = requestId, instanceId = instanceId, messages = messages))
+            if (messages.isEmpty) {
+                return
             }
+            sendJson(session, PullResultWebSocketEvent(instanceId = instanceId, messages = messages))
         } catch (e: Exception) {
-            deliveredCount = 0
-            sendJson(
-                session,
-                PullErrorWebSocketEvent(
-                    requestId = requestId,
-                    instanceId = instanceId,
-                    message = arthasPullResultCoordinator.exactErrorMsg(e),
-                ),
-            )
+            val messages = arthasPullResultCoordinator.errorResult(e)
+            sendJson(session, PullResultWebSocketEvent(instanceId = instanceId, messages = messages))
         } finally {
             releaseInFlight(session, instanceId)
-            sendJson(
-                session,
-                PullCompleteWebSocketEvent(
-                    requestId = requestId,
-                    instanceId = instanceId,
-                    deliveredCount = deliveredCount,
-                ),
-            )
         }
     }
 
@@ -150,31 +132,8 @@ class ArthasChannelResultWebSocketHandler(
 
     private fun parsePullRequest(payload: String): PullResultsWebSocketRequest {
         val node = GLOBAL_JSON_MAPPER.readTree(payload)
-        val instanceIds =
-            node
-                .path("instanceIds")
-                .takeIf { it.isArray }
-                ?.mapNotNull { child ->
-                    child.stringValue()
-                }
         return PullResultsWebSocketRequest(
             type = node.path("type").stringValue() ?: "",
-            requestId = node.path("requestId").stringValue() ?: "",
-            instanceIds = instanceIds,
         )
-    }
-
-    private fun withAuthentication(
-        authentication: Authentication,
-        action: () -> Unit,
-    ) {
-        val context = SecurityContextHolder.createEmptyContext()
-        context.authentication = authentication
-        SecurityContextHolder.setContext(context)
-        try {
-            action()
-        } finally {
-            SecurityContextHolder.clearContext()
-        }
     }
 }

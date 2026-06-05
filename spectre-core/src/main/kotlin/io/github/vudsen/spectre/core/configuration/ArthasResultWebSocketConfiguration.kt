@@ -15,7 +15,7 @@ class ArthasResultWebSocketConfiguration(
 ) : WebSocketConfigurer {
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
         registry
-            .addHandler(arthasChannelResultWebSocketHandler, "/arthas/channel/results-ws")
+            .addHandler(arthasChannelResultWebSocketHandler, "/spectre-api/arthas/channel/results-ws")
             .addInterceptors(arthasResultWebSocketHandshakeInterceptor)
             .setAllowedOriginPatterns("*")
     }

@@ -1,7 +1,5 @@
 import {
   createArthasResultWebSocket,
-  type ArthasPullCompleteEvent,
-  type ArthasPullErrorEvent,
   type ArthasPullResultEvent,
   type ArthasPullResultsRequest,
   type ArthasResultWebSocketEvent,
@@ -49,11 +47,6 @@ export type ArthasMessageBus = {
 
 let globalId = Date.now()
 
-type PullRequestState = {
-  pendingInstanceIds: Set<string>
-  hasMessages: boolean
-}
-
 type PollState = {
   taskDelay: number
   isExcited: boolean
@@ -61,9 +54,6 @@ type PollState = {
   reconnectTaskId?: number
   websocket?: WebSocket
   isSocketOpen: boolean
-  nextRequestId: number
-  busyInstances: Set<string>
-  requests: Map<string, PullRequestState>
 }
 
 type ArthasMessageBusInternal = {
@@ -77,6 +67,7 @@ const classloaderHashRegx = /-c +[\da-zA-Z]{8}/
 const INPUT_STATUS = 'input_status'
 const MAX_BUS_MESSAGE_SIZE = 100
 const MAX_PULL_DELAY = 20 * 1000
+const INITIAL_PULL_DELAY = 1000
 const SOCKET_RECONNECT_DELAY = 1000
 
 function parseChannelIdFromPathname(pathname: string): string | undefined {
@@ -87,6 +78,7 @@ const createArthasMessageBusInternal = async (
   channelId: string,
   instances: InstanceInfoVO[],
 ): Promise<ArthasMessageBusInternal> => {
+  console.log('==')
   const aggregator = createMessageAggregator(instances)
   const listenerMap = new Map<number, Listener>()
   const db = await setupDB()
@@ -96,12 +88,9 @@ const createArthasMessageBusInternal = async (
   await initializeInstanceContext()
 
   const state: PollState = {
-    taskDelay: 0,
+    taskDelay: INITIAL_PULL_DELAY,
     isExcited: false,
     isSocketOpen: false,
-    nextRequestId: 1,
-    busyInstances: new Set<string>(),
-    requests: new Map(),
   }
 
   if (import.meta.env.DEV) {
@@ -260,76 +249,14 @@ const createArthasMessageBusInternal = async (
     }, delay)
   }
 
-  function getIdleInstanceIds(): string[] {
-    return instances
-      .map((instance) => instance.instanceId)
-      .filter((instanceId) => !state.busyInstances.has(instanceId))
-  }
-
-  function markRequestAccepted(requestId: string, instanceIds: string[]) {
-    if (instanceIds.length === 0) {
-      return
-    }
-    for (const instanceId of instanceIds) {
-      state.busyInstances.add(instanceId)
-    }
-    state.requests.set(requestId, {
-      pendingInstanceIds: new Set(instanceIds),
-      hasMessages: false,
-    })
-  }
-
-  function createPullErrorMessage(
-    event: ArthasPullErrorEvent,
-  ): PureArthasResponse & {
-    message: string
-  } {
-    return {
-      type: 'message',
-      jobId: Math.floor(Date.now() / 1000),
-      message: event.message,
-    }
-  }
-
   async function handlePullResultEvent(event: ArthasPullResultEvent) {
-    const requestState = state.requests.get(event.requestId)
-    if (requestState) {
-      requestState.hasMessages = true
-    }
     await persistResponses(
       event.messages.map((response) => ({
         instanceId: event.instanceId,
         response,
       })),
     )
-  }
-
-  async function handlePullErrorEvent(event: ArthasPullErrorEvent) {
-    await persistResponses([
-      {
-        instanceId: event.instanceId,
-        response: createPullErrorMessage(event),
-      },
-    ])
-  }
-
-  function handlePullCompleteEvent(event: ArthasPullCompleteEvent) {
-    const requestState = state.requests.get(event.requestId)
-    state.busyInstances.delete(event.instanceId)
-    if (!requestState) {
-      scheduleNextPull(state.taskDelay)
-      return
-    }
-    requestState.pendingInstanceIds.delete(event.instanceId)
-    if (requestState.pendingInstanceIds.size > 0) {
-      return
-    }
-    state.requests.delete(event.requestId)
-    if (requestState.hasMessages) {
-      state.taskDelay = 0
-    } else {
-      state.taskDelay = Math.min(state.taskDelay + 1000, MAX_PULL_DELAY)
-    }
+    state.taskDelay = 0
     scheduleNextPull(state.taskDelay)
   }
 
@@ -337,14 +264,6 @@ const createArthasMessageBusInternal = async (
     const event = JSON.parse(raw) as ArthasResultWebSocketEvent
     if (event.type === 'pull_result') {
       await handlePullResultEvent(event)
-      return
-    }
-    if (event.type === 'pull_error') {
-      await handlePullErrorEvent(event)
-      return
-    }
-    if (event.type === 'pull_complete') {
-      handlePullCompleteEvent(event)
     }
   }
 
@@ -358,12 +277,18 @@ const createArthasMessageBusInternal = async (
     }
 
     clearReconnectTimer()
-    const websocket = createArthasResultWebSocket(channelId)
+    let websocket: WebSocket
+    try {
+      websocket = createArthasResultWebSocket(channelId)
+    } catch (e) {
+      console.error(e)
+      return
+    }
     state.websocket = websocket
 
     websocket.onopen = () => {
       state.isSocketOpen = true
-      state.taskDelay = 0
+      state.taskDelay = INITIAL_PULL_DELAY
       pullNow()
     }
 
@@ -376,8 +301,6 @@ const createArthasMessageBusInternal = async (
     websocket.onclose = () => {
       state.isSocketOpen = false
       state.websocket = undefined
-      state.busyInstances.clear()
-      state.requests.clear()
       if (!state.isExcited) {
         clearReconnectTimer()
         state.reconnectTaskId = setTimeout(() => {
@@ -405,19 +328,12 @@ const createArthasMessageBusInternal = async (
       return
     }
 
-    const idleInstanceIds = getIdleInstanceIds()
-    if (idleInstanceIds.length === 0) {
-      return
-    }
-
-    const requestId = `${Date.now()}-${state.nextRequestId++}`
     const payload: ArthasPullResultsRequest = {
       type: 'pull_results',
-      requestId,
-      instanceIds: idleInstanceIds,
     }
-    markRequestAccepted(requestId, idleInstanceIds)
     state.websocket.send(JSON.stringify(payload))
+    state.taskDelay = Math.min(state.taskDelay + 1000, MAX_PULL_DELAY)
+    scheduleNextPull(state.taskDelay)
   }
 
   const pullNow = () => {
@@ -524,8 +440,6 @@ const createArthasMessageBusInternal = async (
     state.isExcited = true
     clearPullTimer()
     clearReconnectTimer()
-    state.busyInstances.clear()
-    state.requests.clear()
     if (state.websocket) {
       state.websocket.close()
       state.websocket = undefined

@@ -62,7 +62,7 @@ class ArthasChannelResultWebSocketHandlerTest {
         handler.handleMessage(
             session,
             TextMessage(
-                """{"type":"pull_results","requestId":"req-1","instanceIds":["slow","fast"]}""",
+                """{"type":"pull_results"}""",
             ),
         )
 
@@ -73,7 +73,7 @@ class ArthasChannelResultWebSocketHandlerTest {
         }
         assertFalse(
             session.messages.any {
-                it.path("type").asString() == "pull_complete" && it.path("instanceId").asString() == "slow"
+                it.path("type").asString() == "pull_result" && it.path("instanceId").asString() == "slow"
             },
         )
 
@@ -81,7 +81,7 @@ class ArthasChannelResultWebSocketHandlerTest {
 
         waitUntil(timeoutMs = 2_000) {
             session.messages.any {
-                it.path("type").asString() == "pull_complete" && it.path("instanceId").asString() == "slow"
+                it.path("type").asString() == "pull_result" && it.path("instanceId").asString() == "slow"
             }
         }
     }
@@ -98,19 +98,12 @@ class ArthasChannelResultWebSocketHandlerTest {
         handler.afterConnectionEstablished(session)
         handler.handleMessage(
             session,
-            TextMessage("""{"type":"pull_results","requestId":"req-1","instanceIds":["empty"]}"""),
+            TextMessage("""{"type":"pull_results"}"""),
         )
-
-        waitUntil(timeoutMs = 2_000) {
-            session.messages.any {
-                it.path("type").asString() == "pull_complete" && it.path("instanceId").asString() == "empty"
-            }
-        }
+        Thread.sleep(300)
 
         assertFalse(
-            session.messages.any {
-                it.path("type").asString() == "pull_result" && it.path("instanceId").asString() == "empty"
-            },
+            session.messages.isNotEmpty(),
         )
     }
 
@@ -132,22 +125,23 @@ class ArthasChannelResultWebSocketHandlerTest {
         handler.afterConnectionEstablished(session)
         handler.handleMessage(
             session,
-            TextMessage("""{"type":"pull_results","requestId":"req-1","instanceIds":["alpha"]}"""),
+            TextMessage("""{"type":"pull_results"}"""),
         )
 
         waitUntil(timeoutMs = 2_000) { service.pullCount("alpha") == 1 }
+        waitUntil(timeoutMs = 2_000) { service.pullCount("beta") == 1 }
 
         handler.handleMessage(
             session,
-            TextMessage("""{"type":"pull_results","requestId":"req-2","instanceIds":["alpha","beta"]}"""),
+            TextMessage("""{"type":"pull_results"}"""),
         )
 
-        waitUntil(timeoutMs = 2_000) { service.pullCount("beta") == 1 }
+        waitUntil(timeoutMs = 2_000) { service.pullCount("beta") == 2 }
         assertEquals(1, service.pullCount("alpha"))
 
         waitUntil(timeoutMs = 2_000) {
             session.messages.any {
-                it.path("type").asString() == "pull_complete" && it.path("instanceId").asString() == "beta"
+                it.path("type").asString() == "pull_result" && it.path("instanceId").asString() == "beta"
             }
         }
 
@@ -155,7 +149,7 @@ class ArthasChannelResultWebSocketHandlerTest {
 
         waitUntil(timeoutMs = 2_000) {
             session.messages.any {
-                it.path("type").asString() == "pull_complete" && it.path("instanceId").asString() == "alpha"
+                it.path("type").asString() == "pull_result" && it.path("instanceId").asString() == "alpha"
             }
         }
     }
