@@ -65,7 +65,7 @@
     "selectTypeInfo2": "The runtime node serves as the entry point for Spectre's core functionality. We will list all the JVMs from the runtime node for you to perform further operations.",
     "selectTypeInfo3": "Select a type to start:",
     "selectTypeTip": "Select a type",
-    "batchConnect": "Batch Connection",
+    "batchConnect": "Batch Connection(Beta)",
     "batchConnectDesc": "Single command to serval JVM, and combine the result to display",
     "batchSelected": "Selected JVM Instance And Tree Node",
     "name": "Runtime Node Name",
@@ -110,7 +110,6 @@
     "llmDisabled": "Agent is disabled.",
     "goOpen": "Go Open",
     "batchArgsEmpty": "Batch connect arguments are empty",
-    "successCounter": "Connected {{successCount}} / {{totalCount}}",
     "connected": "Connected",
     "connectFailed": "Error",
     "connecting": "Connecting",
@@ -121,7 +120,9 @@
     "retryStopped": "Retry Stopped",
     "incompleteTipTitle": "\uD83D\uDEA7Functionality Limited\uD83D\uDEA7",
     "incompleteTipMessage": "Batch operations are still under development. Currently, only basic command execution functionality has been completed. Unfinished features will be hidden.",
-    "executeResult": "Execution result"
+    "executeResult": "Execution result",
+    "batchExecFail": "Batch execute failed",
+    "batchExecDesc": "The following instances failed to accept this batch command:"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",

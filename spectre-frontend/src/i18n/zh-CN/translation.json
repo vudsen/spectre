@@ -58,8 +58,8 @@
     "selectTypeInfo2": "运行节点作为 Spectre 核心功能的入口，我们会从运行节点为你列出所有的 JVM 来进行进一步的操作。",
     "selectTypeInfo3": "选择一个类型来开始：",
     "selectTypeTip": "选择一个类型",
-    "batchConnect": "批量连接",
-    "batchConnectDesc": "一条命令，同时发给多个节点，并将结果聚合后展示",
+    "batchConnect": "批量连接(Beta)",
+    "batchConnectDesc": "一条命令，同时发给多个节点，并将结果聚合后展示.",
     "batchSelected": "已选择的 JVM实例/树节点",
     "name": "运行节点名称",
     "jvmName": "JVM 名称",
@@ -101,7 +101,6 @@
     "llmDisabled": "智能体已被禁用",
     "goOpen": "前往开启",
     "batchArgsEmpty": "批量连接参数为空",
-    "successCounter": "已成功 {{successCount}} / {{totalCount}}",
     "connected": "连接成功",
     "connectFailed": "连接异常",
     "connecting": "连接中",
@@ -112,7 +111,9 @@
     "retryStopped": "已停止重试",
     "incompleteTipTitle": "\uD83D\uDEA7功能受限\uD83D\uDEA7",
     "incompleteTipMessage": "批量操作仍在开发中，目前仅完成了基础的命令执行功能，未完成的功能将被隐藏",
-    "executeResult": "执行结果"
+    "executeResult": "执行结果",
+    "batchExecFail": "批量执行失败",
+    "batchExecDesc": "以下实例未能接受本次批量命令："
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",

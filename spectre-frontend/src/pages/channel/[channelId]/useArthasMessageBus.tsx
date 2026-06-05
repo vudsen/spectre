@@ -8,29 +8,36 @@ import {
 } from '@/api/impl/arthas.ts'
 import { useEffect, useState } from 'react'
 import {
+  type InstanceStatus,
   setupChannelContext,
   updateChannelContext,
   updateInputStatus,
 } from '@/store/channelSlice.ts'
 import { store } from '@/store'
-import { useDispatch } from 'react-redux'
-import type { Dispatch } from '@reduxjs/toolkit'
 import setupDB, { type ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 import type { CommandMessage } from '@/pages/channel/[channelId]/_message_view/_component/CommandMessageDetail.tsx'
-import { aggregateCommandMessages } from '@/pages/channel/[channelId]/messageAggregation.ts'
-import { addToast } from '@heroui/react'
-import i18n from 'i18next'
+import { createMessageAggregator } from '@/pages/channel/[channelId]/messageAggregation.ts'
+import { showDialog } from '@/common/util.ts'
+import i18n from '@/i18n'
 
 interface Listener {
   onMessage?: (messages: ArthasMessage[]) => void
   afterExecute?: (command: string, fail: boolean) => void
 }
 
+type DisplayMessages = (channelId?: string) => void
+
+declare global {
+  interface Window {
+    displayMessages?: DisplayMessages
+  }
+}
+
 export type ArthasMessageBus = {
   addListener(listener: Listener): number
   removeListener(listenerId: number): void
   execute(command: string, interruptCurrent?: boolean): Promise<void>
-  messages: ArthasMessage[]
+  messages: Record<string, ArthasMessage[]>
   clearAllMessage(): Promise<void>
   deleteMessage(message: ArthasMessage): Promise<void>
 }
@@ -54,18 +61,20 @@ type ArthasMessageBusInternal = {
 const classloaderHashRegx = /-c +[\da-zA-Z]{8}/
 const INPUT_STATUS = 'input_status'
 const MAX_BUS_MESSAGE_SIZE = 100
-const BUS_MESSAGE_THRESHOLD = 90
+
+function parseChannelIdFromPathname(pathname: string): string | undefined {
+  return /\/channel\/([^/]+)/.exec(pathname)?.[1]
+}
 
 const createArthasMessageBusInternal = async (
   channelId: string,
-  dispatch: Dispatch,
   instances: InstanceInfoVO[],
 ): Promise<ArthasMessageBusInternal> => {
+  const aggregator = createMessageAggregator(instances)
   const listenerMap = new Map<number, Listener>()
   const db = await setupDB()
   const messages = await setupMessages()
   const contextIdByInstance = new Map<string, string>()
-  const commandSeqByInstanceAndCommand = new Map<string, number>()
 
   await initializeInstanceContext()
 
@@ -75,77 +84,57 @@ const createArthasMessageBusInternal = async (
     isExcited: false,
   }
 
+  if (import.meta.env.DEV) {
+    registerDisplayMessages()
+  }
+
   async function initializeInstanceContext() {
     for (const instance of instances) {
-      const lastContextId = await db.findLastContextId(
-        channelId,
-        instance.instanceId,
-      )
+      const lastContextId = await db.findLastContextId(instance.instanceId)
       if (lastContextId) {
         contextIdByInstance.set(instance.instanceId, lastContextId)
       } else {
         const initialContextId = await db.createNewContext({
-          channelId,
           instanceId: instance.instanceId,
         })
         contextIdByInstance.set(instance.instanceId, initialContextId)
       }
     }
-
-    for (const message of messages) {
-      if (message.value.type !== 'command') {
-        continue
-      }
-      const command = (message.value as CommandMessage).command
-      const key = `${message.instanceId}::${command}`
-      commandSeqByInstanceAndCommand.set(
-        key,
-        (commandSeqByInstanceAndCommand.get(key) ?? 0) + 1,
-      )
-    }
   }
 
-  function refreshAggregatedMessages() {
-    dispatch(
-      updateChannelContext({
-        messages: aggregateCommandMessages(messages),
-      }),
-    )
-  }
+  function refreshAggregatedMessages() {}
 
-  async function setupMessages() {
-    const loadedMessages = await db.listAllMessages(
-      channelId,
-      MAX_BUS_MESSAGE_SIZE,
-    )
-    const instancesMap: Record<string, InstanceInfoVO> = {}
+  async function setupMessages(): Promise<Record<string, ArthasMessage[]>> {
+    const r: Record<string, ArthasMessage[]> = {}
+    let inputStatus: InputStatusResponse['inputStatus'] = 'DISABLED'
+    const instanceMap: Record<string, InstanceStatus> = {}
     for (const instance of instances) {
-      instancesMap[instance.instanceId] = instance
-    }
-    if (loadedMessages.length === 0) {
-      dispatch(
-        setupChannelContext({
-          channelId,
-          inputStatus: 'DISABLED',
-          instances: instancesMap,
-          messages: aggregateCommandMessages(loadedMessages),
-        }),
+      const messages = await db.listAllMessages(
+        instance.instanceId,
+        MAX_BUS_MESSAGE_SIZE,
       )
-      return loadedMessages
+      r[instance.instanceId] = messages
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i]
+        if (msg.value.type === INPUT_STATUS) {
+          inputStatus = (msg.value as InputStatusResponse).inputStatus
+          break
+        }
+      }
+      instanceMap[instance.instanceId] = {
+        ...instance,
+        inputStatus,
+      }
     }
-
-    const status = await db.findLastMessage(channelId, INPUT_STATUS)
-    dispatch(
+    store.dispatch(
       setupChannelContext({
         channelId,
-        inputStatus: status
-          ? (status.value as InputStatusResponse).inputStatus
-          : 'ALLOW_INPUT',
-        instances: instancesMap,
-        messages: aggregateCommandMessages(loadedMessages),
+        inputStatus,
+        instances: instanceMap,
+        groupedMessages: aggregator.appendNewMessages([], r),
       }),
     )
-    return loadedMessages
+    return r
   }
 
   async function ensureContextId(instanceId: string): Promise<string> {
@@ -154,7 +143,6 @@ const createArthasMessageBusInternal = async (
       return existing
     }
     const newId = await db.createNewContext({
-      channelId,
       instanceId,
     })
     contextIdByInstance.set(instanceId, newId)
@@ -178,20 +166,13 @@ const createArthasMessageBusInternal = async (
     ) => {
       if (response.type === INPUT_STATUS) {
         const status = (response as InputStatusResponse).inputStatus
-        dispatch(updateInputStatus(status))
+        store.dispatch(updateInputStatus(status))
       }
 
       if (response.type === 'command') {
         const command = (response as CommandMessage).command
-        const commandSeqKey = `${instanceId}::${command}`
-        const commandSequence =
-          (commandSeqByInstanceAndCommand.get(commandSeqKey) ?? 0) + 1
-        commandSeqByInstanceAndCommand.set(commandSeqKey, commandSequence)
-
         const contextId = await db.createNewContext({
           command,
-          commandSequence,
-          channelId: currentChannelId,
           instanceId,
         })
         contextIdByInstance.set(instanceId, contextId)
@@ -206,33 +187,40 @@ const createArthasMessageBusInternal = async (
       })
     }
 
-    console.log(result)
     for (const [instanceId, responses] of Object.entries(result)) {
-      if (responses.isError) {
-        addToast({
-          title: i18n.t('common.error'),
-          description: responses.message ?? '<Unknown>',
-          color: 'danger',
-        })
-        continue
-      }
-      for (const response of responses.data!) {
+      for (const response of responses) {
         await appendMessage(instanceId, response)
       }
     }
-
+    console.log(rowsToPersist.length)
     if (rowsToPersist.length > 0) {
       const dbMessages = await db.insertAllMessages(rowsToPersist)
-      messages.push(...dbMessages)
-      if (messages.length > MAX_BUS_MESSAGE_SIZE) {
-        messages.splice(0, messages.length - BUS_MESSAGE_THRESHOLD)
+      const newMessageMap: Record<string, ArthasMessage[]> = {}
+      for (const instance of instances) {
+        newMessageMap[instance.instanceId] = []
       }
-      refreshAggregatedMessages()
+      for (const dbMessage of dbMessages) {
+        newMessageMap[dbMessage.instanceId].push(dbMessage)
+        messages[dbMessage.instanceId].push(dbMessage)
+      }
+
+      console.log('dispatched.')
+      try {
+        store.dispatch(
+          updateChannelContext({
+            groupedMessages: aggregator.appendNewMessages(
+              store.getState().channel.context.groupedMessages,
+              newMessageMap,
+            ),
+          }),
+        )
+      } catch (e) {
+        console.error(e)
+      }
       for (const entry of listenerMap.entries()) {
         entry[1].onMessage?.(dbMessages)
       }
     }
-
     return rowsToPersist.length
   }
 
@@ -298,8 +286,35 @@ const createArthasMessageBusInternal = async (
 
     let fail = true
     try {
-      await executeArthasCommand(currentChannelId, finalCommand)
-      pullNow()
+      const result = await executeArthasCommand(currentChannelId, finalCommand)
+      const instanceMap = store.getState().channel.context.instances
+      const failMsgArr: string[] = []
+      let totalLen = 0
+      for (const [instanceId, exec] of Object.entries(result)) {
+        totalLen++
+        if (exec.success) {
+          continue
+        }
+        failMsgArr.push(instanceMap[instanceId].jvmName + ': ' + exec.message)
+      }
+      if (failMsgArr.length > 0) {
+        showDialog({
+          title: `${i18n.t('channel.batchExecFail')} (${totalLen - failMsgArr.length}/${totalLen})`,
+          message: (
+            <div className="flex flex-col">
+              <div>{i18n.t('channel.batchExecDesc')}</div>
+              {failMsgArr.map((msg, index) => (
+                <div key={index}>- {msg}</div>
+              ))}
+            </div>
+          ),
+          color: 'danger',
+          hideCancel: true,
+        })
+      }
+      if (failMsgArr.length !== totalLen) {
+        pullNow()
+      }
       fail = false
     } finally {
       for (const entry of listenerMap.entries()) {
@@ -308,10 +323,40 @@ const createArthasMessageBusInternal = async (
     }
   }
 
+  function registerDisplayMessages() {
+    const fallbackChannelId =
+      parseChannelIdFromPathname(window.location.pathname) ?? channelId
+
+    window.displayMessages = (requestedChannelId) => {
+      const resolvedChannelId =
+        requestedChannelId ??
+        parseChannelIdFromPathname(window.location.pathname) ??
+        fallbackChannelId
+
+      console.info('Exporting...')
+
+      if (!resolvedChannelId) {
+        console.warn('No data from the channelId')
+        return
+      }
+
+      db.listDisplayMessages(resolvedChannelId)
+        .then((groupedMessages) => {
+          console.log(groupedMessages)
+        })
+        .catch((error) => {
+          console.error('Failed to export', error)
+        })
+    }
+  }
+
   function close() {
     state.isExcited = true
     if (state.pullResultsTaskId) {
       clearTimeout(state.pullResultsTaskId)
+    }
+    if (import.meta.env.DEV) {
+      delete window.displayMessages
     }
     db.close()
   }
@@ -323,20 +368,49 @@ const createArthasMessageBusInternal = async (
   }
 
   async function clearAllMessage() {
-    await db.deleteAllMessage(channelId)
-    messages.splice(0, messages.length)
+    await Promise.all(
+      Object.keys(messages).map((instanceId) =>
+        db.deleteAllMessage(instanceId),
+      ),
+    )
+    for (const key of Object.keys(messages)) {
+      messages[key] = []
+    }
+    aggregator.clear()
     refreshAggregatedMessages()
+    store.dispatch(
+      updateChannelContext({
+        groupedMessages: [],
+      }),
+    )
   }
 
-  async function deleteMessage(message: ArthasMessage) {
-    const idx = messages.findIndex((msg) => msg.id === message.id)
+  async function deleteMessage(arthasMessage: ArthasMessage) {
+    const target = messages[arthasMessage.instanceId]
+    const idx = target.findIndex((msg) => msg.id === arthasMessage.id)
     if (idx < 0) {
-      console.error('Can not find message: ', message)
+      console.error('Can not find message: ', arthasMessage)
       return
     }
-    await db.deleteMessage(messages[idx])
-    messages.splice(idx, 1)
-    refreshAggregatedMessages()
+    await db.deleteMessage(arthasMessage)
+    target.splice(idx, 1)
+    const messageGroups = store.getState().channel.context.groupedMessages
+    for (const group of messageGroups) {
+      const arr = group.instances[arthasMessage.instanceId]
+      if (!arr) {
+        continue
+      }
+      const t = arr.findIndex((msg) => msg.id === arthasMessage.id)
+      if (t >= 0) {
+        arr.splice(t, 1)
+        break
+      }
+    }
+    store.dispatch(
+      updateChannelContext({
+        groupedMessages: [...messageGroups],
+      }),
+    )
   }
 
   return {
@@ -357,7 +431,6 @@ const useArthasMessageBus = (
   channelId: string,
   channelInfos: InstanceInfoVO[],
 ): ArthasMessageBus | undefined => {
-  const dispatch = useDispatch()
   const [internalBus, setInternalBus] = useState<
     ArthasMessageBusInternal | undefined
   >()
@@ -365,7 +438,7 @@ const useArthasMessageBus = (
   useEffect(() => {
     let isDestroyed = false
     let myBus: ArthasMessageBusInternal | undefined
-    createArthasMessageBusInternal(channelId, dispatch, channelInfos)
+    createArthasMessageBusInternal(channelId, channelInfos)
       .then((r) => {
         if (isDestroyed) {
           myBus = r
@@ -385,7 +458,7 @@ const useArthasMessageBus = (
         myBus.close()
       }
     }
-  }, [channelId, channelInfos, dispatch])
+  }, [channelId, channelInfos])
 
   return internalBus
 }

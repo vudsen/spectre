@@ -1,19 +1,16 @@
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb'
 import type { PureArthasResponse } from '@/api/impl/arthas.ts'
 
-const VERSION = 3
+const VERSION = 5
 
 type ContextValue = {
   command?: string
-  commandSequence?: number
-  channelId: string
   instanceId?: string
 }
 
 type ContextValueWithPK = ContextValue & { id: string }
 
 type MessageValue = {
-  channelId: string
   contextId: string
   instanceId: string
   /**
@@ -24,7 +21,7 @@ type MessageValue = {
 
 type MessageValueWithId = MessageValue & { id: string }
 
-type ChannelInfoValue = {
+type InstanceInfoValue = {
   lastAccess: number
 }
 
@@ -32,19 +29,18 @@ interface ArthasMessageDB extends DBSchema {
   messages: {
     key: string
     value: MessageValue
-    indexes: { 'by-channel-id': string }
+    indexes: { 'by-instance-id': string }
   }
   context: {
     key: string
     value: ContextValue
     indexes: {
-      'by-channel-id': string
-      'by-channel-instance-id': [string, string]
+      'by-instance-id': [string, string]
     }
   }
-  channelInfo: {
+  instanceInfo: {
     key: string
-    value: ChannelInfoValue
+    value: InstanceInfoValue
   }
 }
 
@@ -62,33 +58,31 @@ async function setupDB() {
   let messageId = Date.now()
   const db = await openDB<ArthasMessageDB>('ArthasMessage', VERSION, {
     upgrade(database: IDBPDatabase<ArthasMessageDB>, version) {
+      if (version <= VERSION) {
+        database.clear('messages')
+        // @ts-expect-error remove legacy data
+        database.clear('channelInfo')
+        database.clear('context')
+      }
       if (database.objectStoreNames.contains('messages')) {
         database.deleteObjectStore('messages')
       }
       if (database.objectStoreNames.contains('context')) {
         database.deleteObjectStore('context')
       }
+      // @ts-expect-error remove legacy data
       if (database.objectStoreNames.contains('channelInfo')) {
+        // @ts-expect-error remove legacy data
         database.deleteObjectStore('channelInfo')
       }
 
       const messagesStore = database.createObjectStore('messages')
-      messagesStore.createIndex('by-channel-id', 'channelId')
+      messagesStore.createIndex('by-instance-id', 'instanceId')
 
       const contextStore = database.createObjectStore('context')
-      contextStore.createIndex('by-channel-id', 'channelId')
-      contextStore.createIndex('by-channel-instance-id', [
-        'channelId',
-        'instanceId',
-      ])
+      contextStore.createIndex('by-instance-id', 'instanceId')
 
-      database.createObjectStore('channelInfo')
-
-      if (version <= 2) {
-        database.clear('messages')
-        database.clear('channelInfo')
-        database.clear('context')
-      }
+      database.createObjectStore('instanceInfo')
     },
   })
 
@@ -113,23 +107,25 @@ async function setupDB() {
     return result
   }
 
-  async function doClear(channelId: string) {
+  async function doClear(instanceId: string) {
     const messageTx = db.transaction('messages', 'readwrite')
     const messageIndex = messageTx
       .objectStore('messages')
-      .index('by-channel-id')
+      .index('by-instance-id')
 
     const contextIds = new Set<string>()
     for (
       let cursor = await messageIndex.openCursor(
-        IDBKeyRange.only(channelId),
+        IDBKeyRange.only(instanceId),
         'prev',
       );
       cursor;
       cursor = await cursor.continue()
     ) {
       contextIds.add(cursor.value.contextId)
-      cursor.delete()
+      cursor.delete().catch((e) => {
+        console.error(e)
+      })
     }
 
     const contextTx = db.transaction('context', 'readwrite')
@@ -138,15 +134,15 @@ async function setupDB() {
       await contextStore.delete(id)
     }
 
-    await db.delete('channelInfo', channelId)
+    await db.delete('instanceInfo', instanceId)
     await contextTx.done
     await messageTx.done
   }
 
   return {
     async clearUnusedMessages() {
-      const tx = db.transaction('channelInfo')
-      const store = tx.objectStore('channelInfo')
+      const tx = db.transaction('instanceInfo')
+      const store = tx.objectStore('instanceInfo')
 
       const expiredChannelIds: string[] = []
       for (
@@ -165,55 +161,21 @@ async function setupDB() {
       }
     },
 
-    async findLastMessage(
-      channelId: string,
-      messageType: string,
-      instanceId?: string,
-    ): Promise<ArthasMessage | undefined> {
-      const tx = db.transaction('messages')
-      const index = tx.objectStore('messages').index('by-channel-id')
-
-      for (
-        let cursor = await index.openCursor(
-          IDBKeyRange.only(channelId),
-          'prev',
-        );
-        cursor;
-        cursor = await cursor.continue()
-      ) {
-        if (instanceId && cursor.value.instanceId !== instanceId) {
-          continue
-        }
-        if (cursor.value.value.type !== messageType) {
-          continue
-        }
-        const context = await db.get('context', cursor.value.contextId)
-        if (!context) {
-          continue
-        }
-        return {
-          id: String(cursor.primaryKey),
-          instanceId: cursor.value.instanceId,
-          context,
-          value: cursor.value.value,
-        }
-      }
-
-      return undefined
-    },
-
     async listAllMessages(
-      channelId: string,
+      instanceId: string,
       size: number,
     ): Promise<ArthasMessage[]> {
       const tx = db.transaction('messages')
-      const index = tx.objectStore('messages').index('by-channel-id')
+      const index = tx.objectStore('messages').index('by-instance-id')
 
       const rawMessages: MessageValueWithId[] = []
       const contextIds = new Set<string>()
 
       for (
-        let cursor = await index.openCursor(IDBKeyRange.only(channelId));
+        let cursor = await index.openCursor(
+          IDBKeyRange.only(instanceId),
+          'prev',
+        );
         cursor;
         cursor = await cursor.continue()
       ) {
@@ -229,7 +191,9 @@ async function setupDB() {
 
       const contextMap = await findAllContextByIdIn([...contextIds])
       const result: ArthasMessage[] = []
-      for (const message of rawMessages) {
+      // 返回出去的得按时间升序
+      for (let i = rawMessages.length - 1; i >= 0; i--) {
+        const message = rawMessages[i]
         const context = contextMap[message.contextId]
         if (!context) {
           continue
@@ -241,8 +205,36 @@ async function setupDB() {
           value: message.value,
         })
       }
+      console.log(result)
 
-      await db.put('channelInfo', { lastAccess: Date.now() }, channelId)
+      await db.put('instanceInfo', { lastAccess: Date.now() }, instanceId)
+      await tx.done
+      return result
+    },
+
+    async listDisplayMessages(
+      channelId?: string,
+    ): Promise<Record<string, PureArthasResponse[]>> {
+      if (!channelId) {
+        return {}
+      }
+
+      const tx = db.transaction('messages')
+      const index = tx.objectStore('messages').index('by-instance-id')
+      const result: Record<string, PureArthasResponse[]> = {}
+
+      for (
+        let cursor = await index.openCursor(IDBKeyRange.only(channelId));
+        cursor;
+        cursor = await cursor.continue()
+      ) {
+        const instanceId = cursor.value.instanceId
+        if (!result[instanceId]) {
+          result[instanceId] = []
+        }
+        result[instanceId].push(cursor.value.value)
+      }
+
       await tx.done
       return result
     },
@@ -253,21 +245,15 @@ async function setupDB() {
       return id
     },
 
-    async findLastContextId(channelId: string, instanceId?: string) {
+    async findLastContextId(instanceId: string) {
       const tx = db.transaction('context')
       const store = tx.objectStore('context')
 
-      if (instanceId) {
-        const index = store.index('by-channel-instance-id')
-        const cursor = await index.openCursor(
-          IDBKeyRange.only([channelId, instanceId]),
-          'prev',
-        )
-        return cursor?.primaryKey ? String(cursor.primaryKey) : undefined
-      }
-
-      const index = store.index('by-channel-id')
-      const cursor = await index.openCursor(IDBKeyRange.only(channelId), 'prev')
+      const index = store.index('by-instance-id')
+      const cursor = await index.openCursor(
+        IDBKeyRange.only([instanceId]),
+        'prev',
+      )
       return cursor?.primaryKey ? String(cursor.primaryKey) : undefined
     },
 
@@ -280,18 +266,18 @@ async function setupDB() {
 
       const contextIds = new Set<string>()
       const ids: string[] = []
-      const updateAccessChannelIds = new Set<string>()
+      const updateAccessInstanceIds = new Set<string>()
 
       for (const message of messages) {
         const id = (++messageId).toString()
         await db.put('messages', message, id)
         ids.push(id)
         contextIds.add(message.contextId)
-        updateAccessChannelIds.add(message.channelId)
+        updateAccessInstanceIds.add(message.instanceId)
       }
 
-      for (const channelId of updateAccessChannelIds) {
-        await db.put('channelInfo', { lastAccess: Date.now() }, channelId)
+      for (const instanceId of updateAccessInstanceIds) {
+        await db.put('instanceInfo', { lastAccess: Date.now() }, instanceId)
       }
 
       const contextMap = await findAllContextByIdIn([...contextIds])

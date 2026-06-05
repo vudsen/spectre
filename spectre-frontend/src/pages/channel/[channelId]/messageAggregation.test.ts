@@ -1,86 +1,96 @@
 import { describe, expect, it } from 'vitest'
-import { aggregateCommandMessages } from '@/pages/channel/[channelId]/messageAggregation.ts'
-import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
+import { createMessageAggregator } from './messageAggregation.ts'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import type { ArthasMessage } from './db.ts'
 
-type RawMessage = {
-  id: string
-  instanceId: string
-  command?: string
-  type: string
-  jobId?: number
-  extra?: Record<string, unknown>
+function createDefaultAggregator() {
+  return createMessageAggregator([
+    {
+      runtimeNodeName: 'Aliyun',
+      jvmName: 'math-game-2(vudsen/math-game:java25)',
+      instanceId: '-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ',
+    },
+    {
+      runtimeNodeName: 'Aliyun',
+      jvmName: 'math-game-1(vudsen/math-game:java25)',
+      instanceId: 'ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI',
+    },
+  ])
 }
 
-function buildMessages(items: RawMessage[]): ArthasMessage[] {
-  return items.map((item, index) => {
-    const payload: Record<string, unknown> = {
-      type: item.type,
-      jobId: item.jobId ?? index,
-      ...(item.extra ?? {}),
-    }
-    if (item.type === 'command' && item.command) {
-      payload.command = item.command
-      payload.state = 'SUCCESS'
-      payload.jobId = item.jobId ?? index
-    }
-
-    return {
-      id: item.id,
-      instanceId: item.instanceId,
-      context: {
-        channelId: 'channel-1',
-        command: item.command,
-        instanceId: item.instanceId,
-      },
-      value: payload as ArthasMessage['value'],
-    }
-  })
+function readSample(filename: string): Record<string, ArthasMessage[]> {
+  return JSON.parse(
+    readFileSync(resolve(__dirname, '__test_resources__', filename), {
+      encoding: 'utf-8',
+    }),
+  ) as Record<string, ArthasMessage[]>
 }
 
 describe('aggregateCommandMessages', () => {
-  it('merges same command in same sequence across instances', () => {
-    const messages = buildMessages([
-      { id: '1', instanceId: 'foo', type: 'command', command: 'help' },
-      { id: '2', instanceId: 'foo', type: 'help' },
-      { id: '3', instanceId: 'bar', type: 'command', command: 'help' },
-      { id: '4', instanceId: 'bar', type: 'help' },
-      { id: '5', instanceId: 'abc', type: 'command', command: 'version' },
-      { id: '6', instanceId: 'abc', type: 'version' },
-    ])
+  it('Test basic', () => {
+    const messages1 = readSample('tb-messages0.json')
+    const aggregator = createDefaultAggregator()
 
-    const aggregated = aggregateCommandMessages(messages)
-
-    expect(aggregated).toHaveLength(2)
-    expect(aggregated[0].command).toBe('help')
-    expect(aggregated[0].instances.foo).toHaveLength(1)
-    expect(aggregated[0].instances.bar).toHaveLength(1)
-    expect(aggregated[1].command).toBe('version')
-    expect(aggregated[1].instances.abc).toHaveLength(1)
+    const group = aggregator.appendNewMessages([], messages1)
+    expect(group.length).toBe(2)
   })
 
-  it('splits same command by sequence and keeps global command order', () => {
-    const messages = buildMessages([
-      { id: '1', instanceId: 'foo', type: 'command', command: 'help' },
-      { id: '2', instanceId: 'foo', type: 'help' },
-      { id: '3', instanceId: 'bar', type: 'command', command: 'watch' },
-      { id: '4', instanceId: 'bar', type: 'watch', extra: { stack: 'xxx' } },
-      { id: '5', instanceId: 'bar', type: 'watch', extra: { stack: 'xxx' } },
-      { id: '6', instanceId: 'abc', type: 'command', command: 'version' },
-      { id: '7', instanceId: 'abc', type: 'version' },
-      { id: '8', instanceId: 'bar', type: 'command', command: 'help' },
-      { id: '9', instanceId: 'bar', type: 'help' },
+  it('Test basic2', () => {
+    const messages1 = readSample('tb2-messages0.json')
+    const messages2 = readSample('tb2-messages1.json')
+
+    const aggregator = createMessageAggregator([
+      {
+        runtimeNodeName: 'Aliyun',
+        jvmName: 'math-game-2(vudsen/math-game:java25)',
+        instanceId: '-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ',
+      },
+      {
+        runtimeNodeName: 'Aliyun',
+        jvmName: 'math-game-1(vudsen/math-game:java25)',
+        instanceId: 'ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI',
+      },
     ])
 
-    const aggregated = aggregateCommandMessages(messages)
+    const group = aggregator.appendNewMessages([], messages1)
+    expect(group.length).toBe(1)
+    const group2 = aggregator.appendNewMessages(group, messages2)
+    expect(group2.length).toBe(1)
+    expect(group2).toMatchSnapshot()
+  })
 
-    expect(aggregated).toHaveLength(4)
-    expect(aggregated.map((item) => item.command)).toEqual([
-      'help',
-      'watch',
-      'version',
-      'help',
-    ])
-    expect(aggregated[0].instances.foo).toHaveLength(1)
-    expect(aggregated[3].instances.bar).toHaveLength(1)
+  it('Test two command exec', () => {
+    const messages0 = readSample('ttce-messages0.json')
+    const messages1 = readSample('ttce-messages1.json')
+    const messages2 = readSample('ttce-messages2.json')
+    const messages3 = readSample('ttce-messages3.json')
+
+    const aggregator = createDefaultAggregator()
+
+    const groups0 = aggregator.appendNewMessages([], messages0)
+    expect(groups0.length).toBe(1)
+    const groups1 = aggregator.appendNewMessages(groups0, messages1)
+    expect(groups1.length).toBe(1)
+    // 连续执行相同命令仍然会被合并到同一个组中
+    const groups2 = aggregator.appendNewMessages(groups1, messages2)
+    expect(groups2.length).toBe(2)
+    const groups3 = aggregator.appendNewMessages(groups2, messages3)
+    expect(groups3.length).toBe(2)
+    expect(groups3).matchSnapshot()
+    // for (const testGroup of groups3) {
+    //   expect(Object.keys(testGroup.instances).length).toBe(2)
+    //   for (const value of Object.values(testGroup.instances)) {
+    //     expect(value.length).toBe(8)
+    //   }
+    // }
+  })
+  it('Test basic3', () => {
+    const sample = readSample('sample.json')
+    const aggregator = createDefaultAggregator()
+
+    const groups = aggregator.appendNewMessages([], sample)
+    expect(groups.length).toBe(3)
+    expect(groups).toMatchSnapshot()
   })
 })

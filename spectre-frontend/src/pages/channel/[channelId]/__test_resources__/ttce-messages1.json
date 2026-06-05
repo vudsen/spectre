@@ -1,0 +1,151 @@
+{
+  "-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ": [
+    {
+      "id": "1780554921964",
+      "instanceId": "-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ",
+        "id": "1780554921963"
+      },
+      "value": {
+        "accessPoint": "AtExit",
+        "className": "demo.MathGame",
+        "cost": 0.236531,
+        "jobId": 1300,
+        "methodName": "primeFactors",
+        "sizeLimit": 10485760,
+        "ts": "2026-06-04 06:35:25.496947833",
+        "type": "watch",
+        "value": "@ArrayList[\n    @Object[][isEmpty=false;size=1],\n    @MathGame[demo.MathGame@3aafb60c],\n    @ArrayList[isEmpty=false;size=3],\n]"
+      }
+    },
+    {
+      "id": "1780554921965",
+      "instanceId": "-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ",
+        "id": "1780554921963"
+      },
+      "value": {
+        "jobId": 1300,
+        "statusCode": 0,
+        "type": "status"
+      }
+    },
+    {
+      "id": "1780554921966",
+      "instanceId": "-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ",
+        "id": "1780554921963"
+      },
+      "value": {
+        "inputStatus": "ALLOW_INPUT",
+        "jobId": 0,
+        "type": "input_status"
+      }
+    }
+  ],
+  "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI": [
+    {
+      "id": "1780554921967",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780554921964"
+      },
+      "value": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "jobId": 1317,
+        "state": "SCHEDULED",
+        "type": "command"
+      }
+    },
+    {
+      "id": "1780554921968",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780554921964"
+      },
+      "value": {
+        "inputStatus": "ALLOW_INTERRUPT",
+        "jobId": 0,
+        "type": "input_status"
+      }
+    },
+    {
+      "id": "1780554921969",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780554921964"
+      },
+      "value": {
+        "effect": {
+          "classCount": 1,
+          "cost": 59,
+          "listenerId": 63,
+          "methodCount": 1
+        },
+        "jobId": 1317,
+        "success": true,
+        "type": "enhancer"
+      }
+    },
+    {
+      "id": "1780554921970",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780554921964"
+      },
+      "value": {
+        "accessPoint": "AtExit",
+        "className": "demo.MathGame",
+        "cost": 0.07937,
+        "jobId": 1317,
+        "methodName": "primeFactors",
+        "sizeLimit": 10485760,
+        "ts": "2026-06-04 06:35:27.450856750",
+        "type": "watch",
+        "value": "@ArrayList[\n    @Object[][isEmpty=false;size=1],\n    @MathGame[demo.MathGame@3aafb60c],\n    @ArrayList[isEmpty=false;size=5],\n]"
+      }
+    },
+    {
+      "id": "1780554921971",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780554921964"
+      },
+      "value": {
+        "jobId": 1317,
+        "statusCode": 0,
+        "type": "status"
+      }
+    },
+    {
+      "id": "1780554921972",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "watch demo.MathGame primeFactors -n 1",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780554921964"
+      },
+      "value": {
+        "inputStatus": "ALLOW_INPUT",
+        "jobId": 0,
+        "type": "input_status"
+      }
+    }
+  ]
+}

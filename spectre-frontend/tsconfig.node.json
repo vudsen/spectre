@@ -2,16 +2,19 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "es2021",
-    "lib": ["es2021"],
+    "lib": ["es2021", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "baseUrl": ".",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
 
     /* Linting */
     "strict": true,
@@ -25,7 +28,10 @@
         "name": "@0no-co/graphqlsp",
         "schema": "src/graphql/generated/schema.graphql"
       }
-    ]
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["vite.config.ts", "codegen.ts"]
+  "include": ["vite.config.ts", "codegen.ts", "src/**/*.test.ts"]
 }

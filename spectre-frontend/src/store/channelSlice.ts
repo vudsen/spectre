@@ -4,19 +4,24 @@ import type { SkillDTO } from '@/api/impl/ai.ts'
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 
 export type AggregatedCommandGroup = {
+  key: string
   command: string
   instances: Record<string, ArthasMessage[]>
 }
+
+export type InstanceStatus = {
+  inputStatus: InputStatusResponse['inputStatus']
+} & InstanceInfoVO
 
 type ChannelContext = {
   isDebugMode?: boolean
   channelId: string
   classloaderHash?: string
-  inputStatus: InputStatusResponse['inputStatus']
   selectedSkill?: SkillDTO
   availableSkills?: SkillDTO[]
-  instances: Record<string, InstanceInfoVO>
-  messages: AggregatedCommandGroup[]
+  inputStatus: InputStatusResponse['inputStatus']
+  instances: Record<string, InstanceStatus>
+  groupedMessages: AggregatedCommandGroup[]
   /**
    * 自动执行 LLM 工具执行请求
    */
@@ -36,7 +41,7 @@ const initialState: ChannelState = {
     channelId: '-1',
     inputStatus: 'DISABLED',
     instances: {},
-    messages: [],
+    groupedMessages: [],
   },
 }
 
@@ -49,11 +54,11 @@ export const channelSlice = createSlice({
     },
     updateChannelContext(
       state,
-      action: PayloadAction<Partial<ChannelContext>>,
+      { payload }: PayloadAction<Partial<ChannelContext>>,
     ) {
       state.context = {
         ...state.context,
-        ...action.payload,
+        ...payload,
       }
     },
     updateInputStatus(
