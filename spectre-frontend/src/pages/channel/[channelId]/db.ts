@@ -205,7 +205,6 @@ async function setupDB() {
           value: message.value,
         })
       }
-      console.log(result)
 
       await db.put('instanceInfo', { lastAccess: Date.now() }, instanceId)
       await tx.done

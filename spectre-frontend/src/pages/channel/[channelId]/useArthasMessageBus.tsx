@@ -54,6 +54,7 @@ type PollState = {
   reconnectTaskId?: number
   websocket?: WebSocket
   isSocketOpen: boolean
+  lastPullSentAt: number
 }
 
 type ArthasMessageBusInternal = {
@@ -69,6 +70,7 @@ const MAX_BUS_MESSAGE_SIZE = 100
 const MAX_PULL_DELAY = 20 * 1000
 const INITIAL_PULL_DELAY = 1000
 const SOCKET_RECONNECT_DELAY = 1000
+const MIN_PULL_INTERVAL = 1000
 
 function parseChannelIdFromPathname(pathname: string): string | undefined {
   return /\/channel\/([^/]+)/.exec(pathname)?.[1]
@@ -78,7 +80,6 @@ const createArthasMessageBusInternal = async (
   channelId: string,
   instances: InstanceInfoVO[],
 ): Promise<ArthasMessageBusInternal> => {
-  console.log('==')
   const aggregator = createMessageAggregator(instances)
   const listenerMap = new Map<number, Listener>()
   const db = await setupDB()
@@ -91,6 +92,7 @@ const createArthasMessageBusInternal = async (
     taskDelay: INITIAL_PULL_DELAY,
     isExcited: false,
     isSocketOpen: false,
+    lastPullSentAt: 0,
   }
 
   if (import.meta.env.DEV) {
@@ -268,50 +270,64 @@ const createArthasMessageBusInternal = async (
   }
 
   function openSocket() {
-    if (
-      state.isExcited ||
-      state.websocket?.readyState === WebSocket.OPEN ||
-      state.websocket?.readyState === WebSocket.CONNECTING
-    ) {
-      return
-    }
-
-    clearReconnectTimer()
-    let websocket: WebSocket
-    try {
-      websocket = createArthasResultWebSocket(channelId)
-    } catch (e) {
-      console.error(e)
-      return
-    }
-    state.websocket = websocket
-
-    websocket.onopen = () => {
-      state.isSocketOpen = true
-      state.taskDelay = INITIAL_PULL_DELAY
-      pullNow()
-    }
-
-    websocket.onmessage = (event) => {
-      handleSocketMessage(String(event.data)).catch((error) => {
-        console.error(error)
-      })
-    }
-
-    websocket.onclose = () => {
-      state.isSocketOpen = false
-      state.websocket = undefined
-      if (!state.isExcited) {
-        clearReconnectTimer()
-        state.reconnectTaskId = setTimeout(() => {
-          openSocket()
-        }, SOCKET_RECONNECT_DELAY)
+    return new Promise<void>((resolve, reject) => {
+      if (
+        state.isExcited ||
+        state.websocket?.readyState === WebSocket.OPEN ||
+        state.websocket?.readyState === WebSocket.CONNECTING
+      ) {
+        resolve()
+        return
       }
-    }
 
-    websocket.onerror = (event) => {
-      console.error(event)
-    }
+      clearReconnectTimer()
+      let websocket: WebSocket
+      try {
+        websocket = createArthasResultWebSocket(channelId)
+      } catch (e) {
+        reject(e)
+        return
+      }
+      state.websocket = websocket
+
+      websocket.onopen = function () {
+        state.isSocketOpen = true
+        state.taskDelay = INITIAL_PULL_DELAY
+        pullNow()
+        resolve()
+      }
+
+      websocket.onmessage = (event) => {
+        handleSocketMessage(String(event.data)).catch((error) => {
+          console.error(error)
+        })
+      }
+
+      websocket.onclose = () => {
+        state.isSocketOpen = false
+        state.websocket = undefined
+        console.log('websocket closed')
+        if (!state.isExcited) {
+          clearReconnectTimer()
+          state.reconnectTaskId = setTimeout(() => {
+            openSocket()
+          }, SOCKET_RECONNECT_DELAY)
+        }
+      }
+
+      websocket.onerror = function (event) {
+        console.error(event)
+        showDialog({
+          title: i18n.t('channel.establishFailed'),
+          message: i18n.t('common.seeConsole'),
+          color: 'danger',
+          hideCancel: true,
+        })
+        if (this.readyState !== WebSocket.OPEN) {
+          reject()
+        }
+      }
+    })
   }
 
   const launchPullResultTask = () => {
@@ -328,10 +344,19 @@ const createArthasMessageBusInternal = async (
       return
     }
 
+    const now = Date.now()
+    const elapsed = now - state.lastPullSentAt
+    // 避免后端同时发送多条结果，导致前端多次触发 pullNow
+    if (elapsed < MIN_PULL_INTERVAL) {
+      scheduleNextPull(MIN_PULL_INTERVAL - elapsed)
+      return
+    }
+
     const payload: ArthasPullResultsRequest = {
       type: 'pull_results',
     }
     state.websocket.send(JSON.stringify(payload))
+    state.lastPullSentAt = now
     state.taskDelay = Math.min(state.taskDelay + 1000, MAX_PULL_DELAY)
     scheduleNextPull(state.taskDelay)
   }
@@ -440,7 +465,7 @@ const createArthasMessageBusInternal = async (
     state.isExcited = true
     clearPullTimer()
     clearReconnectTimer()
-    if (state.websocket) {
+    if (state.websocket && state.websocket.readyState === WebSocket.OPEN) {
       state.websocket.close()
       state.websocket = undefined
     }
@@ -502,7 +527,7 @@ const createArthasMessageBusInternal = async (
     )
   }
 
-  openSocket()
+  await openSocket()
 
   return {
     launchPullResultTask,

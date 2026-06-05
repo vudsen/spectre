@@ -36,7 +36,8 @@
     "gotIt": "Got It",
     "type": "Type",
     "empty": "Nothing here",
-    "tip": "Tip"
+    "tip": "Tip",
+    "seeConsole": "See F12 console"
   },
   "router": {
     "home": "Home",
@@ -122,7 +123,8 @@
     "incompleteTipMessage": "Batch operations are still under development. Currently, only basic command execution functionality has been completed. Unfinished features will be hidden.",
     "executeResult": "Execution result",
     "batchExecFail": "Batch execute failed",
-    "batchExecDesc": "The following instances failed to accept this batch command:"
+    "batchExecDesc": "The following instances failed to accept this batch command:",
+    "establishFailed": "Establish Connection Failed"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",
