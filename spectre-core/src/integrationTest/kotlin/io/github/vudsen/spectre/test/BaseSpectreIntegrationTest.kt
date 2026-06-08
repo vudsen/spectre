@@ -11,14 +11,18 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.client.MultipartBodyBuilder
 import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
 import tools.jackson.databind.node.ArrayNode
 import tools.jackson.databind.node.ObjectNode
+import java.util.concurrent.ConcurrentHashMap
 
 abstract class BaseSpectreIntegrationTest : AbstractSpectreIntegrationTest() {
     companion object {
         val logger = LoggerFactory.getLogger(BaseSpectreIntegrationTest::class.java)
     }
+
+    private val arthasResultSockets = ConcurrentHashMap<String, ArthasResultWebSocketClient>()
 
     protected fun findLatestBundleId(): String =
         graphQlTester
@@ -157,34 +161,30 @@ abstract class BaseSpectreIntegrationTest : AbstractSpectreIntegrationTest() {
     /**
      * 同步拉取结果，该方法会保证所有实例的消息都非空
      */
-    private fun pullResultSync(context: ChannelTestContext): Map<String, ArrayNode> {
-        val r = HashMap<String, ArrayNode>()
-        loop(5) {
-            val raw =
-                client
-                    .get()
-                    .uri("spectre-api/arthas/channel/${context.channelId}/pull-result")
-                    .cookies(cookiesConsumer)
-                    .exchange()
-                    .expectStatus()
-                    .isOk
-                    .expectBody<Map<String, ArrayNode>>()
-                    .returnResult()
-                    .responseBody
-            for (entry in raw!!.entries) {
-                val instanceId = entry.key
-                val result = entry.value
-                if (!result.isEmpty) {
-                    r[instanceId] = result
+    private fun pullResultSync(context: ChannelTestContext): Map<String, ArrayNode> =
+        resolveArthasResultSocket(context.channelId).pullResultsSync(context.instanceIds)
+
+    private fun resolveArthasResultSocket(channelId: String): ArthasResultWebSocketClient =
+        arthasResultSockets.computeIfAbsent(channelId) {
+            createArthasResultSocket(channelId).also { socket ->
+                GlobalDisposer.registerDispose {
+                    arthasResultSockets.remove(channelId, socket)
+                    socket.close()
                 }
             }
-            if (r.size == context.instanceIds.size) {
-                return@loop true
-            }
-            return@loop null
         }
-        return r
-    }
+
+    private fun createArthasResultSocket(channelId: String): ArthasResultWebSocketClient =
+        ArthasResultWebSocketClient.connect(
+            baseHttpUrl = "http://localhost:$localServerPort",
+            channelId = channelId,
+            cookieHeader = authCookies.toCookieHeader(),
+        )
+
+    private fun MultiValueMap<String, String>.toCookieHeader(): String =
+        entries
+            .flatMap { entry -> entry.value.map { cookieValue -> "${entry.key}=$cookieValue" } }
+            .joinToString("; ")
 
     private fun testBasicCommand(info: ChannelTestContext) {
         executeArthasCommand(info.channelId, "sc demo.*")
