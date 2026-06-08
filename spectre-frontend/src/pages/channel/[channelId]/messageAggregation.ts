@@ -16,20 +16,6 @@ type MessageSegment = {
 
 const UNKNOWN = '<Unknown>'
 
-function findKey(messagePart: ArthasMessage[]): string {
-  for (const messagePartElement of messagePart) {
-    if (messagePartElement.value.type === 'command') {
-      return (messagePartElement.value as CommandMessage).command
-    } else if (messagePartElement.value.type === 'status') {
-      const msg = messagePartElement.value as StatusMessage
-      return msg.message + msg.statusCode.toString()
-    } else if (messagePartElement.value.type === 'message') {
-      return (messagePartElement.value as MessageResponse).message
-    }
-  }
-  return messagePart[0].value.type
-}
-
 function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
   if (messages.length === 0) {
     return []
@@ -50,7 +36,7 @@ function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
         jobId: lastJobId,
         name: currentName,
         isEnded: ended,
-        key: findKey(part),
+        key: part[0].context.command ?? '<no-group>',
       })
       lastJobId = arthasResponse.jobId
       lastStart = i
@@ -79,7 +65,7 @@ function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
       name: currentName,
       isEnded: ended,
       jobId: lastJobId,
-      key: findKey(part),
+      key: part[0].context.command ?? '<no-group>',
     })
   }
   return result
