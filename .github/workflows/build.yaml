@@ -103,7 +103,7 @@ jobs:
           path: ./spectre-core/build/reports/tests/test/**/*
 
       - name: Publish to Cloudflare Pages
-        if: failure() && steps.test.outcome == 'failure' && github.event_name == 'pull_request'
+        if: failure() && steps.test.outcome == 'failure'
         uses: cloudflare/wrangler-action@v3
         id: cloudflare
         with:
@@ -113,7 +113,7 @@ jobs:
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add Summary
-        if: failure() && steps.test.outcome == 'failure' && github.event_name == 'pull_request'
+        if: failure() && steps.test.outcome == 'failure'
         run: |
           echo "# Test Report" >> $GITHUB_STEP_SUMMARY
           echo "❌ Run test failed, click [here](${{ steps.cloudflare.outputs.deployment-url }}) to check the test report." >> $GITHUB_STEP_SUMMARY
@@ -147,7 +147,7 @@ jobs:
           path: ./spectre-core/build/reports/tests/integrationTest/**/*
 
       - name: Publish to Cloudflare Pages
-        if: failure() && steps.test.outcome == 'failure' && github.event_name == 'pull_request'
+        if: failure() && steps.test.outcome == 'failure'
         uses: cloudflare/wrangler-action@v3
         id: cloudflare
         with:
@@ -157,7 +157,7 @@ jobs:
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add Summary
-        if: failure() && steps.test.outcome == 'failure' && github.event_name == 'pull_request'
+        if: failure() && steps.test.outcome == 'failure'
         run: |
           echo "# Test Report" >> $GITHUB_STEP_SUMMARY
           echo "❌ Run test failed, click [here](${{ steps.cloudflare.outputs.deployment-url }}) to check the test report." >> $GITHUB_STEP_SUMMARY
