@@ -1,9 +1,12 @@
 import {
+  createArthasResultWebSocket,
+  type ArthasPullResultEvent,
+  type ArthasPullResultsRequest,
+  type ArthasResultWebSocketEvent,
   type InstanceInfoVO,
   executeArthasCommand,
   type InputStatusResponse,
   interruptCommand,
-  pullResults,
   type PureArthasResponse,
 } from '@/api/impl/arthas.ts'
 import { useEffect, useState } from 'react'
@@ -47,8 +50,11 @@ let globalId = Date.now()
 type PollState = {
   taskDelay: number
   isExcited: boolean
-  isFetching: boolean
   pullResultsTaskId?: number
+  reconnectTaskId?: number
+  websocket?: WebSocket
+  isSocketOpen: boolean
+  lastPullSentAt: number
 }
 
 type ArthasMessageBusInternal = {
@@ -61,6 +67,10 @@ type ArthasMessageBusInternal = {
 const classloaderHashRegx = /-c +[\da-zA-Z]{8}/
 const INPUT_STATUS = 'input_status'
 const MAX_BUS_MESSAGE_SIZE = 100
+const MAX_PULL_DELAY = 20 * 1000
+const INITIAL_PULL_DELAY = 1000
+const SOCKET_RECONNECT_DELAY = 1000
+const MIN_PULL_INTERVAL = 1000
 
 function parseChannelIdFromPathname(pathname: string): string | undefined {
   return /\/channel\/([^/]+)/.exec(pathname)?.[1]
@@ -79,9 +89,10 @@ const createArthasMessageBusInternal = async (
   await initializeInstanceContext()
 
   const state: PollState = {
-    taskDelay: 0,
-    isFetching: false,
+    taskDelay: INITIAL_PULL_DELAY,
     isExcited: false,
+    isSocketOpen: false,
+    lastPullSentAt: 0,
   }
 
   if (import.meta.env.DEV) {
@@ -109,13 +120,13 @@ const createArthasMessageBusInternal = async (
     let inputStatus: InputStatusResponse['inputStatus'] = 'DISABLED'
     const instanceMap: Record<string, InstanceStatus> = {}
     for (const instance of instances) {
-      const messages = await db.listAllMessages(
+      const instanceMessages = await db.listAllMessages(
         instance.instanceId,
         MAX_BUS_MESSAGE_SIZE,
       )
-      r[instance.instanceId] = messages
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const msg = messages[i]
+      r[instance.instanceId] = instanceMessages
+      for (let i = instanceMessages.length - 1; i >= 0; i--) {
+        const msg = instanceMessages[i]
         if (msg.value.type === INPUT_STATUS) {
           inputStatus = (msg.value as InputStatusResponse).inputStatus
           break
@@ -149,10 +160,13 @@ const createArthasMessageBusInternal = async (
     return newId
   }
 
-  const doPullResults = async (): Promise<number> => {
+  async function persistResponses(
+    rows: {
+      instanceId: string
+      response: PureArthasResponse
+    }[],
+  ): Promise<number> {
     const currentChannelId = store.getState().channel.context.channelId
-    const result = await pullResults(currentChannelId)
-
     const rowsToPersist: {
       value: PureArthasResponse
       channelId: string
@@ -160,10 +174,8 @@ const createArthasMessageBusInternal = async (
       instanceId: string
     }[] = []
 
-    const appendMessage = async (
-      instanceId: string,
-      response: PureArthasResponse,
-    ) => {
+    for (const row of rows) {
+      const response = row.response
       if (response.type === INPUT_STATUS) {
         const status = (response as InputStatusResponse).inputStatus
         store.dispatch(updateInputStatus(status))
@@ -173,86 +185,185 @@ const createArthasMessageBusInternal = async (
         const command = (response as CommandMessage).command
         const contextId = await db.createNewContext({
           command,
-          instanceId,
+          instanceId: row.instanceId,
         })
-        contextIdByInstance.set(instanceId, contextId)
+        contextIdByInstance.set(row.instanceId, contextId)
       }
 
-      const contextId = await ensureContextId(instanceId)
+      const contextId = await ensureContextId(row.instanceId)
       rowsToPersist.push({
         value: response,
         channelId: currentChannelId,
         contextId,
-        instanceId,
+        instanceId: row.instanceId,
       })
     }
 
-    for (const [instanceId, responses] of Object.entries(result)) {
-      for (const response of responses) {
-        await appendMessage(instanceId, response)
-      }
+    if (rowsToPersist.length === 0) {
+      return 0
     }
-    console.log(rowsToPersist.length)
-    if (rowsToPersist.length > 0) {
-      const dbMessages = await db.insertAllMessages(rowsToPersist)
-      const newMessageMap: Record<string, ArthasMessage[]> = {}
-      for (const instance of instances) {
-        newMessageMap[instance.instanceId] = []
-      }
-      for (const dbMessage of dbMessages) {
-        newMessageMap[dbMessage.instanceId].push(dbMessage)
-        messages[dbMessage.instanceId].push(dbMessage)
-      }
 
-      console.log('dispatched.')
-      try {
-        store.dispatch(
-          updateChannelContext({
-            groupedMessages: aggregator.appendNewMessages(
-              store.getState().channel.context.groupedMessages,
-              newMessageMap,
-            ),
-          }),
-        )
-      } catch (e) {
-        console.error(e)
-      }
-      for (const entry of listenerMap.entries()) {
-        entry[1].onMessage?.(dbMessages)
-      }
+    const dbMessages = await db.insertAllMessages(rowsToPersist)
+    const newMessageMap: Record<string, ArthasMessage[]> = {}
+    for (const instance of instances) {
+      newMessageMap[instance.instanceId] = []
+    }
+    for (const dbMessage of dbMessages) {
+      newMessageMap[dbMessage.instanceId].push(dbMessage)
+      messages[dbMessage.instanceId].push(dbMessage)
+    }
+
+    store.dispatch(
+      updateChannelContext({
+        groupedMessages: aggregator.appendNewMessages(
+          store.getState().channel.context.groupedMessages,
+          newMessageMap,
+        ),
+      }),
+    )
+    for (const entry of listenerMap.entries()) {
+      entry[1].onMessage?.(dbMessages)
     }
     return rowsToPersist.length
   }
 
-  const launchPullResultTask = () => {
-    if (state.isExcited || state.isFetching) {
+  function clearPullTimer() {
+    if (state.pullResultsTaskId) {
+      clearTimeout(state.pullResultsTaskId)
+      state.pullResultsTaskId = undefined
+    }
+  }
+
+  function clearReconnectTimer() {
+    if (state.reconnectTaskId) {
+      clearTimeout(state.reconnectTaskId)
+      state.reconnectTaskId = undefined
+    }
+  }
+
+  function scheduleNextPull(delay: number) {
+    if (state.isExcited) {
       return
     }
-    state.isFetching = true
-    doPullResults()
-      .then((messageCount) => {
-        if (messageCount > 0) {
-          state.taskDelay = 0
-        } else {
-          state.taskDelay = Math.min(state.taskDelay + 1000, 20 * 1000)
+    clearPullTimer()
+    state.pullResultsTaskId = setTimeout(() => {
+      launchPullResultTask()
+    }, delay)
+  }
+
+  async function handlePullResultEvent(event: ArthasPullResultEvent) {
+    await persistResponses(
+      event.messages.map((response) => ({
+        instanceId: event.instanceId,
+        response,
+      })),
+    )
+    state.taskDelay = 0
+    scheduleNextPull(state.taskDelay)
+  }
+
+  async function handleSocketMessage(raw: string) {
+    const event = JSON.parse(raw) as ArthasResultWebSocketEvent
+    if (event.type === 'pull_result') {
+      await handlePullResultEvent(event)
+    }
+  }
+
+  function openSocket() {
+    return new Promise<void>((resolve, reject) => {
+      if (
+        state.isExcited ||
+        state.websocket?.readyState === WebSocket.OPEN ||
+        state.websocket?.readyState === WebSocket.CONNECTING
+      ) {
+        resolve()
+        return
+      }
+
+      clearReconnectTimer()
+      let websocket: WebSocket
+      try {
+        websocket = createArthasResultWebSocket(channelId)
+      } catch (e) {
+        reject(e)
+        return
+      }
+      state.websocket = websocket
+
+      websocket.onopen = function () {
+        state.isSocketOpen = true
+        state.taskDelay = INITIAL_PULL_DELAY
+        pullNow()
+        resolve()
+      }
+
+      websocket.onmessage = (event) => {
+        handleSocketMessage(String(event.data)).catch((error) => {
+          console.error(error)
+        })
+      }
+
+      websocket.onclose = () => {
+        state.isSocketOpen = false
+        state.websocket = undefined
+        console.log('websocket closed')
+        if (!state.isExcited) {
+          clearReconnectTimer()
+          state.reconnectTaskId = setTimeout(() => {
+            openSocket()
+          }, SOCKET_RECONNECT_DELAY)
         }
-      })
-      .catch(() => {
-        state.taskDelay = Math.min(state.taskDelay + 5000, 20 * 1000)
-      })
-      .finally(() => {
-        state.pullResultsTaskId = setTimeout(() => {
-          launchPullResultTask()
-        }, state.taskDelay)
-        state.isFetching = false
-      })
+      }
+
+      websocket.onerror = function (event) {
+        console.error(event)
+        showDialog({
+          title: i18n.t('channel.establishFailed'),
+          message: i18n.t('common.seeConsole'),
+          color: 'danger',
+          hideCancel: true,
+        })
+        if (this.readyState !== WebSocket.OPEN) {
+          reject()
+        }
+      }
+    })
+  }
+
+  const launchPullResultTask = () => {
+    if (state.isExcited) {
+      return
+    }
+    if (
+      !state.websocket ||
+      !state.isSocketOpen ||
+      state.websocket.readyState !== WebSocket.OPEN
+    ) {
+      openSocket()
+      scheduleNextPull(Math.max(state.taskDelay, SOCKET_RECONNECT_DELAY))
+      return
+    }
+
+    const now = Date.now()
+    const elapsed = now - state.lastPullSentAt
+    // 避免后端同时发送多条结果，导致前端多次触发 pullNow
+    if (elapsed < MIN_PULL_INTERVAL) {
+      scheduleNextPull(MIN_PULL_INTERVAL - elapsed)
+      return
+    }
+
+    const payload: ArthasPullResultsRequest = {
+      type: 'pull_results',
+    }
+    state.websocket.send(JSON.stringify(payload))
+    state.lastPullSentAt = now
+    state.taskDelay = Math.min(state.taskDelay + 1000, MAX_PULL_DELAY)
+    scheduleNextPull(state.taskDelay)
   }
 
   const pullNow = () => {
-    if (state.pullResultsTaskId) {
-      clearTimeout(state.pullResultsTaskId)
-    }
     state.taskDelay = 0
+    clearPullTimer()
     launchPullResultTask()
   }
 
@@ -352,8 +463,11 @@ const createArthasMessageBusInternal = async (
 
   function close() {
     state.isExcited = true
-    if (state.pullResultsTaskId) {
-      clearTimeout(state.pullResultsTaskId)
+    clearPullTimer()
+    clearReconnectTimer()
+    if (state.websocket && state.websocket.readyState === WebSocket.OPEN) {
+      state.websocket.close()
+      state.websocket = undefined
     }
     if (import.meta.env.DEV) {
       delete window.displayMessages
@@ -413,6 +527,8 @@ const createArthasMessageBusInternal = async (
     )
   }
 
+  await openSocket()
+
   return {
     launchPullResultTask,
     pullNow,
@@ -440,8 +556,8 @@ const useArthasMessageBus = (
     let myBus: ArthasMessageBusInternal | undefined
     createArthasMessageBusInternal(channelId, channelInfos)
       .then((r) => {
+        myBus = r
         if (isDestroyed) {
-          myBus = r
           r.close()
         } else {
           setInternalBus(r)

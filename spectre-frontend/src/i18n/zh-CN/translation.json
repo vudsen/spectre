@@ -29,7 +29,8 @@
     "gotIt": "了解",
     "type": "类型",
     "empty": "没有任何可用数据",
-    "tip": "提示"
+    "tip": "提示",
+    "seeConsole": "详见 F12 控制台"
   },
   "router": {
     "home": "首页",
@@ -113,7 +114,8 @@
     "incompleteTipMessage": "批量操作仍在开发中，目前仅完成了基础的命令执行功能，未完成的功能将被隐藏",
     "executeResult": "执行结果",
     "batchExecFail": "批量执行失败",
-    "batchExecDesc": "以下实例未能接受本次批量命令："
+    "batchExecDesc": "以下实例未能接受本次批量命令：",
+    "establishFailed": "建立连接失败"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",

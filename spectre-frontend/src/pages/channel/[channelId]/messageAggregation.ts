@@ -170,7 +170,6 @@ export const createMessageAggregator = (instances: InstanceInfoVO[]) => {
     readonlyCurrentGroups: AggregatedCommandGroup[],
     newMessages: Record<string, ArthasMessage[]>,
   ): AggregatedCommandGroup[] {
-    console.log('Appending', newMessages)
     const newGroups: AggregatedCommandGroup[] = []
     const segmentsMap: Record<string, MessageSegment[]> = {}
     const instances: string[] = Object.keys(pendingCombined)
@@ -240,7 +239,6 @@ export const createMessageAggregator = (instances: InstanceInfoVO[]) => {
       newGroups.push(group)
       ptr = (ptr + 1) % instances.length
     }
-    console.log('setupResult ', newGroups)
     return [...headGroups, ...newGroups.reverse()]
   }
 

@@ -1,33 +1,25 @@
 package io.github.vudsen.spectre.core.controller
 
-import io.github.vudsen.spectre.api.dto.ArthasConsumerDTO
 import io.github.vudsen.spectre.api.dto.AttachStatus
 import io.github.vudsen.spectre.api.entity.ProfilerFile
 import io.github.vudsen.spectre.api.exception.BusinessException
-import io.github.vudsen.spectre.api.exception.ConsumerNotFountException
-import io.github.vudsen.spectre.api.exception.NamedExceptions
 import io.github.vudsen.spectre.api.service.ArthasExecutionService
 import io.github.vudsen.spectre.api.service.ChannelService
 import io.github.vudsen.spectre.api.vo.ChannelInfoVO
-import io.github.vudsen.spectre.common.util.KeyBasedLock
 import io.github.vudsen.spectre.core.audit.Log
+import io.github.vudsen.spectre.core.controller.ws.ArthasPullResultCoordinator
 import io.github.vudsen.spectre.core.util.MultipartFileAdapter
 import io.github.vudsen.spectre.core.vo.BatchExecResponseVO
 import io.github.vudsen.spectre.core.vo.CreateChannelRequestVO
 import io.github.vudsen.spectre.core.vo.ExecuteCommandRequestVO
-import io.github.vudsen.spectre.repo.po.ChannelPO
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.Resource
-import org.springframework.core.task.TaskExecutor
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -40,12 +32,7 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.util.UriUtils
 import tools.jackson.databind.node.ArrayNode
-import tools.jackson.databind.node.IntNode
-import tools.jackson.databind.node.JsonNodeFactory
-import tools.jackson.databind.node.ObjectNode
-import tools.jackson.databind.node.StringNode
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.CountDownLatch
 
 /**
  * Arthas 交互接口.
@@ -65,14 +52,8 @@ import java.util.concurrent.CountDownLatch
 class ArthasExecutionController(
     private val arthasExecutionService: ArthasExecutionService,
     private val channelService: ChannelService,
-    @param:Qualifier("applicationTaskExecutor") private val executor: TaskExecutor,
+    private val arthasPullResultCoordinator: ArthasPullResultCoordinator,
 ) {
-    private val logger = LoggerFactory.getLogger(ArthasExecutionController::class.java)
-
-    private fun channelSessionDataKey(instanceId: String): String = "InstanceIdToConsumerId:$instanceId"
-
-    private val joinLock = KeyBasedLock(executor)
-
     /**
      * @return Channel Id
      */
@@ -90,129 +71,34 @@ class ArthasExecutionController(
         @PathVariable channelId: String,
         request: HttpServletRequest,
     ): List<ChannelInfoVO> {
-        val channel =
-            channelId.toLongOrNull()?.let {
-                channelService.findById(it)
-            }
-        return joinChannelInternal(channel, request, channelId)
-    }
-
-    /**
-     * @return consumerId
-     */
-    private fun joinChannelForSingleInstance(
-        request: HttpServletRequest,
-        instanceId: String,
-    ): ArthasConsumerDTO {
-        val session = request.getSession(true)
-        val lockKey = session.id + ":" + instanceId
-        joinLock.lock(lockKey) {
-            val key = channelSessionDataKey(instanceId)
-            val oldConsumerId = session.getAttribute(key) as ArthasConsumerDTO?
-            if (oldConsumerId != null) {
-                return oldConsumerId
-            }
-            val detail = arthasExecutionService.joinChannel(instanceId, session.id)
-            session.setAttribute(key, detail)
-            return detail
-        }
+        arthasPullResultCoordinator.joinChannel(channelId, request.getSession(true))
+        val channel = arthasPullResultCoordinator.resolveChannel(channelId)
+        return joinChannelInternal(request, channel != null, channelId)
     }
 
     @GetMapping("/channel/{channelId}/pull-result", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun pullResults(
         @PathVariable channelId: String,
         request: HttpServletRequest,
-    ): Map<String, ArrayNode> {
-        val channel =
-            channelId.toLongOrNull()?.let {
-                channelService.findById(it)
-            }
-        if (channel == null) {
-            try {
-                val channelSession = resolveChannelSession(request, channelId)
-                return mapOf(
-                    channelId to arthasExecutionService.pullResults(channelId, channelSession.consumerId),
-                )
-            } catch (_: ConsumerNotFountException) {
-                return mapOf(channelId to recreateConsumerAndPull(request, channelId))
-            }
-        } else {
-            val result = mutableMapOf<String, ArrayNode>()
-            val latch = CountDownLatch(channel.instanceIds.size)
-            for (instanceId in channel.instanceIds) {
-                val ctx = SecurityContextHolder.getContext()
-                executor.execute {
-                    SecurityContextHolder.setContext(ctx)
-                    try {
-                        try {
-                            val channelSession = resolveChannelSession(request, instanceId)
-                            result[instanceId] = arthasExecutionService.pullResults(instanceId, channelSession.consumerId)
-                        } catch (_: ConsumerNotFountException) {
-                            result[instanceId] = recreateConsumerAndPull(request, instanceId)
-                        } finally {
-                            latch.countDown()
-                            SecurityContextHolder.clearContext()
-                        }
-                    } catch (e: Exception) {
-                        val errorMessage = exactErrorMsg(e)
-                        val node = ArrayNode(JsonNodeFactory.instance)
-                        node.add(createErrorMsg(errorMessage))
-                        result[instanceId] = node
-                    }
-                }
-            }
-            // TODO 添加超时并且将消息缓存到服务里
-            latch.await()
-            return result
-        }
-    }
-
-    private fun exactErrorMsg(e: Exception): String {
-        val errorMessage =
-            if (e is BusinessException) {
-                e.toI18nMessage()
-            } else {
-                logger.error("", e)
-                "Internal Server Error"
-            }
-        return errorMessage
-    }
-
-    private fun createErrorMsg(msg: String): ObjectNode {
-        val node = ObjectNode(JsonNodeFactory.instance)
-        node["type"] = StringNode("message")
-        node["jobId"] = IntNode((System.currentTimeMillis() / 1000).toInt())
-        node["message"] = StringNode(msg)
-        return node
-    }
-
-    private fun recreateConsumerAndPull(
-        request: HttpServletRequest,
-        instanceId: String,
-    ): ArrayNode {
-        val session = request.getSession(false) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
-        session.removeAttribute(channelSessionDataKey(instanceId))
-        try {
-            // reconnect.
-            val consumerDTO = joinChannelForSingleInstance(request, instanceId)
-            return arthasExecutionService.pullResults(instanceId, consumerDTO.consumerId) as ArrayNode
-        } catch (_: ConsumerNotFountException) {
-            throw NamedExceptions.SESSION_EXPIRED.toException()
-        }
-    }
+    ): Map<String, ArrayNode> =
+        arthasPullResultCoordinator.pullResultsForChannel(
+            channelId,
+            request.getSession(false) ?: throw BusinessException("error.channel.not.exist"),
+        )
 
     private fun joinChannelInternal(
-        channel: ChannelPO?,
         request: HttpServletRequest,
+        isBatchChannel: Boolean,
         channelId: String,
     ): List<ChannelInfoVO> {
-        if (channel == null) {
-            val r = joinChannelForSingleInstance(request, channelId)
-            return listOf(ChannelInfoVO("unused", r.name, channelId))
+        if (!isBatchChannel) {
+            val consumer =
+                arthasPullResultCoordinator.resolveChannelSession(
+                    request.getSession(false) ?: throw BusinessException("error.channel.not.exist"),
+                    channelId,
+                )
+            return listOf(ChannelInfoVO("unused", consumer.name, channelId))
         } else {
-            for (instanceId in channel.instanceIds) {
-                joinChannelForSingleInstance(request, instanceId)
-            }
             return channelService.resolveChannelById(channelId.toLong())
         }
     }
@@ -220,13 +106,14 @@ class ArthasExecutionController(
     private fun resolveChannelSession(
         request: HttpServletRequest,
         instanceId: String,
-    ): ArthasConsumerDTO {
-        val session = request.getSession(false) ?: throw NamedExceptions.SESSION_EXPIRED.toException()
-        val channelSession =
-            session.getAttribute(channelSessionDataKey(instanceId)) as ArthasConsumerDTO?
-                ?: throw BusinessException("error.channel.not.exist")
-        return channelSession
-    }
+    ) = arthasPullResultCoordinator.resolveChannelSession(
+        request.getSession(false) ?: throw BusinessException("error.channel.not.exist"),
+        instanceId,
+    )
+
+    private fun exactErrorMsg(e: Exception): String = arthasPullResultCoordinator.exactErrorMsg(e)
+
+    private fun channelSessionDataKey(instanceId: String): String = "InstanceIdToConsumerId:$instanceId"
 
     @PostMapping("/channel/{channelId}/execute")
     @Log("log.arthas.channel.execute", "{ channelId: #args[0], command: #args[1].command  }")

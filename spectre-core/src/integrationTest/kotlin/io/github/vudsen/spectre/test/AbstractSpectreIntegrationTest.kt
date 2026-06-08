@@ -8,10 +8,12 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.graphql.test.autoconfigure.tester.AutoConfigureHttpGraphQlTester
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.context.ApplicationContext
 import org.springframework.graphql.test.tester.HttpGraphQlTester
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import tools.jackson.databind.json.JsonMapper
 import java.util.function.Consumer
@@ -22,6 +24,9 @@ import java.util.function.Consumer
 @SpringBootTest(classes = [SpectreApplication::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractSpectreIntegrationTest {
     protected val jsonMapper = JsonMapper.builderWithJackson2Defaults().build()
+
+    @LocalServerPort
+    protected var localServerPort: Int = 0
 
     @Autowired
     lateinit var graphQlTester: HttpGraphQlTester
@@ -34,7 +39,9 @@ abstract class AbstractSpectreIntegrationTest {
 //        this.client = client.mutate().responseTimeout(Duration.ofDays(1)).build()
 //    }
 
-    var cookiesConsumer: Consumer<MultiValueMap<String, String>> = {}
+    protected val authCookies: MultiValueMap<String, String> = LinkedMultiValueMap()
+
+    var cookiesConsumer: Consumer<MultiValueMap<String, String>> = { cookies -> cookies.addAll(authCookies) }
 
     @BeforeEach
     fun beforeAll(
@@ -67,12 +74,11 @@ abstract class AbstractSpectreIntegrationTest {
                 .returnResult()
                 .responseCookies
 
-        val valueMap = MultiValueMap.fromSingleValue<String, String>(mutableMapOf())
+        authCookies.clear()
         for (entry in responseCookies) {
             for (cookie in entry.value) {
-                valueMap.add(entry.key, cookie.value)
+                authCookies.add(entry.key, cookie.value)
             }
         }
-        cookiesConsumer = { cookies -> cookies.addAll(valueMap) }
     }
 }

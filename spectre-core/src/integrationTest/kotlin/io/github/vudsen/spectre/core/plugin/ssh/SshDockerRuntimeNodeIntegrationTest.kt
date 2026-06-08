@@ -15,6 +15,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.testcontainers.utility.DockerImageName
 
 class SshDockerRuntimeNodeIntegrationTest : BaseSpectreIntegrationTest() {
+    //    @ValueSource(strings = ["java25"])
     @ParameterizedTest
     @ValueSource(strings = ["java8", "java11", "java17", "java25"])
     fun testDockerAttach(mathGameTag: String) {
