@@ -4,31 +4,19 @@ import type { AggregatedCommandGroup } from '@/store/channelSlice.ts'
 import type { MessageResponse } from '@/pages/channel/[channelId]/_message_view/_component/MessageDetail.tsx'
 import type { InstanceInfoVO } from '@/api/impl/arthas.ts'
 import type { StatusMessage } from '@/pages/channel/[channelId]/_message_view/_component/StatusMessageDetail.tsx'
-import { deepClone } from '@/common/objects.ts'
 
 type MessageSegment = {
   jobId: number
   name: string
   message: ArthasMessage[]
   isEnded: boolean
-  key: string
+  /**
+   * command
+   */
+  command: string
 }
 
 const UNKNOWN = '<Unknown>'
-
-function findKey(messagePart: ArthasMessage[]): string {
-  for (const messagePartElement of messagePart) {
-    if (messagePartElement.value.type === 'command') {
-      return (messagePartElement.value as CommandMessage).command
-    } else if (messagePartElement.value.type === 'status') {
-      const msg = messagePartElement.value as StatusMessage
-      return msg.message + msg.statusCode.toString()
-    } else if (messagePartElement.value.type === 'message') {
-      return (messagePartElement.value as MessageResponse).message
-    }
-  }
-  return messagePart[0].value.type
-}
 
 function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
   if (messages.length === 0) {
@@ -43,6 +31,9 @@ function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i]
     const arthasResponse = msg.value
+    if (arthasResponse.type === 'input_status') {
+      continue
+    }
 
     if (arthasResponse.jobId !== lastJobId) {
       result.push({
@@ -50,7 +41,7 @@ function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
         jobId: lastJobId,
         name: currentName,
         isEnded: ended,
-        key: findKey(part),
+        command: part[0].context.command ?? '<no-group>',
       })
       lastJobId = arthasResponse.jobId
       lastStart = i
@@ -79,176 +70,81 @@ function readAllSegments(messages: ArthasMessage[]): MessageSegment[] {
       name: currentName,
       isEnded: ended,
       jobId: lastJobId,
-      key: findKey(part),
+      command: part[0].context.command ?? '<no-group>',
     })
   }
   return result
 }
 
-/**
- * 尝试将消息追加到现有组
- */
-function tryAppendExistGroup(
-  instances: string[],
-  headGroups: AggregatedCommandGroup[],
-  segmentsMap: Record<string, MessageSegment[]>,
-  pendingCombined: Record<string, ArthasMessage[]>,
-) {
-  for (let i = 1; i <= instances.length; i++) {
-    const cur = headGroups.length - i
-    if (cur < 0) {
-      break
-    }
-    let group = headGroups[cur]
-    let isCloned = false
-    for (const instanceId of instances) {
-      const segments = segmentsMap[instanceId]
-      if (segments.length === 0) {
-        continue
-      }
-      const segment = segments[0]
-      if (segment.key !== group.key || segment.message.length === 0) {
-        continue
-      }
-      const temp = group.instances[instanceId]
-      if (
-        temp &&
-        temp.length > 0 &&
-        segment.jobId !== temp[temp.length - 1].value.jobId
-      ) {
-        continue
-      }
-
-      let cloned: AggregatedCommandGroup
-      if (isCloned) {
-        cloned = group
-      } else {
-        cloned = deepClone(group)
-        group = cloned
-        isCloned = true
-      }
-
-      const currentMessages = cloned.instances[instanceId]
-      if (!currentMessages || currentMessages.length === 0) {
-        cloned.instances[instanceId] = segment.message
-      } else {
-        const tailJobId = segment.jobId
-        let j = currentMessages.length - 1
-        for (; j >= 0; j--) {
-          if (currentMessages[j].value.jobId != tailJobId) {
-            break
-          }
-        }
-        if (j < 0) {
-          // same part
-          cloned.instances[instanceId] = segment.message
-        } else {
-          cloned.instances[instanceId] = [
-            ...currentMessages.slice(0, j + 1),
-            ...segment.message,
-          ]
-        }
-      }
-
-      headGroups[cur] = cloned
-      segments.splice(0, 1)
-      if (segment.isEnded) {
-        pendingCombined[instanceId].splice(0, segment.message.length)
-      }
-    }
-  }
-}
-
 export const createMessageAggregator = (instances: InstanceInfoVO[]) => {
-  const pendingCombined: Record<string, ArthasMessage[]> = {}
-
-  for (const instance of instances) {
-    pendingCombined[instance.instanceId] = []
-  }
+  const instancesIds: string[] = instances.map((ins) => ins.instanceId)
 
   function appendNewMessages(
     readonlyCurrentGroups: AggregatedCommandGroup[],
     newMessages: Record<string, ArthasMessage[]>,
   ): AggregatedCommandGroup[] {
-    const newGroups: AggregatedCommandGroup[] = []
     const segmentsMap: Record<string, MessageSegment[]> = {}
-    const instances: string[] = Object.keys(pendingCombined)
-    let ptr = 0
 
     for (const [k, v] of Object.entries(newMessages)) {
-      for (const vElement of v) {
-        if (vElement.value.type === 'input_status') {
-          continue
-        }
-        pendingCombined[k].push(vElement)
-      }
-      segmentsMap[k] = readAllSegments(pendingCombined[k])
+      segmentsMap[k] = readAllSegments(v)
     }
 
-    const headGroups: AggregatedCommandGroup[] = [...readonlyCurrentGroups]
-
-    tryAppendExistGroup(instances, headGroups, segmentsMap, pendingCombined)
-
-    for (const instanceId of instances) {
-      const segments = segmentsMap[instanceId]
-      for (const segment of segments) {
-        if (segment.isEnded) {
-          pendingCombined[instanceId].splice(0, segment.message.length)
-        }
-      }
-    }
+    const newGroups: AggregatedCommandGroup[] = [...readonlyCurrentGroups]
 
     while (true) {
       let emptyCnt = 0
-      for (let i = 0; i < instances.length; i++) {
-        if (segmentsMap[instances[i]].length === 0) {
+      for (const instancesId of instancesIds) {
+        if (segmentsMap[instancesId].length === 0) {
           emptyCnt++
-        }
-      }
-      if (emptyCnt === instances.length) {
-        break
-      }
-
-      const current = segmentsMap[instances[ptr]]
-      if (current.length === 0) {
-        ptr = (ptr + 1) % instances.length
-        continue
-      }
-      const currentLast = current[current.length - 1]
-      // search for group
-      const group: AggregatedCommandGroup = {
-        key: currentLast.key,
-        command: currentLast.name,
-        instances: {
-          [instances[ptr]]: [...currentLast.message],
-        },
-      }
-      current.pop()
-      for (let i = 1; i < instances.length; i++) {
-        const messageSegments =
-          segmentsMap[instances[(ptr + i) % instances.length]]
-        if (messageSegments.length === 0) {
           continue
         }
-        const seg = messageSegments[messageSegments.length - 1]
-        if (seg.key === currentLast.key) {
-          group.instances[instances[(ptr + i) % instances.length]] = seg.message
-          messageSegments.pop()
+        const segements = segmentsMap[instancesId]
+        let currentGroup: AggregatedCommandGroup | undefined
+        for (let i = newGroups.length - 1; i >= 0; i--) {
+          // 找到最近的组
+          const group = newGroups[i]
+          if (group.command !== segements[0].command) {
+            continue
+          }
+          const saved = group.instances[instancesId]
+          if (saved && saved[0].value.jobId === segements[0].jobId) {
+            currentGroup = group
+          } else if (!saved) {
+            currentGroup = group
+          }
+          break
         }
+        if (!currentGroup) {
+          // 没找到，新增组
+          newGroups.push({
+            command: segements[0].command,
+            instances: {
+              [instancesId]: segements[0].message,
+            },
+          })
+        } else {
+          // 找到了，追加
+          const old = currentGroup.instances[instancesId]
+          if (old) {
+            currentGroup.instances[instancesId] = [
+              ...old,
+              ...segements[0].message,
+            ]
+          } else {
+            currentGroup.instances[instancesId] = segements[0].message
+          }
+        }
+        segements.splice(0, 1)
       }
-      newGroups.push(group)
-      ptr = (ptr + 1) % instances.length
+      if (emptyCnt === instancesIds.length) {
+        break
+      }
     }
-    return [...headGroups, ...newGroups.reverse()]
+
+    return newGroups
   }
 
-  function clear() {
-    for (const key of Object.keys(pendingCombined)) {
-      pendingCombined[key] = []
-    }
-  }
   return {
     appendNewMessages,
-    clear,
   }
 }
