@@ -49,7 +49,7 @@ interface ArthasExecutionService {
     fun execSync(
         instanceId: String,
         command: String,
-    ): JsonNode
+    ): ArrayNode
 
     /**
      * 拉取 arthas 执行结果

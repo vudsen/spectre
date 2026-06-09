@@ -12,7 +12,7 @@ interface ArthasHttpClient {
      * 同步执行命令
      * @return 返回一个 JSON 对象，该对象为成功响应中的 `body.result` 数组字段
      */
-    fun exec(command: String): JsonNode
+    fun exec(command: String): ArrayNode
 
     /**
      * 异步执行任务
@@ -36,7 +36,7 @@ interface ArthasHttpClient {
         filename: String,
         commands: MutableList<String>,
         sessionId: String?,
-    ): JsonNode?
+    ): ArrayNode?
 
     /**
      * 列出 profiler 的结果

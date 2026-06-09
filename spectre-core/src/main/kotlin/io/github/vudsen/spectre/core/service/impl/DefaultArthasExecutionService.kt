@@ -547,7 +547,7 @@ class DefaultArthasExecutionService(
         client: ArthasHttpClient,
         commands: MutableList<String>,
         sessionId: String?,
-    ): JsonNode? {
+    ): ArrayNode? {
         // 考虑抽离为一个接口?
         if (commands.isEmpty()) {
             return null
@@ -592,7 +592,7 @@ class DefaultArthasExecutionService(
     override fun execSync(
         instanceId: String,
         command: String,
-    ): JsonNode {
+    ): ArrayNode {
         val commands = splitCommand(command)
         val pair = checkAndGetNode(instanceId, commands)
         beforeExec(pair.second, pair.first, commands, null)?.let {
