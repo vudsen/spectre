@@ -490,7 +490,6 @@ const createArthasMessageBusInternal = async (
     for (const key of Object.keys(messages)) {
       messages[key] = []
     }
-    aggregator.clear()
     refreshAggregatedMessages()
     store.dispatch(
       updateChannelContext({
