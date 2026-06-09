@@ -85,12 +85,36 @@ describe('aggregateCommandMessages', () => {
     //   }
     // }
   })
-  it('Test basic3', () => {
+  it('Test full', () => {
     const sample = readSample('sample.json')
     const aggregator = createDefaultAggregator()
 
     const groups = aggregator.appendNewMessages([], sample)
     expect(groups.length).toBe(3)
     expect(groups).toMatchSnapshot()
+  })
+
+  it('Basic test3', () => {
+    const messages0 = readSample('tb3-messages0.json')
+    const messages1 = readSample('tb3-messages1.json')
+    const messages2 = readSample('tb3-messages2.json')
+    const messages3 = readSample('tb3-messages3.json')
+    const messages4 = readSample('tb3-messages4.json')
+    const messages5 = readSample('tb3-messages5.json')
+
+    const aggregator = createDefaultAggregator()
+    const groups0 = aggregator.appendNewMessages([], messages0)
+    const groups1 = aggregator.appendNewMessages(groups0, messages1)
+    const groups2 = aggregator.appendNewMessages(groups1, messages2)
+    const groups3 = aggregator.appendNewMessages(groups2, messages3)
+    const groups4 = aggregator.appendNewMessages(groups3, messages4)
+    const groups5 = aggregator.appendNewMessages(groups4, messages5)
+
+    expect(groups5.length).toBe(1)
+    expect(Object.keys(groups5[0].instances).length).toBe(2)
+    for (const [_, v] of Object.entries(groups5[0].instances)) {
+      expect(v.length).toBe(5)
+    }
+    expect(groups5).toMatchSnapshot()
   })
 })

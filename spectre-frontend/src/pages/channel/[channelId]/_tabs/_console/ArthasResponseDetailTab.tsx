@@ -47,7 +47,7 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
       )
   }
   return (
-    <div className="relative box-border flex h-full flex-col">
+    <div className="relative box-border flex h-full flex-col bg-white">
       <Tabs
         aria-label="Options"
         color="primary"
@@ -55,9 +55,9 @@ const ArthasResponseDetailTab: React.FC<ArthasResponseDetailProps> = ({
         classNames={{
           panel: 'overflow-scroll grow p-0',
           cursor: 'w-full',
-          base: '',
+          base: 'drag-header cursor-move',
           tab: 'max-w-fit',
-          tabList: ' w-full relative rounded-none p-2 border-b border-divider',
+          tabList: 'w-full relative rounded-none p-2 border-b border-divider',
         }}
       >
         <Tab

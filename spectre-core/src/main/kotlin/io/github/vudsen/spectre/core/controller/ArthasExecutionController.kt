@@ -177,7 +177,20 @@ class ArthasExecutionController(
         request: HttpServletRequest,
     ) {
         resolveChannelSession(request, channelId)
-        arthasExecutionService.interruptCommand(channelId)
+        val channel =
+            channelId.toLongOrNull()?.let {
+                channelService.findById(it)
+            }
+        if (channel == null) {
+            arthasExecutionService.interruptCommand(channelId)
+        } else {
+            for (instanceIds in channel.instanceIds) {
+                try {
+                    arthasExecutionService.interruptCommand(instanceIds)
+                } catch (_: Exception) {
+                }
+            }
+        }
     }
 
     @PostMapping("/channel/{channelId}/retransform", MediaType.APPLICATION_JSON_VALUE)

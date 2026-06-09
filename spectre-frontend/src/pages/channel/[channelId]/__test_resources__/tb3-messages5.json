@@ -1,0 +1,68 @@
+{
+  "-5SoRLH65lkoqSw2OyH2uxcbKjBbopgI6EWnj3D0hdQ": [],
+  "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI": [
+    {
+      "id": "1780975479582",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "stack demo.MathGame primeFactors -n 2",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780975479574"
+      },
+      "value": {
+        "classloader": "jdk.internal.loader.ClassLoaders$AppClassLoader@f880b09",
+        "cost": 0,
+        "daemon": false,
+        "jobId": 1599,
+        "priority": 5,
+        "stackTrace": [
+          {
+            "fileName": "MathGame.java",
+            "lineNumber": 61,
+            "className": "demo.MathGame",
+            "methodName": "primeFactors"
+          },
+          {
+            "fileName": "MathGame.java",
+            "lineNumber": 24,
+            "className": "demo.MathGame",
+            "methodName": "run"
+          },
+          {
+            "lineNumber": 16,
+            "className": "demo.MathGame",
+            "methodName": "main"
+          }
+        ],
+        "threadId": "3",
+        "threadName": "main",
+        "ts": "2026-06-09 03:24:46.251461016",
+        "type": "stack"
+      }
+    },
+    {
+      "id": "1780975479583",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "stack demo.MathGame primeFactors -n 2",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780975479574"
+      },
+      "value": { "jobId": 1599, "statusCode": 0, "type": "status" }
+    },
+    {
+      "id": "1780975479584",
+      "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+      "context": {
+        "command": "stack demo.MathGame primeFactors -n 2",
+        "instanceId": "ob5MJ4tJmvn_IEd-CItRhOvV8Ld5yy2Kd--_XtD0BLI",
+        "id": "1780975479574"
+      },
+      "value": {
+        "inputStatus": "ALLOW_INPUT",
+        "jobId": 0,
+        "type": "input_status"
+      }
+    }
+  ]
+}

@@ -42,9 +42,6 @@ export default defineConfig({
       },
     },
   },
-  esbuild: {
-    sourcemap: true,
-  },
   css: {
     devSourcemap: true,
   },
