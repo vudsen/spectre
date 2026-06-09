@@ -71,7 +71,7 @@ open class ShellBasedArthasHttpClient(
         return node
     }
 
-    override fun exec(command: String): JsonNode {
+    override fun exec(command: String): ArrayNode {
         val response =
             sendRequest(
                 buildMap {
@@ -80,7 +80,7 @@ open class ShellBasedArthasHttpClient(
                 },
                 false,
             )
-        return response.get("body").get("results")
+        return response.get("body").get("results").asArray()
     }
 
     override fun execAsync(
@@ -117,7 +117,7 @@ open class ShellBasedArthasHttpClient(
         filename: String,
         commands: MutableList<String>,
         sessionId: String?,
-    ): JsonNode? {
+    ): ArrayNode? {
         val pair = findArgValue(commands, "--file") ?: findArgValue(commands, "-f")
         if (pair == null) {
             val formatPair = findArgValue(commands, "--format") ?: findArgValue(commands, "-o")

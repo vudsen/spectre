@@ -13,6 +13,6 @@ registerMessageView({
         cost: (message.value.cost / 1024 / 1024).toFixed(4),
       },
     ),
-    color: 'default',
+    color: 'primary',
   }),
 })

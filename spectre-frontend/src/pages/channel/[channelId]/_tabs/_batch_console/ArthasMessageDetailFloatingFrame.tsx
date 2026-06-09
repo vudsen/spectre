@@ -81,6 +81,7 @@ const ArthasMessageDetailFloatingFrame: React.FC<
       minWidth={480}
       minHeight={300}
       maxWidth="90vw"
+      dragHandleClassName="drag-header"
       maxHeight="85vh"
       size={{ width: layout.width, height: layout.height }}
       position={{ x: layout.x, y: layout.y }}

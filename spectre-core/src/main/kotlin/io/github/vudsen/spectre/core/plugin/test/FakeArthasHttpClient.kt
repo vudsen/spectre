@@ -14,7 +14,7 @@ class FakeArthasHttpClient : ArthasHttpClient {
         private const val SESSION_ID = "1"
     }
 
-    override fun exec(command: String): JsonNode {
+    override fun exec(command: String): ArrayNode {
         TODO("Not yet implemented")
     }
 
@@ -27,7 +27,7 @@ class FakeArthasHttpClient : ArthasHttpClient {
         filename: String,
         commands: MutableList<String>,
         sessionId: String?,
-    ): JsonNode? {
+    ): ArrayNode? {
         TODO("Not yet implemented")
     }
 
