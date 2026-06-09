@@ -156,7 +156,6 @@ exports[`aggregateCommandMessages > Test basic2 1`] = `
         },
       ],
     },
-    "key": "watch demo.MathGame primeFactors -n 1",
   },
 ]
 `;
@@ -317,7 +316,6 @@ exports[`aggregateCommandMessages > Test basic3 1`] = `
         },
       ],
     },
-    "key": "watch demo.MathGame primeFactors -n 1",
   },
   {
     "command": "watch demo.MathGame primeFactors -n 1",
@@ -473,7 +471,6 @@ exports[`aggregateCommandMessages > Test basic3 1`] = `
         },
       ],
     },
-    "key": "watch demo.MathGame primeFactors -n 1",
   },
   {
     "command": "version",
@@ -569,7 +566,6 @@ exports[`aggregateCommandMessages > Test basic3 1`] = `
         },
       ],
     },
-    "key": "version",
   },
 ]
 `;
@@ -730,7 +726,6 @@ exports[`aggregateCommandMessages > Test two command exec 1`] = `
         },
       ],
     },
-    "key": "watch demo.MathGame primeFactors -n 1",
   },
   {
     "command": "watch demo.MathGame primeFactors -n 1",
@@ -886,7 +881,6 @@ exports[`aggregateCommandMessages > Test two command exec 1`] = `
         },
       ],
     },
-    "key": "watch demo.MathGame primeFactors -n 1",
   },
 ]
 `;

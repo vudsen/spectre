@@ -4,7 +4,6 @@ import type { SkillDTO } from '@/api/impl/ai.ts'
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
 
 export type AggregatedCommandGroup = {
-  key: string
   command: string
   instances: Record<string, ArthasMessage[]>
 }
