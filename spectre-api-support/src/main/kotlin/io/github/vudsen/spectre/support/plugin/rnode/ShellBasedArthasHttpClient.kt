@@ -170,7 +170,6 @@ open class ShellBasedArthasHttpClient(
                 },
                 false,
             )
-        println(r)
     }
 
     override fun pullResults(

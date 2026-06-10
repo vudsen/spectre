@@ -1,7 +1,5 @@
 import { useContext } from 'react'
 import { useSelector } from 'react-redux'
-import type { RootState } from '@/store'
-import type { InputStatusResponse } from '@/api/impl/arthas.ts'
 import ChannelContext, {
   type ChannelContextState,
 } from '@/pages/channel/[channelId]/context.ts'
@@ -9,6 +7,7 @@ import { useForm, type Path, type FieldValues } from 'react-hook-form'
 import { Button, ModalBody, ModalFooter, ModalHeader } from '@heroui/react'
 import ControlledInput from '@/components/validation/ControlledInput.tsx'
 import i18n from '@/i18n'
+import { selectInputStatus } from '@/store/channelSlice.ts'
 
 type AnyValues = FieldValues
 
@@ -59,10 +58,7 @@ export default function CommandFormContent<T extends AnyValues>({
   defaultValues,
   onClose,
 }: CommandFormContentProps<T>) {
-  const inputStatus = useSelector<
-    RootState,
-    InputStatusResponse['inputStatus']
-  >((state) => state.channel.context.inputStatus)
+  const inputStatus = useSelector(selectInputStatus)
   const context = useContext(ChannelContext)
 
   const { control, trigger, getValues } = useForm<T>({
