@@ -1,7 +1,12 @@
 import type { InputStatusResponse, InstanceInfoVO } from '@/api/impl/arthas.ts'
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import {
+  createSelector,
+  createSlice,
+  type PayloadAction,
+} from '@reduxjs/toolkit'
 import type { SkillDTO } from '@/api/impl/ai.ts'
 import type { ArthasMessage } from '@/pages/channel/[channelId]/db.ts'
+import type { RootState } from '@/store/index.ts'
 
 export type AggregatedCommandGroup = {
   command: string
@@ -18,7 +23,6 @@ type ChannelContext = {
   classloaderHash?: string
   selectedSkill?: SkillDTO
   availableSkills?: SkillDTO[]
-  inputStatus: InputStatusResponse['inputStatus']
   instances: Record<string, InstanceStatus>
   groupedMessages: AggregatedCommandGroup[]
   /**
@@ -38,7 +42,6 @@ interface ChannelState {
 const initialState: ChannelState = {
   context: {
     channelId: '-1',
-    inputStatus: 'DISABLED',
     instances: {},
     groupedMessages: [],
   },
@@ -62,11 +65,25 @@ export const channelSlice = createSlice({
     },
     updateInputStatus(
       state,
-      action: PayloadAction<InputStatusResponse['inputStatus']>,
+      action: PayloadAction<Record<string, InputStatusResponse['inputStatus']>>,
     ) {
-      state.context.inputStatus = action.payload
+      for (const [instanceId, status] of Object.entries(action.payload)) {
+        state.context.instances[instanceId].inputStatus = status
+      }
     },
   },
+})
+
+const selectChannel = (state: RootState) => state.channel
+
+export const selectInputStatus = createSelector([selectChannel], (state) => {
+  const instances = state.context.instances
+  for (const value of Object.values(instances)) {
+    if (value.inputStatus === 'ALLOW_INTERRUPT') {
+      return 'ALLOW_INTERRUPT'
+    }
+  }
+  return 'ALLOW_INPUT'
 })
 
 export const { setupChannelContext, updateChannelContext, updateInputStatus } =

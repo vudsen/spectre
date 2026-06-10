@@ -12,6 +12,7 @@ import io.github.vudsen.spectre.core.util.MultipartFileAdapter
 import io.github.vudsen.spectre.core.vo.BatchExecResponseVO
 import io.github.vudsen.spectre.core.vo.CreateChannelRequestVO
 import io.github.vudsen.spectre.core.vo.ExecuteCommandRequestVO
+import io.github.vudsen.spectre.core.vo.InterruptRequestVO
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.core.io.InputStreamResource
@@ -166,7 +167,7 @@ class ArthasExecutionController(
     ) {
         val session = request.getSession(false)
         session.removeAttribute(channelSessionDataKey(channelId))
-        // 让 arthas 自己自动删除
+        // 让 arthas 自己自动删除，删除后会导致后面无法 attach，需要重启 JVM
 //        arthasExecutionService.execAsync("stop")
     }
 
@@ -174,22 +175,12 @@ class ArthasExecutionController(
     @Log("log.arthas.channel.interrupt", "{ channelId: #args[0] }")
     fun interruptCommand(
         @PathVariable channelId: String,
+        @Validated @RequestBody vo: InterruptRequestVO,
         request: HttpServletRequest,
     ) {
-        resolveChannelSession(request, channelId)
-        val channel =
-            channelId.toLongOrNull()?.let {
-                channelService.findById(it)
-            }
-        if (channel == null) {
-            arthasExecutionService.interruptCommand(channelId)
-        } else {
-            for (instanceIds in channel.instanceIds) {
-                try {
-                    arthasExecutionService.interruptCommand(instanceIds)
-                } catch (_: Exception) {
-                }
-            }
+        for (instanceId in vo.instanceIds) {
+            resolveChannelSession(request, instanceId)
+            arthasExecutionService.interruptCommand(instanceId)
         }
     }
 

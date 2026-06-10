@@ -8,24 +8,19 @@ import React, {
 import ControlledTextarea from '@/components/validation/ControlledTextarea.tsx'
 import { addToast, Button, Tooltip } from '@heroui/react'
 import { useForm } from 'react-hook-form'
-import {
-  type InputStatusResponse,
-  interruptCommand,
-} from '@/api/impl/arthas.ts'
+import { interruptCommand } from '@/api/impl/arthas.ts'
 import { type RootState, store } from '@/store'
 import { useSelector } from 'react-redux'
 import ChannelContext from '@/pages/channel/[channelId]/context.ts'
 import i18n from '@/i18n'
+import { selectInputStatus } from '@/store/channelSlice.ts'
 
 type FromState = {
   command: string
 }
 
 const CommandExecuteBlock: React.FC = () => {
-  const inputStatus = useSelector<
-    RootState,
-    InputStatusResponse['inputStatus']
-  >((state) => state.channel.context.inputStatus)
+  const inputStatus = useSelector(selectInputStatus)
   const isDebugMode = useSelector<RootState, boolean | undefined>(
     (state) => state.channel.context.isDebugMode,
   )
@@ -51,7 +46,16 @@ const CommandExecuteBlock: React.FC = () => {
 
   const interrupt = useCallback(() => {
     setLoading(true)
-    return interruptCommand(store.getState().channel.context.channelId)
+    const interruptable = Object.entries(
+      store.getState().channel.context.instances,
+    ).filter(([_, v]) => v.inputStatus === 'ALLOW_INTERRUPT')
+
+    if (interruptable.length === 0) {
+      return Promise.resolve()
+    }
+    return interruptCommand(store.getState().channel.context.channelId, {
+      instanceIds: interruptable.map((it) => it[1].instanceId),
+    })
       .then(() => {
         addToast({
           title: i18n.t(

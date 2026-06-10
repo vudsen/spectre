@@ -117,7 +117,6 @@ const createArthasMessageBusInternal = async (
 
   async function setupMessages(): Promise<Record<string, ArthasMessage[]>> {
     const r: Record<string, ArthasMessage[]> = {}
-    let inputStatus: InputStatusResponse['inputStatus'] = 'DISABLED'
     const instanceMap: Record<string, InstanceStatus> = {}
     for (const instance of instances) {
       const instanceMessages = await db.listAllMessages(
@@ -125,22 +124,22 @@ const createArthasMessageBusInternal = async (
         MAX_BUS_MESSAGE_SIZE,
       )
       r[instance.instanceId] = instanceMessages
+      const status: InstanceStatus = {
+        ...instance,
+        inputStatus: 'DISABLED',
+      }
       for (let i = instanceMessages.length - 1; i >= 0; i--) {
         const msg = instanceMessages[i]
         if (msg.value.type === INPUT_STATUS) {
-          inputStatus = (msg.value as InputStatusResponse).inputStatus
+          status.inputStatus = (msg.value as InputStatusResponse).inputStatus
           break
         }
       }
-      instanceMap[instance.instanceId] = {
-        ...instance,
-        inputStatus,
-      }
+      instanceMap[instance.instanceId] = status
     }
     store.dispatch(
       setupChannelContext({
         channelId,
-        inputStatus,
         instances: instanceMap,
         groupedMessages: aggregator.appendNewMessages([], r),
       }),
@@ -178,7 +177,11 @@ const createArthasMessageBusInternal = async (
       const response = row.response
       if (response.type === INPUT_STATUS) {
         const status = (response as InputStatusResponse).inputStatus
-        store.dispatch(updateInputStatus(status))
+        store.dispatch(
+          updateInputStatus({
+            [row.instanceId]: status,
+          }),
+        )
       }
 
       if (response.type === 'command') {
@@ -383,8 +386,15 @@ const createArthasMessageBusInternal = async (
   ) => {
     const context = store.getState().channel.context
     const currentChannelId = context.channelId
-    if (interruptCurrent && context.inputStatus === 'ALLOW_INTERRUPT') {
-      await interruptCommand(currentChannelId)
+
+    const interruptable = Object.entries(context.instances).filter(
+      ([_, v]) => v.inputStatus === 'ALLOW_INTERRUPT',
+    )
+
+    if (interruptCurrent && interruptable.length > 0) {
+      await interruptCommand(currentChannelId, {
+        instanceIds: interruptable.map((it) => it[1].instanceId),
+      })
     }
 
     let finalCommand = command

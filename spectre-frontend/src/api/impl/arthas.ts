@@ -101,8 +101,15 @@ export const disconnectSession = (channelId: string) => {
   return axios.post(`arthas/channel/${channelId}/disconnect`)
 }
 
-export const interruptCommand = (channelId: string) => {
-  return axios.post(`arthas/channel/${channelId}/interrupt`)
+type InterruptRequestVO = {
+  instanceIds: string[]
+}
+
+export const interruptCommand = (
+  channelId: string,
+  body: InterruptRequestVO,
+) => {
+  return axios.post(`arthas/channel/${channelId}/interrupt`, body)
 }
 
 export type ProfilerFile = {
