@@ -73,7 +73,7 @@ dependencies {
     implementation("jakarta.xml.bind:jakarta.xml.bind-api")
     implementation("org.glassfish.jaxb:jaxb-runtime")
     implementation("com.esotericsoftware:kryo:5.6.2")
-    implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0-M6"))
+    implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0-RC2"))
     implementation("org.springframework.ai:spring-ai-client-chat")
     implementation("org.springframework.ai:spring-ai-openai")
 }
