@@ -41,7 +41,7 @@ dependencies {
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-graphql-test")
     integrationTestImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     integrationTestImplementation("org.springframework.boot:spring-boot-webtestclient")
-    integrationTestImplementation("org.springframework.graphql:spring-graphql-test:2.0.3")
+    integrationTestImplementation("org.springframework.graphql:spring-graphql-test:2.0.4")
     implementation("org.bouncycastle:bcprov-jdk18on:1.84")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.84")
     implementation("org.springframework.boot:spring-boot-starter-web")
