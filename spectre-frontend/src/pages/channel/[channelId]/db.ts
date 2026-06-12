@@ -211,33 +211,6 @@ async function setupDB() {
       return result
     },
 
-    async listDisplayMessages(
-      channelId?: string,
-    ): Promise<Record<string, PureArthasResponse[]>> {
-      if (!channelId) {
-        return {}
-      }
-
-      const tx = db.transaction('messages')
-      const index = tx.objectStore('messages').index('by-instance-id')
-      const result: Record<string, PureArthasResponse[]> = {}
-
-      for (
-        let cursor = await index.openCursor(IDBKeyRange.only(channelId));
-        cursor;
-        cursor = await cursor.continue()
-      ) {
-        const instanceId = cursor.value.instanceId
-        if (!result[instanceId]) {
-          result[instanceId] = []
-        }
-        result[instanceId].push(cursor.value.value)
-      }
-
-      await tx.done
-      return result
-    },
-
     async createNewContext(context: ContextValue): Promise<string> {
       const id = (++contextId).toString()
       await db.put('context', context, id)
