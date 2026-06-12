@@ -28,7 +28,9 @@ interface Listener {
   afterExecute?: (command: string, fail: boolean) => void
 }
 
-type DisplayMessages = (channelId?: string) => void
+type DisplayMessages = (
+  pretty?: boolean,
+) => Promise<Record<string, ArthasMessage[]>>
 
 declare global {
   interface Window {
@@ -72,10 +74,6 @@ const INITIAL_PULL_DELAY = 1000
 const SOCKET_RECONNECT_DELAY = 1000
 const MIN_PULL_INTERVAL = 1000
 
-function parseChannelIdFromPathname(pathname: string): string | undefined {
-  return /\/channel\/([^/]+)/.exec(pathname)?.[1]
-}
-
 const createArthasMessageBusInternal = async (
   channelId: string,
   instances: InstanceInfoVO[],
@@ -95,9 +93,7 @@ const createArthasMessageBusInternal = async (
     lastPullSentAt: 0,
   }
 
-  if (import.meta.env.DEV) {
-    registerDisplayMessages()
-  }
+  registerDisplayMessages()
 
   async function initializeInstanceContext() {
     for (const instance of instances) {
@@ -445,29 +441,32 @@ const createArthasMessageBusInternal = async (
   }
 
   function registerDisplayMessages() {
-    const fallbackChannelId =
-      parseChannelIdFromPathname(window.location.pathname) ?? channelId
-
-    window.displayMessages = (requestedChannelId) => {
-      const resolvedChannelId =
-        requestedChannelId ??
-        parseChannelIdFromPathname(window.location.pathname) ??
-        fallbackChannelId
-
+    window.displayMessages = async (pretty) => {
+      const instanceIds = Object.keys(
+        store.getState().channel.context.instances,
+      )
       console.info('Exporting...')
-
-      if (!resolvedChannelId) {
-        console.warn('No data from the channelId')
-        return
+      const resultMap: Record<string, ArthasMessage[]> = {}
+      for (const instanceId of instanceIds) {
+        resultMap[instanceId] = await db.listAllMessages(instanceId, 100)
       }
-
-      db.listDisplayMessages(resolvedChannelId)
-        .then((groupedMessages) => {
-          console.log(groupedMessages)
-        })
-        .catch((error) => {
-          console.error('Failed to export', error)
-        })
+      if (pretty) {
+        const prettyResult: Record<string, PureArthasResponse[]> = {}
+        for (const [k, v] of Object.entries(resultMap)) {
+          prettyResult[k] = v.map((msg) => ({
+            // resort field
+            // @ts-expect-error when field not exist
+            type: msg.value.type,
+            // @ts-expect-error when field not exist
+            jobId: msg.value.jobId,
+            ...msg.value,
+          }))
+        }
+        console.log(prettyResult)
+      } else {
+        console.log(resultMap)
+      }
+      return resultMap
     }
   }
 
@@ -478,9 +477,6 @@ const createArthasMessageBusInternal = async (
     if (state.websocket && state.websocket.readyState === WebSocket.OPEN) {
       state.websocket.close()
       state.websocket = undefined
-    }
-    if (import.meta.env.DEV) {
-      delete window.displayMessages
     }
     db.close()
   }
