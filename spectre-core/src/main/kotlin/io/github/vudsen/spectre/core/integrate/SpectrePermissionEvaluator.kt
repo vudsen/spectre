@@ -35,7 +35,7 @@ class SpectrePermissionEvaluator : PermissionEvaluator {
 
     override fun hasPermission(
         authentication: Authentication,
-        targetDomainObject: Any,
+        targetDomainObject: Any?,
         permission: Any,
     ): Boolean {
         val user = authentication.principal as UserWithID
