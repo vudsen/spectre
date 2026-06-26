@@ -105,19 +105,16 @@ export async function chatByAiStream(
   request: AiChatRequestVO,
   handlers: ChatByAiStreamHandlers = {},
 ): Promise<void> {
-  const response = await fetch(
-    resolveApiUrl(request.skillId ? 'ai/chat/with-skill' : 'ai/chat'),
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'text/event-stream',
-      },
-      credentials: 'include',
-      body: JSON.stringify(request),
-      signal: handlers.signal,
+  const response = await fetch(resolveApiUrl('ai/chat'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
     },
-  )
+    credentials: 'include',
+    body: JSON.stringify(request),
+    signal: handlers.signal,
+  })
 
   if (!response.ok) {
     throw new Error(await parseErrorMessage(response))

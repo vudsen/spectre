@@ -35,21 +35,6 @@ class AiController(
             request.channelId,
             request.query,
             DefaultAgentEventPublisher(emitter),
-            null,
-        )
-        return streamResponse(emitter)
-    }
-
-    @PostMapping("chat/with-skill", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun chatWithSkill(
-        @Validated @RequestBody request: AiChatRequestVO,
-    ): ResponseEntity<SseEmitter> {
-        val emitter = SseEmitter(0L)
-        aiService.chat(
-            request.conversationId,
-            request.channelId,
-            request.query,
-            DefaultAgentEventPublisher(emitter),
             request.skillId,
         )
         return streamResponse(emitter)

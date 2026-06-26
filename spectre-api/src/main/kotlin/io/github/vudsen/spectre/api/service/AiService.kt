@@ -12,14 +12,14 @@ interface AiService {
      * @param channelId arthas channel id
      * @param message 用户消息
      * @param publisher AI 事件发布者
-     * @param selectedSkillId 选中的技能 id
+     * @param forceSkillId 强制加载某个技能
      */
     fun chat(
         conversationId: String,
         channelId: String,
         message: String,
         publisher: AgentEventPublisher,
-        selectedSkillId: String?,
+        forceSkillId: String?,
     )
 
     fun getCurrentLLMConfiguration(): LLMConfigurationVO

@@ -5,6 +5,9 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import java.nio.charset.StandardCharsets
 
 object AiSkillsLoader {
+    private const val SKILL_CONTENT = "__CONTENT__"
+    private const val META_END = "\n---\n"
+
     private val resolver = PathMatchingResourcePatternResolver()
 
     @Volatile
@@ -44,14 +47,14 @@ object AiSkillsLoader {
         val entries =
             resources.map { resource ->
                 val content = resource.inputStream.use { String(it.readAllBytes(), StandardCharsets.UTF_8) }
-                val frontMatter = parseFrontMatter(content)
+                val frontMatter = parseSkill(content)
                 val name =
                     frontMatter["name"]?.takeIf { it.isNotBlank() }
                         ?: throw IllegalStateException("Skill file ${resource.filename ?: "unknown"} missing front matter name")
                 val description =
                     frontMatter["description"]?.takeIf { it.isNotBlank() }
                         ?: throw IllegalStateException("Skill file ${resource.filename ?: "unknown"} missing front matter description")
-                Skill(name, description, frontMatter["nameI18nKey"], frontMatter["descriptionI18nKey"]) to content
+                Skill(name, description, frontMatter["nameI18nKey"], frontMatter["descriptionI18nKey"]) to frontMatter[SKILL_CONTENT]!!
             }
 
         val skillsMeta = entries.map { it.first }
@@ -69,31 +72,33 @@ object AiSkillsLoader {
         )
     }
 
-    private fun parseFrontMatter(markdown: String): Map<String, String> {
+    private fun parseSkill(markdown: String): Map<String, String> {
         val normalized = markdown.replace("\r\n", "\n")
         if (!normalized.startsWith("---\n")) {
             throw IllegalStateException("Skill markdown missing front matter")
         }
 
-        val endIndex = normalized.indexOf("\n---\n", startIndex = 4)
+        val endIndex = normalized.indexOf(META_END, startIndex = 4)
         if (endIndex < 0) {
             throw IllegalStateException("Skill markdown front matter not closed")
         }
 
         val frontMatter = normalized.substring(4, endIndex)
-        return frontMatter
-            .lineSequence()
-            .map { it.trim() }
-            .filter { it.isNotBlank() && !it.startsWith("#") }
-            .mapNotNull { line ->
-                val index = line.indexOf(':')
-                if (index <= 0) {
-                    null
-                } else {
-                    val key = line.substring(0, index).trim()
-                    val value = line.substring(index + 1).trim().trim('"', '\'')
-                    key to value
+        return buildMap {
+            put(SKILL_CONTENT, normalized.substring(endIndex + META_END.length).trim())
+            frontMatter
+                .lineSequence()
+                .map { it.trim() }
+                .filter { it.isNotBlank() && !it.startsWith("#") }
+                .forEach { line ->
+                    val index = line.indexOf(':')
+                    if (index > 0) {
+                        val key = line.substring(0, index).trim()
+                        val value = line.substring(index + 1).trim().trim('"', '\'')
+                        key to value
+                        put(key, value)
+                    }
                 }
-            }.toMap()
+        }
     }
 }

@@ -91,9 +91,16 @@ const SkillSelectModalContent: React.FC<SkillSelectModalContentProps> = ({
   return (
     <>
       <ModalHeader>
-        {i18n.t(
-          'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_002',
-        )}
+        <div>
+          <span>
+            {i18n.t(
+              'hardcoded.msg_pages_channel_param_ai_skillselectmodalcontent_002',
+            )}
+          </span>
+          <span className="text-default-500 ml-3 text-sm">
+            {i18n.t('channel.autoSelectSkillDesc')}
+          </span>
+        </div>
       </ModalHeader>
       <ModalBody className="min-h-74 pb-4">
         {isLoading ? (

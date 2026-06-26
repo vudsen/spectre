@@ -14,7 +14,6 @@ export interface AiPanelContentProps {
   pendingAskHuman?: PendingAskHumanState
   autoConfirm?: boolean
   isLoading: boolean
-  eventsLength: number
   onSubmit: (value: string) => Promise<void>
 }
 
@@ -30,7 +29,6 @@ const AiPanelContent: React.FC<AiPanelContentProps> = (props) => {
       pendingAskHuman={props.pendingAskHuman}
       autoConfirm={props.autoConfirm}
       isLoading={props.isLoading}
-      eventsLength={props.eventsLength}
       onSubmit={props.onSubmit}
     />
   )

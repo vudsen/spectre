@@ -1,10 +1,10 @@
 package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.AgentEventPublisher
+import io.github.vudsen.spectre.api.ai.AiToolExecutionContext
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
-import io.github.vudsen.spectre.api.entity.Skill
 import io.github.vudsen.spectre.api.entity.SysConfigIds
 import io.github.vudsen.spectre.api.exception.AppException
 import io.github.vudsen.spectre.api.exception.BusinessException
@@ -17,6 +17,7 @@ import io.github.vudsen.spectre.core.integrate.ai.AiSkillsLoader
 import io.github.vudsen.spectre.core.integrate.ai.currentNotRespondedTool
 import io.github.vudsen.spectre.core.integrate.ai.tool.AskHumanTool
 import org.slf4j.LoggerFactory
+import org.springframework.ai.chat.client.AdvisorParams
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
@@ -111,8 +112,7 @@ class DefaultAiService(
 
                 val executionResult =
                     agentToolsManager.executeTool(
-                        io.github.vudsen.spectre.api.ai
-                            .AiToolExecutionContext(context.conversationId),
+                        AiToolExecutionContext(context.conversationId),
                         toolCall.name,
                         toolCall.arguments,
                     )
@@ -123,12 +123,25 @@ class DefaultAiService(
                         .responses(listOf(ToolResponseMessage.ToolResponse(toolCall.id, toolCall.name, executionResult)))
                         .metadata(mapOf())
                         .build()
-                context.publisher.onToolCallEnd(toolCall.name, executionResult)
+
+                emitToolCallEndEvent(context.publisher, toolCall.name, executionResult)
                 break
             }
         }
         if (currentIteration == maxIteration) {
             context.publisher.onError(null, "达到迭代次数")
+        }
+    }
+
+    private fun emitToolCallEndEvent(
+        publisher: AgentEventPublisher,
+        toolName: String,
+        result: String,
+    ) {
+        if (agentToolsManager.shouldExposeToolCallResponse(toolName)) {
+            publisher.onToolCallEnd(toolName, result)
+        } else {
+            publisher.onToolCallEnd(toolName, "<TOOL RESPONSE WAS HIDDEN BY SERVER>")
         }
     }
 
@@ -141,7 +154,6 @@ class DefaultAiService(
         val chatClient = getOrCreateChatClient(context.llmConfig)
         val options =
             buildLlmOptions(context) {
-                internalToolExecutionEnabled(false)
                 toolCallbacks(agentToolsManager.toolCallbacks())
             }
 
@@ -152,6 +164,7 @@ class DefaultAiService(
             .options(options)
             .messages(inputMessage)
             .advisors { spec ->
+                AdvisorParams.toolCallingAdvisorAutoRegister(false).accept(spec)
                 spec.param(ChatMemory.CONVERSATION_ID, context.conversationId)
             }.stream()
             .chatResponse()
@@ -188,8 +201,7 @@ class DefaultAiService(
             when (question) {
                 "YES" -> {
                     agentToolsManager.executeTool(
-                        io.github.vudsen.spectre.api.ai
-                            .AiToolExecutionContext(context.channelId),
+                        AiToolExecutionContext(context.channelId),
                         tool.name,
                         tool.arguments,
                     )
@@ -202,7 +214,7 @@ class DefaultAiService(
                 }
             }
 
-        context.publisher.onToolCallEnd(tool.name, response)
+        emitToolCallEndEvent(context.publisher, tool.name, response)
 
         // TODO: 支持多工具调用?
         return ToolResponseMessage
@@ -211,107 +223,30 @@ class DefaultAiService(
             .build()
     }
 
-    private fun buildSystemMessageWithSkill(
-        context: AiQueryContext,
-        questionForSkillSelection: String?,
-        selectedSkillId: String?,
-    ): String? {
-        val selectedSkillName =
-            selectedSkillId
-                ?: resolveSelectedSkill(
-                    context = context,
-                    questionForSkillSelection = questionForSkillSelection,
-                )
-        if (selectedSkillName == null) return null
-
-        val selectedSkillContent = AiSkillsLoader.loadSkill(selectedSkillName)
-        return """
-            You are a Java troubleshooting assistant responsible for diagnosing runtime problems in Java applications.
-
-            You are allowed to run Arthas commands to collect runtime information and help the user analyze the issue.
-
-            Use the following skill instructions:
-
-            $selectedSkillContent
-            """.trimIndent()
-    }
-
-    private fun buildSystemMessageWithoutSkill(): String =
-        """
-        You are a helpful Java troubleshooting assistant.
-        You are allowed to run Arthas commands to collect runtime information.
-        If required context is missing, use askHuman tool.
-        """.trimIndent()
-
-    private fun resolveSelectedSkill(
-        context: AiQueryContext,
-        questionForSkillSelection: String?,
-    ): String? {
-        val question = questionForSkillSelection?.trim().orEmpty()
-        if (question.isBlank()) {
-            return null
-        }
-
+    private fun buildSystemMessage(): SystemMessage {
         val skills = AiSkillsLoader.loadAllSkills()
-        if (skills.isEmpty()) {
-            return null
-        }
 
-        return selectSkillWithLlm(context, question, skills)
-    }
+        return SystemMessage(
+            buildString {
+                append(
+                    """
+                    You are a Java troubleshooting assistant responsible for diagnosing runtime problems in Java applications.
 
-    private fun selectSkillWithLlm(
-        context: AiQueryContext,
-        question: String,
-        skills: List<Skill>,
-    ): String? {
-        ensureNotExceededTokenLimit(context.llmConfig.maxTokenPerHour)
+                    You are allowed to run Arthas commands to collect runtime information and help the user analyze the issue.
 
-        val skillList = skills.joinToString("\n") { "- ${it.name}: ${it.description}" }
-
-        val selectionPrompt =
-            """
-            You are selecting one troubleshooting skill for an Arthas assistant.
-            Choose exactly one skill name from the list below.
-            Return ONLY the skill name. If no skill is suitable, return none.
-            Skill list:
-            $skillList
-            """.trimIndent()
-
-        val options =
-            buildLlmOptions(context)
-        val chatClient = getOrCreateChatClient(context.llmConfig)
-
-        val response =
-            chatClient
-                .prompt(question)
-                .system(selectionPrompt)
-                .options(options)
-                .call()
-                .chatResponse()
-
-        val content =
-            response
-                ?.result
-                ?.output
-                ?.text
-                .orEmpty()
-                .trim()
-
-        val usedTokens =
-            response
-                ?.metadata
-                ?.usage
-                ?.totalTokens
-                ?.toLong() ?: 0
-
-        recordTokenUsage(usedTokens)
-        val normalized = normalizeSkillSelection(content)
-        if (normalized.isBlank() || normalized.equals("none", ignoreCase = true)) {
-            return null
-        }
-
-        return skills.firstOrNull { it.name.equals(normalized, ignoreCase = true) }?.name
+                    Here are some available skills, you should load and use them by `load_skill` tool if match:
+                    
+                    """.trimIndent(),
+                )
+                for (skill in skills) {
+                    append("- ")
+                    append(skill.name)
+                    append(": ")
+                    append(skill.description)
+                    append("\n")
+                }
+            },
+        )
     }
 
     private fun buildLlmOptions(
@@ -349,24 +284,6 @@ class DefaultAiService(
             customise(optionsBuilder)
         }
         return optionsBuilder
-    }
-
-    private fun normalizeSkillSelection(raw: String): String {
-        val firstLine =
-            raw
-                .lineSequence()
-                .map { it.trim() }
-                .firstOrNull { it.isNotBlank() && !it.startsWith("```") }
-                .orEmpty()
-
-        val candidate =
-            if (firstLine.startsWith("name:", ignoreCase = true)) {
-                firstLine.substringAfter(':').trim()
-            } else {
-                firstLine
-            }
-
-        return candidate.trim('"', '\'', '`')
     }
 
     private fun ensureNotExceededTokenLimit(maxTokenPerHour: Long) {
@@ -447,7 +364,7 @@ class DefaultAiService(
         channelId: String,
         message: String,
         publisher: AgentEventPublisher,
-        selectedSkillId: String?,
+        forceSkillId: String?,
     ) {
         val llmConfig = getCurrentLLMConfigurationDTO() ?: throw BusinessException("error.llm.not.enabled")
         val securityContext = SecurityContextHolder.getContext()
@@ -471,26 +388,24 @@ class DefaultAiService(
                 if (chatMemory.get(conversationId).isEmpty()) {
                     chatMemory.add(
                         conversationId,
-                        SystemMessage(
-                            if (selectedSkillId != null) {
-                                buildSystemMessageWithSkill(
-                                    context = queryContext,
-                                    questionForSkillSelection = message,
-                                    selectedSkillId = selectedSkillId,
-                                )
-                            } else {
-                                buildSystemMessageWithoutSkill()
-                            },
-                        ),
+                        buildSystemMessage(),
                     )
                 }
                 processConversationLoop(
                     context = queryContext,
-                    initialInputMessage = UserMessage(message),
+                    initialInputMessage =
+                        UserMessage(
+                            if (forceSkillId ==
+                                null
+                            ) {
+                                message
+                            } else {
+                                "Plz use this skill: `$forceSkillId`\n\n$message"
+                            },
+                        ),
                 )
             } catch (e: Exception) {
                 runCatching {
-//                    if (e is WebClientResponseException) {
                     logger.error("AI query failed", e)
                     val msg: String =
                         if (e is BusinessException) {
@@ -514,7 +429,7 @@ class DefaultAiService(
         conversationId: String,
     ) {
         if (tool.name == AskHumanTool.NAME) {
-            queryContext.publisher.onToolCallEnd(tool.name, message)
+            emitToolCallEndEvent(queryContext.publisher, tool.name, message)
             // TODO: 支持多工具调用?
             processConversationLoop(
                 context = queryContext,
