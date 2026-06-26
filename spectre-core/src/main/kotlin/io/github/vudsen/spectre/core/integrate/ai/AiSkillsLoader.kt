@@ -85,7 +85,7 @@ object AiSkillsLoader {
 
         val frontMatter = normalized.substring(4, endIndex)
         return buildMap {
-            put(SKILL_CONTENT, markdown.substring(endIndex + META_END.length).trim())
+            put(SKILL_CONTENT, normalized.substring(endIndex + META_END.length).trim())
             frontMatter
                 .lineSequence()
                 .map { it.trim() }
