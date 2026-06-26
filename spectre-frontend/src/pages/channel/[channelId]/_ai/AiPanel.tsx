@@ -352,7 +352,6 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
           pendingAskHuman={pendingAskHuman}
           autoConfirm={autoConfirm}
           isLoading={isLoading}
-          eventsLength={events.length}
           onSubmit={submitQuery}
         />
       </div>

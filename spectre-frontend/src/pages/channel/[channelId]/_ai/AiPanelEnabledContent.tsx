@@ -16,7 +16,6 @@ export interface AiPanelEnabledContentProps {
   pendingAskHuman?: PendingAskHumanState
   autoConfirm?: boolean
   isLoading: boolean
-  eventsLength: number
   onSubmit: (value: string) => Promise<void>
 }
 
@@ -26,7 +25,6 @@ const AiPanelEnabledContent: React.FC<AiPanelEnabledContentProps> = ({
   pendingAskHuman,
   autoConfirm,
   isLoading,
-  eventsLength,
   onSubmit,
 }) => {
   return (
@@ -53,11 +51,7 @@ const AiPanelEnabledContent: React.FC<AiPanelEnabledContentProps> = ({
           }}
         />
       )}
-      <AiComposer
-        disabled={isLoading}
-        onSubmit={onSubmit}
-        skillSelectionDisabled={eventsLength > 0}
-      />
+      <AiComposer disabled={isLoading} onSubmit={onSubmit} />
     </>
   )
 }

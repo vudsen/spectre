@@ -124,7 +124,8 @@
     "executeResult": "Execution result",
     "batchExecFail": "Batch execute failed",
     "batchExecDesc": "The following instances failed to accept this batch command:",
-    "establishFailed": "Establish Connection Failed"
+    "establishFailed": "Establish Connection Failed",
+    "autoSelectSkillDesc": "The agent will select suitable skill automatically, when you select manually, the skill will be force loaded"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "Delete permission '{{name}}'?",

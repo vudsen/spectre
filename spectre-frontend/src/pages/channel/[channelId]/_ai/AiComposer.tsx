@@ -29,7 +29,6 @@ import i18n from '@/i18n'
 
 interface AiComposerProps {
   disabled?: boolean
-  skillSelectionDisabled?: boolean
   onSubmit: (query: string) => Promise<void>
 }
 
@@ -80,11 +79,7 @@ function resolveSkillTrigger(text: string, caret: number) {
   }
 }
 
-const AiComposer: React.FC<AiComposerProps> = ({
-  disabled,
-  skillSelectionDisabled,
-  onSubmit,
-}) => {
+const AiComposer: React.FC<AiComposerProps> = ({ disabled, onSubmit }) => {
   const [value, setValue] = useState('')
   const [isSkillLoading, setIsSkillLoading] = useState(false)
   const [skillError, setSkillError] = useState<string | undefined>(undefined)
@@ -149,12 +144,6 @@ const AiComposer: React.FC<AiComposerProps> = ({
     setActiveIndex((v) => Math.min(v, filteredSkills.length - 1))
   }, [filteredSkills.length])
 
-  useEffect(() => {
-    if (skillSelectionDisabled) {
-      closeSkillMenu()
-    }
-  }, [skillSelectionDisabled])
-
   const submit = async () => {
     const query = value.trim()
     if (!query || disabled) {
@@ -172,9 +161,6 @@ const AiComposer: React.FC<AiComposerProps> = ({
   }
 
   const applySelectedSkill = (skill: SkillDTO, byTrigger = false) => {
-    if (skillSelectionDisabled) {
-      return
-    }
     dispatch(
       updateChannelContext({
         selectedSkill: skill,
@@ -190,18 +176,11 @@ const AiComposer: React.FC<AiComposerProps> = ({
   }
 
   const onManualSkillSelected = (skill: SkillDTO) => {
-    if (skillSelectionDisabled) {
-      return
-    }
     setValue((v) => withSkillPrefix(v, skill.name))
     closeSkillMenu()
   }
 
   const syncSkillTrigger = (nextValue: string, caret: number) => {
-    if (skillSelectionDisabled) {
-      closeSkillMenu()
-      return
-    }
     const trigger = resolveSkillTrigger(nextValue, caret)
     if (!trigger) {
       closeSkillMenu()
@@ -390,20 +369,15 @@ const AiComposer: React.FC<AiComposerProps> = ({
           <div className="ml-2">
             <Button
               variant="light"
-              onPress={() => {
-                if (!skillSelectionDisabled) {
-                  onOpen()
-                }
-              }}
+              onPress={onOpen}
               color={selectedSkill ? 'primary' : 'default'}
-              isDisabled={skillSelectionDisabled}
             >
               <SvgIcon icon={ChannelIcon.SKILL} />
               {selectedSkill
                 ? selectedSkill.name
                 : i18n.t('hardcoded.msg_pages_channel_param_ai_aicomposer_002')}
             </Button>
-            {selectedSkill && !skillSelectionDisabled ? (
+            {selectedSkill ? (
               <button
                 type="button"
                 className="bg-danger text-danger-foreground pointer-events-none absolute -top-1 -right-1 flex h-4 w-4 scale-90 cursor-pointer items-center justify-center rounded-full text-xs leading-none opacity-0 transition-all duration-200 ease-out group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100"

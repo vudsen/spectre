@@ -115,7 +115,8 @@
     "executeResult": "执行结果",
     "batchExecFail": "批量执行失败",
     "batchExecDesc": "以下实例未能接受本次批量命令：",
-    "establishFailed": "建立连接失败"
+    "establishFailed": "建立连接失败",
+    "autoSelectSkillDesc": "智能体会自动选择合适的技能，当手动指定后，智能体会强制加载对应技能"
   },
   "hardcoded": {
     "msg_components_page_permissionslist_index_002": "确定删除权限 '{{name}}' 吗?",
