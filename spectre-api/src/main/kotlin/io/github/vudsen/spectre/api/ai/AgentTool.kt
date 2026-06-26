@@ -13,6 +13,11 @@ interface AgentTool {
     fun requireUserConfirm(): Boolean
 
     /**
+     * 是否将工具调用结果发送给前端
+     */
+    fun exposeToolCallResponse(): Boolean
+
+    /**
      * 执行工具调用
      */
     fun execute(

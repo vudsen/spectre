@@ -202,7 +202,11 @@ class DefaultAiService(
                 }
             }
 
-        context.publisher.onToolCallEnd(tool.name, response)
+        if (agentToolsManager.shouldExposeToolCallResponse(tool.name)) {
+            context.publisher.onToolCallEnd(tool.name, response)
+        } else {
+            context.publisher.onToolCallEnd(tool.name, "<TOOL RESPONSE WAS HIDDEN BY SERVER>")
+        }
 
         // TODO: 支持多工具调用?
         return ToolResponseMessage

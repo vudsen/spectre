@@ -14,4 +14,6 @@ abstract class TypedAgentTool<T> : AgentTool {
         context: AiToolExecutionContext,
         argument: String,
     ): String = executeInternal(context, GLOBAL_JSON_MAPPER.readValue(argument, getArgumentType()))
+
+    override fun exposeToolCallResponse(): Boolean = true
 }

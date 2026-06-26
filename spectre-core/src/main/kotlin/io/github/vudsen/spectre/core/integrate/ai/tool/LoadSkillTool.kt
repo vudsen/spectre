@@ -19,4 +19,6 @@ class LoadSkillTool : TypedAgentTool<LoadSkillRequest>() {
     override fun getDescription(): String = "Load specific skill."
 
     override fun requireUserConfirm(): Boolean = false
+
+    override fun exposeToolCallResponse(): Boolean = false
 }

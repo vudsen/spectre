@@ -44,6 +44,9 @@ class AgentToolsManager(
 
     fun isRequireConfirm(toolName: String): Boolean = toolMap[toolName]!!.requireUserConfirm()
 
+    fun shouldExposeToolCallResponse(toolName: String) =
+        toolMap[toolName]?.exposeToolCallResponse() ?: throw IllegalStateException("Tool $toolName not found")
+
     fun executeTool(
         context: AiToolExecutionContext,
         toolName: String,
