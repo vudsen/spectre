@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.AgentEventPublisher
+import io.github.vudsen.spectre.api.ai.AiToolExecutionContext
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
@@ -111,8 +112,7 @@ class DefaultAiService(
 
                 val executionResult =
                     agentToolsManager.executeTool(
-                        io.github.vudsen.spectre.api.ai
-                            .AiToolExecutionContext(context.conversationId),
+                        AiToolExecutionContext(context.conversationId),
                         toolCall.name,
                         toolCall.arguments,
                     )
@@ -123,12 +123,25 @@ class DefaultAiService(
                         .responses(listOf(ToolResponseMessage.ToolResponse(toolCall.id, toolCall.name, executionResult)))
                         .metadata(mapOf())
                         .build()
-                context.publisher.onToolCallEnd(toolCall.name, executionResult)
+
+                emitToolCallEndEvent(context.publisher, toolCall.name, executionResult)
                 break
             }
         }
         if (currentIteration == maxIteration) {
             context.publisher.onError(null, "达到迭代次数")
+        }
+    }
+
+    private fun emitToolCallEndEvent(
+        publisher: AgentEventPublisher,
+        toolName: String,
+        result: String,
+    ) {
+        if (agentToolsManager.shouldExposeToolCallResponse(toolName)) {
+            publisher.onToolCallEnd(toolName, result)
+        } else {
+            publisher.onToolCallEnd(toolName, "<TOOL RESPONSE WAS HIDDEN BY SERVER>")
         }
     }
 
@@ -188,8 +201,7 @@ class DefaultAiService(
             when (question) {
                 "YES" -> {
                     agentToolsManager.executeTool(
-                        io.github.vudsen.spectre.api.ai
-                            .AiToolExecutionContext(context.channelId),
+                        AiToolExecutionContext(context.channelId),
                         tool.name,
                         tool.arguments,
                     )
@@ -202,11 +214,7 @@ class DefaultAiService(
                 }
             }
 
-        if (agentToolsManager.shouldExposeToolCallResponse(tool.name)) {
-            context.publisher.onToolCallEnd(tool.name, response)
-        } else {
-            context.publisher.onToolCallEnd(tool.name, "<TOOL RESPONSE WAS HIDDEN BY SERVER>")
-        }
+        emitToolCallEndEvent(context.publisher, tool.name, response)
 
         // TODO: 支持多工具调用?
         return ToolResponseMessage
@@ -421,7 +429,7 @@ class DefaultAiService(
         conversationId: String,
     ) {
         if (tool.name == AskHumanTool.NAME) {
-            queryContext.publisher.onToolCallEnd(tool.name, message)
+            emitToolCallEndEvent(queryContext.publisher, tool.name, message)
             // TODO: 支持多工具调用?
             processConversationLoop(
                 context = queryContext,
