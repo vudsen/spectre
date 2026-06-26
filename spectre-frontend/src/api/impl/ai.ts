@@ -106,7 +106,7 @@ export async function chatByAiStream(
   handlers: ChatByAiStreamHandlers = {},
 ): Promise<void> {
   const response = await fetch(
-    resolveApiUrl(request.skillId ? 'ai/chat/with-skill' : 'ai/chat'),
+    resolveApiUrl('ai/chat'),
     {
       method: 'POST',
       headers: {
