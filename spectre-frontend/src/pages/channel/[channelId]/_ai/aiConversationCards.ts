@@ -1,7 +1,9 @@
 import i18n from '@/i18n'
+import { ASK_HUMAN_TOOL_NAME } from '@/pages/channel/[channelId]/_ai/types.ts'
 import type {
   AiCardToolSegment,
   AiStreamMessage,
+  AiToolCallStartMessage,
   AiToolEventType,
   ConversationCard,
 } from '@/pages/channel/[channelId]/_ai/types.ts'
@@ -15,24 +17,26 @@ function createMessageId(): string {
 
 function formatAiInlineMessage(msg: AiStreamMessage): string {
   switch (msg.type) {
-    case 'TOOL_CALL_START':
-      return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_001', {
-        tool: msg.data,
-        parameter: msg.parameter ? ` (${msg.parameter})` : '',
-      })
     case 'TOOL_CALL_END':
       return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_002', {
         tool: msg.data,
         parameter: msg.parameter ? ` (${msg.parameter})` : '',
       })
-    case 'PENDING_CONFIRM':
-      return i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_003', {
-        tool: msg.data,
-      })
-    case 'ASK_HUMAN':
-      return msg.askHuman?.question || msg.data
     default:
       return msg.data
+  }
+}
+
+function toToolSegmentStatus(
+  msg: AiToolCallStartMessage,
+): AiCardToolSegment['status'] {
+  switch (msg.toolStatus) {
+    case 'PENDING_EXECUTION':
+      return msg.data === ASK_HUMAN_TOOL_NAME
+        ? 'pending_ask_human'
+        : 'waiting_execution'
+    case 'PENDING_CONFIRM':
+      return 'pending_confirm'
   }
 }
 
@@ -42,7 +46,7 @@ export function buildConversationCards(
   const cards: ConversationCard[] = []
   let currentAiCard: Extract<ConversationCard, { type: 'ai' }> | undefined
   let currentErrorCard: Extract<ConversationCard, { type: 'error' }> | undefined
-  let activeToolSegment: AiCardToolSegment | undefined
+  const toolSegmentsById = new Map<string, AiCardToolSegment>()
 
   const ensureAiCard = (): Extract<ConversationCard, { type: 'ai' }> => {
     if (currentAiCard) {
@@ -63,7 +67,10 @@ export function buildConversationCards(
       return
     }
     const aiCard = ensureAiCard()
-    const lastSegment = aiCard.segments.at(-1)
+    const lastSegment =
+      aiCard.segments.length > 0
+        ? aiCard.segments[aiCard.segments.length - 1]
+        : undefined
     if (lastSegment?.kind === 'text') {
       lastSegment.markdown += text
       return
@@ -76,66 +83,43 @@ export function buildConversationCards(
   }
 
   const appendToolEvent = (event: AiStreamMessage): void => {
-    if (!activeToolSegment) {
-      if (event.type === 'TOOL_CALL_END') {
-        appendTextSegment(formatAiInlineMessage(event))
-        return
-      }
-      if (event.type === 'TOOL_CALL_START') {
-        const toolSegment: AiCardToolSegment = {
-          id: createMessageId(),
-          kind: 'tool',
-          toolName: event.data,
-          status: 'running',
-          events: [],
-        }
-        ensureAiCard().segments.push(toolSegment)
-        activeToolSegment = toolSegment
-      } else {
-        const toolSegment: AiCardToolSegment = {
-          id: createMessageId(),
-          kind: 'tool',
-          toolName: event.data,
-          status:
-            event.type === 'PENDING_CONFIRM' ? 'pending_confirm' : 'ask_human',
-          events: [],
-        }
-        ensureAiCard().segments.push(toolSegment)
-        activeToolSegment = toolSegment
-      }
-    } else if (event.type === 'TOOL_CALL_START') {
-      activeToolSegment.status =
-        activeToolSegment.status === 'completed'
-          ? 'completed'
-          : activeToolSegment.status
+    if (event.type === 'TOOL_CALL_START') {
+      const toolCallId = event.toolCallId || createMessageId()
       const toolSegment: AiCardToolSegment = {
         id: createMessageId(),
         kind: 'tool',
+        toolCallId,
         toolName: event.data,
-        status: 'running',
+        status: toToolSegmentStatus(event as AiToolCallStartMessage),
+        parameter: event.parameter,
         events: [],
       }
       ensureAiCard().segments.push(toolSegment)
-      activeToolSegment = toolSegment
+      toolSegmentsById.set(toolCallId, toolSegment)
     }
 
-    activeToolSegment.events.push({
+    if (!event.toolCallId) {
+      return
+    }
+
+    const toolSegment = toolSegmentsById.get(event.toolCallId)
+    if (!toolSegment) {
+      if (event.type === 'TOOL_CALL_END') {
+        appendTextSegment(formatAiInlineMessage(event))
+      }
+      return
+    }
+
+    toolSegment.events.push({
       id: event.id,
       type: event.type as AiToolEventType,
       data: event.data,
       parameter: event.parameter,
-      askHuman: event.askHuman,
+      toolCallId: event.toolCallId,
     })
 
-    if (event.type === 'PENDING_CONFIRM') {
-      activeToolSegment.status = 'pending_confirm'
-    }
-    if (event.type === 'ASK_HUMAN') {
-      activeToolSegment.status = 'ask_human'
-    }
     if (event.type === 'TOOL_CALL_END') {
-      activeToolSegment.status = 'completed'
-      activeToolSegment = undefined
+      toolSegment.status = 'completed'
     }
   }
 
@@ -143,7 +127,7 @@ export function buildConversationCards(
     if (event.type === 'USER') {
       currentAiCard = undefined
       currentErrorCard = undefined
-      activeToolSegment = undefined
+      toolSegmentsById.clear()
       cards.push({
         id: event.id,
         type: 'user',
@@ -154,7 +138,7 @@ export function buildConversationCards(
 
     if (event.type === 'ERROR') {
       currentAiCard = undefined
-      activeToolSegment = undefined
+      toolSegmentsById.clear()
       if (!currentErrorCard) {
         currentErrorCard = {
           id: createMessageId(),
@@ -170,11 +154,7 @@ export function buildConversationCards(
 
     currentErrorCard = undefined
     if (event.type === 'TOKEN') {
-      if (activeToolSegment) {
-        appendToolEvent(event)
-      } else {
-        appendTextSegment(event.data)
-      }
+      appendTextSegment(event.data)
       continue
     }
 

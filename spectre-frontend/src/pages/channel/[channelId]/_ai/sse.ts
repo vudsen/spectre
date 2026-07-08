@@ -1,7 +1,4 @@
-import type {
-  AskHumanRequest,
-  PendingAskHumanState,
-} from '@/pages/channel/[channelId]/_ai/types.ts'
+import type { AskHumanRequest } from '@/pages/channel/[channelId]/_ai/types.ts'
 
 const AI_CONVERSATION_KEY_PREFIX = 'spectre.ai.conversation'
 
@@ -37,7 +34,7 @@ export function resetConversationId(channelId: string): string {
 export function parseAskHumanRequest(
   parameter: string | null | undefined,
   data: string,
-): PendingAskHumanState {
+): AskHumanRequest {
   const fallback: AskHumanRequest = {
     question: data,
   }

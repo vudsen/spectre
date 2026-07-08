@@ -2,7 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { addToast, Button, Tooltip } from '@heroui/react'
 import clsx from 'clsx'
 import { Rnd } from 'react-rnd'
-import { type AiMessageDTO, chatByAiStream } from '@/api/impl/ai.ts'
+import {
+  type AiMessageDTO,
+  type AiToolResponseDTO,
+  chatByAiStream,
+} from '@/api/impl/ai.ts'
 import {
   getOrCreateConversationId,
   parseAskHumanRequest,
@@ -12,7 +16,9 @@ import type {
   AiStreamMessage,
   PendingAskHumanState,
   PendingConfirmState,
+  PendingToolState,
 } from '@/pages/channel/[channelId]/_ai/types.ts'
+import { toPendingToolState } from '@/pages/channel/[channelId]/_ai/types.ts'
 import { store, type RootState } from '@/store'
 import { updateChannelContext } from '@/store/channelSlice.ts'
 import { useDispatch, useSelector } from 'react-redux'
@@ -51,12 +57,9 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
   const [events, setEvents] = useState<AiStreamMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [conversationId, setConversationId] = useState('')
-  const [pendingConfirm, setPendingConfirm] = useState<
-    PendingConfirmState | undefined
-  >(undefined)
-  const [pendingAskHuman, setPendingAskHuman] = useState<
-    PendingAskHumanState | undefined
-  >(undefined)
+  const [pendingToolCalls, setPendingToolCalls] = useState<PendingToolState[]>(
+    [],
+  )
   const dispatch = useDispatch()
   const [isMobile, setIsMobile] = useState<boolean>(() =>
     typeof window !== 'undefined'
@@ -81,8 +84,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
   useEffect(() => {
     setConversationId(getOrCreateConversationId(channelId))
     setEvents([])
-    setPendingConfirm(undefined)
-    setPendingAskHuman(undefined)
+    setPendingToolCalls([])
     if (typeof window !== 'undefined') {
       setLayout(loadLayout(channelId))
     }
@@ -123,50 +125,51 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
           })
           break
         }
-        case 'TOOL_CALL_START': {
-          pushEvent({
-            type: 'TOOL_CALL_START',
-            data: msg.data,
-            parameter: msg.parameter || undefined,
-          })
-          break
-        }
         case 'TOOL_CALL_END': {
-          setPendingConfirm(undefined)
-          setPendingAskHuman(undefined)
+          if (!msg.toolCallId) {
+            break
+          }
+          setPendingToolCalls((prev) =>
+            prev.filter((item) => item.toolCallId !== msg.toolCallId),
+          )
           pushEvent({
             type: 'TOOL_CALL_END',
             data: msg.data,
             parameter: msg.parameter || undefined,
+            toolCallId: msg.toolCallId,
           })
           break
         }
-        case 'PENDING_CONFIRM': {
-          setPendingConfirm({
-            toolName: msg.data,
-            parameter: msg.parameter || undefined,
-          })
-          pushEvent({
-            type: 'PENDING_CONFIRM',
-            data: msg.data,
-            parameter: msg.parameter || undefined,
-          })
-          break
-        }
-        case 'ASK_HUMAN': {
-          const askHuman = parseAskHumanRequest(msg.parameter, msg.data)
-          setPendingAskHuman(askHuman)
-          pushEvent({
-            type: 'ASK_HUMAN',
-            data: msg.data,
-            parameter: msg.parameter || undefined,
-            askHuman,
+        case 'TOOL_CALLS_START': {
+          const toolCalls = msg.toolCalls || []
+          setPendingToolCalls(
+            toolCalls.map((toolCall) => {
+              const pendingTool = toPendingToolState(toolCall)
+              if (pendingTool.kind === 'ask_human') {
+                const askHuman = parseAskHumanRequest(
+                  pendingTool.parameter,
+                  pendingTool.toolName,
+                )
+                return {
+                  ...pendingTool,
+                  question: askHuman.question,
+                }
+              }
+              return pendingTool
+            }),
+          )
+          toolCalls.forEach((toolCall) => {
+            pushEvent({
+              type: 'TOOL_CALL_START',
+              data: toolCall.toolName,
+              parameter: toolCall.arguments || undefined,
+              toolCallId: toolCall.toolCallId,
+              toolStatus: toolCall.status,
+            })
           })
           break
         }
         case 'ERROR': {
-          setPendingConfirm(undefined)
-          setPendingAskHuman(undefined)
           pushEvent({
             type: 'ERROR',
             data: msg.data,
@@ -178,23 +181,129 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     [pushEvent],
   )
 
+  const pendingConfirms = useMemo(
+    () =>
+      pendingToolCalls.filter(
+        (item) => item.kind === 'confirm',
+      ) as PendingConfirmState[],
+    [pendingToolCalls],
+  )
+
+  const currentAskHuman = useMemo(
+    () =>
+      pendingToolCalls.find(
+        (item) => item.kind === 'ask_human' && !item.content,
+      ) as PendingAskHumanState | undefined,
+    [pendingToolCalls],
+  )
+
+  const hasPendingBatch = pendingToolCalls.length > 0
+
+  const buildPendingToolResponses = useCallback((): AiToolResponseDTO[] => {
+    return pendingToolCalls.map((item) => ({
+      toolCallId: item.toolCallId,
+      content: item.content,
+    }))
+  }, [pendingToolCalls])
+
+  const submitPendingToolResponses = useCallback(async () => {
+    if (!conversationId || isLoading || pendingToolCalls.length === 0) {
+      return
+    }
+    setIsLoading(true)
+    abortRef.current?.abort()
+    abortRef.current = new AbortController()
+    try {
+      await chatByAiStream(
+        {
+          query: '',
+          channelId,
+          conversationId,
+          toolResponses: buildPendingToolResponses(),
+        },
+        {
+          signal: abortRef.current.signal,
+          onMessage: handleAiMessage,
+        },
+      )
+    } catch (e) {
+      if (abortRef.current?.signal.aborted) {
+        return
+      }
+      pushEvent({
+        type: 'ERROR',
+        data:
+          e instanceof Error
+            ? e.message
+            : i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_004'),
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [
+    buildPendingToolResponses,
+    channelId,
+    conversationId,
+    handleAiMessage,
+    isLoading,
+    pendingToolCalls.length,
+    pushEvent,
+  ])
+
+  useEffect(() => {
+    if (!hasPendingBatch || isLoading) {
+      return
+    }
+    const hasUnresolvedConfirm = pendingConfirms.some((item) => !item.content)
+    if (hasUnresolvedConfirm || currentAskHuman) {
+      return
+    }
+    void submitPendingToolResponses()
+  }, [
+    currentAskHuman,
+    hasPendingBatch,
+    isLoading,
+    pendingConfirms,
+    submitPendingToolResponses,
+  ])
+
   const submitQuery = useCallback(
     async (query: string) => {
       if (!enabled || isLoading || !conversationId) {
         return
       }
+      if (currentAskHuman) {
+        const content = query.trim()
+        if (!content) {
+          return
+        }
+        setPendingToolCalls((prev) =>
+          prev.map((item) =>
+            item.toolCallId === currentAskHuman.toolCallId &&
+            item.kind === 'ask_human'
+              ? {
+                  ...item,
+                  content,
+                }
+              : item,
+          ),
+        )
+        pushEvent({
+          type: 'USER',
+          data: content,
+        })
+        return
+      }
+      if (hasPendingBatch) {
+        return
+      }
       const activeSkill = store.getState().channel.context.selectedSkill
       abortRef.current?.abort()
       abortRef.current = new AbortController()
-      const shouldRenderUserInput = !pendingConfirm
-      setPendingConfirm(undefined)
-      setPendingAskHuman(undefined)
-      if (shouldRenderUserInput) {
-        pushEvent({
-          type: 'USER',
-          data: formatUserMessage(query, activeSkill?.name),
-        })
-      }
+      pushEvent({
+        type: 'USER',
+        data: formatUserMessage(query, activeSkill?.name),
+      })
       if (activeSkill) {
         dispatch(
           updateChannelContext({
@@ -210,6 +319,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
             channelId,
             conversationId,
             skillId: activeSkill?.id,
+            toolResponses: [],
           },
           {
             signal: abortRef.current.signal,
@@ -236,9 +346,10 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
       conversationId,
       dispatch,
       enabled,
+      currentAskHuman,
+      hasPendingBatch,
       handleAiMessage,
       isLoading,
-      pendingConfirm,
       pushEvent,
     ],
   )
@@ -248,8 +359,7 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     const nextConversationId = resetConversationId(channelId)
     setConversationId(nextConversationId)
     setEvents([])
-    setPendingConfirm(undefined)
-    setPendingAskHuman(undefined)
+    setPendingToolCalls([])
     addToast({
       title: i18n.t('hardcoded.msg_pages_channel_param_ai_aipanel_005'),
       color: 'success',
@@ -264,6 +374,35 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
     },
     [channelId],
   )
+
+  const handleConfirm = useCallback(
+    (toolCallId: string, value: 'YES' | 'NO') => {
+      setPendingToolCalls((prev) =>
+        prev.map((item) =>
+          item.toolCallId === toolCallId && item.kind === 'confirm'
+            ? {
+                ...item,
+                content: value,
+              }
+            : item,
+        ),
+      )
+    },
+    [],
+  )
+
+  const handleAutoConfirmAll = useCallback(() => {
+    setPendingToolCalls((prev) =>
+      prev.map((item) =>
+        item.kind === 'confirm' && !item.content
+          ? {
+              ...item,
+              content: 'YES',
+            }
+          : item,
+      ),
+    )
+  }, [])
 
   if (!isOpen) {
     return null
@@ -348,11 +487,14 @@ const AiPanel: React.FC<AiPanelProps> = ({ channelId, isOpen, onClose }) => {
         <AiPanelContent
           enabled={enabled}
           cards={cards}
-          pendingConfirm={pendingConfirm}
-          pendingAskHuman={pendingAskHuman}
+          pendingConfirms={pendingConfirms}
+          currentAskHuman={currentAskHuman}
           autoConfirm={autoConfirm}
           isLoading={isLoading}
+          composerDisabled={hasPendingBatch && !currentAskHuman}
           onSubmit={submitQuery}
+          onConfirm={handleConfirm}
+          onAutoConfirmAll={handleAutoConfirmAll}
         />
       </div>
     </Rnd>
