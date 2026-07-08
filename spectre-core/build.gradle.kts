@@ -65,7 +65,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:5.4.0")
     implementation("org.apache.commons", "commons-compress", libs.versions.apacheCommons.get())
     implementation("io.lettuce:lettuce-core")
-    implementation("org.postgresql:postgresql:42.7.11")
+    implementation("org.postgresql:postgresql:42.7.12")
     implementation("org.hibernate.orm:hibernate-community-dialects")
     // 稳定后再删除.
     implementation("org.xerial:sqlite-jdbc:3.53.2.0")
