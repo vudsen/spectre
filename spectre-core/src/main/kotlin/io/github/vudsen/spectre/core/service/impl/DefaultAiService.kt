@@ -406,12 +406,14 @@ class DefaultAiService(
         if (toolResponses.size != toolCalls.size) {
             throw IllegalArgumentException("Tool response size mismatch")
         }
+        for ((index, call) in toolCalls.withIndex()) {
+            if (call.id != toolResponses[index].toolCallId) {
+                throw IllegalArgumentException("Tool response order mismatch at index $index")
+            }
+        }
         val responses =
             toolCalls.mapIndexed { index, toolCall ->
                 val toolResponse = toolResponses[index]
-                if (toolResponse.toolCallId != toolCall.id) {
-                    throw IllegalArgumentException("Tool response order mismatch at index $index")
-                }
                 val result = buildRecoveredToolResponse(queryContext, toolCall, toolResponse.content)
                 emitToolCallEndEvent(queryContext.publisher, toolCall.id, toolCall.name, result)
                 ToolResponseMessage.ToolResponse(toolCall.id, toolCall.name, result)
