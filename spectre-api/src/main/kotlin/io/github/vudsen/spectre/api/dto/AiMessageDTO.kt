@@ -4,17 +4,13 @@ class AiMessageDTO(
     val type: MessageType,
     val data: String,
     val parameter: String? = null,
+    val toolCallId: String? = null,
+    val toolCalls: List<AiToolCallDTO>? = null,
 ) {
     enum class MessageType {
         TOKEN,
-        TOOL_CALL_START,
-
-        /**
-         * 等待用户确认
-         */
-        PENDING_CONFIRM,
+        TOOL_CALLS_START,
         TOOL_CALL_END,
-        ASK_HUMAN,
         ERROR,
     }
 }

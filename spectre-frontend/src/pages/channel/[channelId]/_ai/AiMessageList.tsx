@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Button } from '@heroui/react'
+import clsx from 'clsx'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import i18n from '@/i18n'
@@ -10,27 +11,45 @@ import type {
   PendingAskHumanState,
   PendingConfirmState,
 } from '@/pages/channel/[channelId]/_ai/types.ts'
+import remarkGfm from 'remark-gfm'
+import 'github-markdown-css/github-markdown.css'
 
 interface AiMessageListProps {
   cards: ConversationCard[]
-  pendingConfirm?: PendingConfirmState
-  pendingAskHuman?: PendingAskHumanState
+  pendingConfirms: PendingConfirmState[]
+  currentAskHuman?: PendingAskHumanState
   autoConfirm?: boolean
   isLoading?: boolean
-  onQuickSubmit: (value: string) => void
+  onConfirm: (toolCallId: string, value: 'YES' | 'NO') => void
+  onAutoConfirmAll: () => void
 }
 
 function getToolStatusLabel(segment: AiCardToolSegment): string {
   switch (segment.status) {
-    case 'running':
-      return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_001')
+    case 'waiting_execution':
+      return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_015')
     case 'pending_confirm':
       return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_002')
-    case 'ask_human':
+    case 'pending_ask_human':
       return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_003')
     case 'completed':
       return i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_004')
   }
+}
+
+function getToolContainerClassName(
+  segment: AiCardToolSegment,
+  isConfirmExecuting: boolean,
+): string {
+  if (segment.status === 'pending_confirm') {
+    return clsx(
+      'rounded-md border',
+      isConfirmExecuting
+        ? 'border-primary-200 bg-primary-50'
+        : 'border-warning-300 bg-warning-100',
+    )
+  }
+  return 'border-default bg-content1 rounded-md border'
 }
 
 function getToolEventLabel(event: AiToolEvent): string {
@@ -39,12 +58,6 @@ function getToolEventLabel(event: AiToolEvent): string {
       return 'TOOL_CALL_START'
     case 'TOOL_CALL_END':
       return 'TOOL_CALL_END'
-    case 'PENDING_CONFIRM':
-      return 'PENDING_CONFIRM'
-    case 'ASK_HUMAN':
-      return 'ASK_HUMAN'
-    case 'TOKEN':
-      return 'TOKEN'
   }
 }
 
@@ -87,80 +100,56 @@ const markdownComponents: Components = {
 
 const MarkdownText: React.FC<{ text: string }> = ({ text }) => {
   return (
-    <div className="prose prose-sm max-w-none text-sm break-words">
-      <ReactMarkdown components={markdownComponents}>{text}</ReactMarkdown>
+    <div
+      className="prose prose-sm markdown-body max-w-none text-sm break-words"
+      style={{ backgroundColor: 'inherit' }}
+    >
+      <ReactMarkdown
+        components={markdownComponents}
+        remarkPlugins={[remarkGfm]}
+      >
+        {text}
+      </ReactMarkdown>
     </div>
   )
 }
 
 const ToolEventLine: React.FC<{
   event: AiToolEvent
-  pendingConfirm?: PendingConfirmState
-  pendingAskHuman?: PendingAskHumanState
-}> = ({ event, pendingConfirm, pendingAskHuman }) => {
+}> = ({ event }) => {
   return (
     <div className="bg-default-50 border-default-200 rounded-md border px-2 py-1">
       <div className="text-default-600 text-[11px] font-semibold">
         {getToolEventLabel(event)}
       </div>
-      {event.type === 'TOKEN' ? (
-        <div className="text-default-700 mt-1 text-xs break-words whitespace-pre-wrap">
-          {event.data}
-        </div>
-      ) : null}
-      {event.type === 'TOOL_CALL_START' || event.type === 'TOOL_CALL_END' ? (
-        <div className="text-default-700 mt-1 text-xs break-all">
-          {event.parameter}
-        </div>
-      ) : null}
-      {event.type === 'PENDING_CONFIRM' ? (
-        <div className="text-warning-700 mt-1 space-y-1 text-xs">
-          <div>
-            {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_005')}{' '}
-            {event.data}{' '}
-            {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_002')}
-            {event.parameter ? ` (${event.parameter})` : ''}
-          </div>
-          {pendingConfirm?.toolName === event.data ? (
-            <div>
-              {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_006')}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      {event.type === 'ASK_HUMAN' ? (
-        <div className="text-primary-700 mt-1 space-y-1 text-xs">
-          <div>{event.askHuman?.question || event.data}</div>
-          {pendingAskHuman ? (
-            <div>
-              {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_007')}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      <div className="text-default-700 mt-1 text-xs break-all">
+        {event.parameter}
+      </div>
     </div>
   )
 }
 
 const AiMessageList: React.FC<AiMessageListProps> = ({
   cards,
-  pendingConfirm,
-  pendingAskHuman,
+  pendingConfirms,
+  currentAskHuman,
   autoConfirm,
   isLoading,
-  onQuickSubmit,
+  onConfirm,
+  onAutoConfirmAll,
 }) => {
   const [autoConfirmCountdown, setAutoConfirmCountdown] = useState<
     number | null
   >(null)
-  const quickSubmitRef = useRef(onQuickSubmit)
+  const autoConfirmRef = useRef(onAutoConfirmAll)
 
   useEffect(() => {
-    quickSubmitRef.current = onQuickSubmit
-  }, [onQuickSubmit])
+    autoConfirmRef.current = onAutoConfirmAll
+  }, [onAutoConfirmAll])
 
   useEffect(() => {
-    if (!pendingConfirm || !autoConfirm) {
+    const unresolvedConfirms = pendingConfirms.filter((item) => !item.content)
+    if (unresolvedConfirms.length === 0 || !autoConfirm) {
       setAutoConfirmCountdown(null)
       return
     }
@@ -172,14 +161,25 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
       setAutoConfirmCountdown(Math.max(remainSeconds, 0))
     }, 1000)
     const timeoutId = window.setTimeout(() => {
-      quickSubmitRef.current('YES')
+      autoConfirmRef.current()
     }, 3000)
 
     return () => {
       window.clearInterval(intervalId)
       window.clearTimeout(timeoutId)
     }
-  }, [autoConfirm, pendingConfirm])
+  }, [autoConfirm, pendingConfirms])
+
+  const pendingConfirmMap = new Map(
+    pendingConfirms.map((pendingConfirm) => [
+      pendingConfirm.toolCallId,
+      pendingConfirm,
+    ]),
+  )
+  const allPendingConfirmsResolved =
+    pendingConfirms.length > 0 &&
+    pendingConfirms.every((item) => item.content) &&
+    !currentAskHuman
 
   return (
     <div className="h-0 grow overflow-y-auto px-3 py-2">
@@ -237,20 +237,88 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
                   return (
                     <details
                       key={segment.id}
-                      className="border-default-200 bg-content1 rounded-md border"
+                      className={getToolContainerClassName(
+                        segment,
+                        allPendingConfirmsResolved,
+                      )}
                       open={segment.status !== 'completed'}
                     >
                       <summary className="cursor-pointer px-2 py-1 text-xs font-semibold">
-                        {segment.toolName} · {getToolStatusLabel(segment)}
+                        {segment.toolName} ·{' '}
+                        {segment.status === 'pending_confirm' &&
+                        allPendingConfirmsResolved
+                          ? i18n.t(
+                              'hardcoded.msg_pages_channel_param_ai_aimessagelist_001',
+                            )
+                          : getToolStatusLabel(segment)}
                       </summary>
                       <div className="border-default-200 space-y-2 border-t p-2">
+                        {segment.parameter ? (
+                          <div className="text-default-600 text-xs break-all">
+                            {segment.parameter}
+                          </div>
+                        ) : null}
+                        {segment.status === 'pending_confirm' &&
+                        pendingConfirmMap.has(segment.toolCallId) ? (
+                          <div className="flex gap-2">
+                            {!allPendingConfirmsResolved ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  color={
+                                    pendingConfirmMap.get(segment.toolCallId)
+                                      ?.content === 'YES'
+                                      ? 'primary'
+                                      : 'default'
+                                  }
+                                  variant={
+                                    pendingConfirmMap.get(segment.toolCallId)
+                                      ?.content === 'YES'
+                                      ? 'solid'
+                                      : 'flat'
+                                  }
+                                  onPress={() =>
+                                    onConfirm(segment.toolCallId, 'YES')
+                                  }
+                                >
+                                  {i18n.t(
+                                    'hardcoded.msg_pages_channel_param_ai_aimessagelist_010',
+                                  )}
+                                  {autoConfirm &&
+                                  autoConfirmCountdown !== null &&
+                                  !pendingConfirmMap.get(segment.toolCallId)
+                                    ?.content
+                                    ? ` (${autoConfirmCountdown}s)`
+                                    : ''}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  color={
+                                    pendingConfirmMap.get(segment.toolCallId)
+                                      ?.content === 'NO'
+                                      ? 'danger'
+                                      : 'default'
+                                  }
+                                  variant={
+                                    pendingConfirmMap.get(segment.toolCallId)
+                                      ?.content === 'NO'
+                                      ? 'solid'
+                                      : 'flat'
+                                  }
+                                  onPress={() =>
+                                    onConfirm(segment.toolCallId, 'NO')
+                                  }
+                                >
+                                  {i18n.t(
+                                    'hardcoded.msg_pages_channel_param_ai_aimessagelist_011',
+                                  )}
+                                </Button>
+                              </>
+                            ) : null}
+                          </div>
+                        ) : null}
                         {segment.events.map((event) => (
-                          <ToolEventLine
-                            key={event.id}
-                            event={event}
-                            pendingConfirm={pendingConfirm}
-                            pendingAskHuman={pendingAskHuman}
-                          />
+                          <ToolEventLine key={event.id} event={event} />
                         ))}
                       </div>
                     </details>
@@ -261,51 +329,10 @@ const AiMessageList: React.FC<AiMessageListProps> = ({
           )
         })}
 
-        {pendingConfirm ? (
-          <div className="border-warning-200 bg-warning-50 mx-8 rounded-lg border p-3">
-            <div className="text-warning-700 text-sm">
-              {i18n.t('hardcoded.msg_pages_channel_param_ai_aimessagelist_008')}{' '}
-              {pendingConfirm.toolName}
-            </div>
-            {pendingConfirm.parameter ? (
-              <div className="text-warning-700 mt-1 text-xs break-all">
-                {i18n.t(
-                  'hardcoded.msg_pages_channel_param_ai_aimessagelist_009',
-                )}{' '}
-                {pendingConfirm.parameter}
-              </div>
-            ) : null}
-            <div className="mt-2 flex gap-2">
-              <Button
-                size="sm"
-                color="primary"
-                onPress={() => onQuickSubmit('YES')}
-              >
-                {i18n.t(
-                  'hardcoded.msg_pages_channel_param_ai_aimessagelist_010',
-                )}
-                {autoConfirm && autoConfirmCountdown !== null
-                  ? ` (${autoConfirmCountdown}s)`
-                  : ''}
-              </Button>
-              <Button
-                size="sm"
-                color="danger"
-                variant="flat"
-                onPress={() => onQuickSubmit('NO')}
-              >
-                {i18n.t(
-                  'hardcoded.msg_pages_channel_param_ai_aimessagelist_011',
-                )}
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        {pendingAskHuman ? (
+        {currentAskHuman ? (
           <div className="border-primary-200 bg-primary-50 mx-8 rounded-lg border p-3">
             <div className="text-primary-700 text-sm">
-              {pendingAskHuman.question ||
+              {currentAskHuman.question ||
                 i18n.t(
                   'hardcoded.msg_pages_channel_param_ai_aimessagelist_012',
                 )}

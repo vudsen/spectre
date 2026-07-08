@@ -1,6 +1,14 @@
 packages:
   - .
 
+allowBuilds:
+  '@heroui/shared-utils': true
+  '@parcel/watcher': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  '@tailwindcss/oxide': true
+  esbuild: true
+
 onlyBuiltDependencies:
   - '@heroui/shared-utils'
   - '@parcel/watcher'

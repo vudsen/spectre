@@ -2,6 +2,7 @@ package io.github.vudsen.spectre.core.integrate.ai
 
 import io.github.vudsen.spectre.api.AgentEventPublisher
 import io.github.vudsen.spectre.api.dto.AiMessageDTO
+import io.github.vudsen.spectre.api.dto.AiToolCallDTO
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 class DefaultAgentEventPublisher(
@@ -16,24 +17,29 @@ class DefaultAgentEventPublisher(
         )
     }
 
-    override fun onToolCallStart(
-        toolName: String,
-        arguments: String?,
-    ) {
+    override fun onToolCallsStart(toolCalls: List<AiToolCallDTO>) {
         sseEmitter.send(
             AiMessageDTO(
-                AiMessageDTO.MessageType.TOOL_CALL_START,
-                toolName,
-                arguments,
+                AiMessageDTO.MessageType.TOOL_CALLS_START,
+                "",
+                toolCalls = toolCalls,
             ),
         )
     }
 
     override fun onToolCallEnd(
+        toolCallId: String,
         toolName: String,
         result: String,
     ) {
-        sseEmitter.send(AiMessageDTO(AiMessageDTO.MessageType.TOOL_CALL_END, toolName, result))
+        sseEmitter.send(
+            AiMessageDTO(
+                AiMessageDTO.MessageType.TOOL_CALL_END,
+                toolName,
+                result,
+                toolCallId = toolCallId,
+            ),
+        )
     }
 
     override fun onError(
@@ -41,17 +47,6 @@ class DefaultAgentEventPublisher(
         msg: String,
     ) {
         sseEmitter.send(AiMessageDTO(AiMessageDTO.MessageType.ERROR, msg))
-    }
-
-    override fun askHuman(question: String) {
-        sseEmitter.send(AiMessageDTO(AiMessageDTO.MessageType.ASK_HUMAN, question))
-    }
-
-    override fun sendPendingConfirm(
-        toolName: String,
-        arguments: String?,
-    ) {
-        sseEmitter.send(AiMessageDTO(AiMessageDTO.MessageType.PENDING_CONFIRM, toolName, arguments))
     }
 
     override fun done() {

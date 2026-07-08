@@ -34,6 +34,7 @@ class AiController(
             request.conversationId,
             request.channelId,
             request.query,
+            request.toolResponses,
             DefaultAgentEventPublisher(emitter),
             request.skillId,
         )

@@ -1,6 +1,7 @@
 package io.github.vudsen.spectre.api.service
 
 import io.github.vudsen.spectre.api.AgentEventPublisher
+import io.github.vudsen.spectre.api.dto.AiToolResponseDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
 import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
@@ -18,6 +19,7 @@ interface AiService {
         conversationId: String,
         channelId: String,
         message: String,
+        toolResponses: List<AiToolResponseDTO>,
         publisher: AgentEventPublisher,
         forceSkillId: String?,
     )

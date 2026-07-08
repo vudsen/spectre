@@ -37,16 +37,30 @@ export const saveLLMConfiguration = (
 
 export type AiMessageType =
   | 'TOKEN'
-  | 'TOOL_CALL_START'
-  | 'PENDING_CONFIRM'
+  | 'TOOL_CALLS_START'
   | 'TOOL_CALL_END'
-  | 'ASK_HUMAN'
   | 'ERROR'
+
+export type AiToolCallStatus = 'PENDING_EXECUTION' | 'PENDING_CONFIRM'
+
+export type AiToolCallDTO = {
+  toolCallId: string
+  toolName: string
+  arguments?: string | null
+  status: AiToolCallStatus
+}
+
+export type AiToolResponseDTO = {
+  toolCallId: string
+  content: string
+}
 
 export type AiMessageDTO = {
   type: AiMessageType
   data: string
   parameter?: string | null
+  toolCallId?: string | null
+  toolCalls?: AiToolCallDTO[] | null
 }
 
 export type AiChatRequestVO = {
@@ -54,6 +68,7 @@ export type AiChatRequestVO = {
   channelId: string
   conversationId: string
   skillId?: string
+  toolResponses?: AiToolResponseDTO[]
 }
 
 interface ChatByAiStreamHandlers {

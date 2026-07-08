@@ -2,6 +2,9 @@ package io.github.vudsen.spectre.core.service.impl
 
 import io.github.vudsen.spectre.api.AgentEventPublisher
 import io.github.vudsen.spectre.api.ai.AiToolExecutionContext
+import io.github.vudsen.spectre.api.dto.AiToolCallDTO
+import io.github.vudsen.spectre.api.dto.AiToolCallStatus
+import io.github.vudsen.spectre.api.dto.AiToolResponseDTO
 import io.github.vudsen.spectre.api.dto.LLMConfigurationDTO
 import io.github.vudsen.spectre.api.dto.SkillDTO
 import io.github.vudsen.spectre.api.dto.UpdateLLMConfigurationDTO
@@ -14,7 +17,7 @@ import io.github.vudsen.spectre.api.vo.LLMConfigurationVO
 import io.github.vudsen.spectre.core.integrate.ai.AgentToolsManager
 import io.github.vudsen.spectre.core.integrate.ai.AiQueryContext
 import io.github.vudsen.spectre.core.integrate.ai.AiSkillsLoader
-import io.github.vudsen.spectre.core.integrate.ai.currentNotRespondedTool
+import io.github.vudsen.spectre.core.integrate.ai.currentPendingToolBatch
 import io.github.vudsen.spectre.core.integrate.ai.tool.AskHumanTool
 import org.slf4j.LoggerFactory
 import org.springframework.ai.chat.client.AdvisorParams
@@ -72,6 +75,11 @@ class DefaultAiService(
         val used: Long,
     )
 
+    private data class PendingToolCall(
+        val toolCall: AssistantMessage.ToolCall,
+        val status: AiToolCallStatus,
+    )
+
     private val tokenUsageLock = ReentrantLock()
 
     @Volatile
@@ -94,39 +102,29 @@ class DefaultAiService(
                     context = context,
                     inputMessage = nextInputMessage ?: break,
                 )
-            nextInputMessage = null
 
             if (toolCalls.isEmpty()) {
                 return
             }
 
-            for (toolCall in toolCalls) {
-                context.publisher.onToolCallStart(toolCall.name, toolCall.arguments)
-                if (agentToolsManager.isRequireConfirm(toolCall.name)) {
-                    context.publisher.sendPendingConfirm(toolCall.name, toolCall.arguments)
-                    return
-                } else if (toolCall.name == AskHumanTool.NAME) {
-                    context.publisher.askHuman(toolCall.arguments)
-                    return
+            val pendingToolCalls =
+                toolCalls.map { toolCall ->
+                    PendingToolCall(toolCall, resolveToolCallStatus(toolCall))
                 }
-
-                val executionResult =
-                    agentToolsManager.executeTool(
-                        AiToolExecutionContext(context.conversationId),
-                        toolCall.name,
-                        toolCall.arguments,
+            context.publisher.onToolCallsStart(
+                pendingToolCalls.map { pendingToolCall ->
+                    AiToolCallDTO(
+                        toolCallId = pendingToolCall.toolCall.id,
+                        toolName = pendingToolCall.toolCall.name,
+                        arguments = pendingToolCall.toolCall.arguments,
+                        status = pendingToolCall.status,
                     )
-
-                nextInputMessage =
-                    ToolResponseMessage
-                        .builder()
-                        .responses(listOf(ToolResponseMessage.ToolResponse(toolCall.id, toolCall.name, executionResult)))
-                        .metadata(mapOf())
-                        .build()
-
-                emitToolCallEndEvent(context.publisher, toolCall.name, executionResult)
-                break
+                },
+            )
+            if (pendingToolCalls.any { isBlockingToolCall(it.toolCall) }) {
+                return
             }
+            nextInputMessage = buildToolResponseMessage(executePendingExecutionTools(context, pendingToolCalls))
         }
         if (currentIteration == maxIteration) {
             context.publisher.onError(null, "达到迭代次数")
@@ -135,13 +133,14 @@ class DefaultAiService(
 
     private fun emitToolCallEndEvent(
         publisher: AgentEventPublisher,
+        toolCallId: String,
         toolName: String,
         result: String,
     ) {
         if (agentToolsManager.shouldExposeToolCallResponse(toolName)) {
-            publisher.onToolCallEnd(toolName, result)
+            publisher.onToolCallEnd(toolCallId, toolName, result)
         } else {
-            publisher.onToolCallEnd(toolName, "<TOOL RESPONSE WAS HIDDEN BY SERVER>")
+            publisher.onToolCallEnd(toolCallId, toolName, "<TOOL RESPONSE WAS HIDDEN BY SERVER>")
         }
     }
 
@@ -190,37 +189,6 @@ class DefaultAiService(
         recordTokenUsage(usedTokens)
 
         return assistantMessage.toolCalls
-    }
-
-    private fun recoverPendingConfirm(
-        context: AiQueryContext,
-        question: String,
-        tool: AssistantMessage.ToolCall,
-    ): ToolResponseMessage {
-        val response =
-            when (question) {
-                "YES" -> {
-                    agentToolsManager.executeTool(
-                        AiToolExecutionContext(context.channelId),
-                        tool.name,
-                        tool.arguments,
-                    )
-                }
-                "NO" -> {
-                    "User refuse to execute this command, please try another command or exit the process."
-                }
-                else -> {
-                    throw IllegalArgumentException("Pending confirmation only accepts YES or NO")
-                }
-            }
-
-        emitToolCallEndEvent(context.publisher, tool.name, response)
-
-        // TODO: 支持多工具调用?
-        return ToolResponseMessage
-            .builder()
-            .responses(listOf(ToolResponseMessage.ToolResponse(tool.id, tool.name, response)))
-            .build()
     }
 
     private fun buildSystemMessage(): SystemMessage {
@@ -363,6 +331,7 @@ class DefaultAiService(
         conversationId: String,
         channelId: String,
         message: String,
+        toolResponses: List<AiToolResponseDTO>,
         publisher: AgentEventPublisher,
         forceSkillId: String?,
     ) {
@@ -380,10 +349,16 @@ class DefaultAiService(
                     llmConfig = llmConfig,
                 )
             try {
-                val tool = chatMemory.currentNotRespondedTool(conversationId)
-                if (tool != null) {
-                    recoverPendingState(tool, queryContext, message, conversationId)
+                val pendingBatch = chatMemory.currentPendingToolBatch(conversationId)
+                if (pendingBatch != null) {
+                    recoverPendingState(pendingBatch, queryContext, toolResponses)
                     return@execute
+                }
+                if (toolResponses.isNotEmpty()) {
+                    throw IllegalArgumentException("No pending tool batch found for submitted tool responses")
+                }
+                if (message.isBlank()) {
+                    throw IllegalArgumentException("Query must not be blank")
                 }
                 if (chatMemory.get(conversationId).isEmpty()) {
                     chatMemory.add(
@@ -423,34 +398,108 @@ class DefaultAiService(
     }
 
     private fun recoverPendingState(
-        tool: AssistantMessage.ToolCall,
+        assistantMessage: AssistantMessage,
         queryContext: AiQueryContext,
-        message: String,
-        conversationId: String,
+        toolResponses: List<AiToolResponseDTO>,
     ) {
-        if (tool.name == AskHumanTool.NAME) {
-            emitToolCallEndEvent(queryContext.publisher, tool.name, message)
-            // TODO: 支持多工具调用?
-            processConversationLoop(
-                context = queryContext,
-                initialInputMessage =
-                    ToolResponseMessage
-                        .builder()
-                        .responses(listOf(ToolResponseMessage.ToolResponse(tool.id, tool.name, message)))
-                        .build(),
-            )
-            return
-        } else if (!agentToolsManager.isRequireConfirm(tool.name)) {
-            // unreachable.
-            logger.warn("Unreachable code, messages: {}, tool name: {}", chatMemory.get(conversationId), tool.name)
-            throw IllegalStateException("Unreachable code!")
+        val toolCalls = assistantMessage.toolCalls
+        if (toolResponses.size != toolCalls.size) {
+            throw IllegalArgumentException("Tool response size mismatch")
         }
+        val responses =
+            toolCalls.mapIndexed { index, toolCall ->
+                val toolResponse = toolResponses[index]
+                if (toolResponse.toolCallId != toolCall.id) {
+                    throw IllegalArgumentException("Tool response order mismatch at index $index")
+                }
+                val result = buildRecoveredToolResponse(queryContext, toolCall, toolResponse.content)
+                emitToolCallEndEvent(queryContext.publisher, toolCall.id, toolCall.name, result)
+                ToolResponseMessage.ToolResponse(toolCall.id, toolCall.name, result)
+            }
         processConversationLoop(
             context = queryContext,
-            initialInputMessage = recoverPendingConfirm(queryContext, message, tool),
+            initialInputMessage = buildToolResponseMessage(responses),
         )
-        return
     }
+
+    private fun resolveToolCallStatus(toolCall: AssistantMessage.ToolCall): AiToolCallStatus =
+        when {
+            agentToolsManager.isRequireConfirm(toolCall.name) -> AiToolCallStatus.PENDING_CONFIRM
+            else -> AiToolCallStatus.PENDING_EXECUTION
+        }
+
+    private fun isBlockingToolCall(toolCall: AssistantMessage.ToolCall): Boolean =
+        toolCall.name == AskHumanTool.NAME || agentToolsManager.isRequireConfirm(toolCall.name)
+
+    private fun executePendingExecutionTools(
+        context: AiQueryContext,
+        pendingToolCalls: List<PendingToolCall>,
+    ): List<ToolResponseMessage.ToolResponse> =
+        pendingToolCalls.map { pendingToolCall ->
+            val result =
+                executeTool(
+                    context,
+                    pendingToolCall.toolCall.name,
+                    pendingToolCall.toolCall.arguments,
+                )
+            emitToolCallEndEvent(
+                context.publisher,
+                pendingToolCall.toolCall.id,
+                pendingToolCall.toolCall.name,
+                result,
+            )
+            ToolResponseMessage.ToolResponse(
+                pendingToolCall.toolCall.id,
+                pendingToolCall.toolCall.name,
+                result,
+            )
+        }
+
+    private fun buildRecoveredToolResponse(
+        context: AiQueryContext,
+        toolCall: AssistantMessage.ToolCall,
+        content: String,
+    ): String =
+        when {
+            toolCall.name == AskHumanTool.NAME -> {
+                if (content.isBlank()) {
+                    throw IllegalArgumentException("Ask human response must not be blank")
+                }
+                content
+            }
+
+            resolveToolCallStatus(toolCall) == AiToolCallStatus.PENDING_CONFIRM ->
+                when (content) {
+                    "YES" -> executeTool(context, toolCall.name, toolCall.arguments)
+                    "NO" -> "User refuse to execute this command, please try another command or exit the process."
+                    else -> throw IllegalArgumentException("Pending confirmation only accepts YES or NO")
+                }
+
+            else -> {
+                if (content.isNotEmpty()) {
+                    throw IllegalArgumentException("Pending execution tool response content must be empty")
+                }
+                executeTool(context, toolCall.name, toolCall.arguments)
+            }
+        }
+
+    private fun executeTool(
+        context: AiQueryContext,
+        toolName: String,
+        arguments: String?,
+    ): String =
+        agentToolsManager.executeTool(
+            AiToolExecutionContext(context.channelId),
+            toolName,
+            arguments ?: "{}",
+        )
+
+    private fun buildToolResponseMessage(responses: List<ToolResponseMessage.ToolResponse>): ToolResponseMessage =
+        ToolResponseMessage
+            .builder()
+            .responses(responses)
+            .metadata(mapOf())
+            .build()
 
     override fun getCurrentLLMConfiguration(): LLMConfigurationVO {
         val llmConfig = getCurrentLLMConfigurationDTO() ?: return LLMConfigurationVO("", "", 0, false, 0, Instant.now())

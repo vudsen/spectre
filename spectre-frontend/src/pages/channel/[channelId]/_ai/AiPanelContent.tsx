@@ -10,11 +10,14 @@ import AiPanelEnabledContent from '@/pages/channel/[channelId]/_ai/AiPanelEnable
 export interface AiPanelContentProps {
   enabled: boolean
   cards: ConversationCard[]
-  pendingConfirm?: PendingConfirmState
-  pendingAskHuman?: PendingAskHumanState
+  pendingConfirms: PendingConfirmState[]
+  currentAskHuman?: PendingAskHumanState
   autoConfirm?: boolean
   isLoading: boolean
+  composerDisabled?: boolean
   onSubmit: (value: string) => Promise<void>
+  onConfirm: (toolCallId: string, value: 'YES' | 'NO') => void
+  onAutoConfirmAll: () => void
 }
 
 const AiPanelContent: React.FC<AiPanelContentProps> = (props) => {
@@ -25,11 +28,14 @@ const AiPanelContent: React.FC<AiPanelContentProps> = (props) => {
   return (
     <AiPanelEnabledContent
       cards={props.cards}
-      pendingConfirm={props.pendingConfirm}
-      pendingAskHuman={props.pendingAskHuman}
+      pendingConfirms={props.pendingConfirms}
+      currentAskHuman={props.currentAskHuman}
       autoConfirm={props.autoConfirm}
       isLoading={props.isLoading}
+      composerDisabled={props.composerDisabled}
       onSubmit={props.onSubmit}
+      onConfirm={props.onConfirm}
+      onAutoConfirmAll={props.onAutoConfirmAll}
     />
   )
 }

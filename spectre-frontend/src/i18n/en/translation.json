@@ -286,6 +286,7 @@
     "msg_pages_channel_param_ai_aimessagelist_012": "Please provide additional information",
     "msg_pages_channel_param_ai_aimessagelist_013": "Please enter your reply in the input box below and send it",
     "msg_pages_channel_param_ai_aimessagelist_014": "AI is thinking...",
+    "msg_pages_channel_param_ai_aimessagelist_015": "Waiting for execution",
     "msg_pages_channel_param_ai_aipanel_004": "AI request failed",
     "msg_pages_channel_param_ai_aipanel_005": "AI session cleared",
     "msg_pages_channel_param_ai_skillselectmodalcontent_001": "Failed to load skills",

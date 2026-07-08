@@ -12,20 +12,26 @@ import type {
 
 export interface AiPanelEnabledContentProps {
   cards: ConversationCard[]
-  pendingConfirm?: PendingConfirmState
-  pendingAskHuman?: PendingAskHumanState
+  pendingConfirms: PendingConfirmState[]
+  currentAskHuman?: PendingAskHumanState
   autoConfirm?: boolean
   isLoading: boolean
+  composerDisabled?: boolean
   onSubmit: (value: string) => Promise<void>
+  onConfirm: (toolCallId: string, value: 'YES' | 'NO') => void
+  onAutoConfirmAll: () => void
 }
 
 const AiPanelEnabledContent: React.FC<AiPanelEnabledContentProps> = ({
   cards,
-  pendingConfirm,
-  pendingAskHuman,
+  pendingConfirms,
+  currentAskHuman,
   autoConfirm,
   isLoading,
+  composerDisabled,
   onSubmit,
+  onConfirm,
+  onAutoConfirmAll,
 }) => {
   return (
     <>
@@ -42,16 +48,18 @@ const AiPanelEnabledContent: React.FC<AiPanelEnabledContentProps> = ({
       ) : (
         <AiMessageList
           cards={cards}
-          pendingConfirm={pendingConfirm}
-          pendingAskHuman={pendingAskHuman}
+          pendingConfirms={pendingConfirms}
+          currentAskHuman={currentAskHuman}
           autoConfirm={autoConfirm}
           isLoading={isLoading}
-          onQuickSubmit={(value) => {
-            void onSubmit(value)
-          }}
+          onConfirm={onConfirm}
+          onAutoConfirmAll={onAutoConfirmAll}
         />
       )}
-      <AiComposer disabled={isLoading} onSubmit={onSubmit} />
+      <AiComposer
+        disabled={composerDisabled || isLoading}
+        onSubmit={onSubmit}
+      />
     </>
   )
 }

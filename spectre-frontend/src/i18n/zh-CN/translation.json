@@ -277,6 +277,7 @@
     "msg_pages_channel_param_ai_aimessagelist_012": "请提供额外信息",
     "msg_pages_channel_param_ai_aimessagelist_013": "请直接在底部输入框输入回复并发送。",
     "msg_pages_channel_param_ai_aimessagelist_014": "AI 正在思考...",
+    "msg_pages_channel_param_ai_aimessagelist_015": "等待执行",
     "msg_pages_channel_param_ai_aipanel_004": "AI 请求失败",
     "msg_pages_channel_param_ai_aipanel_005": "已清空 AI 会话",
     "msg_pages_channel_param_ai_skillselectmodalcontent_001": "技能加载失败",
