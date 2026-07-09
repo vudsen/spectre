@@ -1,7 +1,7 @@
 [versions]
 springBoot = "4.1.0"
 springDependencyManagement = "1.1.7"
-minaSshd = "2.18.0"
+minaSshd = "2.19.0"
 apacheCommons = "1.28.0"
 
 [libraries]
